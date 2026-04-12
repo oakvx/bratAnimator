@@ -157,4 +157,4 @@ If the repository is configured correctly, the site will be available at:
 
 To be defined.
 
-If you plan to publish or share the project publicly, it is better to add an explicit license to the repository.
+every use without notice will result in a lawsuit (nah im joking but give me credits at least)
