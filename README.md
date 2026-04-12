@@ -104,7 +104,7 @@ Sitemap:
 ## File structure
 
 ```text
-bratAnimator_release/
+root/                                                 sorry y'all idk 
 ├── index.html
 ├── README.md
 ├── robots.txt
