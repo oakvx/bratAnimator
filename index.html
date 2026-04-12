@@ -1,0 +1,1452 @@
+<!doctype html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brat Lyrics Generator</title>
+    <style>
+        :root {
+            --bg-page: #e9e9e9;
+            --bg-brat: #8ACE00;
+            --text: #000;
+            --panel: rgba(255, 255, 255, 0.9);
+            --border: rgba(0, 0, 0, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg-page);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            position: relative;
+            padding: 24px;
+        }
+
+        .stage-wrap {
+            width: min(92vw, 92vh);
+            height: min(92vw, 92vh);
+            position: relative;
+            display: grid;
+            place-items: center;
+        }
+
+        .stage {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-brat);
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.08),
+                inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .lyrics-screen {
+            width: 76%;
+            max-width: 860px;
+            text-align: center;
+            line-height: 0.92;
+            letter-spacing: -0.07em;
+            color: #000;
+            text-transform: lowercase;
+            font-family:
+                "Arial Narrow",
+                Arial,
+                "Helvetica Neue Condensed",
+                "Liberation Sans Narrow",
+                sans-serif;
+            font-weight: 400;
+            font-stretch: condensed;
+            filter: blur(1.05px);
+            text-rendering: geometricPrecision;
+            user-select: none;
+            transform: translateY(-2%) scaleX(0.94);
+            transform-origin: center center;
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: none;
+        }
+
+        .line {
+            display: block;
+            font-size: clamp(46px, 8.8vw, 124px);
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-break: normal;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(18px, 2vw, 30px);
+            line-height: 1;
+            letter-spacing: -0.03em;
+            white-space: nowrap;
+            color: #111;
+            user-select: none;
+        }
+
+        .topbar {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.86);
+            backdrop-filter: blur(10px);
+            color: #111;
+            padding: 10px 14px;
+            font-size: 13px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .panel {
+            position: fixed;
+            top: 56px;
+            left: 14px;
+            z-index: 29;
+            width: min(540px, calc(100vw - 28px));
+            max-height: calc(100vh - 80px);
+            overflow: auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+            padding: 14px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .panel.hidden {
+            display: none;
+        }
+
+        .panel h1 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            line-height: 1;
+            font-weight: 700;
+            text-transform: lowercase;
+            letter-spacing: -0.03em;
+        }
+
+        .panel p {
+            margin: 0 0 10px;
+            font-size: 12px;
+            line-height: 1.35;
+            color: rgba(0, 0, 0, 0.72);
+        }
+
+        .label {
+            display: block;
+            margin: 10px 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: lowercase;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.16);
+            outline: none;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: rgba(0, 0, 0, 0.45);
+        }
+
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+            font: 13px/1.5 Consolas, Monaco, monospace;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .row>* {
+            flex: 1 1 auto;
+        }
+
+        .inline-toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .inline-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: lowercase;
+            cursor: pointer;
+        }
+
+        .inline-toggle input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        button {
+            appearance: none;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            background: #fff;
+            color: #111;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: lowercase;
+            cursor: pointer;
+        }
+
+        button.primary {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
+
+        .meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        .muted {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .results {
+            display: grid;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .result-card {
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+        }
+
+        .result-title {
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .result-sub {
+            font-size: 12px;
+            margin-top: 3px;
+            color: rgba(0, 0, 0, 0.72);
+        }
+
+        .badge-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .badge {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px 7px;
+            font-size: 11px;
+        }
+
+        .yt-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .yt-item {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .yt-item img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            display: block;
+            background: #ddd;
+        }
+
+        .yt-title {
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .yt-channel {
+            font-size: 12px;
+            margin-top: 4px;
+            color: rgba(0, 0, 0, 0.72);
+        }
+
+        .player-wrap {
+            position: fixed;
+            right: 14px;
+            top: 14px;
+            z-index: 28;
+            width: min(420px, calc(100vw - 28px));
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .player-wrap.hidden {
+            display: none;
+        }
+
+        .player-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .player-head strong {
+            font-size: 12px;
+            text-transform: lowercase;
+        }
+
+        .player-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+        }
+
+        .player-box iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        .footer-controls {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            z-index: 30;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 900px) {
+            .player-wrap {
+                top: auto;
+                bottom: 70px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .app {
+                padding: 12px;
+            }
+
+            .stage-wrap {
+                width: min(96vw, 96vh);
+                height: min(96vw, 96vh);
+            }
+
+            .hint {
+                bottom: -34px;
+            }
+
+            .panel {
+                top: auto;
+                bottom: 64px;
+            }
+
+            .yt-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <button id="togglePanelBtn" class="chip">editor</button>
+        <button id="loadDemoBtn" class="chip">demo</button>
+    </div>
+
+    <div id="panel" class="panel">
+        <h1>brat lyrics</h1>
+        <p>
+            Cerca un brano su LRCLIB, carica il testo sincronizzato, scegli un video da Invidious
+            e anima il lyric a blocchi di frase solo nel timing.
+        </p>
+
+        <label class="label" for="searchQueryInput">cerca brano</label>
+        <input id="searchQueryInput" type="text" placeholder="es. artista - titolo" />
+
+        <div class="row">
+            <button id="searchSongBtn" class="primary">cerca canzone</button>
+            <button id="clearResultsBtn">pulisci risultati</button>
+        </div>
+
+        <div id="searchStatus" class="meta muted">nessuna ricerca eseguita</div>
+
+        <div id="lrclibResults" class="results"></div>
+
+        <label class="label" for="lyricsInput">lyrics lrc</label>
+        <textarea id="lyricsInput" spellcheck="false" placeholder="[00:21.62] y dime que me amas, aunque
+[00:24.48] no lo digas con palabras
+[00:27.28] yo sé que en esa pausa también hay algo"></textarea>
+
+        <div class="inline-toggle">
+            <label>
+                <input id="startFromZeroCheckbox" type="checkbox" />
+                parti da 0:00 invece che dal primo lyric
+            </label>
+        </div>
+
+        <div class="row">
+            <button id="startBtn" class="primary">start</button>
+            <button id="playPauseBtn">pause</button>
+            <button id="restartBtn">restart</button>
+            <button id="resetBtn">reset</button>
+        </div>
+
+        <div id="meta" class="meta">0 righe • 0 blocchi • 0.00s timeline</div>
+
+        <label class="label">youtube picker</label>
+        <div id="youtubeStatus" class="meta muted">nessun video caricato</div>
+        <div id="youtubeResults" class="yt-grid"></div>
+    </div>
+
+    <div id="playerWrap" class="player-wrap hidden">
+        <div class="player-head">
+            <strong>video player</strong>
+            <button id="closePlayerBtn">chiudi</button>
+        </div>
+        <div id="playerBox" class="player-box"></div>
+    </div>
+
+    <div class="app">
+        <div class="stage-wrap">
+            <div id="stage" class="stage">
+                <div id="lyricsScreen" class="lyrics-screen">
+                    <span class="line">brat</span>
+                </div>
+            </div>
+            <div class="hint">Take a Screenshot to Save!</div>
+        </div>
+    </div>
+
+    <div class="footer-controls">
+        <button id="bgBtn">green</button>
+        <button id="darkBtn">dark</button>
+    </div>
+
+    <script>
+        const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
+        const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
+
+        const INVIDIOUS_BASES = [
+            "https://inv.nadeko.net",
+            "https://yewtu.be",
+            "https://invidious.nerdvpn.de"
+        ];
+
+        const lyricsInput = document.getElementById("lyricsInput");
+        const lyricsScreen = document.getElementById("lyricsScreen");
+        const meta = document.getElementById("meta");
+        const panel = document.getElementById("panel");
+
+        const togglePanelBtn = document.getElementById("togglePanelBtn");
+        const loadDemoBtn = document.getElementById("loadDemoBtn");
+        const startBtn = document.getElementById("startBtn");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const restartBtn = document.getElementById("restartBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const bgBtn = document.getElementById("bgBtn");
+        const darkBtn = document.getElementById("darkBtn");
+
+        const searchQueryInput = document.getElementById("searchQueryInput");
+        const searchSongBtn = document.getElementById("searchSongBtn");
+        const clearResultsBtn = document.getElementById("clearResultsBtn");
+        const searchStatus = document.getElementById("searchStatus");
+        const lrclibResults = document.getElementById("lrclibResults");
+        const youtubeResults = document.getElementById("youtubeResults");
+        const youtubeStatus = document.getElementById("youtubeStatus");
+
+        const playerWrap = document.getElementById("playerWrap");
+        const playerBox = document.getElementById("playerBox");
+        const closePlayerBtn = document.getElementById("closePlayerBtn");
+
+        const startFromZeroCheckbox = document.getElementById("startFromZeroCheckbox");
+
+        const state = {
+            timeline: [],
+            isPlaying: false,
+            animationFrame: null,
+            playStartMs: null,
+            pausedElapsedSec: 0,
+            currentLineIndex: -1,
+            currentBlockIndex: -1,
+            currentVisibleChars: 0,
+            selectedSong: null,
+            selectedVideoId: null,
+            selectedVideoBase: null
+        };
+
+        const demoLyrics = `[00:21.62] y dime que me amas aunque no lo digas con palabras
+[00:24.48] yo sé que en esa pausa también hay algo
+[00:27.28] aunque no haya puntuación la frase respira igual
+[00:29.56] y por eso no quiero que toda la línea salga junta`;
+
+        const DEFAULT_TYPING_SECONDS_PER_WEIGHT = 0.065;
+        const SHORT_LINE_THRESHOLD = 42;
+        const SHORT_LINE_SPEED_MULTIPLIER = 1.28;
+        const MIN_LINE_CONTENT_WINDOW = 0.42;
+        const MAX_LINE_TRAILING_HOLD = 0.55;
+
+        function normalizeLRCText(text) {
+            return String(text || "")
+                .replace(/^\uFEFF/, "")
+                .replace(/\r/g, "")
+                .replace(/\u00A0/g, " ");
+        }
+
+        function parseTimeTag(minutesStr, secondsStr) {
+            const minutes = Number(minutesStr);
+            const seconds = Number(String(secondsStr).replace(",", "."));
+            if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) return null;
+            return minutes * 60 + seconds;
+        }
+
+        function splitWordsWithIndices(text) {
+            const words = [];
+            const regex = /\S+/g;
+            let match;
+
+            while ((match = regex.exec(text)) !== null) {
+                words.push({
+                    word: match[0],
+                    start: match.index,
+                    end: match.index + match[0].length - 1
+                });
+            }
+
+            return words;
+        }
+
+        function estimatePhraseBreaks(text) {
+            const words = splitWordsWithIndices(text);
+            const breakCharIndices = new Set();
+
+            if (!words.length) return breakCharIndices;
+
+            for (const item of words) {
+                if (/[,:;.!?…]$/.test(item.word)) {
+                    breakCharIndices.add(item.end);
+                }
+            }
+
+            const explicitBreakCount = breakCharIndices.size;
+            const wordCount = words.length;
+
+            if (explicitBreakCount >= Math.max(1, Math.floor(wordCount / 5))) {
+                return breakCharIndices;
+            }
+
+            let targetChunkSize = 3;
+            if (wordCount >= 7) targetChunkSize = 4;
+            if (wordCount >= 11) targetChunkSize = 5;
+            if (wordCount >= 16) targetChunkSize = 6;
+
+            let cursor = 0;
+
+            while (cursor < words.length) {
+                let next = cursor + targetChunkSize;
+
+                if (next >= words.length) break;
+
+                const remaining = words.length - next;
+                if (remaining === 1) {
+                    next -= 1;
+                }
+
+                const breakWord = words[next - 1];
+                if (breakWord) {
+                    breakCharIndices.add(breakWord.end);
+                }
+
+                cursor = next;
+            }
+
+            return breakCharIndices;
+        }
+
+        function buildPhraseChunks(text) {
+            const words = splitWordsWithIndices(text);
+            if (!words.length) return [];
+
+            const breaks = estimatePhraseBreaks(text);
+            const chunks = [];
+
+            let chunkStart = words[0].start;
+
+            for (let i = 0; i < words.length; i += 1) {
+                const currentWord = words[i];
+                const isLastWord = i === words.length - 1;
+                const shouldBreak = breaks.has(currentWord.end) || isLastWord;
+
+                if (!shouldBreak) continue;
+
+                const chunkEnd = currentWord.end;
+                const chunkText = text.slice(chunkStart, chunkEnd + 1).trim();
+
+                if (chunkText) {
+                    chunks.push({
+                        startChar: chunkStart,
+                        endChar: chunkEnd,
+                        text: chunkText
+                    });
+                }
+
+                let nextStart = chunkEnd + 1;
+                while (nextStart < text.length && /\s/.test(text[nextStart])) {
+                    nextStart += 1;
+                }
+                chunkStart = nextStart;
+            }
+
+            if (!chunks.length) {
+                chunks.push({
+                    startChar: 0,
+                    endChar: text.length - 1,
+                    text: text.trim()
+                });
+            }
+
+            return chunks.filter(chunk => chunk.text.length > 0);
+        }
+
+        function getCharWeight(char, nextChar) {
+            if (char === " ") return 0.16;
+            if (char === ",") return 1.7;
+            if (char === ";") return 2.0;
+            if (char === ":") return 2.1;
+            if (char === ".") return nextChar === "." ? 1.2 : 2.35;
+            if (char === "!") return 2.35;
+            if (char === "?") return 2.45;
+            if (char === "…") return 3.1;
+            if (char === "-" || char === "—") return 1.35;
+            if (char === "\u2019" || char === "'") return 0.35;
+            if (/[0-9]/.test(char)) return 1.05;
+            return 1;
+        }
+
+        function getBlockPauseFactor(text) {
+            if (/[.!?…]$/.test(text)) return 0.34;
+            if (/[,:;]$/.test(text)) return 0.26;
+            return 0.18;
+        }
+
+        function scheduleCharsInsideBlock(blockText, blockStart, typingDuration, lineIndex, blockIndex) {
+            const chars = Array.from(blockText);
+            const weights = chars.map((char, index) => {
+                const nextChar = chars[index + 1] || "";
+                let weight = getCharWeight(char, nextChar);
+
+                if (/[A-ZÀ-Ý]/.test(char)) weight += 0.04;
+                if (/[mwMW]/.test(char)) weight += 0.08;
+                if (/[iltI]/.test(char)) weight -= 0.03;
+
+                return Math.max(0.08, weight);
+            });
+
+            const totalWeight = weights.reduce((sum, value) => sum + value, 0) || 1;
+            let cursor = blockStart;
+
+            return chars.map((char, charIndex) => {
+                const duration = (weights[charIndex] / totalWeight) * typingDuration;
+                const timestamp = cursor;
+                cursor += duration;
+
+                return {
+                    char,
+                    lineIndex,
+                    blockIndex,
+                    charIndex,
+                    timestamp,
+                    duration
+                };
+            });
+        }
+
+        function scheduleBlocksForLine(text, lineStart, nextLineStart, lineIndex) {
+            const chunks = buildPhraseChunks(text);
+
+            const fallbackDuration = Math.max(2.1, text.length * 0.082);
+            const reservedGap = 0.05;
+
+            const lineEnd =
+                typeof nextLineStart === "number" ?
+                Math.max(lineStart + 0.42, nextLineStart - reservedGap) :
+                lineStart + fallbackDuration;
+
+            const availableDuration = Math.max(0.42, lineEnd - lineStart);
+
+            const trimmedLength = text.trim().length;
+            const speedMultiplier =
+                trimmedLength <= SHORT_LINE_THRESHOLD ?
+                SHORT_LINE_SPEED_MULTIPLIER :
+                1;
+
+            const weightedChunks = chunks.map((chunk) => {
+                const chars = Array.from(chunk.text);
+                const charWeights = chars.map((char, index) =>
+                    getCharWeight(char, chars[index + 1] || "")
+                );
+                const typingWeight =
+                    charWeights.reduce((sum, value) => sum + value, 0) || 1;
+                const pauseFactor = getBlockPauseFactor(chunk.text);
+                const totalWeight = typingWeight * (1 + pauseFactor);
+
+                return {
+                    ...chunk,
+                    typingWeight,
+                    pauseFactor,
+                    totalWeight
+                };
+            });
+
+            const totalLineWeight =
+                weightedChunks.reduce((sum, chunk) => sum + chunk.totalWeight, 0) || 1;
+
+            const naturalContentDuration =
+                (totalLineWeight * DEFAULT_TYPING_SECONDS_PER_WEIGHT) / speedMultiplier;
+
+            const contentWindow = Math.max(
+                MIN_LINE_CONTENT_WINDOW,
+                Math.min(naturalContentDuration, availableDuration)
+            );
+
+            const trailingHold = Math.max(
+                0,
+                Math.min(availableDuration - contentWindow, MAX_LINE_TRAILING_HOLD)
+            );
+
+            let cursor = lineStart;
+
+            return weightedChunks.map((chunk, blockIndex) => {
+                const blockDuration =
+                    contentWindow * (chunk.totalWeight / totalLineWeight);
+
+                const typingDuration =
+                    blockDuration * (chunk.typingWeight / chunk.totalWeight);
+
+                let holdDuration = blockDuration - typingDuration;
+
+                if (blockIndex === weightedChunks.length - 1) {
+                    holdDuration += trailingHold;
+                }
+
+                const chars = scheduleCharsInsideBlock(
+                    chunk.text,
+                    cursor,
+                    typingDuration,
+                    lineIndex,
+                    blockIndex
+                );
+
+                const displayStart = cursor;
+                const fullVisibleAt = chars[chars.length - 1]?.timestamp ?? cursor;
+                const displayEnd = cursor + typingDuration + holdDuration;
+
+                const block = {
+                    lineIndex,
+                    blockIndex,
+                    text: chunk.text,
+                    startChar: chunk.startChar,
+                    endChar: chunk.endChar,
+                    chars,
+                    displayStart,
+                    fullVisibleAt,
+                    displayEnd
+                };
+
+                cursor = displayEnd;
+                return block;
+            });
+        }
+
+        function parseLRC(lrcText, startFromZero) {
+            const text = normalizeLRCText(lrcText);
+            const rawLines = text.split("\n");
+            const parsed = [];
+            let offsetMs = 0;
+
+            for (const rawLine of rawLines) {
+                const line = rawLine.trim();
+                if (!line) continue;
+
+                const metaMatch = line.match(META_TAG_RE);
+                if (metaMatch) {
+                    if (metaMatch[1].toLowerCase() === "offset") {
+                        const parsedOffset = Number(metaMatch[2].trim());
+                        if (Number.isFinite(parsedOffset)) {
+                            offsetMs = parsedOffset;
+                        }
+                    }
+                    continue;
+                }
+
+                const timestamps = [...line.matchAll(LINE_TIMESTAMP_RE)];
+                if (!timestamps.length) continue;
+
+                const textWithoutTags = line.replace(LINE_TIMESTAMP_RE, "").trim();
+                if (!textWithoutTags) continue;
+
+                for (const match of timestamps) {
+                    const rawTimestamp = parseTimeTag(match[1], match[2]);
+                    if (rawTimestamp == null) continue;
+
+                    parsed.push({
+                        timestamp: Math.max(0, rawTimestamp + offsetMs / 1000),
+                        text: textWithoutTags
+                    });
+                }
+            }
+
+            parsed.sort((a, b) => a.timestamp - b.timestamp);
+            if (!parsed.length) return [];
+
+            const base = startFromZero ? 0 : parsed[0].timestamp;
+
+            const normalized = parsed.map((line, index) => ({
+                ...line,
+                lineIndex: index,
+                timestamp: Math.max(0, line.timestamp - base)
+            }));
+
+            return normalized.map((line, index) => {
+                const nextLineStart = normalized[index + 1]?.timestamp;
+                const blocks = scheduleBlocksForLine(
+                    line.text,
+                    line.timestamp,
+                    nextLineStart,
+                    index
+                );
+
+                return {
+                    ...line,
+                    blocks,
+                    displayStart: blocks[0]?.displayStart ?? line.timestamp,
+                    displayEnd: blocks[blocks.length - 1]?.displayEnd ?? line.timestamp
+                };
+            });
+        }
+
+        function renderPlaceholder() {
+            lyricsScreen.innerHTML = "";
+            const span = document.createElement("span");
+            span.className = "line";
+            span.textContent = "brat";
+            lyricsScreen.appendChild(span);
+        }
+
+        function renderTypedLine(line, activeBlockIndex, visibleCharsInBlock) {
+            if (!line) {
+                renderPlaceholder();
+                return;
+            }
+
+            let revealUntil = -1;
+
+            if (activeBlockIndex >= 0 && line.blocks[activeBlockIndex]) {
+                const activeBlock = line.blocks[activeBlockIndex];
+                revealUntil = activeBlock.startChar + visibleCharsInBlock - 1;
+            }
+
+            const visibleText =
+                revealUntil >= 0 ?
+                Array.from(line.text).slice(0, revealUntil + 1).join("") :
+                "";
+
+            lyricsScreen.innerHTML = "";
+            const span = document.createElement("span");
+            span.className = "line";
+            span.textContent = visibleText;
+            lyricsScreen.appendChild(span);
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;");
+        }
+
+        function getElapsedSeconds() {
+            if (state.playStartMs == null) return state.pausedElapsedSec;
+            return state.pausedElapsedSec + (Date.now() - state.playStartMs) / 1000;
+        }
+
+        function cancelAnimation() {
+            if (state.animationFrame != null) {
+                cancelAnimationFrame(state.animationFrame);
+                state.animationFrame = null;
+            }
+        }
+
+        function updateMeta() {
+            const parsedPreview = parseLRC(
+                lyricsInput.value,
+                startFromZeroCheckbox.checked
+            );
+
+            const lineCount = parsedPreview.length;
+            const blockCount = parsedPreview.reduce((sum, line) => sum + (line.blocks?.length || 0), 0);
+            const totalTime = lineCount ?
+                parsedPreview[parsedPreview.length - 1].displayEnd :
+                0;
+
+            meta.textContent = `${lineCount} righe • ${blockCount} blocchi • ${totalTime.toFixed(2)}s timeline`;
+        }
+
+        function animationTick() {
+            const now = getElapsedSeconds();
+            const timeline = state.timeline;
+
+            let activeLineIndex = -1;
+
+            for (let i = 0; i < timeline.length; i += 1) {
+                const line = timeline[i];
+
+                if (now >= line.displayStart && now <= line.displayEnd) {
+                    activeLineIndex = i;
+                    break;
+                }
+
+                if (now >= line.displayStart) {
+                    activeLineIndex = i;
+                }
+            }
+
+            if (activeLineIndex === -1) {
+                renderPlaceholder();
+            } else {
+                const line = timeline[activeLineIndex];
+                let activeBlockIndex = -1;
+
+                for (let i = 0; i < line.blocks.length; i += 1) {
+                    const block = line.blocks[i];
+
+                    if (now >= block.displayStart && now <= block.displayEnd) {
+                        activeBlockIndex = i;
+                        break;
+                    }
+
+                    if (now >= block.displayStart) {
+                        activeBlockIndex = i;
+                    }
+                }
+
+                if (activeBlockIndex === -1) {
+                    renderPlaceholder();
+                } else {
+                    const block = line.blocks[activeBlockIndex];
+                    let visibleChars = 0;
+
+                    while (
+                        visibleChars < block.chars.length &&
+                        now >= block.chars[visibleChars].timestamp
+                    ) {
+                        visibleChars += 1;
+                    }
+
+                    if (now >= block.fullVisibleAt) {
+                        visibleChars = block.chars.length;
+                    }
+
+                    if (
+                        state.currentLineIndex !== activeLineIndex ||
+                        state.currentBlockIndex !== activeBlockIndex ||
+                        state.currentVisibleChars !== visibleChars
+                    ) {
+                        state.currentLineIndex = activeLineIndex;
+                        state.currentBlockIndex = activeBlockIndex;
+                        state.currentVisibleChars = visibleChars;
+                        renderTypedLine(line, activeBlockIndex, visibleChars);
+                    }
+                }
+            }
+
+            const lastLine = timeline[timeline.length - 1];
+            const endTime = (lastLine?.displayEnd ?? 0) + 0.08;
+
+            if (now > endTime) {
+                state.isPlaying = false;
+                state.playStartMs = null;
+                playPauseBtn.textContent = "play";
+                return;
+            }
+
+            state.animationFrame = requestAnimationFrame(animationTick);
+        }
+
+        function startFromBeginning() {
+            if (!state.timeline.length) return;
+
+            cancelAnimation();
+            state.pausedElapsedSec = 0;
+            state.playStartMs = Date.now();
+            state.isPlaying = true;
+            state.currentLineIndex = -1;
+            state.currentBlockIndex = -1;
+            state.currentVisibleChars = -1;
+            playPauseBtn.textContent = "pause";
+            renderPlaceholder();
+            state.animationFrame = requestAnimationFrame(animationTick);
+        }
+
+        function resetAll() {
+            cancelAnimation();
+            state.timeline = [];
+            state.isPlaying = false;
+            state.playStartMs = null;
+            state.pausedElapsedSec = 0;
+            state.currentLineIndex = -1;
+            state.currentBlockIndex = -1;
+            state.currentVisibleChars = 0;
+            state.selectedVideoId = null;
+            state.selectedVideoBase = null;
+            playPauseBtn.textContent = "pause";
+            renderPlaceholder();
+            playerWrap.classList.add("hidden");
+            playerBox.innerHTML = "";
+        }
+
+        function clearSearchResults() {
+            lrclibResults.innerHTML = "";
+            youtubeResults.innerHTML = "";
+            searchStatus.textContent = "risultati puliti";
+            youtubeStatus.textContent = "nessun video caricato";
+            state.selectedSong = null;
+            state.selectedVideoId = null;
+            state.selectedVideoBase = null;
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds || Number.isNaN(Number(seconds))) return "durata n/d";
+            const total = Math.round(Number(seconds));
+            const mm = Math.floor(total / 60);
+            const ss = String(total % 60).padStart(2, "0");
+            return `${mm}:${ss}`;
+        }
+
+        function formatVideoSeconds(seconds) {
+            const total = Number(seconds);
+            if (!Number.isFinite(total)) return "durata n/d";
+
+            const hh = Math.floor(total / 3600);
+            const mm = Math.floor((total % 3600) / 60);
+            const ss = Math.floor(total % 60);
+
+            if (hh > 0) {
+                return `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+            }
+
+            return `${mm}:${String(ss).padStart(2, "0")}`;
+        }
+
+        async function searchLRCLIB(query) {
+            const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+            const res = await fetch(url);
+
+            if (!res.ok) {
+                throw new Error(`LRCLIB errore HTTP ${res.status}`);
+            }
+
+            return res.json();
+        }
+
+        function renderLRCLIBResults(items) {
+            if (!items.length) {
+                lrclibResults.innerHTML = `
+          <div class="result-card">
+            <div class="result-sub">nessun risultato LRCLIB</div>
+          </div>
+        `;
+                return;
+            }
+
+            lrclibResults.innerHTML = items.map((item, index) => {
+                const synced = item.syncedLyrics ? "synced" : "plain";
+                const artist = escapeHtml(item.artistName || "artista sconosciuto");
+                const track = escapeHtml(item.trackName || "titolo sconosciuto");
+                const album = escapeHtml(item.albumName || "album n/d");
+                const duration = formatDuration(item.duration);
+
+                return `
+          <div class="result-card">
+            <div class="result-title">${track}</div>
+            <div class="result-sub">${artist}</div>
+            <div class="badge-row">
+              <span class="badge">${synced}</span>
+              <span class="badge">${duration}</span>
+              <span class="badge">${album}</span>
+            </div>
+            <div class="row">
+              <button data-lrc-index="${index}" class="use-lrc-btn primary">usa questo</button>
+              <button data-yt-index="${index}" class="find-yt-btn">cerca video</button>
+            </div>
+          </div>
+        `;
+            }).join("");
+
+            document.querySelectorAll(".use-lrc-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const index = Number(btn.dataset.lrcIndex);
+                    const item = items[index];
+                    state.selectedSong = item;
+
+                    const bestLyrics = item.syncedLyrics || item.plainLyrics || "";
+                    lyricsInput.value = bestLyrics;
+                    updateMeta();
+                    searchStatus.textContent = `caricato: ${item.artistName || ""} - ${item.trackName || ""}`.trim();
+                });
+            });
+
+            document.querySelectorAll(".find-yt-btn").forEach((btn) => {
+                btn.addEventListener("click", async () => {
+                    const index = Number(btn.dataset.ytIndex);
+                    const item = items[index];
+                    state.selectedSong = item;
+                    await runYouTubeSearchForItem(item);
+                });
+            });
+        }
+
+        async function fetchFromInvidious(path) {
+            let lastError = null;
+
+            for (const base of INVIDIOUS_BASES) {
+                try {
+                    const res = await fetch(`${base}${path}`, {
+                        method: "GET",
+                        mode: "cors",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    });
+
+                    if (!res.ok) {
+                        lastError = new Error(`istanza ${base} -> HTTP ${res.status}`);
+                        continue;
+                    }
+
+                    const data = await res.json();
+                    return {
+                        base,
+                        data
+                    };
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+
+            throw lastError || new Error("nessuna istanza Invidious disponibile");
+        }
+
+        async function searchUnofficialYouTubeVideos(query) {
+            const params = new URLSearchParams({
+                q: query,
+                type: "video",
+                sort: "relevance",
+                region: "IT"
+            });
+
+            const {
+                base,
+                data
+            } = await fetchFromInvidious(`/api/v1/search?${params.toString()}`);
+
+            const items = Array.isArray(data) ?
+                data.filter((item) => item && item.type === "video").slice(0, 8) : [];
+
+            return {
+                base,
+                items
+            };
+        }
+
+        function getBestThumb(video) {
+            if (!Array.isArray(video.videoThumbnails)) return "";
+
+            const preferred =
+                video.videoThumbnails.find((x) => x.quality === "maxres") ||
+                video.videoThumbnails.find((x) => x.quality === "high") ||
+                video.videoThumbnails.find((x) => x.quality === "medium") ||
+                video.videoThumbnails[0];
+
+            return preferred?.url || "";
+        }
+
+        function renderYouTubeResults(items, instanceBase) {
+            if (!items.length) {
+                youtubeResults.innerHTML = `
+          <div class="result-card">
+            <div class="result-sub">nessun video trovato via Invidious</div>
+          </div>
+        `;
+                return;
+            }
+
+            youtubeResults.innerHTML = items.map((item) => {
+                const videoId = item.videoId || "";
+                const title = escapeHtml(item.title || "video");
+                const channel = escapeHtml(item.author || "canale");
+                const thumb = getBestThumb(item);
+                const duration = formatVideoSeconds(item.lengthSeconds);
+
+                return `
+          <div class="yt-item" data-video-id="${videoId}">
+            <img src="${thumb}" alt="">
+            <div>
+              <div class="yt-title">${title}</div>
+              <div class="yt-channel">${channel}</div>
+              <div class="badge-row" style="margin-top:8px;">
+                <span class="badge">${duration}</span>
+                <span class="badge">via ${instanceBase}</span>
+              </div>
+            </div>
+          </div>
+        `;
+            }).join("");
+
+            document.querySelectorAll(".yt-item").forEach((el) => {
+                el.addEventListener("click", () => {
+                    const videoId = el.dataset.videoId;
+                    loadInvidiousPlayer(videoId);
+                });
+            });
+        }
+
+        function loadInvidiousPlayer(videoId) {
+            const base = state.selectedVideoBase || INVIDIOUS_BASES[0];
+            state.selectedVideoId = videoId;
+
+            playerWrap.classList.remove("hidden");
+            playerBox.innerHTML = `
+        <iframe
+          src="${base}/embed/${encodeURIComponent(videoId)}"
+          title="Invidious player"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      `;
+
+            youtubeStatus.textContent = `video selezionato: ${videoId}`;
+        }
+
+        async function runYouTubeSearchForItem(item) {
+            const query = [item.artistName, item.trackName].filter(Boolean).join(" ").trim();
+
+            if (!query) {
+                youtubeStatus.textContent = "query video non valida";
+                return;
+            }
+
+            youtubeStatus.textContent = `cerco video via Invidious: ${query}`;
+            youtubeResults.innerHTML = "";
+
+            try {
+                const {
+                    base,
+                    items
+                } = await searchUnofficialYouTubeVideos(query);
+                state.selectedVideoBase = base;
+                youtubeStatus.textContent = `${items.length} video trovati via ${base}`;
+                renderYouTubeResults(items, base.replace(/^https?:\/\//, ""));
+            } catch (error) {
+                youtubeStatus.textContent = error?.message || "errore ricerca Invidious";
+                youtubeResults.innerHTML = `
+          <div class="result-card">
+            <div class="result-sub">
+              ricerca video non disponibile su nessuna istanza configurata
+            </div>
+          </div>
+        `;
+            }
+        }
+
+        async function runSongSearch() {
+            const query = searchQueryInput.value.trim();
+
+            if (!query) {
+                alert("scrivi prima una query");
+                return;
+            }
+
+            searchStatus.textContent = `cerco su LRCLIB: ${query}`;
+            lrclibResults.innerHTML = "";
+            youtubeResults.innerHTML = "";
+            youtubeStatus.textContent = "nessun video caricato";
+
+            try {
+                const items = await searchLRCLIB(query);
+                searchStatus.textContent = `${items.length} risultati LRCLIB`;
+                renderLRCLIBResults(items);
+            } catch (error) {
+                searchStatus.textContent = error.message || "errore ricerca LRCLIB";
+            }
+        }
+
+        togglePanelBtn.addEventListener("click", () => {
+            panel.classList.toggle("hidden");
+        });
+
+        loadDemoBtn.addEventListener("click", () => {
+            lyricsInput.value = demoLyrics;
+            updateMeta();
+            searchQueryInput.value = "charli xcx guess";
+            searchStatus.textContent = "demo caricata";
+        });
+
+        clearResultsBtn.addEventListener("click", clearSearchResults);
+
+        searchSongBtn.addEventListener("click", runSongSearch);
+
+        searchQueryInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                runSongSearch();
+            }
+        });
+
+        lyricsInput.addEventListener("input", updateMeta);
+        startFromZeroCheckbox.addEventListener("change", updateMeta);
+
+        startBtn.addEventListener("click", () => {
+            const parsed = parseLRC(
+                lyricsInput.value,
+                startFromZeroCheckbox.checked
+            );
+
+            if (!lyricsInput.value.trim()) {
+                alert("incolla prima i lyrics in formato lrc");
+                return;
+            }
+
+            if (!parsed.length) {
+                alert("formato non valido. usa [MM:SS.xx] testo");
+                return;
+            }
+
+            state.timeline = parsed;
+            startFromBeginning();
+        });
+
+        playPauseBtn.addEventListener("click", () => {
+            if (!state.timeline.length) return;
+
+            if (state.isPlaying) {
+                state.pausedElapsedSec = getElapsedSeconds();
+                state.playStartMs = null;
+                state.isPlaying = false;
+                playPauseBtn.textContent = "play";
+                cancelAnimation();
+                return;
+            }
+
+            state.playStartMs = Date.now();
+            state.isPlaying = true;
+            playPauseBtn.textContent = "pause";
+            cancelAnimation();
+            state.animationFrame = requestAnimationFrame(animationTick);
+        });
+
+        restartBtn.addEventListener("click", () => {
+            startFromBeginning();
+        });
+
+        resetBtn.addEventListener("click", () => {
+            resetAll();
+        });
+
+        closePlayerBtn.addEventListener("click", () => {
+            playerWrap.classList.add("hidden");
+            playerBox.innerHTML = "";
+        });
+
+        bgBtn.addEventListener("click", () => {
+            document.documentElement.style.setProperty("--bg-page", "#e9e9e9");
+            document.documentElement.style.setProperty("--bg-brat", "#8acd00");
+            document.documentElement.style.setProperty("--text", "#000");
+        });
+
+        darkBtn.addEventListener("click", () => {
+            document.documentElement.style.setProperty("--bg-page", "#111");
+            document.documentElement.style.setProperty("--bg-brat", "#7cb600");
+            document.documentElement.style.setProperty("--text", "#000");
+        });
+
+        updateMeta();
+        renderPlaceholder();
+    </script>
+</body>
+
+</html>
