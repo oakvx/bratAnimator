@@ -1,845 +1,332 @@
 <!doctype html>
-<html lang="it">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="google-site-verification" content="VvUmY6lMxWNTWM75UUbpV-3Clw2QV2BKi-MjCoJvTzc" />
-    <title>Brat Animator - Brat lyric video generator</title>
-    <meta name="description" content="Brat Animator converte file LRC in video lyrics quadrati in stile brat. Cerca il testo, rifinisci il timing e scarica video senza audio direttamente dal browser." />
+    <title>Brat Animator - LRC Lyric Video Generator for Brat-Style Edits</title>
+    <meta name="description" content="Create square brat-style lyric videos from synced LRC lyrics. Search lyrics, refine timing with optional audio, preview in browser, and export video-only MP4 or WebM locally." />
     <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
     <meta name="theme-color" content="#8ACE00" />
     <meta name="author" content="oakvx" />
     <link rel="canonical" href="https://oakvx.github.io/bratAnimator/" />
-    
+    <link rel="alternate" hreflang="en" href="https://oakvx.github.io/bratAnimator/en/" />
+    <link rel="alternate" hreflang="ru" href="https://oakvx.github.io/bratAnimator/ru/" />
+    <link rel="alternate" hreflang="zh-CN" href="https://oakvx.github.io/bratAnimator/zh/" />
+    <link rel="alternate" hreflang="x-default" href="https://oakvx.github.io/bratAnimator/" />
+    <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="manifest" href="site.webmanifest" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon-192.png" />
-    <meta property="og:locale" content="it_IT" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Brat Animator - Generatore video lyrics da file LRC" />
-    <meta property="og:description" content="Genera lyric video quadrati in stile brat da file LRC, con timing migliorato e download locale direttamente dal browser." />
+    <meta property="og:title" content="Brat Animator - LRC Lyric Video Generator" />
+    <meta property="og:description" content="Generate square brat-style lyric videos from LRC lyrics, refine timing with optional audio, and export video-only MP4/WebM directly in the browser." />
     <meta property="og:url" content="https://oakvx.github.io/bratAnimator/" />
     <meta property="og:site_name" content="Brat Animator" />
     <meta property="og:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Brat Animator - Generatore video lyrics da file LRC" />
-    <meta name="twitter:description" content="Crea lyric video square in stile brat da file LRC e scarica il video localmente, senza audio." />
+    <meta name="twitter:title" content="Brat Animator - LRC Lyric Video Generator" />
+    <meta name="twitter:description" content="Create brat-style lyric videos from synced LRC lyrics and export video-only files locally in the browser." />
     <meta name="twitter:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
-    <script type="application/ld+json">
+    <script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@graph": [
         {
-            "@context": "https://schema.org",
-            "@graph": [{
-                    "@type": "WebApplication",
-                    "name": "Brat Animator",
-                    "url": "https://oakvx.github.io/bratAnimator/",
-                    "applicationCategory": "MultimediaApplication",
-                    "operatingSystem": "Web",
-                    "inLanguage": "it-IT",
-                    "browserRequirements": "Browser moderno con JavaScript attivo",
-                    "offers": {
-                        "@type": "Offer",
-                        "price": "0",
-                        "priceCurrency": "EUR"
-                    },
-                    "description": "Applicazione web per generare video lyrics quadrati in stile brat da file LRC, con esportazione video senza audio direttamente dal browser."
+            "@type": "WebApplication",
+            "name": "Brat Animator",
+            "url": "https://oakvx.github.io/bratAnimator/",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Web",
+            "inLanguage": [
+                "en",
+                "ru",
+                "zh-CN"
+            ],
+            "browserRequirements": "Modern browser with JavaScript, Canvas, MediaRecorder or WebCodecs support for export",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "EUR"
+            },
+            "description": "Static browser app for creating brat-style LRC lyric videos with optional audio-assisted timing and video-only MP4/WebM export."
+        },
+        {
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Does Brat Animator export audio?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No. The final export contains only video. Uploaded audio is used only as timing assistance."
+                    }
                 },
                 {
-                    "@type": "FAQPage",
-                    "mainEntity": [{
-                            "@type": "Question",
-                            "name": "Che cos'è Brat Animator?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "Brat Animator è un generatore web che trasforma file LRC in lyric video quadrati in stile brat, con anteprima locale nel browser."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "L'esportazione include l'audio?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "No. L'export finale contiene solo la traccia video. L'audio caricato serve soltanto per migliorare il timing del testo."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "Bisogna aspettare tutta la durata del brano per scaricare il video?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "Non necessariamente. Sui browser compatibili viene usata una modalità di export veloce che renderizza il video più rapidamente della durata reale del lyric. Se il browser non la supporta, il sistema usa un fallback tradizionale."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "Quali formati supporta?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "Il tool supporta input LRC per i lyrics, file audio opzionali per l'analisi del timing, esportazione video MP4 o WebM a seconda del browser ed export del frame in PNG."
-                            }
-                        }
-                    ]
+                    "@type": "Question",
+                    "name": "Can I use or redistribute this project?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Usage, copying, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Does it work on GitHub Pages?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. The project is fully static and can run on GitHub Pages without a custom backend."
+                    }
                 }
             ]
         }
-    </script>
-    <style>
-        :root {
-            --bg-page: #e9e9e9;
-            --bg-stage: #8ACE00;
-            --text: #111;
-            --panel: rgba(255, 255, 255, .92);
-            --panel-2: rgba(255, 255, 255, .72);
-            --border: rgba(0, 0, 0, .14);
-            --shadow: 0 18px 42px rgba(0, 0, 0, .12);
-            --radius: 18px;
-        }
-
-        * {
-            box-sizing: border-box
-        }
-
-        html,
-        body {
-            margin: 0;
-            min-height: 100%
-        }
-
-        body {
-            --left-rail: 0px;
-            --right-rail: 0px;
-            background: var(--bg-page);
-            color: var(--text);
-            font-family: Arial, Helvetica, sans-serif;
-            overflow-x: hidden;
-        }
-
-        .app {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 24px;
-        }
-
-        .page-shell {
-            min-height: 100vh;
-        }
-
-        .seo-copy {
-            width: min(1120px, calc(100vw - 32px));
-            margin: 0 auto 48px;
-            padding: 24px;
-            border: 1px solid rgba(0, 0, 0, .08);
-            background: rgba(255, 255, 255, .7);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .06);
-            border-radius: 24px;
-        }
-
-        .seo-copy h2 {
-            margin: 0 0 10px;
-            font-size: clamp(28px, 4vw, 46px);
-            line-height: .98;
-            letter-spacing: -.05em;
-        }
-
-        .seo-copy p {
-            margin: 0;
-            font-size: 15px;
-            line-height: 1.65;
-            color: rgba(0, 0, 0, .78);
-        }
-
-        .seo-grid {
-            display: grid;
-            grid-template-columns: 1.15fr .85fr;
-            gap: 18px;
-            margin-top: 18px;
-        }
-
-        .seo-card {
-            border: 1px solid rgba(0, 0, 0, .08);
-            background: rgba(255, 255, 255, .84);
-            border-radius: 20px;
-            padding: 18px;
-        }
-
-        .seo-card h3 {
-            margin: 0 0 10px;
-            font-size: 18px;
-            line-height: 1.1;
-            letter-spacing: -.03em;
-        }
-
-        .feature-list,
-        .faq-list {
-            display: grid;
-            gap: 10px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .feature-list li,
-        .faq-list li {
-            padding: 12px 14px;
-            border: 1px solid rgba(0, 0, 0, .08);
-            border-radius: 16px;
-            background: rgba(0, 0, 0, .03);
-            font-size: 14px;
-            line-height: 1.55;
-        }
-
-        .faq-list strong {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 14px;
-        }
-
-        .stage-wrap {
-            width: min(92vw, 92vh);
-            height: min(92vw, 92vh);
-            position: relative;
-            display: grid;
-            place-items: center;
-            transition: width .22s ease, height .22s ease, transform .22s ease;
-        }
-
-        .stage {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            background: var(--bg-stage);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, .08), inset 0 0 0 1px rgba(0, 0, 0, .05);
-        }
-
-        .stage canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            background: transparent;
-        }
-
-        .hint {
-            position: absolute;
-            bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: clamp(16px, 2vw, 28px);
-            line-height: 1;
-            letter-spacing: -.03em;
-            white-space: nowrap;
-            color: #111;
-            user-select: none;
-        }
-
-        .topbar {
-            position: fixed;
-            top: 14px;
-            left: 14px;
-            z-index: 40;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .chip,
-        button {
-            appearance: none;
-            border: 1px solid rgba(0, 0, 0, .15);
-            background: #fff;
-            color: #111;
-            padding: 10px 14px;
-            font-size: 12px;
-            line-height: 1;
-            cursor: pointer;
-            border-radius: 999px;
-            font-weight: 700;
-            text-transform: lowercase;
-        }
-
-        button.primary {
-            background: #111;
-            color: #fff;
-            border-color: #111;
-        }
-
-        button:disabled {
-            opacity: .55;
-            cursor: not-allowed;
-        }
-
-        .panel {
-            position: fixed;
-            top: 56px;
-            left: 14px;
-            z-index: 39;
-            width: min(620px, calc(100vw - 28px));
-            max-height: calc(100vh - 80px);
-            overflow: auto;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(14px);
-            padding: 14px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
-
-        .panel.hidden {
-            display: none
-        }
-
-        .panel h1 {
-            margin: 0 0 10px;
-            font-size: 18px;
-            line-height: 1;
-            font-weight: 800;
-            text-transform: lowercase;
-            letter-spacing: -.03em;
-        }
-
-        .panel p {
-            margin: 0 0 10px;
-            font-size: 12px;
-            line-height: 1.4;
-            color: rgba(0, 0, 0, .76);
-        }
-
-        .section {
-            border: 1px solid rgba(0, 0, 0, .08);
-            background: var(--panel-2);
-            border-radius: 14px;
-            padding: 12px;
-            margin-top: 12px;
-        }
-
-        .section:first-of-type {
-            margin-top: 0
-        }
-
-        .section-title {
-            margin: 0 0 8px;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: -.02em;
-            text-transform: lowercase;
-        }
-
-        .label {
-            display: block;
-            margin: 10px 0 6px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: lowercase;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            border: 1px solid rgba(0, 0, 0, .16);
-            outline: none;
-            padding: 12px;
-            background: rgba(255, 255, 255, .95);
-            color: #000;
-            border-radius: 12px;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            border-color: rgba(0, 0, 0, .45);
-        }
-
-        textarea {
-            min-height: 180px;
-            resize: vertical;
-            font: 13px/1.5 Consolas, Monaco, monospace;
-        }
-
-        .row {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .row>* {
-            flex: 1 1 auto;
-            min-width: 140px;
-        }
-
-        .inline-toggle {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: 10px;
-            padding: 10px 12px;
-            border: 1px solid rgba(0, 0, 0, .1);
-            background: rgba(255, 255, 255, .55);
-            border-radius: 12px;
-        }
-
-        .inline-toggle label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: lowercase;
-            cursor: pointer;
-        }
-
-        .inline-toggle input[type="checkbox"] {
-            width: auto;
-            margin: 0;
-            padding: 0;
-        }
-
-        .meta {
-            margin-top: 8px;
-            font-size: 12px;
-            color: rgba(0, 0, 0, .75);
-            line-height: 1.45;
-        }
-
-        .muted {
-            color: rgba(0, 0, 0, .6)
-        }
-
-        .results {
-            display: grid;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .result-card {
-            border: 1px solid rgba(0, 0, 0, .12);
-            background: rgba(255, 255, 255, .82);
-            padding: 10px;
-            border-radius: 14px;
-        }
-
-        .result-title {
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1.25;
-        }
-
-        .result-sub {
-            font-size: 12px;
-            margin-top: 4px;
-            color: rgba(0, 0, 0, .72);
-            line-height: 1.35;
-        }
-
-        .badge-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .badge {
-            border: 1px solid rgba(0, 0, 0, .1);
-            background: rgba(0, 0, 0, .05);
-            padding: 4px 7px;
-            font-size: 11px;
-            border-radius: 999px;
-        }
-
-        .yt-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .yt-item {
-            display: grid;
-            grid-template-columns: 140px 1fr;
-            gap: 10px;
-            border: 1px solid rgba(0, 0, 0, .12);
-            background: rgba(255, 255, 255, .82);
-            padding: 8px;
-            cursor: pointer;
-            border-radius: 14px;
-        }
-
-        .yt-item img {
-            width: 100%;
-            aspect-ratio: 16/9;
-            object-fit: cover;
-            display: block;
-            background: #ddd;
-            border-radius: 10px;
-        }
-
-        .yt-title {
-            font-size: 13px;
-            font-weight: 700;
-            line-height: 1.25;
-        }
-
-        .yt-channel {
-            font-size: 12px;
-            margin-top: 4px;
-            color: rgba(0, 0, 0, .72);
-            line-height: 1.35;
-        }
-
-        .player-wrap {
-            position: fixed;
-            right: 14px;
-            top: 14px;
-            z-index: 38;
-            width: min(420px, calc(100vw - 28px));
-            background: rgba(255, 255, 255, .9);
-            border: 1px solid rgba(0, 0, 0, .12);
-            backdrop-filter: blur(10px);
-            padding: 10px;
-            box-shadow: var(--shadow);
-            border-radius: 18px;
-        }
-
-        .player-wrap.hidden {
-            display: none
-        }
-
-        .player-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            gap: 8px;
-        }
-
-        .player-head strong {
-            font-size: 12px;
-            text-transform: lowercase;
-        }
-
-        .player-box {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            overflow: hidden;
-            border-radius: 14px;
-        }
-
-        .player-box iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            display: block;
-        }
-
-        .footer-controls {
-            position: fixed;
-            right: 14px;
-            bottom: 14px;
-            z-index: 40;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .pill-note {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(0, 0, 0, .1);
-            background: rgba(0, 0, 0, .04);
-            padding: 8px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-
-        @media (min-width: 1180px) {
-            body {
-                --left-rail: clamp(350px, 30vw, 430px);
-            }
-
-            body.player-open {
-                --right-rail: clamp(280px, 24vw, 340px);
-            }
-
-            .app {
-                padding: 28px calc(var(--right-rail) + 28px) 28px calc(var(--left-rail) + 28px);
-            }
-
-            .stage-wrap {
-                width: min(calc(100vw - var(--left-rail) - var(--right-rail) - 84px), calc(100vh - 76px));
-                height: min(calc(100vw - var(--left-rail) - var(--right-rail) - 84px), calc(100vh - 76px));
-                max-width: 980px;
-                max-height: 980px;
-            }
-
-            .topbar {
-                top: 16px;
-                left: 16px;
-                max-width: calc(var(--left-rail) - 32px);
-            }
-
-            .panel {
-                top: 64px;
-                left: 16px;
-                width: calc(var(--left-rail) - 32px);
-                max-height: calc(100vh - 80px);
-            }
-
-            .player-wrap {
-                top: 16px;
-                right: 16px;
-                width: clamp(280px, 24vw, 340px);
-                max-height: calc(100vh - 32px);
-                overflow: auto;
-            }
-        }
-
-        @media (max-width: 1179px) {
-            .panel {
-                width: min(560px, calc(100vw - 28px));
-            }
-
-            .player-wrap {
-                width: min(380px, calc(100vw - 28px));
-            }
-        }
-
-        @media (max-width: 900px) {
-            .player-wrap {
-                top: auto;
-                bottom: 70px;
-            }
-        }
-
-        @media (max-width: 700px) {
-            body {
-                padding-left: max(0px, env(safe-area-inset-left));
-                padding-right: max(0px, env(safe-area-inset-right));
-            }
-
-            .app {
-                padding: 12px;
-                min-height: auto;
-            }
-
-            .stage-wrap {
-                width: min(96vw, 96vh);
-                height: min(96vw, 96vh);
-            }
-
-            .hint {
-                bottom: -34px;
-                font-size: 14px;
-                white-space: normal;
-                text-align: center;
-                width: min(88vw, 340px);
-            }
-
-            .panel {
-                top: auto;
-                bottom: 64px;
-                left: 10px;
-                right: 10px;
-                width: auto;
-                max-height: 62vh;
-                padding: 12px;
-            }
-
-            .topbar {
-                left: 10px;
-                right: 10px;
-                top: 10px;
-                justify-content: flex-start;
-            }
-
-            .player-wrap {
-                left: 10px;
-                right: 10px;
-                width: auto;
-                bottom: 72px;
-            }
-
-            .yt-item {
-                grid-template-columns: 1fr;
-            }
-
-            .row>* {
-                min-width: 120px;
-            }
-
-            .footer-controls {
-                right: 10px;
-                left: 10px;
-                justify-content: flex-end;
-                bottom: 10px;
-            }
-
-            .seo-copy {
-                width: min(100vw - 20px, 1120px);
-                padding: 18px;
-                margin: 28px auto 24px;
-                border-radius: 20px;
-            }
-
-            .seo-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 560px) {
-
-            .chip,
-            button {
-                min-height: 42px;
-                padding: 12px 14px;
-            }
-
-            .row {
-                gap: 6px;
-            }
-
-            .row>* {
-                min-width: calc(50% - 3px);
-                flex: 1 1 calc(50% - 3px);
-            }
-
-            .inline-toggle {
-                align-items: flex-start;
-            }
-
-            .panel h1 {
-                font-size: 16px;
-            }
-
-            .seo-copy h2 {
-                font-size: 30px;
-            }
-
-            .seo-copy p,
-            .feature-list li,
-            .faq-list li {
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 420px) {
-            .stage-wrap {
-                width: min(100vw - 16px, 100vh - 88px);
-                height: min(100vw - 16px, 100vh - 88px);
-            }
-
-            .topbar {
-                gap: 6px;
-            }
-
-            .chip,
-            button {
-                font-size: 11px;
-            }
-
-            .player-head {
-                flex-wrap: wrap;
-                align-items: flex-start;
-            }
-
-            .meta {
-                font-size: 11px;
-            }
-
-            .section {
-                padding: 10px;
-            }
-
-            .row>* {
-                min-width: 100%;
-                flex-basis: 100%;
-            }
-        }
-    </style>
+    ]
+}</script>
+    <script src="assets/js/i18n.js" defer></script>
+    <script src="assets/js/app.js" defer></script>
 </head>
-
 <body>
+<noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
+
     <div class="topbar">
-        <button id="togglePanelBtn" class="chip">controlli</button>
-        <button id="loadDemoBtn" class="chip">carica demo</button>
+        <button id="togglePanelBtn" class="chip" data-i18n="controls">controls</button>
+        <button id="loadDemoBtn" class="chip" data-i18n="loadDemo">load demo</button>
+        <div class="lang-switch" aria-label="language selector">
+            <button class="chip lang-btn" data-lang="en" aria-label="English">🇬🇧 EN</button>
+            <button class="chip lang-btn" data-lang="ru" aria-label="Русский">🇷🇺 RU</button>
+            <button class="chip lang-btn" data-lang="zh" aria-label="中文">🇨🇳 ZH</button>
+        </div>
+        <a id="permissionLink" class="chip link-chip" href="mailto:investingtoro@icloud.com?subject=Brat%20Animator%20permission%20request" data-i18n="requestPermission">request permission</a>
     </div>
 
     <div id="panel" class="panel">
-        <h1>brat video lyrics</h1>
-        <p>
-            Cerca un brano su LRCLIB, carica un testo LRC, opzionalmente analizza un file audio per rifinire il timing
-            e genera un video della sola animazione. L’esportazione non include audio.
-        </p>
+        <div class="panel-header">
+            <div>
+                <h1 data-i18n="panelTitle">brat video lyrics</h1>
+                <p data-i18n="panelIntro">
+                    Search a song on LRCLIB, paste or load LRC lyrics, optionally use audio to refine timing,
+                    and export a video-only animation. Audio is never included in the final export.
+                </p>
+            </div>
+            <span class="autosave-pill" id="autosaveBadge">autosaved</span>
+        </div>
 
-        <div class="section">
-            <div class="section-title">ricerca testo</div>
-            <label class="label" for="searchQueryInput">cerca una canzone</label>
-            <input id="searchQueryInput" type="text" placeholder="es. artista - titolo" />
+        <div class="project-status-bar" aria-label="project status">
+            <div><span>duration</span><strong id="statusDuration">0.00s</strong></div>
+            <div><span>format</span><strong id="statusFormat">1080×1080</strong></div>
+            <div><span>fps</span><strong id="statusFps">30</strong></div>
+            <div><span>lines</span><strong id="statusLines">0</strong></div>
+        </div>
+
+        <nav class="editor-tabs" aria-label="editor sections">
+            <button class="editor-tab active" data-open-tab="lyrics" type="button">♫ lyrics</button>
+            <button class="editor-tab" data-open-tab="timing" type="button">⏱ timing</button>
+            <button class="editor-tab" data-open-tab="design" type="button">✦ design</button>
+            <button class="editor-tab" data-open-tab="canvas" type="button">▣ canvas</button>
+            <button class="editor-tab" data-open-tab="export" type="button">⬇ export</button>
+            <button class="editor-tab" data-open-tab="project" type="button">⚙ project</button>
+        </nav>
+
+        <div class="section editor-section active" data-editor-tab="lyrics">
+            <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
+            <label class="label" for="searchQueryInput" data-i18n="searchSongLabel">search a song</label>
+            <input id="searchQueryInput" type="text" placeholder="artist - title" data-i18n-placeholder="searchPlaceholder" />
 
             <div class="row">
-                <button id="searchSongBtn" class="primary">cerca</button>
-                <button id="clearResultsBtn">svuota risultati</button>
+                <button id="searchSongBtn" class="primary" data-i18n="search">search</button>
+                <button id="clearResultsBtn" data-i18n="clearResults">clear results</button>
             </div>
 
-            <div id="searchStatus" class="meta muted">nessuna ricerca eseguita</div>
+            <div id="searchStatus" class="meta muted" data-status-key="noSearch">no search yet</div>
             <div id="lrclibResults" class="results"></div>
         </div>
 
-        <div class="section">
-            <div class="section-title">testo e timing</div>
+        <div class="section editor-section" data-editor-tab="timing">
+            <div class="section-title" data-i18n="lyricsTiming">lyrics and timing</div>
 
-            <label class="label" for="lyricsInput">testo LRC</label>
+            <label class="label" for="lyricsInput" data-i18n="lrcText">LRC lyrics</label>
             <textarea id="lyricsInput" spellcheck="false" placeholder="[00:21.62] y dime que me amas, aunque
 [00:24.48] no lo digas con palabras
 [00:27.28] yo sé que en esa pausa también hay algo"></textarea>
+            <div id="lrcDropZone" class="drop-zone" tabindex="0" role="button" data-i18n="dropLrc">
+                Drop a .lrc file here or click to load lyrics
+            </div>
 
-            <label class="label" for="audioFileInput">audio opzionale per analisi timing</label>
+            <div class="tool-strip" aria-label="LRC tools">
+                <button id="cleanLrcBtn">clean LRC</button>
+                <button id="normalizeLrcBtn">normalize timestamps</button>
+                <button id="shiftBackBtn">shift -0.50s</button>
+                <button id="shiftForwardBtn">shift +0.50s</button>
+            </div>
+
+            <details class="advanced-block" open>
+                <summary>visual LRC editor</summary>
+                <div class="editor-toolbar">
+                    <button id="refreshEditorBtn">refresh rows</button>
+                    <button id="applyEditorBtn" class="primary">apply rows to LRC</button>
+                    <button id="addLrcRowBtn">+ add line</button>
+                    <button id="syncCurrentRowBtn">sync selected to playhead</button>
+                </div>
+                <div id="lrcRows" class="lrc-rows" aria-live="polite"></div>
+            </details>
+
+            <details class="advanced-block">
+                <summary>tap to sync</summary>
+                <p class="mini-copy">Paste plain lyrics, start the timer, then press SPACE or “tap next line” when each lyric begins. The tool writes LRC timestamps automatically.</p>
+                <textarea id="plainLyricsInput" class="compact-textarea" spellcheck="false" placeholder="one lyric line per row"></textarea>
+                <div class="tool-strip">
+                    <button id="startTapSyncBtn">start tap sync</button>
+                    <button id="tapNextLineBtn" class="primary">tap next line</button>
+                    <button id="finishTapSyncBtn">finish to LRC</button>
+                </div>
+                <div id="tapSyncStatus" class="meta muted">tap sync idle</div>
+            </details>
+
+            <label class="label" for="audioFileInput" data-i18n="optionalAudio">optional audio for timing analysis</label>
             <input id="audioFileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" />
-            <div id="audioStatus" class="meta muted">nessun audio caricato</div>
+            <div id="audioDropZone" class="drop-zone" tabindex="0" role="button" data-i18n="dropAudio">
+                Drop an audio file here or click to load audio
+            </div>
+            <div id="audioStatus" class="meta muted" data-status-key="noAudio">no audio loaded</div>
+            <audio id="syncAudio" controls class="sync-audio hidden"></audio>
+            <canvas id="waveformCanvas" class="waveform-canvas" width="900" height="120" aria-label="audio waveform"></canvas>
+            <canvas id="timelineCanvas" class="timeline-canvas" width="900" height="92" aria-label="lyric timeline"></canvas>
 
             <div class="inline-toggle">
-                <label><input id="useAudioTimingCheckbox" type="checkbox" checked /> usa l’audio per migliorare il timing</label>
+                <label><input id="useAudioTimingCheckbox" type="checkbox" checked /> <span data-i18n="useAudioTiming">use audio to improve timing</span></label>
             </div>
 
             <div class="inline-toggle">
-                <label><input id="startFromZeroCheckbox" type="checkbox" /> fai partire la timeline da 0:00</label>
+                <label><input id="startFromZeroCheckbox" type="checkbox" /> <span data-i18n="startFromZero">start timeline from 0:00</span></label>
             </div>
 
             <div class="row">
-                <button id="startBtn" class="primary">avvia</button>
-                <button id="playPauseBtn">pausa</button>
-                <button id="restartBtn">riavvia</button>
-                <button id="resetBtn">reimposta</button>
+                <button id="clearSavedBtn" data-i18n="clearSaved">clear saved project</button>
+            </div>
+
+            <div class="row">
+                <button id="startBtn" class="primary" data-i18n="start">start</button>
+                <button id="playPauseBtn" data-i18n="pause">pause</button>
+                <button id="restartBtn" data-i18n="restart">restart</button>
+                <button id="resetBtn" data-i18n="reset">reset</button>
             </div>
 
             <div id="meta" class="meta">0 righe • 0 blocchi • 0.00s timeline</div>
         </div>
 
-        <div class="section">
-            <div class="section-title">esportazione</div>
-            <p>
-                Il file esportato contiene solo il video della grafica quadrata. Nessun iframe esterno e nessuna traccia audio.
-                Sui browser compatibili l’export veloce genera il download senza aspettare tutta la durata reale del lyric, o comunque molto più rapidamente.
+        <div class="section editor-section" data-editor-tab="design">
+            <div class="section-title">style and animation</div>
+            <div class="row">
+                <div>
+                    <label class="label" for="themePresetSelect">style preset</label>
+                    <select id="themePresetSelect">
+                        <option value="classic" selected>brat classic</option>
+                        <option value="dark-green">dark green</option>
+                        <option value="white-label">white label</option>
+                        <option value="pink">pink</option>
+                        <option value="blue">blue</option>
+                        <option value="custom">custom</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label" for="animationModeSelect">animation</label>
+                    <select id="animationModeSelect">
+                        <option value="typewriter" selected>typewriter</option>
+                        <option value="word">word by word</option>
+                        <option value="phrase">phrase by phrase</option>
+                        <option value="line">full line</option>
+                        <option value="fade">fade in</option>
+                        <option value="jitter">jitter</option>
+                        <option value="pulse">pulse</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row color-row">
+                <div>
+                    <label class="label" for="bgColorInput">background</label>
+                    <input id="bgColorInput" type="color" value="#8ACE00" />
+                </div>
+                <div>
+                    <label class="label" for="textColorInput">text</label>
+                    <input id="textColorInput" type="color" value="#000000" />
+                </div>
+                <div>
+                    <label class="label" for="fontFamilySelect">font</label>
+                    <select id="fontFamilySelect">
+                        <option value="Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif" selected>Arial Narrow</option>
+                        <option value="Arial, Helvetica, sans-serif">Arial</option>
+                        <option value="Impact, Haettenschweiler, Arial Narrow Bold, sans-serif">Impact</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="Courier New, monospace">Courier New</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="range-grid">
+                <label>font scale <input id="fontScaleInput" type="range" min="70" max="150" value="100" /></label>
+                <label>blur <input id="blurInput" type="range" min="0" max="300" value="105" /></label>
+                <label>vertical position <input id="verticalPositionInput" type="range" min="-30" max="30" value="0" /></label>
+                <label>stretch <input id="stretchInput" type="range" min="70" max="130" value="94" /></label>
+                <label>letter spacing <input id="letterSpacingInput" type="range" min="-8" max="20" value="0" /></label>
+                <label>line spacing <input id="lineSpacingInput" type="range" min="70" max="130" value="92" /></label>
+            </div>
+
+            <div class="tool-strip">
+                <button id="randomStyleBtn">randomize style</button>
+                <label class="inline-check"><input id="safeZonesCheckbox" type="checkbox" /> show social safe zones</label>
+                <button id="fullscreenBtn">fullscreen preview</button>
+            </div>
+        </div>
+
+        <div class="section editor-section" data-editor-tab="canvas">
+            <div class="section-title">canvas and safe areas</div>
+            <p class="mini-copy">Choose the output shape, preview safe zones and check what will fit before exporting.</p>
+            <div class="row canvas-quick-actions">
+                <button type="button" data-preset-quick="square">square</button>
+                <button type="button" data-preset-quick="vertical">vertical</button>
+                <button type="button" data-preset-quick="landscape">landscape</button>
+                <button type="button" data-preset-quick="cover">cover</button>
+            </div>
+            <div class="canvas-summary-grid">
+                <div><span>current format</span><strong id="canvasFormatSummary">1080×1080</strong></div>
+                <div><span>safe zones</span><strong id="canvasSafeSummary">off</strong></div>
+                <div><span>recommended fps</span><strong>30</strong></div>
+            </div>
+            <div class="tool-strip">
+                <button id="canvasFullscreenBtn" type="button">fullscreen preview</button>
+                <button id="canvasSafeToggleBtn" type="button">toggle safe zones</button>
+            </div>
+        </div>
+
+        <div class="section editor-section" data-editor-tab="export">
+            <div class="section-title" data-i18n="export">export</div>
+            <p data-i18n="exportIntro">
+                The exported file contains only the rendered video. No external iframe and no audio track are included.
+                On compatible browsers, fast export can render without waiting for the full real-time lyric duration.
             </p>
 
             <div class="row">
                 <div>
-                    <label class="label" for="exportSizeSelect">dimensione video</label>
+                    <label class="label" for="formatPresetSelect">format preset</label>
+                    <select id="formatPresetSelect">
+                        <option value="square" selected>Square · 1080×1080</option>
+                        <option value="vertical">TikTok/Reels/Shorts · 1080×1920</option>
+                        <option value="story">Story · 1080×1920</option>
+                        <option value="landscape">Landscape · 1920×1080</option>
+                        <option value="cover">Cover PNG · 3000×3000</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label" for="exportSizeSelect" data-i18n="videoSize">video size</label>
                     <select id="exportSizeSelect">
-                        <option value="720">720 × 720</option>
-                        <option value="1080" selected>1080 × 1080</option>
-                        <option value="1440">1440 × 1440</option>
+                        <option value="720">base 720</option>
+                        <option value="1080" selected>base 1080</option>
+                        <option value="1440">base 1440</option>
+                        <option value="1920">base 1920</option>
+                        <option value="3000">base 3000</option>
                     </select>
                 </div>
                 <div>
@@ -852,28 +339,60 @@
                 </div>
             </div>
 
-            <div class="row">
-                <button id="exportVideoBtn" class="primary">esporta video</button>
-                <button id="exportPngBtn">esporta frame PNG</button>
+            <div id="compatPanel" class="compat-panel" aria-live="polite">
+                <div class="compat-item">
+                    <strong data-i18n="fastMp4">Fast MP4</strong>
+                    <span id="compatFastMp4">checking...</span>
+                </div>
+                <div class="compat-item">
+                    <strong data-i18n="mediaRecorder">MediaRecorder</strong>
+                    <span id="compatMediaRecorder">checking...</span>
+                </div>
+                <div class="compat-item">
+                    <strong data-i18n="recommendedPreset">Recommended</strong>
+                    <span id="compatRecommendation">1080p · 30 fps</span>
+                </div>
             </div>
 
-            <div id="exportStatus" class="meta muted">nessuna esportazione eseguita</div>
-            <div id="exportEstimate" class="meta muted">tempo stimato export: n/d</div>
-            <div class="pill-note">output video-only • export veloce quando supportato • mp4 se disponibile, altrimenti fallback webm</div>
+            <div class="row">
+                <button id="exportVideoBtn" class="primary" data-i18n="exportVideo">export video</button>
+                <button id="exportPngBtn" data-i18n="exportPng">export PNG frame</button>
+                <button id="exportFramesBtn">export 3 preview frames</button>
+                <button id="exportPreviewClipBtn">export 5s WebM preview</button>
+            </div>
+            <div class="row">
+                <button id="exportProjectBtn">export project JSON</button>
+                <label class="file-button">import project JSON <input id="importProjectInput" type="file" accept="application/json,.json" hidden /></label>
+            </div>
+
+            <progress id="exportProgress" value="0" max="100" hidden></progress>
+
+            <div id="exportStatus" class="meta muted" data-status-key="noExport">no export yet</div>
+            <div id="exportEstimate" class="meta muted" data-status-key="estimateNA">estimated export time: n/a</div>
+            <div class="pill-note" data-i18n="exportNote">video-only output • fast export when supported • MP4 if available, otherwise WebM fallback</div>
         </div>
 
-        <div class="section">
-            <div class="section-title">anteprima video esterna</div>
-            <label class="label">selezione video</label>
-            <div id="youtubeStatus" class="meta muted">nessun video caricato</div>
+        <div class="section editor-section" data-editor-tab="project">
+            <div class="section-title" data-i18n="externalPreview">external video preview</div>
+            <label class="label" data-i18n="videoSelection">video selection</label>
+            <div id="youtubeStatus" class="meta muted" data-status-key="noVideo">no video loaded</div>
             <div id="youtubeResults" class="yt-grid"></div>
+            <div class="project-actions-inline">
+                <button id="sidebarExportProjectBtn" type="button">export project JSON</button>
+                <button id="sidebarClearSavedBtn" type="button">clear autosave</button>
+            </div>
+        </div>
+
+        <div class="sidebar-action-dock">
+            <button id="dockPreviewBtn" type="button">▶ preview</button>
+            <button id="dockExportBtn" class="primary" type="button">⬇ export</button>
         </div>
     </div>
 
     <div id="playerWrap" class="player-wrap hidden">
         <div class="player-head">
-            <strong>anteprima video</strong>
-            <button id="closePlayerBtn">chiudi anteprima</button>
+            <strong data-i18n="videoPreview">video preview</strong>
+            <button id="closePlayerBtn" data-i18n="closePreview">close preview</button>
         </div>
         <div id="playerBox" class="player-box"></div>
     </div>
@@ -882,12 +401,37 @@
         <div class="app">
             <div class="stage-wrap">
                 <div id="stage" class="stage">
-                    <canvas id="previewCanvas" width="1080" height="1080" aria-label="anteprima video lyrics"></canvas>
+                    <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
                 </div>
-                <div class="hint">esporta un frame o registra il video</div>
+                <div class="hint" data-i18n="hint">export a frame or render the video</div>
             </div>
         </div>
 
+
+            <section class="seo-copy" id="about">
+            <h2 data-i18n="aboutTitle">Brat-style LRC lyric video generator</h2>
+            <p data-i18n="aboutText">
+                Brat Animator is a static, browser-based creative tool for turning synced LRC lyrics into square lyric videos.
+                It runs on GitHub Pages, processes lyrics locally in the browser, and exports video-only MP4/WebM files when supported.
+            </p>
+            <div class="seo-grid">
+                <div class="seo-card">
+                    <h3 data-i18n="whyTitle">Why it exists</h3>
+                    <ul class="feature-list">
+                        <li data-i18n="whyOne">Create fast brat-style lyric visuals without editing software.</li>
+                        <li data-i18n="whyTwo">Use audio only as timing assistance; the exported video contains no audio.</li>
+                        <li data-i18n="whyThree">Keep everything static and deployable on GitHub Pages.</li>
+                    </ul>
+                </div>
+                <div class="seo-card">
+                    <h3 data-i18n="permissionTitle">Permission required</h3>
+                    <p data-i18n="permissionText">
+                        Usage, copying, modification, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author.
+                    </p>
+                    <p><a class="text-link" href="mailto:investingtoro@icloud.com?subject=Brat%20Animator%20permission%20request" data-i18n="requestPermission">request permission</a></p>
+                </div>
+            </div>
+        </section>
 
     </main>
 
@@ -895,1825 +439,5 @@
         <button id="bgBtn">green</button>
         <button id="darkBtn">dark</button>
     </div>
-
-    <script>
-        const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
-        const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
-
-        const INVIDIOUS_BASES = [
-            "https://inv.nadeko.net",
-            "https://yewtu.be",
-            "https://invidious.nerdvpn.de"
-        ];
-
-        const previewCanvas = document.getElementById("previewCanvas");
-        const previewCtx = previewCanvas.getContext("2d", {
-            alpha: false
-        });
-        const panel = document.getElementById("panel");
-
-        const togglePanelBtn = document.getElementById("togglePanelBtn");
-        const loadDemoBtn = document.getElementById("loadDemoBtn");
-        const startBtn = document.getElementById("startBtn");
-        const playPauseBtn = document.getElementById("playPauseBtn");
-        const restartBtn = document.getElementById("restartBtn");
-        const resetBtn = document.getElementById("resetBtn");
-        const bgBtn = document.getElementById("bgBtn");
-        const darkBtn = document.getElementById("darkBtn");
-
-        const searchQueryInput = document.getElementById("searchQueryInput");
-        const searchSongBtn = document.getElementById("searchSongBtn");
-        const clearResultsBtn = document.getElementById("clearResultsBtn");
-        const searchStatus = document.getElementById("searchStatus");
-        const lrclibResults = document.getElementById("lrclibResults");
-        const youtubeResults = document.getElementById("youtubeResults");
-        const youtubeStatus = document.getElementById("youtubeStatus");
-
-        const playerWrap = document.getElementById("playerWrap");
-        const playerBox = document.getElementById("playerBox");
-        const closePlayerBtn = document.getElementById("closePlayerBtn");
-
-        const lyricsInput = document.getElementById("lyricsInput");
-        const audioFileInput = document.getElementById("audioFileInput");
-        const audioStatus = document.getElementById("audioStatus");
-        const useAudioTimingCheckbox = document.getElementById("useAudioTimingCheckbox");
-        const startFromZeroCheckbox = document.getElementById("startFromZeroCheckbox");
-
-        const exportVideoBtn = document.getElementById("exportVideoBtn");
-        const exportPngBtn = document.getElementById("exportPngBtn");
-        const exportSizeSelect = document.getElementById("exportSizeSelect");
-        const exportFpsSelect = document.getElementById("exportFpsSelect");
-        const exportStatus = document.getElementById("exportStatus");
-        const exportEstimate = document.getElementById("exportEstimate");
-
-        const meta = document.getElementById("meta");
-
-        const state = {
-            timeline: [],
-            isPlaying: false,
-            animationFrame: null,
-            playStartMs: null,
-            pausedElapsedSec: 0,
-            selectedSong: null,
-            selectedVideoId: null,
-            selectedVideoBase: null,
-            audioBuffer: null,
-            audioAnalysis: null,
-            audioFileName: "",
-            theme: "green",
-            exportInProgress: false
-        };
-
-        const demoLyrics = `[00:21.62] y dime que me amas aunque no lo digas con palabras
-[00:24.48] yo sé que en esa pausa también hay algo
-[00:27.28] aunque no haya puntuación la frase respira igual
-[00:29.56] y por eso no quiero que tutta la línea salga junta`;
-
-        const DEFAULT_TYPING_SECONDS_PER_WEIGHT = 0.065;
-        const SHORT_LINE_THRESHOLD = 42;
-        const SHORT_LINE_SPEED_MULTIPLIER = 1.28;
-        const MIN_LINE_CONTENT_WINDOW = 0.42;
-        const MAX_LINE_TRAILING_HOLD = 0.55;
-
-        let sharedAudioContext = null;
-
-        function clamp(value, min, max) {
-            return Math.min(max, Math.max(min, value));
-        }
-
-        function percentile(values, q) {
-            if (!values.length) return 0;
-            const sorted = [...values].sort((a, b) => a - b);
-            const index = (sorted.length - 1) * q;
-            const lower = Math.floor(index);
-            const upper = Math.ceil(index);
-            if (lower === upper) return sorted[lower];
-            const weight = index - lower;
-            return sorted[lower] * (1 - weight) + sorted[upper] * weight;
-        }
-
-        function normalizeLRCText(text) {
-            return String(text || "")
-                .replace(/^\uFEFF/, "")
-                .replace(/\r/g, "")
-                .replace(/\u00A0/g, " ");
-        }
-
-        function parseTimeTag(minutesStr, secondsStr) {
-            const minutes = Number(minutesStr);
-            const seconds = Number(String(secondsStr).replace(",", "."));
-            if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) return null;
-            return minutes * 60 + seconds;
-        }
-
-        function splitWordsWithIndices(text) {
-            const words = [];
-            const regex = /\S+/g;
-            let match;
-
-            while ((match = regex.exec(text)) !== null) {
-                words.push({
-                    word: match[0],
-                    start: match.index,
-                    end: match.index + match[0].length - 1
-                });
-            }
-
-            return words;
-        }
-
-        function estimatePhraseBreaks(text) {
-            const words = splitWordsWithIndices(text);
-            const breakCharIndices = new Set();
-
-            if (!words.length) return breakCharIndices;
-
-            for (const item of words) {
-                if (/[,:;.!?…]$/.test(item.word)) {
-                    breakCharIndices.add(item.end);
-                }
-            }
-
-            const explicitBreakCount = breakCharIndices.size;
-            const wordCount = words.length;
-
-            if (explicitBreakCount >= Math.max(1, Math.floor(wordCount / 5))) {
-                return breakCharIndices;
-            }
-
-            let targetChunkSize = 3;
-            if (wordCount >= 7) targetChunkSize = 4;
-            if (wordCount >= 11) targetChunkSize = 5;
-            if (wordCount >= 16) targetChunkSize = 6;
-
-            let cursor = 0;
-            while (cursor < words.length) {
-                let next = cursor + targetChunkSize;
-                if (next >= words.length) break;
-
-                const remaining = words.length - next;
-                if (remaining === 1) next -= 1;
-
-                const breakWord = words[next - 1];
-                if (breakWord) {
-                    breakCharIndices.add(breakWord.end);
-                }
-
-                cursor = next;
-            }
-
-            return breakCharIndices;
-        }
-
-        function buildPhraseChunks(text) {
-            const words = splitWordsWithIndices(text);
-            if (!words.length) return [];
-
-            const breaks = estimatePhraseBreaks(text);
-            const chunks = [];
-            let chunkStart = words[0].start;
-
-            for (let i = 0; i < words.length; i += 1) {
-                const currentWord = words[i];
-                const isLastWord = i === words.length - 1;
-                const shouldBreak = breaks.has(currentWord.end) || isLastWord;
-
-                if (!shouldBreak) continue;
-
-                const chunkEnd = currentWord.end;
-                const chunkText = text.slice(chunkStart, chunkEnd + 1).trim();
-
-                if (chunkText) {
-                    chunks.push({
-                        startChar: chunkStart,
-                        endChar: chunkEnd,
-                        text: chunkText
-                    });
-                }
-
-                let nextStart = chunkEnd + 1;
-                while (nextStart < text.length && /\s/.test(text[nextStart])) {
-                    nextStart += 1;
-                }
-                chunkStart = nextStart;
-            }
-
-            if (!chunks.length) {
-                chunks.push({
-                    startChar: 0,
-                    endChar: text.length - 1,
-                    text: text.trim()
-                });
-            }
-
-            return chunks.filter(chunk => chunk.text.length > 0);
-        }
-
-        function getCharWeight(char, nextChar) {
-            if (char === " ") return 0.16;
-            if (char === ",") return 1.7;
-            if (char === ";") return 2.0;
-            if (char === ":") return 2.1;
-            if (char === ".") return nextChar === "." ? 1.2 : 2.35;
-            if (char === "!") return 2.35;
-            if (char === "?") return 2.45;
-            if (char === "…") return 3.1;
-            if (char === "-" || char === "—") return 1.35;
-            if (char === "\u2019" || char === "'") return 0.35;
-            if (/[0-9]/.test(char)) return 1.05;
-            return 1;
-        }
-
-        function getBlockPauseFactor(text) {
-            if (/[.!?…]$/.test(text)) return 0.34;
-            if (/[,:;]$/.test(text)) return 0.26;
-            return 0.18;
-        }
-
-        async function getAudioContext() {
-            if (!sharedAudioContext) {
-                sharedAudioContext = new(window.AudioContext || window.webkitAudioContext)();
-            }
-            return sharedAudioContext;
-        }
-
-        async function decodeUploadedAudio(file) {
-            const audioContext = await getAudioContext();
-            const arrayBuffer = await file.arrayBuffer();
-            return audioContext.decodeAudioData(arrayBuffer);
-        }
-
-        function analyzeAudioEnergy(audioBuffer, frameMs = 18) {
-            const channelCount = audioBuffer.numberOfChannels;
-            const sampleRate = audioBuffer.sampleRate;
-            const frameSize = Math.max(1, Math.floor(sampleRate * frameMs / 1000));
-            const frameDuration = frameSize / sampleRate;
-            const channels = Array.from({
-                length: channelCount
-            }, (_, i) => audioBuffer.getChannelData(i));
-
-            const rawFrames = [];
-
-            for (let start = 0; start < audioBuffer.length; start += frameSize) {
-                const end = Math.min(start + frameSize, audioBuffer.length);
-                let sum = 0;
-
-                for (let i = start; i < end; i += 1) {
-                    let mono = 0;
-                    for (let c = 0; c < channelCount; c += 1) {
-                        mono += channels[c][i] || 0;
-                    }
-                    mono /= channelCount;
-                    sum += mono * mono;
-                }
-
-                rawFrames.push({
-                    time: start / sampleRate,
-                    rms: Math.sqrt(sum / Math.max(1, end - start))
-                });
-            }
-
-            const frames = rawFrames.map((frame, i) => {
-                let sum = 0;
-                let count = 0;
-
-                for (let j = Math.max(0, i - 2); j <= Math.min(rawFrames.length - 1, i + 2); j += 1) {
-                    sum += rawFrames[j].rms;
-                    count += 1;
-                }
-
-                return {
-                    time: frame.time,
-                    rms: sum / count
-                };
-            });
-
-            const rmsValues = frames.map(frame => frame.rms);
-            const lowRms = percentile(rmsValues, 0.12);
-            const medianRms = percentile(rmsValues, 0.50);
-            const highRms = percentile(rmsValues, 0.88);
-            const silenceThreshold = lowRms + (medianRms - lowRms) * 0.28;
-
-            return {
-                duration: audioBuffer.duration,
-                frameDuration,
-                frames,
-                lowRms,
-                medianRms,
-                highRms,
-                silenceThreshold
-            };
-        }
-
-        function getFramesInWindow(audioAnalysis, startSec, endSec) {
-            if (!audioAnalysis || !audioAnalysis.frames.length) return [];
-
-            const safeStart = clamp(startSec, 0, audioAnalysis.duration);
-            const safeEnd = clamp(endSec, safeStart, audioAnalysis.duration);
-
-            const startIndex = clamp(
-                Math.floor(safeStart / audioAnalysis.frameDuration),
-                0,
-                audioAnalysis.frames.length - 1
-            );
-
-            const endIndex = clamp(
-                Math.ceil(safeEnd / audioAnalysis.frameDuration),
-                startIndex,
-                audioAnalysis.frames.length - 1
-            );
-
-            return audioAnalysis.frames.slice(startIndex, endIndex + 1);
-        }
-
-        function estimateTrailingSilence(audioAnalysis, startSec, endSec) {
-            const frames = getFramesInWindow(audioAnalysis, startSec, endSec);
-            if (frames.length < 3) return 0;
-
-            const threshold = audioAnalysis.silenceThreshold * 1.12;
-            let trailingCount = 0;
-
-            for (let i = frames.length - 1; i >= 0; i -= 1) {
-                if (frames[i].rms <= threshold) {
-                    trailingCount += 1;
-                } else if (trailingCount > 0) {
-                    break;
-                }
-            }
-
-            return clamp(
-                trailingCount * audioAnalysis.frameDuration,
-                0,
-                Math.max(0, endSec - startSec)
-            );
-        }
-
-        function findAudioAwareBoundaries(audioAnalysis, startSec, endSec, targetRatios) {
-            if (!audioAnalysis || !targetRatios.length) return [];
-
-            const frames = getFramesInWindow(audioAnalysis, startSec, endSec);
-            if (frames.length < 4) return [];
-
-            const localDuration = endSec - startSec;
-            if (localDuration <= 0.12) return [];
-
-            const rmsRange = Math.max(audioAnalysis.highRms - audioAnalysis.lowRms, 1e-6);
-            const boundaries = [];
-            let previousBoundary = startSec;
-
-            for (let i = 0; i < targetRatios.length; i += 1) {
-                const ratio = targetRatios[i];
-                const targetTime = startSec + localDuration * ratio;
-                const searchRadius = clamp(localDuration * 0.14, 0.08, 0.30);
-
-                const minAllowed = previousBoundary + 0.06;
-                const maxAllowed = endSec - 0.06 * (targetRatios.length - i);
-
-                const windowStart = Math.max(minAllowed, targetTime - searchRadius);
-                const windowEnd = Math.min(maxAllowed, targetTime + searchRadius);
-
-                const candidates = frames.filter(frame =>
-                    frame.time >= windowStart && frame.time <= windowEnd
-                );
-
-                let boundary = clamp(targetTime, minAllowed, maxAllowed);
-
-                if (candidates.length) {
-                    let bestCandidate = candidates[0];
-                    let bestScore = Infinity;
-
-                    for (const candidate of candidates) {
-                        const energyNorm = (candidate.rms - audioAnalysis.lowRms) / rmsRange;
-                        const distanceNorm = Math.abs(candidate.time - targetTime) / Math.max(searchRadius, 1e-6);
-                        const score = energyNorm * 0.85 + distanceNorm * 0.35;
-
-                        if (score < bestScore) {
-                            bestScore = score;
-                            bestCandidate = candidate;
-                        }
-                    }
-
-                    boundary = clamp(bestCandidate.time, minAllowed, maxAllowed);
-                }
-
-                previousBoundary = boundary;
-                boundaries.push(boundary);
-            }
-
-            return boundaries;
-        }
-
-        function scheduleCharsInsideBlock(blockText, blockStart, typingDuration, lineIndex, blockIndex) {
-            const chars = Array.from(blockText);
-            const weights = chars.map((char, index) => {
-                const nextChar = chars[index + 1] || "";
-                let weight = getCharWeight(char, nextChar);
-
-                if (/[A-ZÀ-Ý]/.test(char)) weight += 0.04;
-                if (/[mwMW]/.test(char)) weight += 0.08;
-                if (/[iltI]/.test(char)) weight -= 0.03;
-
-                return Math.max(0.08, weight);
-            });
-
-            const totalWeight = weights.reduce((sum, value) => sum + value, 0) || 1;
-            let cursor = blockStart;
-
-            return chars.map((char, charIndex) => {
-                const duration = (weights[charIndex] / totalWeight) * typingDuration;
-                const timestamp = cursor;
-                cursor += duration;
-
-                return {
-                    char,
-                    lineIndex,
-                    blockIndex,
-                    charIndex,
-                    timestamp,
-                    duration
-                };
-            });
-        }
-
-        function getActiveAudioAnalysis() {
-            return useAudioTimingCheckbox.checked ? state.audioAnalysis : null;
-        }
-
-        function scheduleBlocksForLine(
-            text,
-            lineStart,
-            nextLineStart,
-            lineIndex,
-            sourceLineStart = null,
-            sourceNextLineStart = null,
-            audioAnalysis = null
-        ) {
-            const chunks = buildPhraseChunks(text);
-
-            const fallbackDuration = Math.max(2.1, text.length * 0.082);
-            const reservedGap = 0.05;
-
-            const lineEnd =
-                typeof nextLineStart === "number" ?
-                Math.max(lineStart + 0.42, nextLineStart - reservedGap) :
-                lineStart + fallbackDuration;
-
-            const availableDuration = Math.max(0.42, lineEnd - lineStart);
-
-            const trimmedLength = text.trim().length;
-            const speedMultiplier =
-                trimmedLength <= SHORT_LINE_THRESHOLD ? SHORT_LINE_SPEED_MULTIPLIER : 1;
-
-            const weightedChunks = chunks.map((chunk) => {
-                const chars = Array.from(chunk.text);
-                const charWeights = chars.map((char, index) =>
-                    getCharWeight(char, chars[index + 1] || "")
-                );
-                const typingWeight =
-                    charWeights.reduce((sum, value) => sum + value, 0) || 1;
-                const pauseFactor = getBlockPauseFactor(chunk.text);
-                const totalWeight = typingWeight * (1 + pauseFactor);
-
-                return {
-                    ...chunk,
-                    typingWeight,
-                    pauseFactor,
-                    totalWeight
-                };
-            });
-
-            const totalLineWeight =
-                weightedChunks.reduce((sum, chunk) => sum + chunk.totalWeight, 0) || 1;
-
-            const naturalContentDuration =
-                (totalLineWeight * DEFAULT_TYPING_SECONDS_PER_WEIGHT) / speedMultiplier;
-
-            let contentWindow = Math.max(
-                MIN_LINE_CONTENT_WINDOW,
-                Math.min(naturalContentDuration, availableDuration)
-            );
-
-            let trailingHold = Math.max(
-                0,
-                Math.min(availableDuration - contentWindow, MAX_LINE_TRAILING_HOLD)
-            );
-
-            let boundaryOffsets = null;
-
-            if (
-                audioAnalysis &&
-                Number.isFinite(sourceLineStart) &&
-                weightedChunks.length > 1
-            ) {
-                const absoluteIntervalEnd =
-                    Number.isFinite(sourceNextLineStart) ?
-                    sourceNextLineStart :
-                    sourceLineStart + availableDuration;
-
-                const audioTrailingHold = estimateTrailingSilence(
-                    audioAnalysis,
-                    sourceLineStart,
-                    absoluteIntervalEnd
-                );
-
-                const maxAllowedTrailingHold = Math.max(
-                    0,
-                    Math.min(MAX_LINE_TRAILING_HOLD, availableDuration - MIN_LINE_CONTENT_WINDOW)
-                );
-
-                trailingHold = clamp(
-                    Math.max(trailingHold, audioTrailingHold * 0.85),
-                    0,
-                    maxAllowedTrailingHold
-                );
-
-                contentWindow = Math.max(
-                    MIN_LINE_CONTENT_WINDOW,
-                    Math.min(naturalContentDuration, availableDuration - trailingHold)
-                );
-
-                const targetRatios = [];
-                let runningRatio = 0;
-
-                for (let i = 0; i < weightedChunks.length - 1; i += 1) {
-                    runningRatio += weightedChunks[i].totalWeight / totalLineWeight;
-                    targetRatios.push(runningRatio);
-                }
-
-                const audioBoundaries = findAudioAwareBoundaries(
-                    audioAnalysis,
-                    sourceLineStart,
-                    sourceLineStart + contentWindow,
-                    targetRatios
-                );
-
-                if (audioBoundaries.length === weightedChunks.length - 1) {
-                    boundaryOffsets = [
-                        0,
-                        ...audioBoundaries.map(boundary =>
-                            clamp(boundary - sourceLineStart, 0, contentWindow)
-                        ),
-                        contentWindow
-                    ];
-                }
-            }
-
-            let cursor = lineStart;
-
-            return weightedChunks.map((chunk, blockIndex) => {
-                let blockStartTime = cursor;
-                let blockDuration =
-                    contentWindow * (chunk.totalWeight / totalLineWeight);
-
-                if (boundaryOffsets) {
-                    blockStartTime = lineStart + boundaryOffsets[blockIndex];
-                    blockDuration = Math.max(
-                        0.08,
-                        boundaryOffsets[blockIndex + 1] - boundaryOffsets[blockIndex]
-                    );
-                }
-
-                const typingDuration =
-                    blockDuration * (chunk.typingWeight / chunk.totalWeight);
-
-                let holdDuration = blockDuration - typingDuration;
-
-                if (blockIndex === weightedChunks.length - 1) {
-                    holdDuration += trailingHold;
-                }
-
-                const chars = scheduleCharsInsideBlock(
-                    chunk.text,
-                    blockStartTime,
-                    typingDuration,
-                    lineIndex,
-                    blockIndex
-                );
-
-                const displayStart = blockStartTime;
-                const fullVisibleAt = chars[chars.length - 1]?.timestamp ?? blockStartTime;
-                const displayEnd = blockStartTime + typingDuration + holdDuration;
-
-                const block = {
-                    lineIndex,
-                    blockIndex,
-                    text: chunk.text,
-                    startChar: chunk.startChar,
-                    endChar: chunk.endChar,
-                    chars,
-                    displayStart,
-                    fullVisibleAt,
-                    displayEnd
-                };
-
-                cursor = displayEnd;
-                return block;
-            });
-        }
-
-        function parseLRC(lrcText, startFromZero, audioAnalysis = null) {
-            const text = normalizeLRCText(lrcText);
-            const rawLines = text.split("\n");
-            const parsed = [];
-            let offsetMs = 0;
-
-            for (const rawLine of rawLines) {
-                const line = rawLine.trim();
-                if (!line) continue;
-
-                const metaMatch = line.match(META_TAG_RE);
-                if (metaMatch) {
-                    if (metaMatch[1].toLowerCase() === "offset") {
-                        const parsedOffset = Number(metaMatch[2].trim());
-                        if (Number.isFinite(parsedOffset)) {
-                            offsetMs = parsedOffset;
-                        }
-                    }
-                    continue;
-                }
-
-                const timestamps = [...line.matchAll(LINE_TIMESTAMP_RE)];
-                if (!timestamps.length) continue;
-
-                const textWithoutTags = line.replace(LINE_TIMESTAMP_RE, "").trim();
-                if (!textWithoutTags) continue;
-
-                for (const match of timestamps) {
-                    const rawTimestamp = parseTimeTag(match[1], match[2]);
-                    if (rawTimestamp == null) continue;
-
-                    parsed.push({
-                        timestamp: Math.max(0, rawTimestamp + offsetMs / 1000),
-                        text: textWithoutTags
-                    });
-                }
-            }
-
-            parsed.sort((a, b) => a.timestamp - b.timestamp);
-            if (!parsed.length) return [];
-
-            const base = startFromZero ? 0 : parsed[0].timestamp;
-
-            const normalized = parsed.map((line, index) => ({
-                ...line,
-                sourceTimestamp: line.timestamp,
-                lineIndex: index,
-                timestamp: Math.max(0, line.timestamp - base)
-            }));
-
-            return normalized.map((line, index) => {
-                const nextLineStart = normalized[index + 1]?.timestamp;
-                const nextSourceLineStart = normalized[index + 1]?.sourceTimestamp;
-
-                const blocks = scheduleBlocksForLine(
-                    line.text,
-                    line.timestamp,
-                    nextLineStart,
-                    index,
-                    line.sourceTimestamp,
-                    nextSourceLineStart,
-                    audioAnalysis
-                );
-
-                return {
-                    ...line,
-                    blocks,
-                    displayStart: blocks[0]?.displayStart ?? line.timestamp,
-                    displayEnd: blocks[blocks.length - 1]?.displayEnd ?? line.timestamp
-                };
-            });
-        }
-
-        function getElapsedSeconds() {
-            if (state.playStartMs == null) return state.pausedElapsedSec;
-            return state.pausedElapsedSec + (Date.now() - state.playStartMs) / 1000;
-        }
-
-        function cancelAnimation() {
-            if (state.animationFrame != null) {
-                cancelAnimationFrame(state.animationFrame);
-                state.animationFrame = null;
-            }
-        }
-
-        function getTimelineDuration() {
-            const lastLine = state.timeline[state.timeline.length - 1];
-            return lastLine ? lastLine.displayEnd : 0;
-        }
-
-        function getVisibleTextAt(timeSec) {
-            if (!state.timeline.length) {
-                return {
-                    text: "brat",
-                    active: false
-                };
-            }
-
-            let activeLineIndex = -1;
-
-            for (let i = 0; i < state.timeline.length; i += 1) {
-                const line = state.timeline[i];
-
-                if (timeSec >= line.displayStart && timeSec <= line.displayEnd) {
-                    activeLineIndex = i;
-                    break;
-                }
-
-                if (timeSec >= line.displayStart) {
-                    activeLineIndex = i;
-                }
-            }
-
-            if (activeLineIndex === -1) {
-                return {
-                    text: "brat",
-                    active: false
-                };
-            }
-
-            const line = state.timeline[activeLineIndex];
-            let activeBlockIndex = -1;
-
-            for (let i = 0; i < line.blocks.length; i += 1) {
-                const block = line.blocks[i];
-
-                if (timeSec >= block.displayStart && timeSec <= block.displayEnd) {
-                    activeBlockIndex = i;
-                    break;
-                }
-
-                if (timeSec >= block.displayStart) {
-                    activeBlockIndex = i;
-                }
-            }
-
-            if (activeBlockIndex === -1) {
-                return {
-                    text: "",
-                    active: true
-                };
-            }
-
-            const block = line.blocks[activeBlockIndex];
-            let visibleChars = 0;
-
-            while (
-                visibleChars < block.chars.length &&
-                timeSec >= block.chars[visibleChars].timestamp
-            ) {
-                visibleChars += 1;
-            }
-
-            if (timeSec >= block.fullVisibleAt) {
-                visibleChars = block.chars.length;
-            }
-
-            const revealUntil = block.startChar + visibleChars - 1;
-            const visibleText =
-                revealUntil >= 0 ? Array.from(line.text).slice(0, revealUntil + 1).join("") : "";
-
-            return {
-                text: visibleText,
-                active: true,
-                line
-            };
-        }
-
-        function measureWrappedLines(ctx, text, maxWidth) {
-            const words = String(text || "").trim().split(/\s+/).filter(Boolean);
-            if (!words.length) return [""];
-
-            const lines = [];
-            let current = words[0];
-
-            for (let i = 1; i < words.length; i += 1) {
-                const candidate = current + " " + words[i];
-                if (ctx.measureText(candidate).width <= maxWidth) {
-                    current = candidate;
-                } else {
-                    lines.push(current);
-                    current = words[i];
-                }
-            }
-
-            if (current) lines.push(current);
-
-            if (lines.length <= 4) return lines;
-
-            const compact = [];
-            let bucket = "";
-
-            for (const line of lines) {
-                const candidate = bucket ? bucket + " " + line : line;
-                if (!bucket || ctx.measureText(candidate).width <= maxWidth * 1.05) {
-                    bucket = candidate;
-                } else {
-                    compact.push(bucket);
-                    bucket = line;
-                }
-            }
-
-            if (bucket) compact.push(bucket);
-            return compact;
-        }
-
-        function fitTextLayout(ctx, text, width, height) {
-            const maxWidth = width * 0.76;
-            const maxHeight = height * 0.44;
-            let finalSize = 56;
-            let finalLines = [text || "brat"];
-
-            for (let size = Math.floor(width * 0.118); size >= 42; size -= 2) {
-                ctx.save();
-                ctx.font = `400 ${size}px "Arial Narrow", Arial, "Helvetica Neue Condensed", sans-serif`;
-                const lines = measureWrappedLines(ctx, text || "brat", maxWidth);
-                const lineHeight = size * 0.92;
-                const widest = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
-                const totalHeight = lines.length * lineHeight;
-
-                ctx.restore();
-
-                if (widest <= maxWidth && totalHeight <= maxHeight) {
-                    finalSize = size;
-                    finalLines = lines;
-                    break;
-                }
-            }
-
-            return {
-                fontSize: finalSize,
-                lines: finalLines,
-                lineHeight: finalSize * 0.92,
-                maxWidth
-            };
-        }
-
-        function getThemeColors() {
-            if (state.theme === "dark") {
-                return {
-                    page: "#111111",
-                    stage: "#7cb600",
-                    text: "#000000"
-                };
-            }
-
-            return {
-                page: "#e9e9e9",
-                stage: "#8ACE00",
-                text: "#000000"
-            };
-        }
-
-        function drawScene(ctx, width, height, timeSec) {
-            const theme = getThemeColors();
-            const visible = getVisibleTextAt(timeSec);
-            const displayText = visible.text || (visible.active ? "" : "brat");
-
-            ctx.save();
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = theme.stage;
-            ctx.fillRect(0, 0, width, height);
-
-            const layout = fitTextLayout(ctx, displayText, width, height);
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const totalHeight = layout.lines.length * layout.lineHeight;
-            const startY = centerY - totalHeight / 2 + layout.lineHeight * 0.82;
-
-            ctx.translate(centerX, 0);
-            ctx.scale(0.94, 1);
-
-            ctx.textAlign = "center";
-            ctx.textBaseline = "alphabetic";
-            ctx.fillStyle = theme.text;
-            ctx.filter = "blur(1.05px)";
-            ctx.letterSpacing = "0px";
-
-            layout.lines.forEach((line, index) => {
-                ctx.font = `400 ${layout.fontSize}px "Arial Narrow", Arial, "Helvetica Neue Condensed", sans-serif`;
-                ctx.fillText(line, 0, startY + index * layout.lineHeight);
-            });
-
-            ctx.filter = "none";
-            ctx.restore();
-        }
-
-        function renderPreviewAt(timeSec = 0) {
-            drawScene(previewCtx, previewCanvas.width, previewCanvas.height, timeSec);
-        }
-
-        function animationTick() {
-            const now = getElapsedSeconds();
-            renderPreviewAt(now);
-
-            const endTime = getTimelineDuration() + 0.08;
-
-            if (now > endTime) {
-                state.isPlaying = false;
-                state.playStartMs = null;
-                playPauseBtn.textContent = "play";
-                cancelAnimation();
-                renderPreviewAt(0);
-                return;
-            }
-
-            state.animationFrame = requestAnimationFrame(animationTick);
-        }
-
-        function startFromBeginning() {
-            if (!state.timeline.length) return;
-
-            cancelAnimation();
-            state.pausedElapsedSec = 0;
-            state.playStartMs = Date.now();
-            state.isPlaying = true;
-            playPauseBtn.textContent = "pausa";
-            state.animationFrame = requestAnimationFrame(animationTick);
-        }
-
-        function updateAudioStatus(message, isError = false) {
-            audioStatus.textContent = message;
-            audioStatus.classList.toggle("muted", !isError);
-        }
-
-        function rebuildTimelineFromCurrentInputs() {
-            if (!lyricsInput.value.trim()) {
-                state.timeline = [];
-                renderPreviewAt(0);
-                return;
-            }
-
-            const parsed = parseLRC(
-                lyricsInput.value,
-                startFromZeroCheckbox.checked,
-                getActiveAudioAnalysis()
-            );
-
-            state.timeline = parsed;
-            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
-        }
-
-        function updateMeta() {
-            const parsedPreview = parseLRC(
-                lyricsInput.value,
-                startFromZeroCheckbox.checked,
-                getActiveAudioAnalysis()
-            );
-
-            const lineCount = parsedPreview.length;
-            const blockCount = parsedPreview.reduce((sum, line) => sum + (line.blocks?.length || 0), 0);
-            const totalTime = lineCount ? parsedPreview[parsedPreview.length - 1].displayEnd : 0;
-
-            const audioLabel =
-                state.audioAnalysis ?
-                (useAudioTimingCheckbox.checked ? " • audio assist on" : " • audio assist off") :
-                "";
-
-            meta.textContent = `${lineCount} righe • ${blockCount} blocchi • ${totalTime.toFixed(2)}s timeline${audioLabel}`;
-        }
-
-        function stopPlayback(keepCurrentTime = true) {
-            if (keepCurrentTime) {
-                state.pausedElapsedSec = getElapsedSeconds();
-            } else {
-                state.pausedElapsedSec = 0;
-            }
-            state.playStartMs = null;
-            state.isPlaying = false;
-            playPauseBtn.textContent = "play";
-            cancelAnimation();
-        }
-
-        function resetAll() {
-            stopPlayback(false);
-            state.timeline = [];
-            state.selectedVideoId = null;
-            state.selectedVideoBase = null;
-            playerWrap.classList.add("hidden");
-            setPlayerOpenState(false);
-            playerBox.innerHTML = "";
-            exportStatus.textContent = "nessuna esportazione eseguita";
-            renderPreviewAt(0);
-        }
-
-        function clearSearchResults() {
-            lrclibResults.innerHTML = "";
-            youtubeResults.innerHTML = "";
-            searchStatus.textContent = "risultati svuotati";
-            youtubeStatus.textContent = "nessun video caricato";
-            state.selectedSong = null;
-            state.selectedVideoId = null;
-            state.selectedVideoBase = null;
-        }
-
-        function formatDuration(seconds) {
-            if (!seconds || Number.isNaN(Number(seconds))) return "durata n/d";
-            const total = Math.round(Number(seconds));
-            const mm = Math.floor(total / 60);
-            const ss = String(total % 60).padStart(2, "0");
-            return `${mm}:${ss}`;
-        }
-
-        function formatVideoSeconds(seconds) {
-            const total = Number(seconds);
-            if (!Number.isFinite(total)) return "durata n/d";
-
-            const hh = Math.floor(total / 3600);
-            const mm = Math.floor((total % 3600) / 60);
-            const ss = Math.floor(total % 60);
-
-            if (hh > 0) {
-                return `${hh}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-            }
-
-            return `${mm}:${String(ss).padStart(2, "0")}`;
-        }
-
-        function escapeHtml(text) {
-            return String(text)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;");
-        }
-
-        async function searchLRCLIB(query) {
-            const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
-            const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error(`LRCLIB errore HTTP ${res.status}`);
-            }
-
-            return res.json();
-        }
-
-        function renderLRCLIBResults(items) {
-            if (!items.length) {
-                lrclibResults.innerHTML = `
-          <div class="result-card">
-            <div class="result-sub">nessun risultato LRCLIB</div>
-          </div>
-        `;
-                return;
-            }
-
-            lrclibResults.innerHTML = items.map((item, index) => {
-                const synced = item.syncedLyrics ? "sincronizzato" : "solo testo";
-                const artist = escapeHtml(item.artistName || "artista sconosciuto");
-                const track = escapeHtml(item.trackName || "titolo sconosciuto");
-                const album = escapeHtml(item.albumName || "album n/d");
-                const duration = formatDuration(item.duration);
-
-                return `
-          <div class="result-card">
-            <div class="result-title">${track}</div>
-            <div class="result-sub">${artist}</div>
-            <div class="badge-row">
-              <span class="badge">${synced}</span>
-              <span class="badge">${duration}</span>
-              <span class="badge">${album}</span>
-            </div>
-            <div class="row">
-              <button data-lrc-index="${index}" class="use-lrc-btn primary">usa questo testo</button>
-              <button data-yt-index="${index}" class="find-yt-btn">cerca video</button>
-            </div>
-          </div>
-        `;
-            }).join("");
-
-            document.querySelectorAll(".use-lrc-btn").forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    const index = Number(btn.dataset.lrcIndex);
-                    const item = items[index];
-                    state.selectedSong = item;
-
-                    const bestLyrics = item.syncedLyrics || item.plainLyrics || "";
-                    lyricsInput.value = bestLyrics;
-                    rebuildTimelineFromCurrentInputs();
-                    updateMeta();
-                    searchStatus.textContent = `caricato: ${(item.artistName || "")} - ${(item.trackName || "")}`.trim();
-                });
-            });
-
-            document.querySelectorAll(".find-yt-btn").forEach((btn) => {
-                btn.addEventListener("click", async () => {
-                    const index = Number(btn.dataset.ytIndex);
-                    const item = items[index];
-                    state.selectedSong = item;
-                    await runYouTubeSearchForItem(item);
-                });
-            });
-        }
-
-        async function fetchFromInvidious(path) {
-            let lastError = null;
-
-            for (const base of INVIDIOUS_BASES) {
-                try {
-                    const res = await fetch(`${base}${path}`, {
-                        method: "GET",
-                        mode: "cors",
-                        headers: {
-                            "Accept": "application/json"
-                        }
-                    });
-
-                    if (!res.ok) {
-                        lastError = new Error(`istanza ${base} -> HTTP ${res.status}`);
-                        continue;
-                    }
-
-                    const data = await res.json();
-                    return {
-                        base,
-                        data
-                    };
-                } catch (error) {
-                    lastError = error;
-                }
-            }
-
-            throw lastError || new Error("nessuna istanza Invidious disponibile");
-        }
-
-        async function searchUnofficialYouTubeVideos(query) {
-            const params = new URLSearchParams({
-                q: query,
-                type: "video",
-                sort: "relevance",
-                region: "IT"
-            });
-
-            const {
-                base,
-                data
-            } = await fetchFromInvidious(`/api/v1/search?${params.toString()}`);
-            const items = Array.isArray(data) ?
-                data.filter((item) => item && item.type === "video").slice(0, 8) : [];
-
-            return {
-                base,
-                items
-            };
-        }
-
-        function getBestThumb(video) {
-            if (!Array.isArray(video.videoThumbnails)) return "";
-            const preferred =
-                video.videoThumbnails.find((x) => x.quality === "maxres") ||
-                video.videoThumbnails.find((x) => x.quality === "high") ||
-                video.videoThumbnails.find((x) => x.quality === "medium") ||
-                video.videoThumbnails[0];
-
-            return preferred?.url || "";
-        }
-
-        function renderYouTubeResults(items, instanceBase) {
-            if (!items.length) {
-                youtubeResults.innerHTML = `
-          <div class="result-card">
-            <div class="result-sub">nessun video trovato via Invidious</div>
-          </div>
-        `;
-                return;
-            }
-
-            youtubeResults.innerHTML = items.map((item) => {
-                const videoId = item.videoId || "";
-                const title = escapeHtml(item.title || "video");
-                const channel = escapeHtml(item.author || "canale");
-                const thumb = getBestThumb(item);
-                const duration = formatVideoSeconds(item.lengthSeconds);
-
-                return `
-          <div class="yt-item" data-video-id="${videoId}">
-            <img src="${thumb}" alt="">
-            <div>
-              <div class="yt-title">${title}</div>
-              <div class="yt-channel">${channel}</div>
-              <div class="badge-row" style="margin-top:8px;">
-                <span class="badge">${duration}</span>
-                <span class="badge">via ${instanceBase}</span>
-              </div>
-            </div>
-          </div>
-        `;
-            }).join("");
-
-            document.querySelectorAll(".yt-item").forEach((el) => {
-                el.addEventListener("click", () => {
-                    const videoId = el.dataset.videoId;
-                    loadInvidiousPlayer(videoId);
-                });
-            });
-        }
-
-        function loadInvidiousPlayer(videoId) {
-            const base = state.selectedVideoBase || INVIDIOUS_BASES[0];
-            state.selectedVideoId = videoId;
-
-            playerWrap.classList.remove("hidden");
-            setPlayerOpenState(true);
-            playerBox.innerHTML = `
-        <iframe
-          src="${base}/embed/${encodeURIComponent(videoId)}"
-          title="Invidious player"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen>
-        </iframe>
-      `;
-
-            youtubeStatus.textContent = `video selezionato: ${videoId}`;
-        }
-
-        async function runYouTubeSearchForItem(item) {
-            const query = [item.artistName, item.trackName].filter(Boolean).join(" ").trim();
-
-            if (!query) {
-                youtubeStatus.textContent = "query video non valida";
-                return;
-            }
-
-            youtubeStatus.textContent = `ricerca video via Invidious: ${query}`;
-            youtubeResults.innerHTML = "";
-
-            try {
-                const {
-                    base,
-                    items
-                } = await searchUnofficialYouTubeVideos(query);
-                state.selectedVideoBase = base;
-                youtubeStatus.textContent = `${items.length} video trovati via ${base}`;
-                renderYouTubeResults(items, base.replace(/^https?:\/\//, ""));
-            } catch (error) {
-                youtubeStatus.textContent = error?.message || "errore ricerca Invidious";
-                youtubeResults.innerHTML = `
-          <div class="result-card">
-            <div class="result-sub">
-              ricerca video non disponibile su nessuna istanza configurata
-            </div>
-          </div>
-        `;
-            }
-        }
-
-        async function runSongSearch() {
-            const query = searchQueryInput.value.trim();
-
-            if (!query) {
-                alert("scrivi prima una query");
-                return;
-            }
-
-            searchStatus.textContent = `ricerca su LRCLIB: ${query}`;
-            lrclibResults.innerHTML = "";
-            youtubeResults.innerHTML = "";
-            youtubeStatus.textContent = "nessun video caricato";
-
-            try {
-                const items = await searchLRCLIB(query);
-                searchStatus.textContent = `${items.length} risultati LRCLIB`;
-                renderLRCLIBResults(items);
-            } catch (error) {
-                searchStatus.textContent = error.message || "errore ricerca LRCLIB";
-            }
-        }
-
-        function setTheme(theme) {
-            state.theme = theme;
-            const colors = getThemeColors();
-            document.documentElement.style.setProperty("--bg-page", colors.page);
-            document.documentElement.style.setProperty("--bg-stage", colors.stage);
-            document.documentElement.style.setProperty("--text", colors.text);
-            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
-        }
-
-        function buildExportFileBase() {
-            const source = state.selectedSong ? [state.selectedSong.artistName, state.selectedSong.trackName].filter(Boolean).join(" - ") :
-                "brat-video-lyrics";
-
-            return source
-                .toLowerCase()
-                .replace(/[^a-z0-9àèéìòóù _-]+/gi, "")
-                .trim()
-                .replace(/\s+/g, "-") || "brat-video-lyrics";
-        }
-
-        function downloadBlob(blob, filename) {
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement("a");
-            anchor.href = url;
-            anchor.download = filename;
-            anchor.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }
-
-        function pickVideoMimeType() {
-            if (typeof MediaRecorder === "undefined") return null;
-
-            const candidates = [
-                "video/mp4;codecs=avc1.42E01E",
-                "video/mp4",
-                "video/webm;codecs=vp9",
-                "video/webm;codecs=vp8",
-                "video/webm"
-            ];
-
-            for (const type of candidates) {
-                if (MediaRecorder.isTypeSupported(type)) {
-                    return type;
-                }
-            }
-
-            return "";
-        }
-
-        let mp4MuxerModulePromise = null;
-
-        function canAttemptFastExport() {
-            return typeof VideoEncoder !== "undefined" && typeof VideoFrame !== "undefined";
-        }
-
-        async function loadMp4MuxerModule() {
-            if (!mp4MuxerModulePromise) {
-                mp4MuxerModulePromise = import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs");
-            }
-            return mp4MuxerModulePromise;
-        }
-
-        async function canUseFastMp4Export(size, fps) {
-            if (!canAttemptFastExport() || typeof VideoEncoder.isConfigSupported !== "function") {
-                return false;
-            }
-
-            try {
-                const support = await VideoEncoder.isConfigSupported({
-                    codec: "avc1.42001f",
-                    width: size,
-                    height: size,
-                    bitrate: Math.max(4_000_000, Math.round(size * size * Math.max(24, fps) * 0.09)),
-                    bitrateMode: "variable",
-                    framerate: fps,
-                    avc: {
-                        format: "annexb"
-                    }
-                });
-
-                return Boolean(support && support.supported);
-            } catch (error) {
-                return false;
-            }
-        }
-
-        function wait(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        function formatClock(totalSeconds) {
-            const safe = Math.max(0, Math.round(Number(totalSeconds) || 0));
-            const hours = Math.floor(safe / 3600);
-            const minutes = Math.floor((safe % 3600) / 60);
-            const seconds = safe % 60;
-
-            if (hours > 0) {
-                return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-            }
-
-            return `${minutes}:${String(seconds).padStart(2, "0")}`;
-        }
-
-        function estimateExportSeconds(durationSec, size, fps, fastMode = false) {
-            if (fastMode) {
-                const sizeFactor = size >= 1440 ? 1.38 : size >= 1080 ? 1 : 0.78;
-                const fpsFactor = fps >= 60 ? 1.65 : fps >= 30 ? 1 : 0.82;
-                return Math.max(4, durationSec * 0.075 * sizeFactor * fpsFactor + 3.5);
-            }
-
-            const sizePenalty = size >= 1440 ? 0.16 : size >= 1080 ? 0.07 : 0.02;
-            const fpsPenalty = fps >= 60 ? 0.16 : fps >= 30 ? 0.05 : 0.01;
-            return Math.max(durationSec + 1, durationSec * (1 + sizePenalty + fpsPenalty) + 1.2);
-        }
-
-        async function updateExportEstimate() {
-            const parsed = parseLRC(
-                lyricsInput.value,
-                startFromZeroCheckbox.checked,
-                getActiveAudioAnalysis()
-            );
-
-            if (!parsed.length) {
-                exportEstimate.textContent = "tempo stimato export: n/d";
-                return;
-            }
-
-            const size = Number(exportSizeSelect.value) || 1080;
-            const fps = Number(exportFpsSelect.value) || 30;
-            const duration = Math.max(1, parsed[parsed.length - 1].displayEnd + 0.6);
-
-            if (await canUseFastMp4Export(size, fps)) {
-                const estimated = estimateExportSeconds(duration, size, fps, true);
-                exportEstimate.textContent = `tempo stimato export: circa ${formatClock(estimated)} • export veloce, non serve aspettare tutta la durata del lyric`;
-                return;
-            }
-
-            const estimated = estimateExportSeconds(duration, size, fps, false);
-            const minimum = Math.max(duration, 1);
-            exportEstimate.textContent = `tempo stimato export: circa ${formatClock(estimated)} • fallback tradizionale, il browser può avvicinarsi alla durata reale (${formatClock(minimum)})`;
-        }
-
-        function setPlayerOpenState(isOpen) {
-            document.body.classList.toggle("player-open", Boolean(isOpen));
-        }
-
-        async function exportVideo() {
-            if (state.exportInProgress) return;
-
-            const parsed = parseLRC(
-                lyricsInput.value,
-                startFromZeroCheckbox.checked,
-                getActiveAudioAnalysis()
-            );
-
-            if (!lyricsInput.value.trim()) {
-                alert("incolla prima i lyrics in formato LRC");
-                return;
-            }
-
-            if (!parsed.length) {
-                alert("formato non valido. usa [MM:SS.xx] testo");
-                return;
-            }
-
-            if (typeof MediaRecorder === "undefined" && !canAttemptFastExport()) {
-                alert("questo browser non supporta l'esportazione video");
-                return;
-            }
-
-            state.timeline = parsed;
-            state.exportInProgress = true;
-            exportVideoBtn.disabled = true;
-            exportPngBtn.disabled = true;
-
-            const wasPlaying = state.isPlaying;
-            const previousElapsed = getElapsedSeconds();
-            stopPlayback(true);
-
-            const size = Number(exportSizeSelect.value) || 1080;
-            const fps = Number(exportFpsSelect.value) || 30;
-            const duration = Math.max(1, getTimelineDuration() + 0.6);
-            const totalFrames = Math.ceil(duration * fps);
-            const exportCanvas = document.createElement("canvas");
-            exportCanvas.width = size;
-            exportCanvas.height = size;
-            const exportCtx = exportCanvas.getContext("2d", {
-                alpha: false
-            });
-
-            const restoreUIState = () => {
-                state.exportInProgress = false;
-                exportVideoBtn.disabled = false;
-                exportPngBtn.disabled = false;
-                state.pausedElapsedSec = previousElapsed;
-                renderPreviewAt(previousElapsed);
-
-                if (wasPlaying) {
-                    state.playStartMs = Date.now();
-                    state.isPlaying = true;
-                    playPauseBtn.textContent = "pausa";
-                    cancelAnimation();
-                    state.animationFrame = requestAnimationFrame(animationTick);
-                } else {
-                    state.playStartMs = null;
-                    state.isPlaying = false;
-                    playPauseBtn.textContent = "play";
-                }
-            };
-
-            try {
-                if (await canUseFastMp4Export(size, fps)) {
-                    exportStatus.textContent = "preparazione export veloce MP4...";
-                    const {
-                        Muxer,
-                        ArrayBufferTarget
-                    } = await loadMp4MuxerModule();
-                    const bitrate = Math.max(4_500_000, Math.round(size * size * Math.max(24, fps) * 0.095));
-                    const encoderConfig = {
-                        codec: "avc1.42001f",
-                        width: size,
-                        height: size,
-                        bitrate,
-                        bitrateMode: "variable",
-                        framerate: fps,
-                        avc: {
-                            format: "annexb"
-                        }
-                    };
-
-                    const target = new ArrayBufferTarget();
-                    const muxer = new Muxer({
-                        target,
-                        fastStart: "in-memory",
-                        firstTimestampBehavior: "offset",
-                        video: {
-                            codec: "avc",
-                            width: size,
-                            height: size
-                        }
-                    });
-
-                    const perfStart = performance.now();
-                    let encodedFrames = 0;
-
-                    const encoder = new VideoEncoder({
-                        output: (chunk, meta) => {
-                            muxer.addVideoChunk(chunk, meta);
-                        },
-                        error: (error) => {
-                            throw error;
-                        }
-                    });
-
-                    encoder.configure(encoderConfig);
-
-                    for (let frameIndex = 0; frameIndex <= totalFrames; frameIndex += 1) {
-                        const timeSec = Math.min(duration, frameIndex / fps);
-                        drawScene(exportCtx, exportCanvas.width, exportCanvas.height, timeSec);
-
-                        const frame = new VideoFrame(exportCanvas, {
-                            timestamp: Math.round((frameIndex / fps) * 1_000_000),
-                            duration: Math.round((1 / fps) * 1_000_000)
-                        });
-
-                        encoder.encode(frame, {
-                            keyFrame: frameIndex === 0 || frameIndex % Math.max(fps * 2, 1) === 0
-                        });
-                        frame.close();
-                        encodedFrames += 1;
-
-                        if (frameIndex === 0 || frameIndex === totalFrames || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
-                            const progress = totalFrames > 0 ? frameIndex / totalFrames : 1;
-                            const elapsedRealSec = (performance.now() - perfStart) / 1000;
-                            const remainingSec = progress > 0 ? Math.max(0, (elapsedRealSec / progress) - elapsedRealSec) : 0;
-                            exportStatus.textContent = `export veloce MP4: ${Math.round(progress * 100)}% • restante stimato ${formatClock(remainingSec)}`;
-                            await wait(0);
-                        }
-                    }
-
-                    await encoder.flush();
-                    encoder.close();
-                    muxer.finalize();
-
-                    const buffer = target.buffer;
-                    downloadBlob(new Blob([buffer], {
-                        type: "video/mp4"
-                    }), `${buildExportFileBase()}.mp4`);
-                    exportStatus.textContent = "export completato: MP4 generato senza audio con modalità veloce";
-                    restoreUIState();
-                    return;
-                }
-
-                if (typeof MediaRecorder === "undefined") {
-                    throw new Error("nessun encoder video disponibile in questo browser");
-                }
-
-                exportStatus.textContent = "preparazione export fallback...";
-                const stream = exportCanvas.captureStream(fps);
-                const chunks = [];
-                let recorder;
-
-                const videoMimeType = pickVideoMimeType();
-                try {
-                    recorder = videoMimeType ? new MediaRecorder(stream, {
-                        mimeType: videoMimeType,
-                        videoBitsPerSecond: 8_000_000
-                    }) : new MediaRecorder(stream);
-                } catch (error) {
-                    recorder = new MediaRecorder(stream);
-                }
-
-                const actualMimeType = recorder.mimeType || videoMimeType || "video/webm";
-                const extension = actualMimeType.includes("mp4") ? "mp4" : "webm";
-
-                recorder.ondataavailable = (event) => {
-                    if (event.data && event.data.size > 0) {
-                        chunks.push(event.data);
-                    }
-                };
-
-                const stopPromise = new Promise((resolve, reject) => {
-                    recorder.onerror = () => reject(new Error("registrazione video fallita"));
-                    recorder.onstop = () => resolve();
-                });
-
-                recorder.start();
-                exportStatus.textContent = `fallback in corso: ${extension.toUpperCase()} • ${fps} fps • senza audio`;
-                const exportPerfStart = performance.now();
-
-                for (let frameIndex = 0; frameIndex <= totalFrames; frameIndex += 1) {
-                    const timeSec = Math.min(duration, frameIndex / fps);
-                    drawScene(exportCtx, exportCanvas.width, exportCanvas.height, timeSec);
-
-                    if (frameIndex === 0 || frameIndex === totalFrames || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
-                        const progress = totalFrames > 0 ? frameIndex / totalFrames : 1;
-                        if (progress > 0) {
-                            const elapsedRealSec = (performance.now() - exportPerfStart) / 1000;
-                            const remainingSec = Math.max(0, (elapsedRealSec / progress) - elapsedRealSec);
-                            exportStatus.textContent = `fallback in corso: ${extension.toUpperCase()} • ${Math.round(progress * 100)}% • restante stimato ${formatClock(remainingSec)}`;
-                        }
-                    }
-
-                    await wait(1000 / fps);
-                }
-
-                await wait(120);
-                recorder.stop();
-                await stopPromise;
-                stream.getTracks().forEach(track => track.stop());
-
-                const blob = new Blob(chunks, {
-                    type: actualMimeType || "video/webm"
-                });
-                const filename = `${buildExportFileBase()}.${extension}`;
-                downloadBlob(blob, filename);
-
-                exportStatus.textContent =
-                    extension === "mp4" ?
-                    "export completato: file MP4 generato senza audio con fallback tradizionale" :
-                    "export completato: il browser ha generato WebM senza audio con fallback tradizionale";
-
-                restoreUIState();
-            } catch (error) {
-                console.error(error);
-                exportStatus.textContent = error?.message || "export fallito";
-                restoreUIState();
-            }
-        }
-
-        function exportCurrentFramePng() {
-            const size = Number(exportSizeSelect.value) || 1080;
-            const frameCanvas = document.createElement("canvas");
-            frameCanvas.width = size;
-            frameCanvas.height = size;
-            const frameCtx = frameCanvas.getContext("2d", {
-                alpha: false
-            });
-            const timeSec = state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec;
-
-            drawScene(frameCtx, frameCanvas.width, frameCanvas.height, timeSec);
-
-            frameCanvas.toBlob((blob) => {
-                if (!blob) return;
-                downloadBlob(blob, `${buildExportFileBase()}.png`);
-                exportStatus.textContent = "frame PNG esportato";
-            }, "image/png");
-        }
-
-        togglePanelBtn.addEventListener("click", () => {
-            panel.classList.toggle("hidden");
-        });
-
-        loadDemoBtn.addEventListener("click", () => {
-            lyricsInput.value = demoLyrics;
-            updateMeta();
-            rebuildTimelineFromCurrentInputs();
-            updateExportEstimate();
-            searchQueryInput.value = "charli xcx guess";
-            searchStatus.textContent = "demo caricata";
-            renderPreviewAt(0);
-        });
-
-        clearResultsBtn.addEventListener("click", clearSearchResults);
-        searchSongBtn.addEventListener("click", runSongSearch);
-
-        searchQueryInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                runSongSearch();
-            }
-        });
-
-        audioFileInput.addEventListener("change", async () => {
-            const file = audioFileInput.files?.[0];
-
-            if (!file) {
-                state.audioBuffer = null;
-                state.audioAnalysis = null;
-                state.audioFileName = "";
-                updateAudioStatus("nessun audio caricato");
-                rebuildTimelineFromCurrentInputs();
-                updateMeta();
-                updateExportEstimate();
-                return;
-            }
-
-            updateAudioStatus(`decodifica ${file.name}...`);
-
-            try {
-                const audioBuffer = await decodeUploadedAudio(file);
-                const audioAnalysis = analyzeAudioEnergy(audioBuffer);
-
-                state.audioBuffer = audioBuffer;
-                state.audioAnalysis = audioAnalysis;
-                state.audioFileName = file.name;
-
-                updateAudioStatus(
-                    `${file.name} • ${audioBuffer.duration.toFixed(2)}s • analisi timing pronta`
-                );
-
-                rebuildTimelineFromCurrentInputs();
-                updateMeta();
-                updateExportEstimate();
-            } catch (error) {
-                state.audioBuffer = null;
-                state.audioAnalysis = null;
-                state.audioFileName = "";
-                updateAudioStatus("audio non supportato o decodifica fallita", true);
-                rebuildTimelineFromCurrentInputs();
-                updateMeta();
-                updateExportEstimate();
-            }
-        });
-
-        lyricsInput.addEventListener("input", () => {
-            rebuildTimelineFromCurrentInputs();
-            updateMeta();
-            updateExportEstimate();
-        });
-
-        useAudioTimingCheckbox.addEventListener("change", () => {
-            rebuildTimelineFromCurrentInputs();
-            updateMeta();
-            updateExportEstimate();
-        });
-
-        startFromZeroCheckbox.addEventListener("change", () => {
-            rebuildTimelineFromCurrentInputs();
-            updateMeta();
-            updateExportEstimate();
-        });
-
-        startBtn.addEventListener("click", () => {
-            const parsed = parseLRC(
-                lyricsInput.value,
-                startFromZeroCheckbox.checked,
-                getActiveAudioAnalysis()
-            );
-
-            if (!lyricsInput.value.trim()) {
-                alert("incolla prima i lyrics in formato LRC");
-                return;
-            }
-
-            if (!parsed.length) {
-                alert("formato non valido. usa [MM:SS.xx] testo");
-                return;
-            }
-
-            state.timeline = parsed;
-            startFromBeginning();
-        });
-
-        playPauseBtn.addEventListener("click", () => {
-            if (!state.timeline.length) return;
-
-            if (state.isPlaying) {
-                stopPlayback(true);
-                return;
-            }
-
-            state.playStartMs = Date.now();
-            state.isPlaying = true;
-            playPauseBtn.textContent = "pausa";
-            cancelAnimation();
-            state.animationFrame = requestAnimationFrame(animationTick);
-        });
-
-        restartBtn.addEventListener("click", () => {
-            rebuildTimelineFromCurrentInputs();
-            startFromBeginning();
-        });
-
-        resetBtn.addEventListener("click", resetAll);
-
-        closePlayerBtn.addEventListener("click", () => {
-            playerWrap.classList.add("hidden");
-            setPlayerOpenState(false);
-            playerBox.innerHTML = "";
-        });
-
-        bgBtn.addEventListener("click", () => setTheme("green"));
-        darkBtn.addEventListener("click", () => setTheme("dark"));
-
-        exportVideoBtn.addEventListener("click", exportVideo);
-        exportPngBtn.addEventListener("click", exportCurrentFramePng);
-        exportSizeSelect.addEventListener("change", updateExportEstimate);
-        exportFpsSelect.addEventListener("change", updateExportEstimate);
-
-        updateAudioStatus("nessun audio caricato");
-        setTheme("green");
-        updateMeta();
-        renderPreviewAt(0);
-    </script>
 </body>
-
 </html>

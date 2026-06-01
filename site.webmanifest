@@ -1,13 +1,12 @@
 {
   "name": "Brat Animator",
   "short_name": "Brat Animator",
-  "description": "Generatore video lyrics da file LRC con export locale senza audio.",
-  "start_url": "/bratAnimator/",
-  "scope": "/bratAnimator/",
+  "description": "Create brat-style LRC lyric videos in the browser.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#e9e9e9",
   "theme_color": "#8ACE00",
-  "lang": "it-IT",
   "icons": [
     {
       "src": "icon-192.png",
