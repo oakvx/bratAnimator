@@ -227,6 +227,9 @@
                         <option value="white-label">white label</option>
                         <option value="pink">pink</option>
                         <option value="blue">blue</option>
+                        <optgroup label="Beta">
+                            <option value="beautiful-lyrics">Beautiful Lyrics</option>
+                        </optgroup>
                         <option value="custom">custom</option>
                     </select>
                 </div>
@@ -242,6 +245,20 @@
                         <option value="pulse">pulse</option>
                     </select>
                 </div>
+                <div>
+                    <label class="label" for="lyricsDisplayModeSelect">lyrics display</label>
+                    <select id="lyricsDisplayModeSelect">
+                        <option value="brat" selected>brat canvas</option>
+                        <option value="music">music synced scroll</option>
+                        <optgroup label="Beta">
+                            <option value="beautiful">Beautiful Lyrics</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mode-note" id="musicModeNote">
+                The Beta → Beautiful Lyrics option uses an Apple-like SF Pro typography stack, liquid-glass dynamic background, line-by-line live lyrics, depth-based dimming and per-word sung highlighting. Enhanced LRC word tags are supported for precise karaoke timing; normal LRC is interpolated word-by-word automatically. Not affiliated with Apple Music, Spotify or Beautiful Lyrics.
             </div>
 
             <div class="row color-row">
@@ -257,6 +274,8 @@
                     <label class="label" for="fontFamilySelect">font</label>
                     <select id="fontFamilySelect">
                         <option value="Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif" selected>Arial Narrow</option>
+                        <option value='"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", system-ui, sans-serif'>Apple / SF Pro</option>
+                        <option value="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">System UI</option>
                         <option value="Arial, Helvetica, sans-serif">Arial</option>
                         <option value="Impact, Haettenschweiler, Arial Narrow Bold, sans-serif">Impact</option>
                         <option value="Georgia, serif">Georgia</option>
@@ -273,6 +292,39 @@
                 <label>letter spacing <input id="letterSpacingInput" type="range" min="-8" max="20" value="0" /></label>
                 <label>line spacing <input id="lineSpacingInput" type="range" min="70" max="130" value="92" /></label>
             </div>
+
+            <details class="advanced-block music-options" open>
+                <summary>music synced scroll options</summary>
+                <div class="row">
+                    <div>
+                        <label class="label" for="musicAlignSelect">lyrics alignment</label>
+                        <select id="musicAlignSelect">
+                            <option value="left" selected>left</option>
+                            <option value="center">center</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label" for="wordHighlightCheckbox">highlight</label>
+                        <label class="inline-check"><input id="wordHighlightCheckbox" type="checkbox" checked /> word-progress highlight</label>
+                    </div>
+                </div>
+                <div class="range-grid">
+                    <label>active scale <input id="musicActiveScaleInput" type="range" min="100" max="135" value="122" /></label>
+                    <label>dim opacity <input id="musicDimOpacityInput" type="range" min="12" max="60" value="20" /></label>
+                    <label>scroll anchor <input id="musicScrollPositionInput" type="range" min="35" max="65" value="50" /></label>
+                </div>
+                <div class="beautiful-note">Use <code>[bg]</code>, <code>[side]</code> or <code>[rom]</code> before a lyric line to render backing vocals, side vocals or secondary/romanized lines.</div>
+                <div class="row">
+                    <label class="inline-check"><input id="beautifulDynamicBgCheckbox" type="checkbox" checked /> dynamic blurred background</label>
+                    <label class="inline-check"><input id="beautifulSideVocalsCheckbox" type="checkbox" checked /> side / backing vocals</label>
+                </div>
+                <div class="range-grid">
+                    <label>background motion <input id="beautifulMotionInput" type="range" min="0" max="100" value="86" /></label>
+                    <label>depth / vignette <input id="beautifulDepthInput" type="range" min="0" max="100" value="96" /></label>
+                    <label>lyric glow <input id="beautifulGlowInput" type="range" min="0" max="100" value="88" /></label>
+                    <label>edge fade <input id="beautifulEdgeFadeInput" type="range" min="0" max="100" value="92" /></label>
+                </div>
+            </details>
 
             <div class="tool-strip">
                 <button id="randomStyleBtn">randomize style</button>

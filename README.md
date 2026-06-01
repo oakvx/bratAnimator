@@ -98,3 +98,11 @@ Brat Animator 是一个静态浏览器工具，可以把同步 **LRC 歌词** �
 ## 授权
 
 使用、复制、修改、再分发、self-hosting、商业用途或集成都需要**作者的明确书面许可**。
+
+## Music synced scroll mode
+
+The editor includes an optional music-style synced lyrics mode for exports that need a full-screen lyric interface instead of the classic brat single-line canvas.
+
+This mode supports large scrolling lyric lines, active-line focus, dimmed surrounding lyrics, optional word-progress highlight, and Enhanced LRC word timing tags such as `<00:12.34>` when available.
+
+This project is not affiliated with Apple Music or Apple Inc.
