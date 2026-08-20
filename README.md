@@ -6,6 +6,23 @@ Live demo: **https://oakvx.github.io/bratAnimator/**
 
 ---
 
+## Version 3.0 updates
+
+* New v3.0 main menu with a branded command dock, grouped controls, compact mobile layout, and clearer active states
+* Modernized visual system with cleaner surfaces, sharper controls, improved spacing, and a less dated product feel
+* Better mobile experience with a refined top menu, bottom editor sheet, touch-friendly controls, and no horizontal page overflow
+* Built-in tutorial for first-time users
+* Project tools for browser snapshots, share links, starter LRC, copied LRC, and project JSON handoff
+* Enhanced SEO with richer metadata, JSON-LD structured data, localized entry pages, updated sitemap, and an improved web manifest
+
+## TODO
+
+* Add automated visual regression checks for the desktop and mobile layouts, especially the v3.0 main menu and editor sheet.
+* Expand localization coverage for the newest tutorial, project, and SEO copy.
+* Add a clearer project import flow to pair with the existing project JSON export/share tools.
+
+---
+
 ## Languages
 
 * 🇬🇧 [English](#-english)
@@ -47,10 +64,15 @@ Live demo: **https://oakvx.github.io/bratAnimator/**
 * Canvas-based preview
 * Video-only export: MP4 when supported, WebM fallback otherwise
 * PNG single-frame export
+* v3.0 command dock main menu
+* First-run tutorial and help overlay
+* Project snapshots saved in the browser
+* Share links, starter LRC, copied LRC, and project JSON handoff tools
 * EN / RU / ZH interface switcher
 * Drag and drop for LRC and audio files
 * Autosave through `localStorage`
 * Browser compatibility panel for export
+* SEO-ready metadata, JSON-LD structured data, sitemap, robots.txt, and localized entry pages
 * PWA-ready service worker and web manifest
 * Static deployment on GitHub Pages
 
@@ -106,10 +128,15 @@ Demo online: **https://oakvx.github.io/bratAnimator/**
 * Anteprima basata su Canvas
 * Esportazione solo video: MP4 quando supportato, altrimenti fallback WebM
 * Esportazione PNG di un singolo frame
+* Main menu v3.0 in stile command dock
+* Tutorial iniziale e overlay di aiuto
+* Snapshot del progetto salvati nel browser
+* Share link, starter LRC, copia LRC e strumenti di handoff tramite project JSON
 * Interfaccia EN / RU / ZH
 * Drag and drop per file LRC e audio
 * Autosave tramite `localStorage`
 * Pannello di compatibilità browser per l’export
+* SEO migliorata con metadata, JSON-LD, sitemap, robots.txt e pagine localizzate
 * Service worker e web manifest PWA-ready
 * Deploy statico su GitHub Pages
 

@@ -8,7 +8,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             "https://invidious.nerdvpn.de"
         ];
 
-        const APPLE_LIKE_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro Rounded", "Helvetica Neue", Inter, "Segoe UI", system-ui, sans-serif';
+        const APPLE_LIKE_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro Rounded", "Helvetica Neue", "Segoe UI", system-ui, sans-serif';
 
         const previewCanvas = document.getElementById("previewCanvas");
         const previewCtx = previewCanvas.getContext("2d", {
@@ -108,6 +108,16 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const exportPreviewClipBtn = document.getElementById("exportPreviewClipBtn");
         const exportProjectBtn = document.getElementById("exportProjectBtn");
         const importProjectInput = document.getElementById("importProjectInput");
+        const copyLrcBtn = document.getElementById("copyLrcBtn");
+        const starterLrcBtn = document.getElementById("starterLrcBtn");
+        const snapshotNameInput = document.getElementById("snapshotNameInput");
+        const saveSnapshotBtn = document.getElementById("saveSnapshotBtn");
+        const shareProjectLinkBtn = document.getElementById("shareProjectLinkBtn");
+        const copyProjectJsonBtn = document.getElementById("copyProjectJsonBtn");
+        const projectFeatureStatus = document.getElementById("projectFeatureStatus");
+        const snapshotList = document.getElementById("snapshotList");
+
+        const SNAPSHOT_STORAGE_KEY = "bratAnimator.snapshots.v1";
 
         const state = {
             timeline: [],
@@ -1628,6 +1638,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             renderTimeline();
         }
 
+        function syncPlaybackButtonLabel() {
+            const key = state.isPlaying ? "pause" : "play";
+            playPauseBtn.textContent = translateUi(key, key);
+            playPauseBtn.setAttribute("aria-pressed", String(state.isPlaying));
+        }
+
         function animationTick() {
             const now = getElapsedSeconds();
             renderPreviewAt(now);
@@ -1637,7 +1653,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (now > endTime) {
                 state.isPlaying = false;
                 state.playStartMs = null;
-                playPauseBtn.textContent = "play";
+                syncPlaybackButtonLabel();
                 cancelAnimation();
                 renderPreviewAt(0);
                 return;
@@ -1653,13 +1669,27 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             state.pausedElapsedSec = 0;
             state.playStartMs = Date.now();
             state.isPlaying = true;
-            playPauseBtn.textContent = "pausa";
+            syncPlaybackButtonLabel();
             state.animationFrame = requestAnimationFrame(animationTick);
         }
 
         function updateAudioStatus(message, isError = false) {
             audioStatus.textContent = message;
             audioStatus.classList.toggle("muted", !isError);
+        }
+
+        function syncPanelState() {
+            const isOpen = !panel.classList.contains("hidden");
+            document.body.classList.toggle("panel-open", isOpen);
+            document.body.classList.toggle("panel-closed", !isOpen);
+            togglePanelBtn.setAttribute("aria-expanded", String(isOpen));
+        }
+
+        function syncThemeButtons() {
+            bgBtn.classList.toggle("active", state.theme === "green");
+            darkBtn.classList.toggle("active", state.theme === "dark");
+            bgBtn.setAttribute("aria-pressed", String(state.theme === "green"));
+            darkBtn.setAttribute("aria-pressed", String(state.theme === "dark"));
         }
 
         function rebuildTimelineFromCurrentInputs() {
@@ -1695,7 +1725,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 (useAudioTimingCheckbox.checked ? " • audio assist on" : " • audio assist off") :
                 "";
 
-            meta.textContent = `${lineCount} righe • ${blockCount} blocchi • ${totalTime.toFixed(2)}s timeline${audioLabel}`;
+            meta.textContent = `${lineCount} lines • ${blockCount} blocks • ${totalTime.toFixed(2)}s timeline${audioLabel}`;
         }
 
         function stopPlayback(keepCurrentTime = true) {
@@ -1706,7 +1736,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
             state.playStartMs = null;
             state.isPlaying = false;
-            playPauseBtn.textContent = "play";
+            syncPlaybackButtonLabel();
             cancelAnimation();
         }
 
@@ -2024,6 +2054,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             document.documentElement.style.setProperty("--bg-page", colors.page);
             document.documentElement.style.setProperty("--bg-stage", colors.stage);
             document.documentElement.style.setProperty("--text", colors.text);
+            syncThemeButtons();
             renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
         }
 
@@ -2505,9 +2536,250 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 renderLrcRows();
                 applyFormatPreset();
                 exportStatus.textContent = "project JSON imported";
+                setProjectFeatureStatus("project JSON imported");
             } catch (error) {
                 alert("Invalid project JSON.");
             }
+        }
+
+        async function copyText(text) {
+            const value = String(text || "");
+            if (!value) return false;
+
+            if (navigator.clipboard?.writeText && window.isSecureContext) {
+                await navigator.clipboard.writeText(value);
+                return true;
+            }
+
+            const textarea = document.createElement("textarea");
+            textarea.value = value;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.select();
+            const copied = document.execCommand("copy");
+            textarea.remove();
+            return copied;
+        }
+
+        function setProjectFeatureStatus(message, isError = false) {
+            if (!projectFeatureStatus) return;
+            projectFeatureStatus.textContent = message;
+            projectFeatureStatus.classList.toggle("muted", !isError);
+        }
+
+        function encodeProjectPayload(payload) {
+            const json = JSON.stringify(payload);
+            const bytes = new TextEncoder().encode(json);
+            let binary = "";
+            bytes.forEach((byte) => {
+                binary += String.fromCharCode(byte);
+            });
+            return btoa(binary)
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_")
+                .replace(/=+$/g, "");
+        }
+
+        function decodeProjectPayload(encoded) {
+            const padded = String(encoded || "").replace(/-/g, "+").replace(/_/g, "/");
+            const base64 = padded + "=".repeat((4 - padded.length % 4) % 4);
+            const binary = atob(base64);
+            const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+            return JSON.parse(new TextDecoder().decode(bytes));
+        }
+
+        function getHashProjectPayload() {
+            const match = window.location.hash.match(/^#project=([^&]+)/);
+            if (!match) return null;
+            try {
+                return decodeProjectPayload(match[1]);
+            } catch (error) {
+                console.warn("shared project link could not be read", error);
+                return null;
+            }
+        }
+
+        function buildProjectLabel(payload = buildProjectPayload()) {
+            const source = [
+                state.selectedSong?.artistName,
+                state.selectedSong?.trackName
+            ].filter(Boolean).join(" - ");
+            if (source) return source;
+
+            const query = String(payload.query || "").trim();
+            if (query) return query.slice(0, 52);
+
+            const firstLyric = String(payload.lyrics || "")
+                .split("\n")
+                .map(line => line.replace(LINE_TIMESTAMP_RE, "").trim())
+                .find(Boolean);
+
+            return (firstLyric || "untitled lyric project").slice(0, 52);
+        }
+
+        function loadSnapshots() {
+            try {
+                const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn("snapshots restore failed", error);
+                return [];
+            }
+        }
+
+        function writeSnapshots(items) {
+            try {
+                localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(items.slice(0, 8)));
+            } catch (error) {
+                console.warn("snapshots save failed", error);
+                setProjectFeatureStatus("snapshot storage is full", true);
+            }
+        }
+
+        function formatSnapshotTime(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "saved";
+            return date.toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function renderSnapshots() {
+            if (!snapshotList) return;
+            const snapshots = loadSnapshots();
+            snapshotList.innerHTML = "";
+
+            if (!snapshots.length) {
+                const empty = document.createElement("div");
+                empty.className = "snapshot-empty";
+                empty.textContent = "No snapshots yet.";
+                snapshotList.appendChild(empty);
+                return;
+            }
+
+            snapshots.forEach((snapshot) => {
+                const item = document.createElement("div");
+                item.className = "snapshot-item";
+
+                const details = document.createElement("div");
+                details.className = "snapshot-details";
+
+                const title = document.createElement("strong");
+                title.textContent = snapshot.title || "untitled snapshot";
+
+                const metaText = document.createElement("span");
+                const payload = snapshot.payload || {};
+                const lineCount = parseLRC(
+                    payload.lyrics || "",
+                    Boolean(payload.startFromZero),
+                    null
+                ).length;
+                metaText.textContent = `${formatSnapshotTime(snapshot.savedAt)} · ${lineCount} lines`;
+
+                details.append(title, metaText);
+
+                const actions = document.createElement("div");
+                actions.className = "snapshot-actions";
+
+                const loadButton = document.createElement("button");
+                loadButton.type = "button";
+                loadButton.textContent = "load";
+                loadButton.addEventListener("click", () => {
+                    restoreProjectSettings(snapshot.payload);
+                    saveProjectSettings();
+                    renderSnapshots();
+                    setProjectFeatureStatus(`loaded ${snapshot.title || "snapshot"}`);
+                });
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "delete";
+                deleteButton.addEventListener("click", () => {
+                    writeSnapshots(loadSnapshots().filter(item => item.id !== snapshot.id));
+                    renderSnapshots();
+                    setProjectFeatureStatus("snapshot deleted");
+                });
+
+                actions.append(loadButton, deleteButton);
+                item.append(details, actions);
+                snapshotList.appendChild(item);
+            });
+        }
+
+        function saveSnapshot() {
+            const payload = buildProjectPayload();
+            const title = (snapshotNameInput?.value || buildProjectLabel(payload)).trim() || "untitled lyric project";
+            const snapshots = loadSnapshots();
+            snapshots.unshift({
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                title,
+                savedAt: new Date().toISOString(),
+                payload
+            });
+            writeSnapshots(snapshots);
+            if (snapshotNameInput) snapshotNameInput.value = "";
+            renderSnapshots();
+            setProjectFeatureStatus(`saved snapshot: ${title}`);
+        }
+
+        async function copyProjectJson() {
+            const payload = buildProjectPayload();
+            const copied = await copyText(JSON.stringify(payload, null, 2));
+            setProjectFeatureStatus(copied ? "project JSON copied" : "copy failed", !copied);
+        }
+
+        async function copyProjectLink() {
+            const payload = buildProjectPayload();
+            const encoded = encodeProjectPayload(payload);
+            const url = new URL(window.location.href);
+            url.hash = `project=${encoded}`;
+            const shareUrl = url.toString();
+
+            if (shareUrl.length > 7800) {
+                await copyProjectJson();
+                setProjectFeatureStatus("project is too large for a tidy link; JSON copied instead", true);
+                return;
+            }
+
+            const copied = await copyText(shareUrl);
+            setProjectFeatureStatus(copied ? "share link copied" : "copy failed", !copied);
+        }
+
+        async function copyLrcText() {
+            if (!lyricsInput.value.trim()) {
+                meta.textContent = "nothing to copy yet";
+                lyricsInput.focus();
+                return;
+            }
+            const copied = await copyText(lyricsInput.value);
+            meta.textContent = copied ? "LRC copied" : "copy failed";
+        }
+
+        function generateStarterLrc() {
+            const starters = [
+                ["late light on the kitchen tile", "you said the quiet part twice", "i kept the echo in my pocket", "now every room knows your name"],
+                ["green screen glow on my face", "timer running out of frame", "words arrive a little crooked", "but the feeling lands the same"],
+                ["train glass shaking in the rain", "your message sitting unread", "i count the seconds between stations", "and make a chorus in my head"],
+                ["soft static under the door", "bass line taped to the wall", "i let the first line breathe longer", "then let the whole thing fall"]
+            ];
+            const picked = starters[Math.floor(Math.random() * starters.length)];
+            const start = 1.2 + Math.random() * 1.4;
+            lyricsInput.value = picked
+                .map((line, index) => `${secondsToTag(start + index * (2.15 + index * 0.18))} ${line}`)
+                .join("\n");
+            rebuildTimelineFromCurrentInputs();
+            updateMeta();
+            renderLrcRows();
+            renderTimeline();
+            updateExportEstimate();
+            saveProjectSettings();
+            meta.textContent = "starter LRC generated";
         }
 
         function buildProjectPayload() {
@@ -2780,10 +3052,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function setupLanguageControls() {
             state.language = window.BratI18n?.applyLanguage?.(window.BratI18n?.getSavedLanguage?.() || "en") || "en";
+            syncPlaybackButtonLabel();
 
             langButtons.forEach((button) => {
                 button.addEventListener("click", () => {
                     state.language = window.BratI18n?.applyLanguage?.(button.dataset.lang) || button.dataset.lang || "en";
+                    syncPlaybackButtonLabel();
                     saveProjectSettings();
                 });
             });
@@ -2888,13 +3162,13 @@ async function updateExportEstimate() {
                 if (wasPlaying) {
                     state.playStartMs = Date.now();
                     state.isPlaying = true;
-                    playPauseBtn.textContent = "pausa";
+                    syncPlaybackButtonLabel();
                     cancelAnimation();
                     state.animationFrame = requestAnimationFrame(animationTick);
                 } else {
                     state.playStartMs = null;
                     state.isPlaying = false;
-                    playPauseBtn.textContent = "play";
+                    syncPlaybackButtonLabel();
                 }
             };
 
@@ -3081,6 +3355,7 @@ async function updateExportEstimate() {
 
         togglePanelBtn.addEventListener("click", () => {
             panel.classList.toggle("hidden");
+            syncPanelState();
         });
 
         loadDemoBtn.addEventListener("click", () => {
@@ -3166,7 +3441,7 @@ async function updateExportEstimate() {
 
             state.playStartMs = Date.now();
             state.isPlaying = true;
-            playPauseBtn.textContent = "pausa";
+            syncPlaybackButtonLabel();
             cancelAnimation();
             state.animationFrame = requestAnimationFrame(animationTick);
         });
@@ -3241,6 +3516,8 @@ async function updateExportEstimate() {
         normalizeLrcBtn?.addEventListener("click", normalizeLrc);
         shiftBackBtn?.addEventListener("click", () => shiftLrc(-0.5));
         shiftForwardBtn?.addEventListener("click", () => shiftLrc(0.5));
+        copyLrcBtn?.addEventListener("click", copyLrcText);
+        starterLrcBtn?.addEventListener("click", generateStarterLrc);
 
         startTapSyncBtn?.addEventListener("click", startTapSync);
         tapNextLineBtn?.addEventListener("click", tapNextLine);
@@ -3266,6 +3543,9 @@ async function updateExportEstimate() {
         exportPreviewClipBtn?.addEventListener("click", exportPreviewClip);
         exportProjectBtn?.addEventListener("click", exportProjectJson);
         importProjectInput?.addEventListener("change", () => importProjectJson(importProjectInput.files?.[0]));
+        saveSnapshotBtn?.addEventListener("click", saveSnapshot);
+        shareProjectLinkBtn?.addEventListener("click", copyProjectLink);
+        copyProjectJsonBtn?.addEventListener("click", copyProjectJson);
 
         document.addEventListener("keydown", (event) => {
             const target = event.target;
@@ -3309,12 +3589,17 @@ async function updateExportEstimate() {
         bgBtn.addEventListener("click", saveProjectSettings);
         darkBtn.addEventListener("click", saveProjectSettings);
 
-        const restored = restoreProjectSettings(loadProjectSettings());
+        syncPanelState();
+        syncPlaybackButtonLabel();
+        const sharedProject = getHashProjectPayload();
+        const restored = restoreProjectSettings(sharedProject || loadProjectSettings());
+        if (sharedProject) setProjectFeatureStatus("shared project loaded");
         updateAudioStatus(translateUi("noAudio", "no audio loaded"));
         if (!restored) {
             setTheme("green");
         }
         renderLrcRows();
+        renderSnapshots();
         applyFormatPreset();
         updateMeta();
         updateExportEstimate();
@@ -3339,21 +3624,216 @@ async function updateExportEstimate() {
     const canvasFullscreenBtn = document.getElementById('canvasFullscreenBtn');
     const canvasSafeToggleBtn = document.getElementById('canvasSafeToggleBtn');
     const quickPresetButtons = Array.from(document.querySelectorAll('[data-preset-quick]'));
+    const tutorialBtn = document.getElementById('tutorialBtn');
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutorialProgress = document.getElementById('tutorialProgress');
+    const tutorialTitle = document.getElementById('tutorialTitle');
+    const tutorialBody = document.getElementById('tutorialBody');
+    const tutorialTip = document.getElementById('tutorialTip');
+    const tutorialSkipBtn = document.getElementById('tutorialSkipBtn');
+    const tutorialBackBtn = document.getElementById('tutorialBackBtn');
+    const tutorialNextBtn = document.getElementById('tutorialNextBtn');
+    const tutorialActionBtn = document.getElementById('tutorialActionBtn');
+    const TUTORIAL_STORAGE_KEY = 'bratAnimator.tutorial.seen.v1';
+
+    const tutorialSteps = [
+        {
+            title: 'start with the preview',
+            body: 'The canvas is the video you will export. Every lyric, timing, style, and format change updates this preview.',
+            target: '.stage-wrap',
+            placement: 'bottom',
+            tip: 'Use the controls panel for editing. Collapse it when you want a larger preview.'
+        },
+        {
+            title: 'find lyrics',
+            body: 'Search by artist and title. Results from LRCLIB can fill the project without leaving the browser.',
+            tab: 'lyrics',
+            target: '#searchQueryInput',
+            tip: 'You can also skip search and paste your own LRC in the Timing tab.'
+        },
+        {
+            title: 'add timed lines',
+            body: 'LRC lines need timestamps like [00:01.20]. Use starter LRC for a quick working example, then edit the rows.',
+            tab: 'timing',
+            target: '#starterLrcBtn',
+            actionLabel: 'generate starter',
+            action() {
+                starterLrcBtn?.click();
+            }
+        },
+        {
+            title: 'adjust the look',
+            body: 'Choose a preset, animation mode, colors, and typography. Keep checking the canvas as you tune it.',
+            tab: 'design',
+            target: '#themePresetSelect'
+        },
+        {
+            title: 'choose the format',
+            body: 'Pick square, vertical, landscape, or cover output before exporting. Safe zones help with social layouts.',
+            tab: 'canvas',
+            target: '[data-preset-quick="vertical"]',
+            tip: 'The Export tab still controls final size and FPS.'
+        },
+        {
+            title: 'export or save',
+            body: 'Export the video, save a project snapshot, or copy a share link so you can return to the edit later.',
+            tab: 'export',
+            target: '#exportVideoBtn',
+            tip: 'Exports are video-only. Audio is used for timing help, not embedded in the final file.'
+        }
+    ];
+
+    let tutorialIndex = 0;
+    let tutorialActive = false;
 
     function openEditorTab(tabName) {
+        let activeTab = null;
+        let activeSection = null;
+
         tabs.forEach((tab) => {
             const isActive = tab.dataset.openTab === tabName;
             tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-selected', String(isActive));
+            tab.setAttribute('tabindex', isActive ? '0' : '-1');
+            if (isActive) activeTab = tab;
         });
 
         sections.forEach((section) => {
-            section.classList.toggle('active', section.dataset.editorTab === tabName);
+            const isActive = section.dataset.editorTab === tabName;
+            section.classList.toggle('active', isActive);
+            section.toggleAttribute('hidden', !isActive);
+            section.setAttribute('aria-hidden', String(!isActive));
+            if (isActive) activeSection = section;
         });
+
+        if (window.matchMedia('(max-width: 700px)').matches) {
+            activeTab?.scrollIntoView({
+                block: 'nearest',
+                inline: 'center',
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+            });
+            if (activeSection) activeSection.scrollTop = 0;
+        }
 
         try {
             localStorage.setItem('bratAnimator.activeSidebarTab', tabName);
         } catch (_) {}
+    }
+
+    function clearTutorialFocus() {
+        document.querySelectorAll('.tutorial-focus').forEach((node) => {
+            node.classList.remove('tutorial-focus');
+            node.removeAttribute('data-tutorial-active');
+        });
+    }
+
+    function getTutorialTarget(selector) {
+        if (!selector) return null;
+        return document.querySelector(selector);
+    }
+
+    function setTutorialSeen() {
+        try {
+            localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true');
+        } catch (_) {}
+    }
+
+    function hasSeenTutorial() {
+        try {
+            return localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
+        } catch (_) {
+            return true;
+        }
+    }
+
+    function closeTutorial(markSeen = true) {
+        tutorialActive = false;
+        tutorialOverlay?.classList.add('hidden');
+        document.body.classList.remove('tutorial-open');
+        clearTutorialFocus();
+        if (markSeen) setTutorialSeen();
+        tutorialBtn?.focus();
+    }
+
+    function renderTutorialStep() {
+        if (!tutorialOverlay || !tutorialTitle || !tutorialBody) return;
+
+        const step = tutorialSteps[tutorialIndex];
+        if (!step) return;
+
+        if (panel.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            syncPanelState();
+        }
+
+        if (step.tab) openEditorTab(step.tab);
+
+        tutorialProgress.textContent = `step ${tutorialIndex + 1} of ${tutorialSteps.length}`;
+        tutorialOverlay.dataset.placement = step.placement || 'top';
+        tutorialTitle.textContent = step.title;
+        tutorialBody.textContent = step.body;
+
+        if (step.tip) {
+            tutorialTip.hidden = false;
+            tutorialTip.textContent = step.tip;
+        } else {
+            tutorialTip.hidden = true;
+            tutorialTip.textContent = '';
+        }
+
+        tutorialBackBtn.disabled = tutorialIndex === 0;
+        tutorialNextBtn.textContent = tutorialIndex === tutorialSteps.length - 1 ? 'finish' : 'next';
+
+        if (step.actionLabel && typeof step.action === 'function') {
+            tutorialActionBtn.classList.remove('hidden');
+            tutorialActionBtn.textContent = step.actionLabel;
+            tutorialActionBtn.onclick = () => {
+                step.action();
+                renderTutorialStep();
+            };
+        } else {
+            tutorialActionBtn.classList.add('hidden');
+            tutorialActionBtn.onclick = null;
+        }
+
+        clearTutorialFocus();
+
+        window.setTimeout(() => {
+            const target = getTutorialTarget(step.target);
+            if (!target) return;
+            target.classList.add('tutorial-focus');
+            target.setAttribute('data-tutorial-active', 'true');
+            target.scrollIntoView({
+                block: 'nearest',
+                inline: 'center',
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+            });
+        }, 80);
+    }
+
+    function startTutorial(startIndex = 0) {
+        tutorialActive = true;
+        tutorialIndex = clamp(startIndex, 0, tutorialSteps.length - 1);
+        tutorialOverlay?.classList.remove('hidden');
+        document.body.classList.add('tutorial-open');
+        renderTutorialStep();
+        tutorialNextBtn?.focus();
+    }
+
+    function goToNextTutorialStep() {
+        if (tutorialIndex >= tutorialSteps.length - 1) {
+            closeTutorial(true);
+            return;
+        }
+
+        tutorialIndex += 1;
+        renderTutorialStep();
+    }
+
+    function goToPreviousTutorialStep() {
+        if (tutorialIndex <= 0) return;
+        tutorialIndex -= 1;
+        renderTutorialStep();
     }
 
     function getSidebarDimensionsLabel() {
@@ -3414,16 +3894,54 @@ async function updateExportEstimate() {
         tab.addEventListener('click', () => openEditorTab(tab.dataset.openTab));
     });
 
-    dockPreviewBtn?.addEventListener('click', () => {
-        openEditorTab('timing');
-        if (state.timeline.length) {
-            playPauseBtn.click();
-        } else {
-            startBtn.click();
+    tutorialBtn?.addEventListener('click', () => startTutorial(0));
+    tutorialSkipBtn?.addEventListener('click', () => closeTutorial(true));
+    tutorialBackBtn?.addEventListener('click', goToPreviousTutorialStep);
+    tutorialNextBtn?.addEventListener('click', goToNextTutorialStep);
+
+    document.addEventListener('keydown', (event) => {
+        if (!tutorialActive) return;
+        if (event.key === 'Escape') closeTutorial(true);
+        if (event.key === 'ArrowRight' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
+            goToNextTutorialStep();
+        }
+        if (event.key === 'ArrowLeft' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
+            goToPreviousTutorialStep();
         }
     });
 
+    dockPreviewBtn?.addEventListener('click', () => {
+        openEditorTab('timing');
+        const parsed = parseLRC(
+            lyricsInput.value,
+            startFromZeroCheckbox.checked,
+            getActiveAudioAnalysis()
+        );
+
+        if (!lyricsInput.value.trim()) {
+            meta.textContent = 'paste or load LRC lyrics to preview';
+            lyricsInput.focus();
+            return;
+        }
+
+        if (!parsed.length) {
+            meta.textContent = 'use [MM:SS.xx] timestamps before previewing';
+            lyricsInput.focus();
+            return;
+        }
+
+        state.timeline = parsed;
+        startFromBeginning();
+    });
+
     dockExportBtn?.addEventListener('click', () => {
+        if (!lyricsInput.value.trim()) {
+            openEditorTab('timing');
+            meta.textContent = 'paste or load LRC lyrics before exporting';
+            lyricsInput.focus();
+            return;
+        }
+
         openEditorTab('export');
         exportVideoBtn.click();
     });
@@ -3463,4 +3981,8 @@ async function updateExportEstimate() {
     if (!tabs.some((tab) => tab.dataset.openTab === restoredTab)) restoredTab = 'lyrics';
     openEditorTab(restoredTab);
     updateSidebarStatus();
+
+    if (!hasSeenTutorial() && !window.location.hash.startsWith('#project=')) {
+        window.setTimeout(() => startTutorial(0), 900);
+    }
 })();
