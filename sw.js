@@ -1,10 +1,14 @@
-const CACHE_NAME = "brat-animator-v2";
+const CACHE_NAME = "brat-animator-v3-feature-complete";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./assets/css/style.css",
+  "./assets/js/core.js",
+  "./assets/js/media.js",
+  "./assets/js/export.js",
   "./assets/js/i18n.js",
   "./assets/js/app.js",
+  "./vendor/mp4-muxer.mjs",
   "./favicon.svg",
   "./icon-192.png",
   "./icon-512.png",

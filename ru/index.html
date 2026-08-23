@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Brat Animator - генератор LRC lyric video</title>
-  <meta name="description" content="Создавайте квадратные brat-style lyric videos из синхронизированных LRC lyrics в браузере, уточняйте тайминг локальным аудио и экспортируйте video-only MP4/WebM." />
+  <meta name="description" content="Создавайте brat-style lyric videos из LRC lyrics в браузере: локальный тайминг, фоновые медиа и экспорт MP4/WebM с опциональным загруженным аудио." />
   <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large" />
   <meta name="theme-color" content="#8ACE00" />
   <meta name="application-name" content="Brat Animator" />
@@ -13,14 +13,21 @@
   <link rel="alternate" hreflang="ru" href="https://oakvx.github.io/bratAnimator/ru/" />
   <link rel="alternate" hreflang="zh-CN" href="https://oakvx.github.io/bratAnimator/zh/" />
   <link rel="alternate" hreflang="x-default" href="https://oakvx.github.io/bratAnimator/" />
-  <link rel="manifest" href="../site.webmanifest" />
+  <script>
+    if (/^https?:$/.test(window.location.protocol)) {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = "../site.webmanifest";
+      document.head.appendChild(manifestLink);
+    }
+  </script>
   <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="../icon-192.png" />
   <link rel="stylesheet" href="../assets/css/style.css" />
   <meta property="og:locale" content="ru_RU" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Brat Animator - генератор LRC lyric video" />
-  <meta property="og:description" content="Создавайте brat-style lyric videos из LRC lyrics и экспортируйте video-only MP4/WebM прямо в браузере." />
+  <meta property="og:description" content="Создавайте brat-style LRC lyric videos и экспортируйте MP4/WebM с опциональным загруженным аудио. YouTube только для preview." />
   <meta property="og:url" content="https://oakvx.github.io/bratAnimator/ru/" />
   <meta property="og:site_name" content="Brat Animator" />
   <meta property="og:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
@@ -29,7 +36,7 @@
   <meta property="og:image:alt" content="Brat Animator preview with a green brat-style lyric video canvas." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Brat Animator - генератор LRC lyric video" />
-  <meta name="twitter:description" content="Создавайте brat-style lyric videos из LRC lyrics и экспортируйте video-only MP4/WebM в браузере." />
+  <meta name="twitter:description" content="Создавайте brat-style LRC lyric videos и экспортируйте MP4/WebM с опциональным загруженным аудио." />
   <meta name="twitter:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
   <meta name="twitter:image:alt" content="Brat Animator preview with a green brat-style lyric video canvas." />
   <script type="application/ld+json">{
@@ -38,7 +45,7 @@
     "@id": "https://oakvx.github.io/bratAnimator/ru/#webpage",
     "url": "https://oakvx.github.io/bratAnimator/ru/",
     "name": "Brat Animator - генератор LRC lyric video",
-    "description": "Создавайте квадратные brat-style lyric videos из синхронизированных LRC lyrics в браузере, уточняйте тайминг локальным аудио и экспортируйте video-only MP4/WebM.",
+    "description": "Создавайте brat-style lyric videos из LRC lyrics в браузере: локальный тайминг, фоновые медиа и экспорт MP4/WebM с опциональным загруженным аудио.",
     "isPartOf": {
       "@id": "https://oakvx.github.io/bratAnimator/#website"
     },
@@ -55,27 +62,36 @@
 <body>
   <main class="seo-copy localized-seo">
     <h1>Brat Animator</h1>
-    <p>Статический браузерный инструмент для создания квадратных brat-style lyric videos из синхронизированных LRC lyrics, проверки тайминга локальным аудио и video-only экспорта MP4/WebM.</p>
+    <p>Статический браузерный инструмент для квадратных brat-style LRC lyric videos, локального тайминга, фоновых медиа, snapshot проекта и экспорта MP4/WebM с опциональным загруженным аудио.</p>
+    <nav class="internal-links" aria-label="site links">
+      <strong>Ссылки сайта</strong>
+      <a href="../">Главное приложение</a>
+      <a href="../en/" hreflang="en">English</a>
+      <a href="../ru/" hreflang="ru">Russian</a>
+      <a href="../zh/" hreflang="zh-CN">Chinese</a>
+      <a href="../sitemap.xml">Sitemap</a>
+    </nav>
     <div class="seo-grid">
       <section class="seo-card">
         <h3>Возможности</h3>
         <ul class="feature-list">
-          <li>Поиск через LRCLIB или вставка LRC lyrics с таймкодами.</li>
-          <li>Preview и уточнение тайминга lyrics в браузере.</li>
-          <li>Настройка квадратного canvas перед экспортом.</li>
+          <li>Ищите lyrics через LRCLIB, вставляйте LRC или используйте YouTube ссылку как preview/reference.</li>
+          <li>Редактируйте timing, word animation, format presets и background media в браузере.</li>
+          <li>Сохраняйте snapshots, экспортируйте project JSON и импортируйте preset libraries.</li>
         </ul>
       </section>
       <section class="seo-card">
         <h3>Экспорт</h3>
         <ul class="feature-list">
-          <li>Video-only MP4 при поддержке браузера.</li>
-          <li>WebM fallback в совместимых браузерах.</li>
-          <li>Project snapshots и инструменты передачи JSON.</li>
+          <li>Fast MP4 остается video-only, когда поддерживается браузером.</li>
+          <li>Realtime MP4/WebM может объединять локальное или direct CORS-enabled media audio.</li>
+          <li>YouTube не скачивается и не извлекается.</li>
         </ul>
       </section>
       <section class="seo-card">
         <h3>Требуется разрешение</h3>
-        <p>Использование, копирование, распространение, self-hosting, коммерческое использование или интеграция требуют явного письменного разрешения автора.</p>
+        <p>Вы можете свободно пользоваться Brat Animator. Для публикации, публичного распространения, self-hosting, коммерческого использования или интеграции сначала запросите письменное разрешение автора.</p>
+        <p><a class="text-link" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A">Запросить разрешение</a></p>
       </section>
       <section class="seo-card">
         <h3>Открыть приложение</h3>

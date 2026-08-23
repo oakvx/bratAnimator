@@ -3,12 +3,15 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
 
         const INVIDIOUS_BASES = [
-            "https://inv.nadeko.net",
             "https://yewtu.be",
             "https://invidious.nerdvpn.de"
         ];
 
         const APPLE_LIKE_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro Rounded", "Helvetica Neue", "Segoe UI", system-ui, sans-serif';
+        const BratCore = window.BratCore || {};
+        const BratMedia = window.BratMedia || {};
+        const BratExport = window.BratExport || {};
+        const PROJECT_VERSION = BratCore.PROJECT_VERSION || 3;
 
         const previewCanvas = document.getElementById("previewCanvas");
         const previewCtx = previewCanvas.getContext("2d", {
@@ -39,6 +42,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         const lyricsInput = document.getElementById("lyricsInput");
         const audioFileInput = document.getElementById("audioFileInput");
+        const audioUrlInput = document.getElementById("audioUrlInput");
+        const loadAudioUrlBtn = document.getElementById("loadAudioUrlBtn");
         const audioStatus = document.getElementById("audioStatus");
         const useAudioTimingCheckbox = document.getElementById("useAudioTimingCheckbox");
         const startFromZeroCheckbox = document.getElementById("startFromZeroCheckbox");
@@ -47,6 +52,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const exportPngBtn = document.getElementById("exportPngBtn");
         const exportSizeSelect = document.getElementById("exportSizeSelect");
         const exportFpsSelect = document.getElementById("exportFpsSelect");
+        const includeAudioInExportCheckbox = document.getElementById("includeAudioInExportCheckbox");
+        const exportAudioVolumeInput = document.getElementById("exportAudioVolumeInput");
+        const exportAudioFadeInInput = document.getElementById("exportAudioFadeInInput");
+        const exportAudioFadeOutInput = document.getElementById("exportAudioFadeOutInput");
+        const exportAudioNote = document.getElementById("exportAudioNote");
         const exportStatus = document.getElementById("exportStatus");
         const exportEstimate = document.getElementById("exportEstimate");
 
@@ -69,6 +79,9 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const musicActiveScaleInput = document.getElementById("musicActiveScaleInput");
         const musicDimOpacityInput = document.getElementById("musicDimOpacityInput");
         const musicScrollPositionInput = document.getElementById("musicScrollPositionInput");
+        const wordAnimationModeSelect = document.getElementById("wordAnimationModeSelect");
+        const wordAnimationIntensityInput = document.getElementById("wordAnimationIntensityInput");
+        const wordAnimationColorInput = document.getElementById("wordAnimationColorInput");
         const beautifulDynamicBgCheckbox = document.getElementById("beautifulDynamicBgCheckbox");
         const beautifulSideVocalsCheckbox = document.getElementById("beautifulSideVocalsCheckbox");
         const beautifulMotionInput = document.getElementById("beautifulMotionInput");
@@ -83,21 +96,56 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const verticalPositionInput = document.getElementById("verticalPositionInput");
         const stretchInput = document.getElementById("stretchInput");
         const letterSpacingInput = document.getElementById("letterSpacingInput");
+        const letterChunkSizeInput = document.getElementById("letterChunkSizeInput");
         const lineSpacingInput = document.getElementById("lineSpacingInput");
         const randomStyleBtn = document.getElementById("randomStyleBtn");
         const safeZonesCheckbox = document.getElementById("safeZonesCheckbox");
         const fullscreenBtn = document.getElementById("fullscreenBtn");
+        const backgroundFileInput = document.getElementById("backgroundFileInput");
+        const backgroundUrlInput = document.getElementById("backgroundUrlInput");
+        const loadBackgroundUrlBtn = document.getElementById("loadBackgroundUrlBtn");
+        const clearBackgroundBtn = document.getElementById("clearBackgroundBtn");
+        const useArtworkBgBtn = document.getElementById("useArtworkBgBtn");
+        const bgMediaOpacityInput = document.getElementById("bgMediaOpacityInput");
+        const bgMediaBlurInput = document.getElementById("bgMediaBlurInput");
+        const bgMediaBrightnessInput = document.getElementById("bgMediaBrightnessInput");
+        const bgMediaSaturationInput = document.getElementById("bgMediaSaturationInput");
+        const bgMediaScaleInput = document.getElementById("bgMediaScaleInput");
+        const bgMediaPositionXInput = document.getElementById("bgMediaPositionXInput");
+        const bgMediaPositionYInput = document.getElementById("bgMediaPositionYInput");
+        const backgroundStatus = document.getElementById("backgroundStatus");
+        const presetNameInput = document.getElementById("presetNameInput");
+        const savePresetBtn = document.getElementById("savePresetBtn");
+        const userPresetSelect = document.getElementById("userPresetSelect");
+        const loadPresetBtn = document.getElementById("loadPresetBtn");
+        const deletePresetBtn = document.getElementById("deletePresetBtn");
+        const exportPresetBtn = document.getElementById("exportPresetBtn");
+        const importPresetInput = document.getElementById("importPresetInput");
+        const presetStatus = document.getElementById("presetStatus");
         const lrcRows = document.getElementById("lrcRows");
+        const lrcSearchInput = document.getElementById("lrcSearchInput");
         const refreshEditorBtn = document.getElementById("refreshEditorBtn");
         const applyEditorBtn = document.getElementById("applyEditorBtn");
         const addLrcRowBtn = document.getElementById("addLrcRowBtn");
         const syncCurrentRowBtn = document.getElementById("syncCurrentRowBtn");
+        const splitLrcRowBtn = document.getElementById("splitLrcRowBtn");
+        const mergeLrcRowBtn = document.getElementById("mergeLrcRowBtn");
+        const moveLrcUpBtn = document.getElementById("moveLrcUpBtn");
+        const moveLrcDownBtn = document.getElementById("moveLrcDownBtn");
+        const duplicateLrcRowBtn = document.getElementById("duplicateLrcRowBtn");
+        const playSelectedRowBtn = document.getElementById("playSelectedRowBtn");
+        const timingOffsetInput = document.getElementById("timingOffsetInput");
+        const shiftSelectedBackBtn = document.getElementById("shiftSelectedBackBtn");
+        const shiftSelectedForwardBtn = document.getElementById("shiftSelectedForwardBtn");
+        const shiftAllByInputBtn = document.getElementById("shiftAllByInputBtn");
+        const undoBtn = document.getElementById("undoBtn");
+        const redoBtn = document.getElementById("redoBtn");
         const plainLyricsInput = document.getElementById("plainLyricsInput");
         const startTapSyncBtn = document.getElementById("startTapSyncBtn");
         const tapNextLineBtn = document.getElementById("tapNextLineBtn");
         const finishTapSyncBtn = document.getElementById("finishTapSyncBtn");
         const tapSyncStatus = document.getElementById("tapSyncStatus");
-        const syncAudio = document.getElementById("syncAudio");
+        const syncMediaMount = document.getElementById("syncMediaMount");
         const waveformCanvas = document.getElementById("waveformCanvas");
         const timelineCanvas = document.getElementById("timelineCanvas");
         const cleanLrcBtn = document.getElementById("cleanLrcBtn");
@@ -112,12 +160,24 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const starterLrcBtn = document.getElementById("starterLrcBtn");
         const snapshotNameInput = document.getElementById("snapshotNameInput");
         const saveSnapshotBtn = document.getElementById("saveSnapshotBtn");
+        const duplicateProjectBtn = document.getElementById("duplicateProjectBtn");
         const shareProjectLinkBtn = document.getElementById("shareProjectLinkBtn");
         const copyProjectJsonBtn = document.getElementById("copyProjectJsonBtn");
         const projectFeatureStatus = document.getElementById("projectFeatureStatus");
         const snapshotList = document.getElementById("snapshotList");
+        const previewZoomInput = document.getElementById("previewZoomInput");
+        const commandPalette = document.getElementById("commandPalette");
+        const commandPaletteInput = document.getElementById("commandPaletteInput");
+        const commandPaletteList = document.getElementById("commandPaletteList");
+        const recoveryBanner = document.getElementById("recoveryBanner");
+        const recoveryKeepBtn = document.getElementById("recoveryKeepBtn");
+        const recoveryDiscardBtn = document.getElementById("recoveryDiscardBtn");
 
         const SNAPSHOT_STORAGE_KEY = "bratAnimator.snapshots.v1";
+        const USER_PRESET_STORAGE_KEY = "bratAnimator.presets.v1";
+        const MEDIA_DB_NAME = "bratAnimator.media.v1";
+        const MEDIA_STORE_NAME = "media";
+        const UNDO_LIMIT = 60;
 
         const state = {
             timeline: [],
@@ -132,11 +192,58 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             audioAnalysis: null,
             audioFileName: "",
             audioObjectUrl: "",
+            audioRemoteUrl: "",
             theme: "green",
             language: "en",
             formatPreset: "square",
             animationMode: "typewriter",
+            includeAudioInExport: true,
             selectedLrcRowIndex: 0,
+            selectedLrcRowIndexes: new Set(),
+            lrcClipboardRows: [],
+            undoStack: [],
+            redoStack: [],
+            dragEdit: null,
+            previewZoom: 1,
+            audio: {
+                includeInExport: true,
+                volume: 1,
+                fadeIn: 0,
+                fadeOut: 0,
+                source: "local",
+                url: "",
+                mediaKind: "audio"
+            },
+            metadata: {
+                trackName: "",
+                artistName: "",
+                albumName: "",
+                duration: 0,
+                artworkUrl: "",
+                thumbnailUrl: "",
+                source: ""
+            },
+            background: {
+                kind: "none",
+                assetId: "",
+                url: "",
+                name: "",
+                opacity: 1,
+                blur: 0,
+                brightness: 1,
+                saturation: 1,
+                scale: 1,
+                positionX: 0.5,
+                positionY: 0.5
+            },
+            backgroundElement: null,
+            backgroundObjectUrl: "",
+            backgroundExportSafe: true,
+            dirty: {
+                timeline: true,
+                render: true,
+                waveform: true
+            },
             tapSync: {
                 active: false,
                 startedAt: 0,
@@ -153,6 +260,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 verticalPosition: 0,
                 stretch: 0.94,
                 letterSpacing: 0,
+                letterChunkSize: 2,
                 lineSpacing: 0.92,
                 lyricsMode: "brat",
                 musicAlign: "left",
@@ -160,6 +268,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 musicActiveScale: 1.16,
                 musicDimOpacity: 0.34,
                 musicScrollPosition: 0.50,
+                wordAnimation: {
+                    mode: "progress",
+                    intensity: 0.7,
+                    color: "#ffffff"
+                },
                 beautifulDynamicBg: true,
                 beautifulSideVocals: true,
                 beautifulMotion: 0.72,
@@ -183,9 +296,172 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const MAX_LINE_TRAILING_HOLD = 0.55;
 
         let sharedAudioContext = null;
+        let syncAudio = null;
 
         function clamp(value, min, max) {
             return Math.min(max, Math.max(min, value));
+        }
+
+        function migrateProjectPayload(payload) {
+            if (BratCore.migrateProjectPayload) {
+                return BratCore.migrateProjectPayload(payload);
+            }
+            const audioName = payload?.audio?.name || "";
+            const audioUrl = payload?.audio?.url || "";
+            return {
+                ...(payload || {}),
+                version: PROJECT_VERSION,
+                audio: {
+                    includeInExport: payload?.audio?.includeInExport ?? payload?.includeAudioInExport ?? true,
+                    volume: clamp(Number(payload?.audio?.volume ?? 1), 0, 2),
+                    fadeIn: clamp(Number(payload?.audio?.fadeIn ?? 0), 0, 30),
+                    fadeOut: clamp(Number(payload?.audio?.fadeOut ?? 0), 0, 30),
+                    source: payload?.audio?.source || "local",
+                    url: audioUrl,
+                    assetId: payload?.audio?.assetId || "",
+                    name: audioName,
+                    mediaKind: payload?.audio?.mediaKind || inferAudioMediaKind(audioName, audioUrl)
+                },
+                metadata: payload?.metadata || {},
+                background: payload?.background || { kind: "none" },
+                style: {
+                    ...(payload?.style || {}),
+                    wordAnimation: payload?.style?.wordAnimation || { mode: "progress", intensity: 0.7, color: "#ffffff" }
+                }
+            };
+        }
+
+        function getAudioSettingsFromControls() {
+            state.audio = {
+                includeInExport: includeAudioInExportCheckbox?.checked !== false,
+                volume: clamp((Number(exportAudioVolumeInput?.value) || 100) / 100, 0, 2),
+                fadeIn: clamp((Number(exportAudioFadeInInput?.value) || 0) / 100, 0, 10),
+                fadeOut: clamp((Number(exportAudioFadeOutInput?.value) || 0) / 100, 0, 10),
+                source: state.audio?.source || "local",
+                url: state.audio?.url || state.audioRemoteUrl || "",
+                assetId: state.audio?.assetId || "",
+                name: state.audio?.name || state.audioFileName || "",
+                mediaKind: state.audio?.mediaKind || inferAudioMediaKind(state.audio?.name || state.audioFileName || "", state.audio?.url || state.audioRemoteUrl || "")
+            };
+            state.includeAudioInExport = state.audio.includeInExport;
+            return state.audio;
+        }
+
+        function writeAudioControls(audio = state.audio) {
+            const next = migrateProjectPayload({ audio }).audio;
+            state.audio = next;
+            state.includeAudioInExport = next.includeInExport;
+            if (includeAudioInExportCheckbox) includeAudioInExportCheckbox.checked = next.includeInExport !== false;
+            if (exportAudioVolumeInput) exportAudioVolumeInput.value = Math.round((next.volume ?? 1) * 100);
+            if (exportAudioFadeInInput) exportAudioFadeInInput.value = Math.round((next.fadeIn ?? 0) * 100);
+            if (exportAudioFadeOutInput) exportAudioFadeOutInput.value = Math.round((next.fadeOut ?? 0) * 100);
+        }
+
+        function getBackgroundSettingsFromControls() {
+            state.background = {
+                ...state.background,
+                opacity: clamp((Number(bgMediaOpacityInput?.value) || 100) / 100, 0, 1),
+                blur: clamp(Number(bgMediaBlurInput?.value) || 0, 0, 40),
+                brightness: clamp((Number(bgMediaBrightnessInput?.value) || 100) / 100, 0, 2),
+                saturation: clamp((Number(bgMediaSaturationInput?.value) || 100) / 100, 0, 2),
+                scale: clamp((Number(bgMediaScaleInput?.value) || 100) / 100, 0.25, 3),
+                positionX: clamp((Number(bgMediaPositionXInput?.value) || 50) / 100, 0, 1),
+                positionY: clamp((Number(bgMediaPositionYInput?.value) || 50) / 100, 0, 1)
+            };
+            return state.background;
+        }
+
+        function writeBackgroundControls(background = state.background) {
+            const next = migrateProjectPayload({ background }).background;
+            state.background = { ...state.background, ...next };
+            if (bgMediaOpacityInput) bgMediaOpacityInput.value = Math.round((next.opacity ?? 1) * 100);
+            if (bgMediaBlurInput) bgMediaBlurInput.value = Math.round(next.blur ?? 0);
+            if (bgMediaBrightnessInput) bgMediaBrightnessInput.value = Math.round((next.brightness ?? 1) * 100);
+            if (bgMediaSaturationInput) bgMediaSaturationInput.value = Math.round((next.saturation ?? 1) * 100);
+            if (bgMediaScaleInput) bgMediaScaleInput.value = Math.round((next.scale ?? 1) * 100);
+            if (bgMediaPositionXInput) bgMediaPositionXInput.value = Math.round((next.positionX ?? 0.5) * 100);
+            if (bgMediaPositionYInput) bgMediaPositionYInput.value = Math.round((next.positionY ?? 0.5) * 100);
+            updateBackgroundStatus();
+        }
+
+        function updateUndoRedoState() {
+            if (undoBtn) undoBtn.disabled = !state.undoStack.length;
+            if (redoBtn) redoBtn.disabled = !state.redoStack.length;
+        }
+
+        function commitProjectChange(label, mutator) {
+            const before = buildProjectPayload();
+            mutator();
+            const after = buildProjectPayload();
+            if (JSON.stringify(before) !== JSON.stringify(after)) {
+                state.undoStack.push({ label, payload: before });
+                if (state.undoStack.length > UNDO_LIMIT) state.undoStack.shift();
+                state.redoStack = [];
+            }
+            updateUndoRedoState();
+        }
+
+        function undoProjectChange() {
+            if (!state.undoStack.length) return;
+            const current = buildProjectPayload();
+            const entry = state.undoStack.pop();
+            state.redoStack.push({ label: entry.label, payload: current });
+            restoreProjectSettings(entry.payload, { skipHistory: true });
+            setProjectFeatureStatus(`undid ${entry.label}`);
+            updateUndoRedoState();
+        }
+
+        function redoProjectChange() {
+            if (!state.redoStack.length) return;
+            const current = buildProjectPayload();
+            const entry = state.redoStack.pop();
+            state.undoStack.push({ label: entry.label, payload: current });
+            restoreProjectSettings(entry.payload, { skipHistory: true });
+            setProjectFeatureStatus(`redid ${entry.label}`);
+            updateUndoRedoState();
+        }
+
+        function openMediaDb() {
+            if (!("indexedDB" in window)) return Promise.resolve(null);
+            return new Promise((resolve) => {
+                const request = indexedDB.open(MEDIA_DB_NAME, 1);
+                request.onupgradeneeded = () => {
+                    request.result.createObjectStore(MEDIA_STORE_NAME, { keyPath: "id" });
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function storeMediaBlob(blob, name, kind) {
+            const db = await openMediaDb();
+            const id = `${kind}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+            if (!db) return id;
+            await new Promise((resolve) => {
+                const tx = db.transaction(MEDIA_STORE_NAME, "readwrite");
+                tx.objectStore(MEDIA_STORE_NAME).put({ id, blob, name, kind, savedAt: new Date().toISOString() });
+                tx.oncomplete = resolve;
+                tx.onerror = resolve;
+            });
+            db.close?.();
+            return id;
+        }
+
+        async function loadMediaBlob(assetId) {
+            const db = await openMediaDb();
+            if (!db || !assetId) return null;
+            return new Promise((resolve) => {
+                const tx = db.transaction(MEDIA_STORE_NAME, "readonly");
+                const request = tx.objectStore(MEDIA_STORE_NAME).get(assetId);
+                request.onsuccess = () => {
+                    db.close?.();
+                    resolve(request.result || null);
+                };
+                request.onerror = () => {
+                    db.close?.();
+                    resolve(null);
+                };
+            });
         }
 
         function percentile(values, q) {
@@ -426,6 +702,41 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const audioContext = await getAudioContext();
             const arrayBuffer = await file.arrayBuffer();
             return audioContext.decodeAudioData(arrayBuffer);
+        }
+
+        function bindSyncMediaEvents(element) {
+            element.addEventListener("timeupdate", () => {
+                if (!state.isPlaying) {
+                    state.pausedElapsedSec = element.currentTime || state.pausedElapsedSec;
+                    renderPreviewAt(state.pausedElapsedSec);
+                    drawWaveform();
+                    renderTimeline();
+                }
+            });
+        }
+
+        function clearSyncMediaSource() {
+            syncAudio?.pause?.();
+            syncAudio = null;
+            if (syncMediaMount) {
+                syncMediaMount.replaceChildren();
+                syncMediaMount.classList.add("hidden");
+            }
+        }
+
+        function setSyncMediaSource(src, mediaKind) {
+            if (!syncMediaMount) return;
+            clearSyncMediaSource();
+            const element = mediaKind === "video" ? document.createElement("video") : document.createElement("audio");
+            element.controls = true;
+            element.preload = "metadata";
+            element.playsInline = true;
+            element.className = mediaKind === "video" ? "sync-media-player is-video" : "sync-media-player";
+            element.src = src;
+            bindSyncMediaEvents(element);
+            syncAudio = element;
+            syncMediaMount.appendChild(element);
+            syncMediaMount.classList.remove("hidden");
         }
 
         function analyzeAudioEnergy(audioBuffer, frameMs = 18) {
@@ -889,6 +1200,31 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
         }
 
+        function revealTextByNonSpaceLimit(text, nonSpaceLimit) {
+            if (nonSpaceLimit <= 0) return "";
+
+            const chars = Array.from(String(text || ""));
+            let visibleNonSpace = 0;
+            let revealIndex = -1;
+
+            for (let i = 0; i < chars.length; i += 1) {
+                const isVisibleChar = /\S/.test(chars[i]);
+
+                if (isVisibleChar) {
+                    if (visibleNonSpace >= nonSpaceLimit) break;
+                    visibleNonSpace += 1;
+                }
+
+                revealIndex = i;
+            }
+
+            while (revealIndex + 1 < chars.length && !/\S/.test(chars[revealIndex + 1])) {
+                revealIndex += 1;
+            }
+
+            return chars.slice(0, revealIndex + 1).join("");
+        }
+
         function getTimelineDuration() {
             const lastLine = state.timeline[state.timeline.length - 1];
             return lastLine ? lastLine.displayEnd : 0;
@@ -966,6 +1302,29 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 return { text: textUntilBlock + visibleBlock, active: true, line, block, progress: blockProgress, alpha: 1 };
             }
 
+            if (mode === "letter-chunks") {
+                const textUntilBlock = Array.from(line.text).slice(0, block.startChar).join("");
+                const nonSpaceChars = block.chars.filter(item => /\S/.test(item.char));
+                const chunkSize = clamp(Math.round(state.style.letterChunkSize || 2), 1, 12);
+                let visibleNonSpace = 0;
+
+                while (visibleNonSpace < nonSpaceChars.length && timeSec >= nonSpaceChars[visibleNonSpace].timestamp) {
+                    visibleNonSpace += 1;
+                }
+
+                if (timeSec >= block.fullVisibleAt) {
+                    visibleNonSpace = nonSpaceChars.length;
+                }
+
+                const chunkedVisibleNonSpace = Math.min(
+                    nonSpaceChars.length,
+                    Math.ceil(visibleNonSpace / chunkSize) * chunkSize
+                );
+                const visibleBlock = revealTextByNonSpaceLimit(block.text, chunkedVisibleNonSpace);
+
+                return { text: textUntilBlock + visibleBlock, active: true, line, block, progress: blockProgress, alpha: 1 };
+            }
+
             let visibleChars = 0;
             while (visibleChars < block.chars.length && timeSec >= block.chars[visibleChars].timestamp) {
                 visibleChars += 1;
@@ -1016,7 +1375,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function fitTextLayout(ctx, text, width, height) {
-            readStyleControls();
             const maxWidth = width * 0.76;
             const maxHeight = height * 0.48;
             let finalSize = 56;
@@ -1045,12 +1403,223 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function getThemeColors() {
-            readStyleControls();
             return {
                 page: state.theme === "dark" ? "#111111" : "#e9e9e9",
                 stage: state.style.bgColor || "#8ACE00",
                 text: state.style.textColor || "#000000"
             };
+        }
+
+        function updateBackgroundStatus(message = "") {
+            if (!backgroundStatus) return;
+            if (message) {
+                backgroundStatus.textContent = message;
+                return;
+            }
+            const bg = state.background || {};
+            if (!bg.kind || bg.kind === "none") {
+                backgroundStatus.textContent = "no background media";
+                return;
+            }
+            backgroundStatus.textContent = `${bg.kind} background ${bg.name || bg.url || bg.assetId ? "ready" : "selected"}`;
+        }
+
+        function inferBackgroundKind(source = "", fileType = "") {
+            if (BratMedia.inferBackgroundKind) return BratMedia.inferBackgroundKind(source, fileType);
+            const value = `${fileType} ${source}`.toLowerCase();
+            return /video|\.mp4|\.webm|\.mov|\.m4v/.test(value) ? "video" : "image";
+        }
+
+        function inferAudioMediaKind(source = "", fileType = "") {
+            if (BratMedia.inferAudioMediaKind) return BratMedia.inferAudioMediaKind(source, fileType);
+            const value = `${fileType} ${source}`.toLowerCase();
+            return /video|\.mp4|\.webm|\.mov|\.m4v/.test(value) ? "video" : "audio";
+        }
+
+        function mediaNameFromUrl(url) {
+            if (BratMedia.mediaNameFromUrl) return BratMedia.mediaNameFromUrl(url, window.location.href);
+            try {
+                const parsed = new URL(url, window.location.href);
+                const fileName = parsed.pathname.split("/").filter(Boolean).pop();
+                return decodeURIComponent(fileName || parsed.hostname || "URL media");
+            } catch (_) {
+                return "URL media";
+            }
+        }
+
+        function mediaDecodeFailureMessage(kind) {
+            if (kind === "video") {
+                return "could not extract audio from this video; use a browser-supported video with an audio track, or upload the audio file";
+            }
+            return "unsupported audio or decoding failed";
+        }
+
+        function mediaReadyLabel(kind) {
+            return kind === "video" ? "audio extracted from video" : "timing analysis ready";
+        }
+
+        function extractYouTubeVideoId(value = "") {
+            if (BratMedia.extractYouTubeVideoId) return BratMedia.extractYouTubeVideoId(value, window.location.href);
+            const raw = String(value || "").trim();
+            const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/i);
+            return match?.[1] || "";
+        }
+
+        function releaseBackgroundObjectUrl() {
+            if (state.backgroundObjectUrl) {
+                URL.revokeObjectURL(state.backgroundObjectUrl);
+                state.backgroundObjectUrl = "";
+            }
+        }
+
+        function makeBackgroundElement(kind, src, fromUrl = false) {
+            return new Promise((resolve, reject) => {
+                const element = kind === "video" ? document.createElement("video") : new Image();
+                if (fromUrl) element.crossOrigin = "anonymous";
+
+                if (kind === "video") {
+                    element.muted = true;
+                    element.loop = true;
+                    element.playsInline = true;
+                    element.preload = "auto";
+                    element.addEventListener("loadeddata", () => resolve(element), { once: true });
+                    element.addEventListener("error", reject, { once: true });
+                    element.src = src;
+                    element.play?.().catch(() => {});
+                    return;
+                }
+
+                element.onload = () => resolve(element);
+                element.onerror = reject;
+                element.src = src;
+            });
+        }
+
+        function canExportBackgroundElement(kind, element) {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = 2;
+                canvas.height = 2;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return false;
+                ctx.drawImage(element, 0, 0, 2, 2);
+                ctx.getImageData(0, 0, 1, 1);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        async function setBackgroundMedia({ kind, src, name = "", assetId = "", fromUrl = false }) {
+            updateBackgroundStatus(`loading ${kind} background...`);
+            try {
+                const element = await makeBackgroundElement(kind, src, fromUrl);
+                const exportSafe = !fromUrl || canExportBackgroundElement(kind, element);
+                state.backgroundElement = element;
+                state.backgroundExportSafe = exportSafe;
+                state.background = { ...state.background, kind, url: fromUrl ? src : "", name, assetId };
+                writeBackgroundControls(state.background);
+                renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+                updateBackgroundStatus(exportSafe ? `${kind} background ready` : `${kind} background is preview-only; upload it locally to export`);
+                saveProjectSettings();
+            } catch (error) {
+                state.backgroundElement = null;
+                state.backgroundExportSafe = false;
+                updateBackgroundStatus("background failed to load or is not CORS-enabled");
+            }
+        }
+
+        async function loadBackgroundFile(file) {
+            if (!file) return;
+            const kind = inferBackgroundKind(file.name, file.type);
+            const assetId = await storeMediaBlob(file, file.name, kind);
+            releaseBackgroundObjectUrl();
+            state.backgroundObjectUrl = URL.createObjectURL(file);
+            await setBackgroundMedia({ kind, src: state.backgroundObjectUrl, name: file.name, assetId, fromUrl: false });
+        }
+
+        async function loadBackgroundUrl(urlValue) {
+            const url = String(urlValue || "").trim();
+            if (!url) return;
+
+            const youtubeVideoId = extractYouTubeVideoId(url);
+            if (youtubeVideoId) {
+                updateBackgroundStatus("YouTube links are preview-only. Use search video for reference, or upload/paste a direct image/video URL for background.");
+                loadInvidiousPlayer(youtubeVideoId);
+                return;
+            }
+
+            let label = url;
+            try {
+                label = new URL(url, window.location.href).hostname;
+            } catch (_) {}
+            await setBackgroundMedia({ kind: inferBackgroundKind(url), src: url, name: label, fromUrl: true });
+        }
+
+        async function restoreBackgroundMedia(background) {
+            writeBackgroundControls(background);
+            if (!background || background.kind === "none") return;
+            if (background.assetId) {
+                const record = await loadMediaBlob(background.assetId);
+                if (record?.blob) {
+                    releaseBackgroundObjectUrl();
+                    state.backgroundObjectUrl = URL.createObjectURL(record.blob);
+                    await setBackgroundMedia({ kind: record.kind || background.kind, src: state.backgroundObjectUrl, name: record.name || background.name, assetId: background.assetId, fromUrl: false });
+                    return;
+                }
+            }
+            if (background.url) {
+                await setBackgroundMedia({ kind: background.kind, src: background.url, name: background.name || background.url, fromUrl: true });
+            }
+        }
+
+        function clearBackgroundMedia() {
+            releaseBackgroundObjectUrl();
+            state.backgroundElement = null;
+            state.backgroundExportSafe = true;
+            state.background = migrateProjectPayload({}).background;
+            writeBackgroundControls(state.background);
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            saveProjectSettings();
+        }
+
+        function useArtworkAsBackground() {
+            const url = state.metadata?.artworkUrl || state.metadata?.thumbnailUrl || "";
+            if (!url) {
+                updateBackgroundStatus("no artwork or thumbnail available");
+                return;
+            }
+            loadBackgroundUrl(url);
+        }
+
+        function drawBackgroundMedia(ctx, width, height, timeSec) {
+            const element = state.backgroundElement;
+            const bg = state.background || {};
+            if (!element || !bg.kind || bg.kind === "none" || (bg.opacity ?? 1) <= 0) return false;
+
+            const mediaWidth = bg.kind === "video" ? element.videoWidth : element.naturalWidth;
+            const mediaHeight = bg.kind === "video" ? element.videoHeight : element.naturalHeight;
+            if (!mediaWidth || !mediaHeight) return false;
+
+            if (bg.kind === "video" && Number.isFinite(element.duration) && element.duration > 0 && !element.seeking) {
+                const target = timeSec % element.duration;
+                if (Math.abs((element.currentTime || 0) - target) > 0.35) {
+                    try { element.currentTime = target; } catch (_) {}
+                }
+            }
+
+            const coverScale = Math.max(width / mediaWidth, height / mediaHeight) * (bg.scale || 1);
+            const drawWidth = mediaWidth * coverScale;
+            const drawHeight = mediaHeight * coverScale;
+            const x = (width - drawWidth) * (bg.positionX ?? 0.5);
+            const y = (height - drawHeight) * (bg.positionY ?? 0.5);
+
+            ctx.save();
+            ctx.globalAlpha = clamp(bg.opacity ?? 1, 0, 1);
+            ctx.filter = `blur(${bg.blur || 0}px) brightness(${bg.brightness || 1}) saturate(${bg.saturation || 1})`;
+            ctx.drawImage(element, x, y, drawWidth, drawHeight);
+            ctx.restore();
+            return true;
         }
 
         function getActiveMusicLineIndex(timeSec) {
@@ -1225,7 +1794,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const textColor = theme.text || "#f5f5f7";
             const futureColor = rgbaFromHex(textColor, Math.max(0.22, baseOpacity * 0.92));
             const sungColor = rgbaFromHex(textColor, 0.78);
-            const currentColor = "#ffffff";
+            const wordAnimation = state.style.wordAnimation || { mode: "progress", intensity: 0.7, color: "#ffffff" };
+            const wordMode = wordAnimation.mode || "progress";
+            const wordIntensity = clamp(wordAnimation.intensity ?? 0.7, 0, 1);
+            const currentColor = wordMode === "color" ? (wordAnimation.color || "#ffffff") : "#ffffff";
             const haloColor = mixHex(textColor, "#ffffff", 0.52);
 
             ctx.save();
@@ -1260,6 +1832,15 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                         const centerX = tokenX + reveal;
                         const glowWidth = token.width + padX * 2;
                         const pulse = 0.78 + 0.22 * Math.sin(local * Math.PI);
+                        const shakeX = wordMode === "shake" ? Math.sin(timeSec * 80) * fontSize * 0.025 * wordIntensity : 0;
+                        const shakeY = wordMode === "shake" ? Math.cos(timeSec * 68) * fontSize * 0.018 * wordIntensity : 0;
+                        const scale = wordMode === "scale"
+                            ? 1 + Math.sin(local * Math.PI) * 0.10 * wordIntensity
+                            : wordMode === "pop"
+                                ? 1 + Math.max(0, 1 - local * 2.2) * 0.18 * wordIntensity
+                                : 1;
+                        const currentAlpha = wordMode === "fade" ? Math.max(0.2, local) : 1;
+                        const effectiveGlow = glow * (wordMode === "glow" ? 1 + wordIntensity * 1.35 : 1);
 
                         // Soft Apple-like luminous band centered on the currently sung word.
                         const glowGradient = ctx.createRadialGradient(
@@ -1270,8 +1851,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                             rowY,
                             glowWidth * 0.72
                         );
-                        glowGradient.addColorStop(0, `rgba(255,255,255,${0.30 * glow * pulse})`);
-                        glowGradient.addColorStop(0.42, `rgba(255,255,255,${0.12 * glow * pulse})`);
+                        glowGradient.addColorStop(0, `rgba(255,255,255,${0.30 * effectiveGlow * pulse})`);
+                        glowGradient.addColorStop(0.42, `rgba(255,255,255,${0.12 * effectiveGlow * pulse})`);
                         glowGradient.addColorStop(1, "rgba(255,255,255,0)");
                         ctx.save();
                         ctx.globalCompositeOperation = "screen";
@@ -1282,20 +1863,24 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                         // Progressive fill inside the word: the current word lights up
                         // from left to right as it is sung.
                         ctx.save();
-                        ctx.beginPath();
-                        ctx.rect(tokenX - 2, rowY - lineHeight * 0.56, reveal + 4, lineHeight * 1.12);
-                        ctx.clip();
-                        ctx.globalAlpha = 1;
-                        ctx.shadowColor = `rgba(255,255,255,${0.62 * glow})`;
-                        ctx.shadowBlur = 38 * glow;
+                        if (wordMode === "progress" || wordMode === "color") {
+                            ctx.beginPath();
+                            ctx.rect(tokenX - 2, rowY - lineHeight * 0.56, reveal + 4, lineHeight * 1.12);
+                            ctx.clip();
+                        }
+                        ctx.translate(tokenX + token.width / 2 + shakeX, rowY + shakeY);
+                        ctx.scale(scale, scale);
+                        ctx.globalAlpha = currentAlpha;
+                        ctx.shadowColor = `rgba(255,255,255,${0.62 * effectiveGlow})`;
+                        ctx.shadowBlur = 38 * effectiveGlow;
                         ctx.fillStyle = currentColor;
-                        ctx.fillText(token.text, tokenX, rowY);
+                        ctx.fillText(token.text, -token.width / 2, 0);
                         ctx.restore();
 
                         // A small specular sparkle at the reveal edge, visible only on
                         // the active word. It replaces any hard rectangle highlight.
                         const sparkle = ctx.createRadialGradient(centerX, rowY, 0, centerX, rowY, fontSize * 0.42);
-                        sparkle.addColorStop(0, `rgba(255,255,255,${0.22 * glow * pulse})`);
+                        sparkle.addColorStop(0, `rgba(255,255,255,${0.22 * effectiveGlow * pulse})`);
                         sparkle.addColorStop(1, "rgba(255,255,255,0)");
                         ctx.save();
                         ctx.globalCompositeOperation = "screen";
@@ -1445,6 +2030,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             ctx.save();
             ctx.clearRect(0, 0, width, height);
             drawMusicBackground(ctx, width, height, theme, timeSec);
+            drawBackgroundMedia(ctx, width, height, timeSec);
 
             if (!state.timeline.length) {
                 ctx.fillStyle = theme.text;
@@ -1578,7 +2164,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function drawScene(ctx, width, height, timeSec, options = {}) {
-            readStyleControls();
             if (state.style.lyricsMode === "music" || state.style.lyricsMode === "beautiful") {
                 drawMusicSyncedScene(ctx, width, height, timeSec, options);
                 return;
@@ -1591,6 +2176,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = theme.stage;
             ctx.fillRect(0, 0, width, height);
+            drawBackgroundMedia(ctx, width, height, timeSec);
 
             const layout = fitTextLayout(ctx, displayText, width, height);
             const centerX = width / 2;
@@ -1792,6 +2378,19 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 .replaceAll(">", "&gt;");
         }
 
+        function setMetadataFromLrclibItem(item = {}) {
+            state.selectedSong = item;
+            state.metadata = {
+                trackName: item.trackName || state.metadata?.trackName || "",
+                artistName: item.artistName || state.metadata?.artistName || "",
+                albumName: item.albumName || state.metadata?.albumName || "",
+                duration: Number(item.duration || state.metadata?.duration || 0) || 0,
+                artworkUrl: item.artworkUrl || item.coverArt || item.albumArt || state.metadata?.artworkUrl || "",
+                thumbnailUrl: state.metadata?.thumbnailUrl || "",
+                source: "lrclib"
+            };
+        }
+
         async function searchLRCLIB(query) {
             const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
             const res = await fetch(url);
@@ -1841,12 +2440,15 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 btn.addEventListener("click", () => {
                     const index = Number(btn.dataset.lrcIndex);
                     const item = items[index];
-                    state.selectedSong = item;
+                    setMetadataFromLrclibItem(item);
 
                     const bestLyrics = item.syncedLyrics || item.plainLyrics || "";
                     lyricsInput.value = bestLyrics;
                     rebuildTimelineFromCurrentInputs();
                     updateMeta();
+                    renderLrcRows();
+                    updateBackgroundStatus();
+                    saveProjectSettings();
                     searchStatus.textContent = `loaded: ${(item.artistName || "")} - ${(item.trackName || "")}`.trim();
                 });
             });
@@ -1855,7 +2457,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 btn.addEventListener("click", async () => {
                     const index = Number(btn.dataset.ytIndex);
                     const item = items[index];
-                    state.selectedSong = item;
+                    setMetadataFromLrclibItem(item);
+                    saveProjectSettings();
                     await runYouTubeSearchForItem(item);
                 });
             });
@@ -1959,27 +2562,103 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             document.querySelectorAll(".yt-item").forEach((el) => {
                 el.addEventListener("click", () => {
                     const videoId = el.dataset.videoId;
+                    const item = items.find(video => video.videoId === videoId);
+                    state.metadata = { ...state.metadata, thumbnailUrl: item ? getBestThumb(item) : state.metadata?.thumbnailUrl || "" };
+                    saveProjectSettings();
                     loadInvidiousPlayer(videoId);
                 });
             });
         }
 
+        function buildYouTubeWatchUrl(videoId) {
+            return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
+        }
+
+        function buildYouTubeEmbedUrl(videoId) {
+            const params = new URLSearchParams({
+                rel: "0",
+                modestbranding: "1",
+                playsinline: "1"
+            });
+            if (/^https?:$/.test(window.location.protocol) && window.location.origin && window.location.origin !== "null") {
+                params.set("origin", window.location.origin);
+            }
+            return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+        }
+
+        function renderYouTubeFallbackCard(videoId, reason = "") {
+            const watchUrl = buildYouTubeWatchUrl(videoId);
+            const thumb = `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
+            playerBox.innerHTML = `
+        <div class="yt-preview-card">
+          <img src="${thumb}" alt="">
+          <div class="yt-preview-card-body">
+            <strong>YouTube preview</strong>
+            <p>${reason || "This browser cannot open the embedded player here."}</p>
+            <p class="mini-copy">To use audio, upload an audio/video file or paste a direct media URL you have permission to use.</p>
+            <div class="yt-media-actions">
+              <button class="yt-add-media-btn" type="button">add audio/video file</button>
+              <a class="yt-open-link" href="${watchUrl}" target="_blank" rel="noopener noreferrer">watch on YouTube</a>
+            </div>
+          </div>
+        </div>
+      `;
+        }
+
         function loadInvidiousPlayer(videoId) {
-            const base = state.selectedVideoBase || INVIDIOUS_BASES[0];
             state.selectedVideoId = videoId;
 
             playerWrap.classList.remove("hidden");
             setPlayerOpenState(true);
+
+            if (!/^https?:$/.test(window.location.protocol)) {
+                renderYouTubeFallbackCard(videoId, "Embedded YouTube preview needs http/https. Open the project through a local server, or watch this reference on YouTube.");
+                youtubeStatus.textContent = `selected video: ${videoId} - open through http/https for embedded preview`;
+                return;
+            }
+
             playerBox.innerHTML = `
         <iframe
-          src="${base}/embed/${encodeURIComponent(videoId)}"
-          title="Invidious player"
+          src="${buildYouTubeEmbedUrl(videoId)}"
+          title="YouTube preview"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowfullscreen>
         </iframe>
+        <div class="yt-iframe-fallback">
+          <span>if the embed is blocked</span>
+          <button class="yt-add-media-btn" type="button">add audio/video</button>
+          <a href="${buildYouTubeWatchUrl(videoId)}" target="_blank" rel="noopener noreferrer">watch on YouTube</a>
+        </div>
       `;
 
-            youtubeStatus.textContent = `selected video: ${videoId}`;
+            youtubeStatus.textContent = `selected video: ${videoId} - YouTube preview only; add matching audio by upload or direct permitted URL`;
+        }
+
+        function loadYouTubeLinkFromSearch(query) {
+            const videoId = extractYouTubeVideoId(query);
+            if (!videoId) return false;
+
+            state.selectedSong = null;
+            state.selectedVideoBase = "";
+            state.metadata = {
+                ...state.metadata,
+                thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                source: state.metadata?.source || "youtube"
+            };
+            lrclibResults.innerHTML = `
+          <div class="result-card">
+            <div class="result-title">YouTube preview loaded</div>
+            <div class="result-sub">${escapeHtml(videoId)}</div>
+            <p class="mini-copy">This is preview/reference only. Add matching audio in Timing with an uploaded audio/video file or permitted direct media URL.</p>
+          </div>
+        `;
+            youtubeResults.innerHTML = "";
+            searchStatus.textContent = "YouTube link loaded as video preview";
+            loadInvidiousPlayer(videoId);
+            saveProjectSettings();
+            return true;
         }
 
         async function runYouTubeSearchForItem(item) {
@@ -2002,12 +2681,15 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 youtubeStatus.textContent = `${items.length} videos found via ${base}`;
                 renderYouTubeResults(items, base.replace(/^https?:\/\//, ""));
             } catch (error) {
-                youtubeStatus.textContent = error?.message || "Invidious search error";
+                const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                youtubeStatus.textContent = "video search unavailable; open YouTube search and paste a video URL if needed";
                 youtubeResults.innerHTML = `
           <div class="result-card">
             <div class="result-sub">
               video search unavailable on all configured instances
             </div>
+            <p class="mini-copy">Invidious instances can block automated API access. You can still use YouTube as preview/reference.</p>
+            <p><a class="text-link" href="${youtubeSearchUrl}" target="_blank" rel="noopener noreferrer">open YouTube search</a></p>
           </div>
         `;
             }
@@ -2020,6 +2702,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 alert("Write a search query first.");
                 return;
             }
+
+            if (loadYouTubeLinkFromSearch(query)) return;
 
             searchStatus.textContent = `LRCLIB search: ${query}`;
             lrclibResults.innerHTML = "";
@@ -2078,10 +2762,18 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
-        function pickVideoMimeType() {
+        function pickVideoMimeType(includeAudio = false) {
             if (typeof MediaRecorder === "undefined") return null;
 
-            const candidates = [
+            const candidates = includeAudio ? [
+                "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+                "video/mp4",
+                "video/webm;codecs=vp9,opus",
+                "video/webm;codecs=vp8,opus",
+                "video/webm;codecs=vp9",
+                "video/webm;codecs=vp8",
+                "video/webm"
+            ] : [
                 "video/mp4;codecs=avc1.42E01E",
                 "video/mp4",
                 "video/webm;codecs=vp9",
@@ -2098,21 +2790,119 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return "";
         }
 
-        let mp4MuxerModulePromise = null;
+        function hasLoadedExportAudio() {
+            return Boolean(state.audioBuffer && Number.isFinite(state.audioBuffer.duration));
+        }
+
+        function shouldIncludeAudioInExport() {
+            return Boolean(includeAudioInExportCheckbox?.checked && hasLoadedExportAudio());
+        }
+
+        function syncExportAudioOption() {
+            const hasAudio = hasLoadedExportAudio();
+            state.includeAudioInExport = includeAudioInExportCheckbox ? includeAudioInExportCheckbox.checked : true;
+
+            if (includeAudioInExportCheckbox) {
+                includeAudioInExportCheckbox.disabled = !hasAudio;
+                includeAudioInExportCheckbox.closest(".export-audio-option")?.classList.toggle("is-disabled", !hasAudio);
+            }
+
+            if (!exportAudioNote) return;
+
+            if (hasAudio) {
+                const readyText = translateUi(
+                    "exportAudioReady",
+                    "will be merged into export. Extracted audio stays local; YouTube is preview only."
+                );
+                exportAudioNote.textContent = `${state.audioFileName || "loaded media"} ${readyText}`;
+                return;
+            }
+
+            exportAudioNote.textContent = translateUi(
+                "exportAudioNoFile",
+                "Load one audio/video file in Timing; export can merge the extracted audio automatically."
+            );
+        }
+
+        async function createAudioExportSource() {
+            if (!shouldIncludeAudioInExport()) return null;
+
+            const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextCtor) {
+                throw new Error("audio export requires Web Audio support");
+            }
+
+            const audioContext = new AudioContextCtor();
+            const destination = audioContext.createMediaStreamDestination();
+            const source = audioContext.createBufferSource();
+            const gain = audioContext.createGain();
+            const audio = getAudioSettingsFromControls();
+            const duration = Math.max(0.001, state.audioBuffer?.duration || 0);
+            const volume = clamp(audio.volume ?? 1, 0, 2);
+            const fadeIn = clamp(audio.fadeIn ?? 0, 0, duration);
+            const fadeOut = clamp(audio.fadeOut ?? 0, 0, duration);
+            source.buffer = state.audioBuffer;
+            source.connect(gain);
+            gain.connect(destination);
+
+            let started = false;
+
+            return {
+                stream: destination.stream,
+                async start() {
+                    if (audioContext.state === "suspended") {
+                        await audioContext.resume();
+                    }
+                    const now = audioContext.currentTime;
+                    gain.gain.cancelScheduledValues(now);
+                    gain.gain.setValueAtTime(fadeIn > 0 ? 0 : volume, now);
+                    if (fadeIn > 0) {
+                        gain.gain.linearRampToValueAtTime(volume, now + fadeIn);
+                    }
+                    if (fadeOut > 0) {
+                        const fadeStart = now + Math.max(0, duration - fadeOut);
+                        gain.gain.setValueAtTime(volume, fadeStart);
+                        gain.gain.linearRampToValueAtTime(0, now + duration);
+                    }
+                    source.start(0);
+                    started = true;
+                },
+                stop() {
+                    try {
+                        if (started) source.stop();
+                    } catch (_) {}
+
+                    destination.stream.getTracks().forEach(track => track.stop());
+
+                    try {
+                        audioContext.close?.();
+                    } catch (_) {}
+                }
+            };
+        }
 
         function canAttemptFastExport() {
+            if (BratExport.canAttemptFastExport) return BratExport.canAttemptFastExport(window);
             return typeof VideoEncoder !== "undefined" && typeof VideoFrame !== "undefined";
         }
 
         async function loadMp4MuxerModule() {
-            if (!mp4MuxerModulePromise) {
-                mp4MuxerModulePromise = import("../../vendor/mp4-muxer.mjs")
-                    .catch(() => import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs"));
+            if (BratExport.loadMp4MuxerModule) return BratExport.loadMp4MuxerModule();
+            return import("../../vendor/mp4-muxer.mjs");
+        }
+
+        async function hasMp4MuxerModule() {
+            if (BratExport.hasMp4MuxerModule) return BratExport.hasMp4MuxerModule();
+            try {
+                await loadMp4MuxerModule();
+                return true;
+            } catch (error) {
+                return false;
             }
-            return mp4MuxerModulePromise;
         }
 
         async function canUseFastMp4Export(width, fps, height = width) {
+            if (BratExport.canUseFastMp4Export) return BratExport.canUseFastMp4Export(width, fps, height, window);
             if (!canAttemptFastExport() || typeof VideoEncoder.isConfigSupported !== "function") {
                 return false;
             }
@@ -2192,6 +2982,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function getLrcLineObjects() {
+            if (BratCore.lrcToRows) return BratCore.lrcToRows(lyricsInput.value);
             const lines = normalizeLRCText(lyricsInput.value).split("\n");
             const rows = [];
             for (const raw of lines) {
@@ -2287,6 +3078,217 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             writeRowsToEditor(rows);
         }
 
+        function getSelectedRowIndexes() {
+            const selected = [...(state.selectedLrcRowIndexes || new Set())]
+                .map(index => Number(index))
+                .filter(index => Number.isInteger(index) && index >= 0);
+            if (selected.length) return [...new Set(selected)].sort((a, b) => a - b);
+            if (Number.isInteger(state.selectedLrcRowIndex) && state.selectedLrcRowIndex >= 0) return [state.selectedLrcRowIndex];
+            return [];
+        }
+
+        function setSelectedRowIndexes(indexes) {
+            state.selectedLrcRowIndexes = new Set(indexes.filter(index => Number.isInteger(index) && index >= 0));
+            state.selectedLrcRowIndex = getSelectedRowIndexes()[0] ?? 0;
+        }
+
+        function refreshFromRows(rows, { preserveSelection = true } = {}) {
+            if (!lrcRows) return;
+            lrcRows.__rows = rows.map(row => ({
+                time: Number(row.time) || 0,
+                text: String(row.text || "")
+            }));
+
+            if (!preserveSelection) setSelectedRowIndexes([]);
+            const selected = new Set(getSelectedRowIndexes());
+            const query = (lrcSearchInput?.value || "").trim().toLowerCase();
+            lrcRows.innerHTML = "";
+
+            rows.forEach((row, index) => {
+                const searchable = `${secondsToTag(row.time)} ${row.text}`.toLowerCase();
+                if (query && !searchable.includes(query)) return;
+
+                const wrapper = document.createElement("div");
+                const isSelected = selected.has(index);
+                wrapper.className = "lrc-row" + (index === state.selectedLrcRowIndex ? " selected" : "") + (isSelected ? " multi-selected" : "");
+                wrapper.dataset.index = String(index);
+                wrapper.innerHTML = `
+                    <input class="row-select" type="checkbox" ${isSelected ? "checked" : ""} aria-label="select lyric row">
+                    <input class="lrc-time" value="${secondsToTag(row.time).replace(/[\[\]]/g, "")}" aria-label="timestamp">
+                    <input class="lrc-text" value="${escapeHtml(row.text).replaceAll('"', '&quot;')}" aria-label="lyric text">
+                    <button class="seek-row" type="button" title="seek to row">play</button>
+                    <button class="remove-row" type="button" title="remove">&times;</button>
+                `;
+
+                wrapper.addEventListener("click", (event) => {
+                    if (event.target.closest("input, button")) return;
+                    setSelectedRowIndexes([index]);
+                    refreshFromRows(readRowsFromEditor());
+                });
+
+                wrapper.querySelector(".row-select")?.addEventListener("change", (event) => {
+                    if (event.target.checked) state.selectedLrcRowIndexes.add(index);
+                    else state.selectedLrcRowIndexes.delete(index);
+                    state.selectedLrcRowIndex = getSelectedRowIndexes()[0] ?? index;
+                    refreshFromRows(readRowsFromEditor());
+                });
+
+                wrapper.querySelector(".seek-row")?.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    setSelectedRowIndexes([index]);
+                    seekTo(row.time);
+                    refreshFromRows(readRowsFromEditor());
+                });
+
+                wrapper.querySelectorAll(".lrc-time, .lrc-text").forEach(input => {
+                    input.addEventListener("change", () => {
+                        const before = buildProjectPayload();
+                        writeRowsToEditor(readRowsFromEditor(), { selection: getSelectedRowIndexes(), beforePayload: before, label: "edit lyric" });
+                    });
+                });
+
+                wrapper.querySelector(".remove-row")?.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    const rowsNow = readRowsFromEditor();
+                    commitRowsChange("delete lyric", rowsNow.filter((_, rowIndex) => rowIndex !== index), [clamp(index, 0, Math.max(0, rowsNow.length - 2))]);
+                });
+
+                lrcRows.appendChild(wrapper);
+            });
+
+            if (!rows.length || !lrcRows.children.length) {
+                const empty = document.createElement("div");
+                empty.className = "meta muted";
+                empty.textContent = rows.length ? "No lyric rows match the filter." : "No editable LRC rows yet.";
+                lrcRows.appendChild(empty);
+            }
+        }
+
+        function renderLrcRows() {
+            refreshFromRows(getLrcLineObjects());
+        }
+
+        function readRowsFromEditor() {
+            if (!lrcRows) return [];
+            const rows = (lrcRows.__rows || getLrcLineObjects()).map(row => ({ ...row }));
+            lrcRows.querySelectorAll(".lrc-row").forEach(rowEl => {
+                const index = Number(rowEl.dataset.index);
+                if (!Number.isInteger(index) || !rows[index]) return;
+                rows[index] = {
+                    time: tagToSeconds(rowEl.querySelector(".lrc-time")?.value || "0:00.00"),
+                    text: rowEl.querySelector(".lrc-text")?.value || ""
+                };
+            });
+            return rows.filter(row => row.text.trim());
+        }
+
+        function writeRowsToEditor(rows, options = {}) {
+            if (!lrcRows) return;
+            const normalizedRows = rows
+                .filter(row => String(row.text || "").trim())
+                .map(row => ({ time: Math.max(0, Number(row.time) || 0), text: String(row.text || "").trim() }));
+            lyricsInput.value = normalizedRows.map(row => `${secondsToTag(row.time)} ${row.text}`).join("\n");
+            if (Array.isArray(options.selection)) setSelectedRowIndexes(options.selection);
+            renderLrcRows();
+            rebuildTimelineFromCurrentInputs();
+            updateMeta();
+            updateExportEstimate();
+            renderTimeline();
+            drawWaveform();
+            saveProjectSettings();
+
+            if (options.beforePayload) {
+                const after = buildProjectPayload();
+                if (JSON.stringify(options.beforePayload) !== JSON.stringify(after)) {
+                    state.undoStack.push({ label: options.label || "edit lyrics", payload: options.beforePayload });
+                    if (state.undoStack.length > UNDO_LIMIT) state.undoStack.shift();
+                    state.redoStack = [];
+                    updateUndoRedoState();
+                }
+            }
+        }
+
+        function commitRowsChange(label, rows, selection = getSelectedRowIndexes()) {
+            commitProjectChange(label, () => writeRowsToEditor(rows, { selection }));
+        }
+
+        function applyEditorRowsToTextarea() {
+            commitRowsChange("apply lyric edits", readRowsFromEditor());
+        }
+
+        function shiftLrc(secondsDelta) {
+            const shifter = BratCore.shiftRows || ((items, delta) => items.map(row => ({ ...row, time: Math.max(0, row.time + delta) })));
+            commitRowsChange("shift all lyrics", shifter(getLrcLineObjects(), secondsDelta));
+        }
+
+        function shiftSelectedRows(secondsDelta) {
+            const indexes = getSelectedRowIndexes();
+            if (!indexes.length) return shiftLrc(secondsDelta);
+            const shifter = BratCore.shiftRows || ((items, delta, selectedIndexes) => {
+                const selected = new Set(selectedIndexes);
+                return items.map((row, index) => selected.has(index) ? { ...row, time: Math.max(0, row.time + delta) } : { ...row });
+            });
+            commitRowsChange("shift selected lyrics", shifter(readRowsFromEditor(), secondsDelta, indexes), indexes);
+        }
+
+        function splitSelectedRow() {
+            const [index] = getSelectedRowIndexes();
+            const rows = readRowsFromEditor();
+            if (!rows[index]) return;
+            const activeText = document.activeElement?.classList?.contains("lrc-text") ? document.activeElement : lrcRows?.querySelector(`.lrc-row[data-index="${index}"] .lrc-text`);
+            const caret = activeText && Number.isInteger(activeText.selectionStart) ? activeText.selectionStart : Math.ceil(rows[index].text.length / 2);
+            const nextRows = BratCore.splitRow ? BratCore.splitRow(rows, index, caret) : rows;
+            commitRowsChange("split lyric", nextRows, [index + 1]);
+        }
+
+        function mergeSelectedRow() {
+            const [index] = getSelectedRowIndexes();
+            const rows = readRowsFromEditor();
+            if (!rows[index] || !rows[index + 1]) return;
+            const nextRows = BratCore.mergeRows ? BratCore.mergeRows(rows, index) : rows;
+            commitRowsChange("merge lyrics", nextRows, [index]);
+        }
+
+        function moveSelectedRow(direction) {
+            const [index] = getSelectedRowIndexes();
+            const rows = readRowsFromEditor();
+            const target = index + direction;
+            if (!rows[index] || !rows[target]) return;
+            const nextRows = rows.map(row => ({ ...row }));
+            const movingTime = nextRows[index].time;
+            nextRows[index].time = nextRows[target].time;
+            nextRows[target].time = movingTime;
+            commitRowsChange(direction < 0 ? "move lyric up" : "move lyric down", nextRows, [target]);
+        }
+
+        function duplicateSelectedRow() {
+            const indexes = getSelectedRowIndexes();
+            const rows = readRowsFromEditor();
+            if (!indexes.length || !rows[indexes[0]]) return;
+            const nextRows = rows.map(row => ({ ...row }));
+            indexes.slice().reverse().forEach(index => {
+                if (!rows[index]) return;
+                nextRows.splice(index + 1, 0, { ...rows[index], time: rows[index].time + 0.25 });
+            });
+            commitRowsChange("duplicate lyrics", nextRows, indexes.map(index => index + 1));
+        }
+
+        function playSelectedRow() {
+            const [index] = getSelectedRowIndexes();
+            const rows = readRowsFromEditor();
+            if (!rows[index]) return;
+            seekTo(rows[index].time);
+            if (!state.isPlaying) playPauseBtn?.click();
+        }
+
+        function cleanLrc() {
+            commitRowsChange("clean lyrics", getLrcLineObjects().filter(row => row.text.trim()));
+        }
+
+        function normalizeLrc() {
+            commitRowsChange("normalize lyrics", getLrcLineObjects());
+        }
+
         function getExportDimensions() {
             const preset = formatPresetSelect?.value || state.formatPreset || "square";
             const base = Number(exportSizeSelect?.value) || 1080;
@@ -2320,6 +3322,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 verticalPosition: (Number(verticalPositionInput?.value) || 0) / 100,
                 stretch: (Number(stretchInput?.value) || 100) / 100,
                 letterSpacing: Number(letterSpacingInput?.value) || 0,
+                letterChunkSize: clamp(Math.round(Number(letterChunkSizeInput?.value) || state.style.letterChunkSize || 2), 1, 12),
                 lineSpacing: (Number(lineSpacingInput?.value) || 92) / 100,
                 lyricsMode: lyricsDisplayModeSelect?.value || state.style.lyricsMode || "brat",
                 musicAlign: musicAlignSelect?.value || state.style.musicAlign || "left",
@@ -2327,6 +3330,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 musicActiveScale: (Number(musicActiveScaleInput?.value) || 116) / 100,
                 musicDimOpacity: (Number(musicDimOpacityInput?.value) || 34) / 100,
                 musicScrollPosition: (Number(musicScrollPositionInput?.value) || 50) / 100,
+                wordAnimation: {
+                    mode: wordAnimationModeSelect?.value || state.style.wordAnimation?.mode || "progress",
+                    intensity: clamp((Number(wordAnimationIntensityInput?.value) || 70) / 100, 0, 1),
+                    color: wordAnimationColorInput?.value || state.style.wordAnimation?.color || "#ffffff"
+                },
                 beautifulDynamicBg: Boolean(beautifulDynamicBgCheckbox?.checked),
                 beautifulSideVocals: Boolean(beautifulSideVocalsCheckbox?.checked),
                 beautifulMotion: (Number(beautifulMotionInput?.value) || 65) / 100,
@@ -2345,6 +3353,9 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (musicActiveScaleInput) musicActiveScaleInput.value = Math.round((style.musicActiveScale || 1.16) * 100);
             if (musicDimOpacityInput) musicDimOpacityInput.value = Math.round((style.musicDimOpacity ?? 0.34) * 100);
             if (musicScrollPositionInput) musicScrollPositionInput.value = Math.round((style.musicScrollPosition || 0.50) * 100);
+            if (wordAnimationModeSelect) wordAnimationModeSelect.value = style.wordAnimation?.mode || "progress";
+            if (wordAnimationIntensityInput) wordAnimationIntensityInput.value = Math.round((style.wordAnimation?.intensity ?? 0.7) * 100);
+            if (wordAnimationColorInput) wordAnimationColorInput.value = style.wordAnimation?.color || "#ffffff";
             if (beautifulDynamicBgCheckbox) beautifulDynamicBgCheckbox.checked = style.beautifulDynamicBg !== false;
             if (beautifulSideVocalsCheckbox) beautifulSideVocalsCheckbox.checked = style.beautifulSideVocals !== false;
             if (beautifulMotionInput) beautifulMotionInput.value = Math.round((style.beautifulMotion ?? 0.65) * 100);
@@ -2359,6 +3370,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (verticalPositionInput) verticalPositionInput.value = Math.round((style.verticalPosition || 0) * 100);
             if (stretchInput) stretchInput.value = Math.round((style.stretch || 0.94) * 100);
             if (letterSpacingInput) letterSpacingInput.value = Math.round(style.letterSpacing || 0);
+            if (letterChunkSizeInput) letterChunkSizeInput.value = clamp(Math.round(style.letterChunkSize || 2), 1, 12);
             if (lineSpacingInput) lineSpacingInput.value = Math.round((style.lineSpacing || 0.92) * 100);
             if (safeZonesCheckbox) safeZonesCheckbox.checked = Boolean(style.safeZones);
             readStyleControls();
@@ -2366,13 +3378,13 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function applyStylePreset(preset) {
             const presets = {
-                classic: { bgColor: "#8ACE00", textColor: "#000000", fontScale: 1, blur: 1.05, verticalPosition: 0, stretch: 0.94, letterSpacing: 0, lineSpacing: 0.92 },
-                "dark-green": { bgColor: "#111111", textColor: "#8ACE00", fontScale: 1, blur: 0.6, verticalPosition: 0, stretch: 0.96, letterSpacing: 0, lineSpacing: 0.94 },
-                "white-label": { bgColor: "#f6f6f2", textColor: "#111111", fontScale: 0.96, blur: 0.15, verticalPosition: 0, stretch: 1, letterSpacing: 0, lineSpacing: 0.96 },
-                pink: { bgColor: "#ff8fcb", textColor: "#111111", fontScale: 1.04, blur: 0.55, verticalPosition: 0, stretch: 0.96, letterSpacing: 0, lineSpacing: 0.92 },
-                blue: { bgColor: "#6db7ff", textColor: "#06111f", fontScale: 1.02, blur: 0.45, verticalPosition: 0, stretch: 0.98, letterSpacing: 0, lineSpacing: 0.92 },
-                "beautiful-lyrics": { bgColor: "#07090d", textColor: "#f5f5f7", fontFamily: APPLE_LIKE_FONT_STACK, fontScale: 1.00, blur: 0.00, verticalPosition: 0, stretch: 1, letterSpacing: -2, lineSpacing: 1.00, lyricsMode: "beautiful", musicAlign: "center", musicActiveScale: 1.22, musicDimOpacity: 0.20, musicScrollPosition: 0.52, musicWordHighlight: true, beautifulDynamicBg: true, beautifulSideVocals: true, beautifulMotion: 0.86, beautifulDepth: 0.96, beautifulGlow: 0.88, beautifulEdgeFade: 0.92 },
-                "beautiful-live": { bgColor: "#07090d", textColor: "#f5f5f7", fontFamily: APPLE_LIKE_FONT_STACK, fontScale: 1.00, blur: 0.00, verticalPosition: 0, stretch: 1, letterSpacing: -2, lineSpacing: 1.00, lyricsMode: "beautiful", musicAlign: "center", musicActiveScale: 1.22, musicDimOpacity: 0.20, musicScrollPosition: 0.52, musicWordHighlight: true, beautifulDynamicBg: true, beautifulSideVocals: true, beautifulMotion: 0.86, beautifulDepth: 0.96, beautifulGlow: 0.88, beautifulEdgeFade: 0.92 }
+                classic: { bgColor: "#8ACE00", textColor: "#000000", fontScale: 1, blur: 1.05, verticalPosition: 0, stretch: 0.94, letterSpacing: 0, lineSpacing: 0.92, wordAnimation: { mode: "progress", intensity: 0.7, color: "#ffffff" } },
+                "dark-green": { bgColor: "#111111", textColor: "#8ACE00", fontScale: 1, blur: 0.6, verticalPosition: 0, stretch: 0.96, letterSpacing: 0, lineSpacing: 0.94, wordAnimation: { mode: "glow", intensity: 0.76, color: "#8ACE00" } },
+                "white-label": { bgColor: "#f6f6f2", textColor: "#111111", fontScale: 0.96, blur: 0.15, verticalPosition: 0, stretch: 1, letterSpacing: 0, lineSpacing: 0.96, wordAnimation: { mode: "fade", intensity: 0.55, color: "#111111" } },
+                pink: { bgColor: "#ff8fcb", textColor: "#111111", fontScale: 1.04, blur: 0.55, verticalPosition: 0, stretch: 0.96, letterSpacing: 0, lineSpacing: 0.92, wordAnimation: { mode: "pop", intensity: 0.68, color: "#ffffff" } },
+                blue: { bgColor: "#6db7ff", textColor: "#06111f", fontScale: 1.02, blur: 0.45, verticalPosition: 0, stretch: 0.98, letterSpacing: 0, lineSpacing: 0.92, wordAnimation: { mode: "scale", intensity: 0.62, color: "#ffffff" } },
+                "beautiful-lyrics": { bgColor: "#07090d", textColor: "#f5f5f7", fontFamily: APPLE_LIKE_FONT_STACK, fontScale: 1.00, blur: 0.00, verticalPosition: 0, stretch: 1, letterSpacing: -2, lineSpacing: 1.00, lyricsMode: "beautiful", musicAlign: "center", musicActiveScale: 1.22, musicDimOpacity: 0.20, musicScrollPosition: 0.52, musicWordHighlight: true, wordAnimation: { mode: "progress", intensity: 0.86, color: "#ffffff" }, beautifulDynamicBg: true, beautifulSideVocals: true, beautifulMotion: 0.86, beautifulDepth: 0.96, beautifulGlow: 0.88, beautifulEdgeFade: 0.92 },
+                "beautiful-live": { bgColor: "#07090d", textColor: "#f5f5f7", fontFamily: APPLE_LIKE_FONT_STACK, fontScale: 1.00, blur: 0.00, verticalPosition: 0, stretch: 1, letterSpacing: -2, lineSpacing: 1.00, lyricsMode: "beautiful", musicAlign: "center", musicActiveScale: 1.22, musicDimOpacity: 0.20, musicScrollPosition: 0.52, musicWordHighlight: true, wordAnimation: { mode: "glow", intensity: 0.90, color: "#ffffff" }, beautifulDynamicBg: true, beautifulSideVocals: true, beautifulMotion: 0.86, beautifulDepth: 0.96, beautifulGlow: 0.88, beautifulEdgeFade: 0.92 }
             };
             const next = presets[preset];
             if (!next) return;
@@ -2395,8 +3407,14 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 verticalPosition: -0.1 + Math.random() * 0.2,
                 stretch: 0.86 + Math.random() * 0.22,
                 letterSpacing: Math.round(-2 + Math.random() * 8),
-                lineSpacing: 0.84 + Math.random() * 0.24
-            }, ["typewriter", "word", "phrase", "fade", "jitter", "pulse"][Math.floor(Math.random()*6)]);
+                letterChunkSize: 1 + Math.floor(Math.random() * 5),
+                lineSpacing: 0.84 + Math.random() * 0.24,
+                wordAnimation: {
+                    mode: ["progress", "fade", "scale", "pop", "glow", "shake", "color"][Math.floor(Math.random() * 7)],
+                    intensity: 0.45 + Math.random() * 0.48,
+                    color: darkBg ? "#ffffff" : "#111111"
+                }
+            }, ["typewriter", "word", "letter-chunks", "phrase", "fade", "jitter", "pulse"][Math.floor(Math.random()*7)]);
             if (themePresetSelect) themePresetSelect.value = "custom";
             renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
             saveProjectSettings();
@@ -2470,6 +3488,144 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             ctx.fillRect(playhead, 0, 2, height);
             ctx.fillStyle = "rgba(0,0,0,.62)";
             ctx.fillText(`${state.timeline.length} lines · ${formatClock(duration)}`, 10, 13);
+        }
+
+        function drawLyricMarkers(ctx, width, height, duration) {
+            const rows = getLrcLineObjects();
+            const selected = new Set(getSelectedRowIndexes());
+            rows.forEach((row, index) => {
+                const x = clamp(row.time / duration, 0, 1) * width;
+                ctx.save();
+                ctx.strokeStyle = selected.has(index) ? "#8ACE00" : "rgba(18,19,15,.48)";
+                ctx.lineWidth = selected.has(index) ? 3 : 1;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        function drawWaveform() {
+            if (!waveformCanvas) return;
+            const ctx = waveformCanvas.getContext("2d");
+            const width = waveformCanvas.width;
+            const height = waveformCanvas.height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255,255,255,.75)";
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(0,0,0,.12)";
+            ctx.fillRect(0, height / 2 - 1, width, 2);
+
+            if (state.audioAnalysis?.frames?.length) {
+                const frames = state.audioAnalysis.frames;
+                const max = Math.max(...frames.map(f => f.rms), 0.001);
+                ctx.fillStyle = "rgba(0,0,0,.68)";
+                for (let x = 0; x < width; x += 1) {
+                    const index = Math.floor((x / width) * frames.length);
+                    const rms = frames[index]?.rms || 0;
+                    const amp = (rms / max) * (height * 0.46);
+                    ctx.fillRect(x, height / 2 - amp, 1, Math.max(1, amp * 2));
+                }
+            } else {
+                ctx.fillStyle = "rgba(0,0,0,.52)";
+                ctx.font = "13px Arial, sans-serif";
+                ctx.fillText("waveform appears after audio upload", 14, 25);
+            }
+
+            const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
+            drawLyricMarkers(ctx, width, height, duration);
+            const playhead = clamp((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) / duration, 0, 1) * width;
+            ctx.fillStyle = "rgba(0,0,0,.95)";
+            ctx.fillRect(playhead, 0, 2, height);
+        }
+
+        function renderTimeline() {
+            if (!timelineCanvas) return;
+            const ctx = timelineCanvas.getContext("2d");
+            const width = timelineCanvas.width;
+            const height = timelineCanvas.height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "rgba(255,255,255,.75)";
+            ctx.fillRect(0, 0, width, height);
+            const duration = Math.max(getTimelineDuration(), 1);
+            ctx.font = "11px Arial, sans-serif";
+            state.timeline.forEach((line, i) => {
+                const x = (line.displayStart / duration) * width;
+                const w = Math.max(3, ((line.displayEnd - line.displayStart) / duration) * width);
+                ctx.fillStyle = i % 2 ? "rgba(0,0,0,.42)" : "rgba(0,0,0,.64)";
+                ctx.fillRect(x, 18, w, 28);
+            });
+            drawLyricMarkers(ctx, width, height, duration);
+            const playhead = clamp((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) / duration, 0, 1) * width;
+            ctx.fillStyle = "rgba(0,0,0,.96)";
+            ctx.fillRect(playhead, 0, 2, height);
+            ctx.fillStyle = "rgba(0,0,0,.62)";
+            ctx.fillText(`${state.timeline.length} lines - ${formatClock(duration)}`, 10, 13);
+        }
+
+        function canvasTimeFromPointer(event, canvas, duration) {
+            const rect = canvas.getBoundingClientRect();
+            return clamp(((event.clientX - rect.left) / rect.width) * duration, 0, duration);
+        }
+
+        function findNearestTimingRow(event, canvas, duration) {
+            const rows = getLrcLineObjects();
+            if (!rows.length) return -1;
+            const rect = canvas.getBoundingClientRect();
+            const pointerX = event.clientX - rect.left;
+            let nearest = -1;
+            let nearestDistance = 14;
+            rows.forEach((row, index) => {
+                const x = clamp(row.time / duration, 0, 1) * rect.width;
+                const distance = Math.abs(pointerX - x);
+                if (distance < nearestDistance) {
+                    nearest = index;
+                    nearestDistance = distance;
+                }
+            });
+            return nearest;
+        }
+
+        function beginTimingPointer(event, canvas, duration) {
+            const nearest = findNearestTimingRow(event, canvas, duration);
+            if (nearest < 0) {
+                seekTo(canvasTimeFromPointer(event, canvas, duration));
+                return;
+            }
+            event.preventDefault();
+            canvas.setPointerCapture?.(event.pointerId);
+            setSelectedRowIndexes([nearest]);
+            state.dragEdit = {
+                pointerId: event.pointerId,
+                index: nearest,
+                beforePayload: buildProjectPayload(),
+                rows: readRowsFromEditor()
+            };
+            updateTimingPointer(event, canvas, duration);
+        }
+
+        function updateTimingPointer(event, canvas, duration) {
+            if (!state.dragEdit || state.dragEdit.pointerId !== event.pointerId) return;
+            const rows = state.dragEdit.rows.map(row => ({ ...row }));
+            if (!rows[state.dragEdit.index]) return;
+            rows[state.dragEdit.index].time = canvasTimeFromPointer(event, canvas, duration);
+            state.dragEdit.rows = rows;
+            writeRowsToEditor(rows, { selection: [state.dragEdit.index] });
+        }
+
+        function finishTimingPointer(event, canvas) {
+            if (!state.dragEdit || state.dragEdit.pointerId !== event.pointerId) return;
+            canvas.releasePointerCapture?.(event.pointerId);
+            const before = state.dragEdit.beforePayload;
+            state.dragEdit = null;
+            const after = buildProjectPayload();
+            if (JSON.stringify(before) !== JSON.stringify(after)) {
+                state.undoStack.push({ label: "drag lyric timing", payload: before });
+                if (state.undoStack.length > UNDO_LIMIT) state.undoStack.shift();
+                state.redoStack = [];
+                updateUndoRedoState();
+            }
         }
 
         function seekTo(seconds) {
@@ -2751,6 +3907,190 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             setProjectFeatureStatus(copied ? "share link copied" : "copy failed", !copied);
         }
 
+        function loadUserPresets() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(USER_PRESET_STORAGE_KEY) || "[]");
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function writeUserPresets(presets) {
+            localStorage.setItem(USER_PRESET_STORAGE_KEY, JSON.stringify(presets));
+            renderUserPresets();
+        }
+
+        function renderUserPresets() {
+            if (!userPresetSelect) return;
+            const presets = loadUserPresets();
+            userPresetSelect.innerHTML = presets.length
+                ? presets.map((preset, index) => `<option value="${index}">${escapeHtml(preset.name || `preset ${index + 1}`)}</option>`).join("")
+                : `<option value="">no user presets</option>`;
+            if (presetStatus) presetStatus.textContent = presets.length ? `${presets.length} saved presets` : "no saved presets yet";
+        }
+
+        function saveUserPreset() {
+            const name = (presetNameInput?.value || "").trim() || `preset ${new Date().toLocaleDateString()}`;
+            const payload = BratCore.buildPresetPayload
+                ? BratCore.buildPresetPayload(buildProjectPayload(), name)
+                : { type: "bratAnimatorPreset", version: PROJECT_VERSION, name, style: state.style, background: state.background };
+            const presets = loadUserPresets().filter(preset => preset.name !== name);
+            presets.unshift({ ...payload, savedAt: new Date().toISOString() });
+            writeUserPresets(presets);
+            if (presetNameInput) presetNameInput.value = name;
+            if (presetStatus) presetStatus.textContent = `saved preset: ${name}`;
+        }
+
+        function applyUserPreset() {
+            const presets = loadUserPresets();
+            const index = Number(userPresetSelect?.value);
+            const preset = presets[index];
+            if (!preset) return;
+            commitProjectChange("apply preset", () => {
+                if (preset.exportSize && exportSizeSelect) exportSizeSelect.value = preset.exportSize;
+                if (preset.exportFps && exportFpsSelect) exportFpsSelect.value = preset.exportFps;
+                if (preset.formatPreset && formatPresetSelect) formatPresetSelect.value = preset.formatPreset;
+                if (preset.animationMode) state.animationMode = preset.animationMode;
+                if (preset.style) writeStyleControls({ ...state.style, ...preset.style }, state.animationMode);
+                if (preset.background) {
+                    state.background = { ...state.background, ...migrateProjectPayload({ background: preset.background }).background };
+                    writeBackgroundControls(state.background);
+                    restoreBackgroundMedia(state.background);
+                }
+                applyFormatPreset();
+                renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+                saveProjectSettings();
+            });
+            if (presetStatus) presetStatus.textContent = `loaded preset: ${preset.name || "preset"}`;
+        }
+
+        function deleteUserPreset() {
+            const index = Number(userPresetSelect?.value);
+            const presets = loadUserPresets();
+            if (!presets[index]) return;
+            const [removed] = presets.splice(index, 1);
+            writeUserPresets(presets);
+            if (presetStatus) presetStatus.textContent = `deleted preset: ${removed.name || "preset"}`;
+        }
+
+        function exportUserPresets() {
+            const presets = loadUserPresets();
+            downloadBlob(new Blob([JSON.stringify({ type: "bratAnimatorPresetLibrary", version: PROJECT_VERSION, presets }, null, 2)], { type: "application/json" }), "brat-animator-presets.json");
+            if (presetStatus) presetStatus.textContent = "preset library exported";
+        }
+
+        async function importUserPresetFile(file) {
+            if (!file) return;
+            try {
+                const payload = JSON.parse(await file.text());
+                const incoming = Array.isArray(payload) ? payload : Array.isArray(payload.presets) ? payload.presets : [payload];
+                const valid = incoming.filter(preset => preset && typeof preset === "object");
+                if (!valid.length) throw new Error("no presets");
+                const existing = loadUserPresets();
+                const merged = [...valid, ...existing].slice(0, 80);
+                writeUserPresets(merged);
+                if (presetStatus) presetStatus.textContent = `imported ${valid.length} preset${valid.length === 1 ? "" : "s"}`;
+            } catch (error) {
+                if (presetStatus) presetStatus.textContent = "preset import failed";
+            } finally {
+                if (importPresetInput) importPresetInput.value = "";
+            }
+        }
+
+        function duplicateProjectSnapshot() {
+            const base = (snapshotNameInput?.value || buildExportFileBase()).trim() || "brat-animator";
+            if (snapshotNameInput) snapshotNameInput.value = `${base} copy`;
+            saveSnapshot();
+            setProjectFeatureStatus("duplicated current project as a snapshot");
+        }
+
+        function applyPreviewZoom() {
+            state.previewZoom = clamp((Number(previewZoomInput?.value) || 100) / 100, 0.5, 1.4);
+            if (stageWrap) stageWrap.style.setProperty("--preview-zoom", String(state.previewZoom));
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+        }
+
+        function showTab(tabName) {
+            document.querySelector(`[data-open-tab="${tabName}"]`)?.click();
+        }
+
+        const commandDefinitions = [
+            { name: "preview from start", run: () => startBtn?.click() },
+            { name: "export video", run: () => { showTab("export"); exportVideoBtn?.click(); } },
+            { name: "save snapshot", run: () => saveSnapshotBtn?.click() },
+            { name: "undo", run: undoProjectChange },
+            { name: "redo", run: redoProjectChange },
+            { name: "fullscreen preview", run: () => fullscreenBtn?.click() },
+            { name: "play selected lyric", run: playSelectedRow },
+            { name: "split selected lyric", run: splitSelectedRow },
+            { name: "duplicate selected lyric", run: duplicateSelectedRow },
+            { name: "clear background", run: () => commitProjectChange("clear background", clearBackgroundMedia) },
+            { name: "open lyrics", run: () => showTab("lyrics") },
+            { name: "open timing", run: () => showTab("timing") },
+            { name: "open design", run: () => showTab("design") },
+            { name: "open canvas", run: () => showTab("canvas") },
+            { name: "open project", run: () => showTab("project") }
+        ];
+
+        function renderCommandPalette() {
+            if (!commandPaletteList) return;
+            const query = (commandPaletteInput?.value || "").trim().toLowerCase();
+            const commands = commandDefinitions.filter(command => command.name.includes(query)).slice(0, 8);
+            commandPaletteList.innerHTML = commands.map((command, index) => `
+                <button type="button" data-command-index="${index}" ${index === 0 ? 'class="active"' : ""}>${escapeHtml(command.name)}</button>
+            `).join("");
+            commandPaletteList.querySelectorAll("button").forEach((button, localIndex) => {
+                button.addEventListener("click", () => {
+                    commands[localIndex]?.run();
+                    closeCommandPalette();
+                });
+            });
+        }
+
+        function openCommandPalette() {
+            if (!commandPalette) return;
+            commandPalette.classList.remove("hidden");
+            if (commandPaletteInput) commandPaletteInput.value = "";
+            renderCommandPalette();
+            window.setTimeout(() => commandPaletteInput?.focus({ preventScroll: true }), 20);
+        }
+
+        function closeCommandPalette() {
+            commandPalette?.classList.add("hidden");
+        }
+
+        function copySelectedRowsToClipboard() {
+            const rows = readRowsFromEditor();
+            const selected = getSelectedRowIndexes();
+            state.lrcClipboardRows = selected.map(index => rows[index]).filter(Boolean).map(row => ({ ...row }));
+            if (state.lrcClipboardRows.length) copyText(state.lrcClipboardRows.map(row => `${secondsToTag(row.time)} ${row.text}`).join("\n"));
+        }
+
+        async function pasteRowsFromClipboard() {
+            const rows = readRowsFromEditor();
+            let incoming = state.lrcClipboardRows.map(row => ({ ...row }));
+            try {
+                const text = await navigator.clipboard?.readText?.();
+                const parsed = text ? getLrcLineObjectsFromText(text) : [];
+                if (parsed.length) incoming = parsed;
+            } catch (_) {}
+            if (!incoming.length) return;
+            const insertAfter = Math.max(...getSelectedRowIndexes(), state.selectedLrcRowIndex, -1);
+            const nextRows = rows.map(row => ({ ...row }));
+            incoming.forEach((row, offset) => nextRows.splice(insertAfter + 1 + offset, 0, { ...row, time: row.time + 0.25 * (offset + 1) }));
+            commitRowsChange("paste lyrics", nextRows, incoming.map((_, offset) => insertAfter + 1 + offset));
+        }
+
+        function getLrcLineObjectsFromText(text) {
+            if (BratCore.lrcToRows) return BratCore.lrcToRows(text);
+            const previous = lyricsInput.value;
+            lyricsInput.value = text;
+            const rows = getLrcLineObjects();
+            lyricsInput.value = previous;
+            return rows;
+        }
+
         async function copyLrcText() {
             if (!lyricsInput.value.trim()) {
                 meta.textContent = "nothing to copy yet";
@@ -2784,8 +4124,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function buildProjectPayload() {
             readStyleControls();
+            getAudioSettingsFromControls();
+            getBackgroundSettingsFromControls();
             return {
-                version: 3,
+                version: PROJECT_VERSION,
                 lyrics: lyricsInput.value,
                 plainLyrics: plainLyricsInput?.value || "",
                 query: searchQueryInput.value,
@@ -2793,6 +4135,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 startFromZero: startFromZeroCheckbox.checked,
                 exportSize: exportSizeSelect.value,
                 exportFps: exportFpsSelect.value,
+                includeAudioInExport: includeAudioInExportCheckbox?.checked !== false,
+                audio: state.audio,
+                metadata: state.metadata,
+                background: state.background,
                 formatPreset: formatPresetSelect?.value || state.formatPreset,
                 theme: state.theme,
                 animationMode: state.animationMode,
@@ -2858,26 +4204,31 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const dims = getExportDimensions();
             const fps = Number(exportFpsSelect.value) || 30;
             const canRecord = typeof MediaRecorder !== "undefined";
+            const includeAudio = shouldIncludeAudioInExport();
             let fastMp4 = false;
 
-            try {
-                fastMp4 = await canUseFastMp4Export(dims.width, fps, dims.height);
-            } catch (error) {
-                fastMp4 = false;
+            if (!includeAudio) {
+                try {
+                    fastMp4 = await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule();
+                } catch (error) {
+                    fastMp4 = false;
+                }
             }
 
-            compatFastMp4.textContent = fastMp4 ? "supported" : "not supported";
+            compatFastMp4.textContent = includeAudio ? "disabled with audio" : (fastMp4 ? "supported" : "not supported");
             compatMediaRecorder.textContent = canRecord ? "supported" : "not supported";
-            compatRecommendation.textContent =
-                Math.max(dims.width, dims.height) >= 1920 || fps >= 60
+            compatRecommendation.textContent = includeAudio
+                ? `${dims.width}×${dims.height} · ${fps} fps · audio uses real-time export`
+                : Math.max(dims.width, dims.height) >= 1920 || fps >= 60
                     ? `${dims.width}×${dims.height} works, but 1080 base · 30 fps is safer`
                     : `${dims.width}×${dims.height} · ${fps} fps`;
         }
 
         function saveProjectSettings() {
             try {
-                localStorage.setItem("bratAnimator.project.v3", JSON.stringify(buildProjectPayload()));
-                localStorage.setItem("bratAnimator.project.v2", JSON.stringify(buildProjectPayload()));
+                const payload = buildProjectPayload();
+                const raw = JSON.stringify(payload);
+                localStorage.setItem("bratAnimator.project.v3", raw);
             } catch (error) {
                 console.warn("autosave failed", error);
             }
@@ -2893,8 +4244,17 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
         }
 
-        function restoreProjectSettings(payload) {
+        function showRecoveryBanner() {
+            recoveryBanner?.classList.remove("hidden");
+        }
+
+        function hideRecoveryBanner() {
+            recoveryBanner?.classList.add("hidden");
+        }
+
+        function restoreProjectSettings(payload, options = {}) {
             if (!payload || typeof payload !== "object") return false;
+            payload = migrateProjectPayload(payload);
 
             if (typeof payload.lyrics === "string") lyricsInput.value = payload.lyrics;
             if (plainLyricsInput && typeof payload.plainLyrics === "string") plainLyricsInput.value = payload.plainLyrics;
@@ -2903,6 +4263,15 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (typeof payload.startFromZero === "boolean") startFromZeroCheckbox.checked = payload.startFromZero;
             if (payload.exportSize) exportSizeSelect.value = payload.exportSize;
             if (payload.exportFps) exportFpsSelect.value = payload.exportFps;
+            state.audio = payload.audio;
+            writeAudioControls(payload.audio);
+            if (audioUrlInput) audioUrlInput.value = payload.audio?.url || "";
+            if (payload.audio?.source === "local" && payload.audio.assetId) {
+                restoreAudioMedia(payload.audio).catch(() => updateAudioStatus("saved media reference could not be restored", true));
+            }
+            state.metadata = payload.metadata || state.metadata;
+            state.background = payload.background || state.background;
+            restoreBackgroundMedia(state.background);
             if (formatPresetSelect && payload.formatPreset) formatPresetSelect.value = payload.formatPreset;
             if (payload.animationMode) state.animationMode = payload.animationMode;
             if (payload.style && typeof payload.style === "object") state.style = { ...state.style, ...payload.style };
@@ -2912,6 +4281,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             rebuildTimelineFromCurrentInputs();
             renderLrcRows();
             applyFormatPreset();
+            if (payload.audio?.source === "url" && payload.audio.url) {
+                updateAudioStatus("URL media reference restored; click load media URL to decode it again.");
+            }
+            if (!options.skipHistory) updateUndoRedoState();
             return true;
         }
 
@@ -2924,8 +4297,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             useAudioTimingCheckbox.checked = true;
             exportSizeSelect.value = "1080";
             exportFpsSelect.value = "30";
+            if (includeAudioInExportCheckbox) includeAudioInExportCheckbox.checked = true;
             if (formatPresetSelect) formatPresetSelect.value = "square";
             if (plainLyricsInput) plainLyricsInput.value = "";
+            writeAudioControls({ includeInExport: true, volume: 1, fadeIn: 0, fadeOut: 0, source: "local", url: "", assetId: "", name: "", mediaKind: "audio" });
+            if (audioUrlInput) audioUrlInput.value = "";
             writeStyleControls({
                 bgColor: "#8ACE00",
                 textColor: "#000000",
@@ -2935,12 +4311,20 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 verticalPosition: 0,
                 stretch: 0.94,
                 letterSpacing: 0,
+                letterChunkSize: 2,
                 lineSpacing: 0.92,
+                wordAnimation: { mode: "progress", intensity: 0.7, color: "#ffffff" },
                 safeZones: false
             }, "typewriter");
             state.audioBuffer = null;
             state.audioAnalysis = null;
             state.audioFileName = "";
+            state.audioRemoteUrl = "";
+            if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
+            state.audioObjectUrl = "";
+            clearSyncMediaSource();
+            clearBackgroundMedia();
+            syncExportAudioOption();
             setTheme("green");
             resetAll();
             updateAudioStatus(translateUi("noAudio", "no audio loaded"));
@@ -2970,8 +4354,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 state.audioFileName = "";
                 if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
                 state.audioObjectUrl = "";
-                if (syncAudio) { syncAudio.removeAttribute("src"); syncAudio.classList.add("hidden"); }
+                state.audioRemoteUrl = "";
+                state.audio = { ...state.audio, source: "local", url: "", assetId: "", name: "", mediaKind: "audio" };
+                clearSyncMediaSource();
                 updateAudioStatus(translateUi("noAudio", "no audio loaded"));
+                syncExportAudioOption();
                 rebuildTimelineFromCurrentInputs();
                 updateMeta();
                 updateExportEstimate();
@@ -2981,27 +4368,29 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 return;
             }
 
-            updateAudioStatus(`decoding ${file.name}...`);
+            const mediaKind = inferAudioMediaKind(file.name, file.type);
+            updateAudioStatus(mediaKind === "video" ? `extracting audio from ${file.name}...` : `decoding ${file.name}...`);
 
             try {
                 const audioBuffer = await decodeUploadedAudio(file);
                 const audioAnalysis = analyzeAudioEnergy(audioBuffer);
+                const assetId = await storeMediaBlob(file, file.name, mediaKind);
 
                 state.audioBuffer = audioBuffer;
                 state.audioAnalysis = audioAnalysis;
                 state.audioFileName = file.name;
+                state.audioRemoteUrl = "";
+                state.audio = { ...state.audio, source: "local", url: "", assetId, name: file.name, mediaKind };
                 if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
                 state.audioObjectUrl = URL.createObjectURL(file);
-                if (syncAudio) {
-                    syncAudio.src = state.audioObjectUrl;
-                    syncAudio.classList.remove("hidden");
-                }
+                setSyncMediaSource(state.audioObjectUrl, mediaKind);
                 drawWaveform();
 
                 updateAudioStatus(
-                    `${file.name} • ${audioBuffer.duration.toFixed(2)}s • timing analysis ready`
+                    `${file.name} - ${audioBuffer.duration.toFixed(2)}s - ${mediaReadyLabel(mediaKind)}`
                 );
 
+                syncExportAudioOption();
                 rebuildTimelineFromCurrentInputs();
                 updateMeta();
                 updateExportEstimate();
@@ -3010,12 +4399,74 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 state.audioBuffer = null;
                 state.audioAnalysis = null;
                 state.audioFileName = "";
-                updateAudioStatus("unsupported audio or decoding failed", true);
+                updateAudioStatus(mediaDecodeFailureMessage(mediaKind), true);
+                syncExportAudioOption();
                 rebuildTimelineFromCurrentInputs();
                 updateMeta();
                 updateExportEstimate();
                 drawWaveform();
             }
+        }
+
+        async function processAudioUrl(urlValue) {
+            const url = String(urlValue || "").trim();
+            if (!url) return;
+
+            const youtubeVideoId = extractYouTubeVideoId(url);
+            if (youtubeVideoId) {
+                loadInvidiousPlayer(youtubeVideoId);
+                updateAudioStatus("YouTube cannot be downloaded here. Use it as preview, then upload an audio/video file or paste a direct CORS-enabled media URL you can use.", true);
+                document.querySelector('[data-open-tab="timing"]')?.click();
+                return;
+            }
+
+            const guessedKind = inferAudioMediaKind(url);
+            updateAudioStatus(`loading URL ${guessedKind}...`);
+
+            try {
+                const response = await fetch(url, { mode: "cors" });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const blob = await response.blob();
+                const mediaKind = inferAudioMediaKind(url, blob.type || response.headers.get("content-type") || "");
+                updateAudioStatus(mediaKind === "video" ? "extracting audio from URL media..." : "decoding URL audio...");
+
+                const audioBuffer = await decodeUploadedAudio(blob);
+                const audioAnalysis = analyzeAudioEnergy(audioBuffer);
+                const name = mediaNameFromUrl(url);
+
+                state.audioBuffer = audioBuffer;
+                state.audioAnalysis = audioAnalysis;
+                state.audioFileName = name;
+                state.audioRemoteUrl = url;
+                state.audio = { ...state.audio, source: "url", url, assetId: "", name, mediaKind };
+                if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
+                state.audioObjectUrl = URL.createObjectURL(blob);
+                setSyncMediaSource(state.audioObjectUrl, mediaKind);
+                drawWaveform();
+
+                updateAudioStatus(
+                    `${name} - ${audioBuffer.duration.toFixed(2)}s - ${mediaReadyLabel(mediaKind)}`
+                );
+
+                syncExportAudioOption();
+                rebuildTimelineFromCurrentInputs();
+                updateMeta();
+                updateExportEstimate();
+                saveProjectSettings();
+            } catch (error) {
+                console.warn("media URL failed", error);
+                updateAudioStatus("media URL could not be loaded or decoded; check CORS, permissions, and browser support", true);
+            }
+        }
+
+        async function restoreAudioMedia(audio = state.audio) {
+            if (!audio || audio.source !== "local" || !audio.assetId) return false;
+            const record = await loadMediaBlob(audio.assetId);
+            if (!record?.blob) return false;
+            const file = new File([record.blob], record.name || audio.name || "restored media", { type: record.blob.type || (record.kind === "video" ? "video/mp4" : "audio/mpeg") });
+            await processAudioFile(file);
+            updateAudioStatus(`${file.name} restored from this browser`);
+            return true;
         }
 
         function setupDropZone(dropZone, acceptFn) {
@@ -3052,11 +4503,13 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function setupLanguageControls() {
             state.language = window.BratI18n?.applyLanguage?.(window.BratI18n?.getSavedLanguage?.() || "en") || "en";
+            syncExportAudioOption();
             syncPlaybackButtonLabel();
 
             langButtons.forEach((button) => {
                 button.addEventListener("click", () => {
                     state.language = window.BratI18n?.applyLanguage?.(button.dataset.lang) || button.dataset.lang || "en";
+                    syncExportAudioOption();
                     syncPlaybackButtonLabel();
                     saveProjectSettings();
                 });
@@ -3064,6 +4517,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function registerServiceWorker() {
+            if (!/^https?:$/.test(window.location.protocol)) return;
             if (!("serviceWorker" in navigator)) return;
             window.addEventListener("load", () => {
                 navigator.serviceWorker.register("./sw.js").catch((error) => {
@@ -3088,9 +4542,17 @@ async function updateExportEstimate() {
             const dims = getExportDimensions();
             const size = Math.max(dims.width, dims.height);
             const fps = Number(exportFpsSelect.value) || 30;
-            const duration = Math.max(1, parsed[parsed.length - 1].displayEnd + 0.6);
+            const includeAudio = shouldIncludeAudioInExport();
+            const baseDuration = Math.max(1, parsed[parsed.length - 1].displayEnd + 0.6);
+            const duration = includeAudio ? Math.max(baseDuration, state.audioBuffer.duration || 0) : baseDuration;
 
-            if (await canUseFastMp4Export(dims.width, fps, dims.height)) {
+            if (includeAudio) {
+                const estimated = estimateExportSeconds(duration, size, fps, false);
+                exportEstimate.textContent = `estimated export time: about ${formatClock(estimated)} - audio export records in real time (${formatClock(duration)})`;
+                return;
+            }
+
+            if (await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
                 const estimated = estimateExportSeconds(duration, size, fps, true);
                 exportEstimate.textContent = `estimated export time: about ${formatClock(estimated)} • fast export, no need to wait for the full lyric duration`;
                 return;
@@ -3124,6 +4586,18 @@ async function updateExportEstimate() {
                 return;
             }
 
+            const includeAudio = shouldIncludeAudioInExport();
+
+            if (state.background?.kind !== "none" && state.backgroundExportSafe === false) {
+                alert("The selected remote background is not CORS-enabled, so the browser cannot export it. Use a local upload or another permitted URL.");
+                return;
+            }
+
+            if (includeAudio && typeof MediaRecorder === "undefined") {
+                alert("Audio export requires MediaRecorder support in this browser.");
+                return;
+            }
+
             if (typeof MediaRecorder === "undefined" && !canAttemptFastExport()) {
                 alert("This browser does not support video export.");
                 return;
@@ -3142,7 +4616,8 @@ async function updateExportEstimate() {
             const dims = getExportDimensions();
             const size = Math.max(dims.width, dims.height);
             const fps = Number(exportFpsSelect.value) || 30;
-            const duration = Math.max(1, getTimelineDuration() + 0.6);
+            const baseDuration = Math.max(1, getTimelineDuration() + 0.6);
+            const duration = includeAudio ? Math.max(baseDuration, state.audioBuffer.duration || 0) : baseDuration;
             const totalFrames = Math.ceil(duration * fps);
             const exportCanvas = document.createElement("canvas");
             exportCanvas.width = dims.width;
@@ -3172,8 +4647,10 @@ async function updateExportEstimate() {
                 }
             };
 
+            let activeAudioExport = null;
+
             try {
-                if (await canUseFastMp4Export(dims.width, fps, dims.height)) {
+                if (!includeAudio && await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
                     exportStatus.textContent = "preparing fast MP4 export...";
                     const {
                         Muxer,
@@ -3262,14 +4739,17 @@ async function updateExportEstimate() {
 
                 exportStatus.textContent = "preparing fallback export...";
                 const stream = exportCanvas.captureStream(fps);
+                activeAudioExport = includeAudio ? await createAudioExportSource() : null;
+                activeAudioExport?.stream.getAudioTracks().forEach(track => stream.addTrack(track));
                 const chunks = [];
                 let recorder;
 
-                const videoMimeType = pickVideoMimeType();
+                const videoMimeType = pickVideoMimeType(includeAudio);
                 try {
                     recorder = videoMimeType ? new MediaRecorder(stream, {
                         mimeType: videoMimeType,
-                        videoBitsPerSecond: 8_000_000
+                        videoBitsPerSecond: 8_000_000,
+                        audioBitsPerSecond: includeAudio ? 192_000 : undefined
                     }) : new MediaRecorder(stream);
                 } catch (error) {
                     recorder = new MediaRecorder(stream);
@@ -3290,7 +4770,8 @@ async function updateExportEstimate() {
                 });
 
                 recorder.start();
-                exportStatus.textContent = `fallback export: ${extension.toUpperCase()} • ${fps} fps • no audio`;
+                await activeAudioExport?.start();
+                exportStatus.textContent = `fallback export: ${extension.toUpperCase()} - ${fps} fps - ${includeAudio ? "with loaded audio" : "no audio"}`;
                 const exportPerfStart = performance.now();
 
                 for (let frameIndex = 0; frameIndex <= totalFrames; frameIndex += 1) {
@@ -3314,6 +4795,8 @@ async function updateExportEstimate() {
                 recorder.stop();
                 await stopPromise;
                 stream.getTracks().forEach(track => track.stop());
+                activeAudioExport?.stop();
+                activeAudioExport = null;
 
                 const blob = new Blob(chunks, {
                     type: actualMimeType || "video/webm"
@@ -3323,12 +4806,13 @@ async function updateExportEstimate() {
 
                 exportStatus.textContent =
                     extension === "mp4" ?
-                    "export complete: video-only MP4 generated with fallback mode" :
-                    "export complete: browser generated video-only WebM fallback";
+                    `export complete: ${includeAudio ? "MP4 with loaded audio" : "video-only MP4"} generated with fallback mode` :
+                    `export complete: browser generated ${includeAudio ? "WebM with loaded audio" : "video-only WebM fallback"}`;
 
                 restoreUIState();
             } catch (error) {
                 console.error(error);
+                activeAudioExport?.stop();
                 exportStatus.textContent = error?.message || "export failed";
                 restoreUIState();
             }
@@ -3375,6 +4859,12 @@ async function updateExportEstimate() {
         searchSongBtn.addEventListener("click", runSongSearch);
 
         searchQueryInput.addEventListener("input", saveProjectSettings);
+        searchQueryInput.addEventListener("paste", () => {
+            window.setTimeout(() => {
+                const pastedValue = searchQueryInput.value.trim();
+                if (extractYouTubeVideoId(pastedValue)) runSongSearch();
+            }, 0);
+        });
 
         searchQueryInput.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
@@ -3385,6 +4875,18 @@ async function updateExportEstimate() {
 
         audioFileInput.addEventListener("change", async () => {
             await processAudioFile(audioFileInput.files?.[0] || null);
+        });
+        loadAudioUrlBtn?.addEventListener("click", () => processAudioUrl(audioUrlInput?.value || ""));
+        audioUrlInput?.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                processAudioUrl(audioUrlInput.value);
+            }
+        });
+        audioUrlInput?.addEventListener("input", () => {
+            const nextUrl = audioUrlInput.value.trim();
+            state.audio = { ...state.audio, source: "url", url: nextUrl, mediaKind: inferAudioMediaKind(nextUrl, state.audio?.name || "") };
+            saveProjectSettings();
         });
 
         lyricsInput.addEventListener("input", () => {
@@ -3459,6 +4961,13 @@ async function updateExportEstimate() {
             playerBox.innerHTML = "";
         });
 
+        playerBox?.addEventListener("click", (event) => {
+            const addMediaButton = event.target.closest?.(".yt-add-media-btn");
+            if (!addMediaButton) return;
+            document.querySelector('[data-open-tab="timing"]')?.click();
+            audioFileInput?.click();
+        });
+
         bgBtn.addEventListener("click", () => setTheme("green"));
         darkBtn.addEventListener("click", () => setTheme("dark"));
 
@@ -3474,12 +4983,25 @@ async function updateExportEstimate() {
             updateCompatibilityPanel();
             saveProjectSettings();
         });
+        includeAudioInExportCheckbox?.addEventListener("change", () => {
+            syncExportAudioOption();
+            updateExportEstimate();
+            updateCompatibilityPanel();
+            saveProjectSettings();
+        });
+        [exportAudioVolumeInput, exportAudioFadeInInput, exportAudioFadeOutInput].forEach((control) => {
+            control?.addEventListener("input", () => {
+                getAudioSettingsFromControls();
+                updateExportEstimate();
+                saveProjectSettings();
+            });
+        });
 
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
-        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
+        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
-                if (themePresetSelect && [bgColorInput, textColorInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, lineSpacingInput].includes(control)) {
+                if (themePresetSelect && [bgColorInput, textColorInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput].includes(control)) {
                     themePresetSelect.value = "custom";
                 }
                 readStyleControls();
@@ -3493,61 +5015,135 @@ async function updateExportEstimate() {
             });
         });
         randomStyleBtn?.addEventListener("click", randomizeStyle);
+        backgroundFileInput?.addEventListener("change", () => loadBackgroundFile(backgroundFileInput.files?.[0]));
+        loadBackgroundUrlBtn?.addEventListener("click", () => loadBackgroundUrl(backgroundUrlInput?.value || ""));
+        backgroundUrlInput?.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                loadBackgroundUrl(backgroundUrlInput.value);
+            }
+        });
+        clearBackgroundBtn?.addEventListener("click", () => commitProjectChange("clear background", clearBackgroundMedia));
+        useArtworkBgBtn?.addEventListener("click", useArtworkAsBackground);
+        [bgMediaOpacityInput, bgMediaBlurInput, bgMediaBrightnessInput, bgMediaSaturationInput, bgMediaScaleInput, bgMediaPositionXInput, bgMediaPositionYInput].forEach((control) => {
+            control?.addEventListener("input", () => {
+                getBackgroundSettingsFromControls();
+                updateBackgroundStatus();
+                renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+                saveProjectSettings();
+            });
+        });
+        savePresetBtn?.addEventListener("click", saveUserPreset);
+        loadPresetBtn?.addEventListener("click", applyUserPreset);
+        deletePresetBtn?.addEventListener("click", deleteUserPreset);
+        exportPresetBtn?.addEventListener("click", exportUserPresets);
+        importPresetInput?.addEventListener("change", () => importUserPresetFile(importPresetInput.files?.[0]));
+        previewZoomInput?.addEventListener("input", applyPreviewZoom);
         fullscreenBtn?.addEventListener("click", () => {
             document.getElementById("stage")?.requestFullscreen?.().catch(() => {});
         });
 
+        undoBtn?.addEventListener("click", undoProjectChange);
+        redoBtn?.addEventListener("click", redoProjectChange);
+        lrcSearchInput?.addEventListener("input", renderLrcRows);
         refreshEditorBtn?.addEventListener("click", renderLrcRows);
         applyEditorBtn?.addEventListener("click", applyEditorRowsToTextarea);
         addLrcRowBtn?.addEventListener("click", () => {
             const rows = getLrcLineObjects();
             rows.push({ time: rows.at(-1)?.time != null ? rows.at(-1).time + 2 : 0, text: "new lyric line" });
             state.selectedLrcRowIndex = rows.length - 1;
-            writeRowsToEditor(rows);
+            commitRowsChange("add lyric", rows, [rows.length - 1]);
         });
         syncCurrentRowBtn?.addEventListener("click", () => {
             const rows = readRowsFromEditor();
             const idx = clamp(state.selectedLrcRowIndex, 0, Math.max(0, rows.length - 1));
             if (!rows[idx]) return;
             rows[idx].time = state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec;
-            writeRowsToEditor(rows);
+            commitRowsChange("sync lyric", rows, [idx]);
         });
+        splitLrcRowBtn?.addEventListener("click", splitSelectedRow);
+        mergeLrcRowBtn?.addEventListener("click", mergeSelectedRow);
+        moveLrcUpBtn?.addEventListener("click", () => moveSelectedRow(-1));
+        moveLrcDownBtn?.addEventListener("click", () => moveSelectedRow(1));
+        duplicateLrcRowBtn?.addEventListener("click", duplicateSelectedRow);
+        playSelectedRowBtn?.addEventListener("click", playSelectedRow);
         cleanLrcBtn?.addEventListener("click", cleanLrc);
         normalizeLrcBtn?.addEventListener("click", normalizeLrc);
         shiftBackBtn?.addEventListener("click", () => shiftLrc(-0.5));
         shiftForwardBtn?.addEventListener("click", () => shiftLrc(0.5));
+        shiftSelectedBackBtn?.addEventListener("click", () => shiftSelectedRows(-0.25));
+        shiftSelectedForwardBtn?.addEventListener("click", () => shiftSelectedRows(0.25));
+        shiftAllByInputBtn?.addEventListener("click", () => shiftLrc(Number(timingOffsetInput?.value) || 0));
         copyLrcBtn?.addEventListener("click", copyLrcText);
         starterLrcBtn?.addEventListener("click", generateStarterLrc);
 
         startTapSyncBtn?.addEventListener("click", startTapSync);
         tapNextLineBtn?.addEventListener("click", tapNextLine);
         finishTapSyncBtn?.addEventListener("click", finishTapSync);
-        syncAudio?.addEventListener("timeupdate", () => {
-            if (!state.isPlaying) {
-                state.pausedElapsedSec = syncAudio.currentTime || state.pausedElapsedSec;
-                renderPreviewAt(state.pausedElapsedSec);
-            }
-        });
         waveformCanvas?.addEventListener("click", (event) => {
             const rect = waveformCanvas.getBoundingClientRect();
             const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
             seekTo(((event.clientX - rect.left) / rect.width) * duration);
         });
+        waveformCanvas?.addEventListener("pointerdown", (event) => {
+            const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
+            beginTimingPointer(event, waveformCanvas, duration);
+        });
+        waveformCanvas?.addEventListener("pointermove", (event) => {
+            const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
+            updateTimingPointer(event, waveformCanvas, duration);
+        });
+        waveformCanvas?.addEventListener("pointerup", (event) => finishTimingPointer(event, waveformCanvas));
+        waveformCanvas?.addEventListener("pointercancel", (event) => finishTimingPointer(event, waveformCanvas));
         timelineCanvas?.addEventListener("click", (event) => {
             const rect = timelineCanvas.getBoundingClientRect();
             const duration = getTimelineDuration() || 1;
             seekTo(((event.clientX - rect.left) / rect.width) * duration);
         });
+        timelineCanvas?.addEventListener("pointerdown", (event) => {
+            const duration = getTimelineDuration() || 1;
+            beginTimingPointer(event, timelineCanvas, duration);
+        });
+        timelineCanvas?.addEventListener("pointermove", (event) => {
+            const duration = getTimelineDuration() || 1;
+            updateTimingPointer(event, timelineCanvas, duration);
+        });
+        timelineCanvas?.addEventListener("pointerup", (event) => finishTimingPointer(event, timelineCanvas));
+        timelineCanvas?.addEventListener("pointercancel", (event) => finishTimingPointer(event, timelineCanvas));
 
         exportFramesBtn?.addEventListener("click", exportPreviewFrames);
         exportPreviewClipBtn?.addEventListener("click", exportPreviewClip);
         exportProjectBtn?.addEventListener("click", exportProjectJson);
         importProjectInput?.addEventListener("change", () => importProjectJson(importProjectInput.files?.[0]));
         saveSnapshotBtn?.addEventListener("click", saveSnapshot);
+        duplicateProjectBtn?.addEventListener("click", duplicateProjectSnapshot);
         shareProjectLinkBtn?.addEventListener("click", copyProjectLink);
         copyProjectJsonBtn?.addEventListener("click", copyProjectJson);
+        commandPaletteInput?.addEventListener("input", renderCommandPalette);
+        commandPaletteInput?.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                closeCommandPalette();
+                return;
+            }
+            if (event.key === "Enter") {
+                event.preventDefault();
+                const first = commandPaletteList?.querySelector("button");
+                first?.click();
+            }
+        });
+        commandPalette?.addEventListener("click", (event) => {
+            if (event.target === commandPalette) closeCommandPalette();
+        });
 
         document.addEventListener("keydown", (event) => {
+            if (document.body.classList.contains("permission-notice-open")) return;
+            if (commandPalette && !commandPalette.classList.contains("hidden") && event.key === "Escape") {
+                event.preventDefault();
+                closeCommandPalette();
+                return;
+            }
+
             const target = event.target;
             const isTyping = target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
             if (isTyping && event.code !== "Space") return;
@@ -3557,6 +5153,44 @@ async function updateExportEstimate() {
                 return;
             }
             if (isTyping) return;
+            const shortcutKey = event.key?.toLowerCase();
+            if (event.ctrlKey || event.metaKey) {
+                if (shortcutKey === "k") {
+                    event.preventDefault();
+                    openCommandPalette();
+                    return;
+                }
+                if (shortcutKey === "s") {
+                    event.preventDefault();
+                    saveSnapshotBtn?.click();
+                    return;
+                }
+                if (shortcutKey === "z") {
+                    event.preventDefault();
+                    undoProjectChange();
+                    return;
+                }
+                if (shortcutKey === "y") {
+                    event.preventDefault();
+                    redoProjectChange();
+                    return;
+                }
+                if (shortcutKey === "d") {
+                    event.preventDefault();
+                    duplicateSelectedRow();
+                    return;
+                }
+                if (shortcutKey === "c") {
+                    event.preventDefault();
+                    copySelectedRowsToClipboard();
+                    return;
+                }
+                if (shortcutKey === "v") {
+                    event.preventDefault();
+                    pasteRowsFromClipboard();
+                    return;
+                }
+            }
             if (event.code === "Space") { event.preventDefault(); playPauseBtn.click(); }
             if (event.key?.toLowerCase() === "r") restartBtn.click();
             if (event.key?.toLowerCase() === "e") exportVideoBtn.click();
@@ -3586,24 +5220,40 @@ async function updateExportEstimate() {
         });
 
         clearSavedBtn?.addEventListener("click", clearSavedProject);
+        recoveryKeepBtn?.addEventListener("click", hideRecoveryBanner);
+        recoveryDiscardBtn?.addEventListener("click", () => {
+            clearSavedProject();
+            hideRecoveryBanner();
+        });
         bgBtn.addEventListener("click", saveProjectSettings);
         darkBtn.addEventListener("click", saveProjectSettings);
 
         syncPanelState();
         syncPlaybackButtonLabel();
         const sharedProject = getHashProjectPayload();
-        const restored = restoreProjectSettings(sharedProject || loadProjectSettings());
+        const autosavedProject = sharedProject ? null : loadProjectSettings();
+        const restored = restoreProjectSettings(sharedProject || autosavedProject);
         if (sharedProject) setProjectFeatureStatus("shared project loaded");
+        if (autosavedProject && restored) showRecoveryBanner();
         updateAudioStatus(translateUi("noAudio", "no audio loaded"));
         if (!restored) {
             setTheme("green");
         }
         renderLrcRows();
+        renderUserPresets();
         renderSnapshots();
         applyFormatPreset();
+        applyPreviewZoom();
+        syncExportAudioOption();
+        updateUndoRedoState();
+        updateBackgroundStatus();
         updateMeta();
         updateExportEstimate();
         updateCompatibilityPanel();
+        window.addEventListener("beforeunload", () => {
+            if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
+            releaseBackgroundObjectUrl();
+        });
         registerServiceWorker();
         renderPreviewAt(0);
 /* --- Sidebar editor navigation upgrade --- */
@@ -3635,6 +5285,10 @@ async function updateExportEstimate() {
     const tutorialNextBtn = document.getElementById('tutorialNextBtn');
     const tutorialActionBtn = document.getElementById('tutorialActionBtn');
     const TUTORIAL_STORAGE_KEY = 'bratAnimator.tutorial.seen.v1';
+    const permissionNotice = document.getElementById('permissionNotice');
+    const permissionNoticeAckBtn = document.getElementById('permissionNoticeAckBtn');
+    const permissionNoticeRequestLink = document.getElementById('permissionNoticeRequestLink');
+    const PERMISSION_NOTICE_SESSION_KEY = 'bratAnimator.permissionNotice.dismissed.v1';
 
     const tutorialSteps = [
         {
@@ -3679,7 +5333,7 @@ async function updateExportEstimate() {
             body: 'Export the video, save a project snapshot, or copy a share link so you can return to the edit later.',
             tab: 'export',
             target: '#exportVideoBtn',
-            tip: 'Exports are video-only. Audio is used for timing help, not embedded in the final file.'
+            tip: 'Audio can be embedded only from a local upload or a direct CORS-enabled URL you have permission to use.'
         }
     ];
 
@@ -3743,6 +5397,64 @@ async function updateExportEstimate() {
             return localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
         } catch (_) {
             return true;
+        }
+    }
+
+    function setPermissionNoticeDismissed() {
+        try {
+            sessionStorage.setItem(PERMISSION_NOTICE_SESSION_KEY, 'true');
+        } catch (_) {}
+    }
+
+    function hasDismissedPermissionNotice() {
+        try {
+            return sessionStorage.getItem(PERMISSION_NOTICE_SESSION_KEY) === 'true';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function shouldAutoStartTutorial() {
+        return !hasSeenTutorial() && !window.location.hash.startsWith('#project=');
+    }
+
+    function scheduleTutorial(delay = 900) {
+        if (shouldAutoStartTutorial()) {
+            window.setTimeout(() => startTutorial(0), delay);
+        }
+    }
+
+    function closePermissionNotice() {
+        permissionNotice?.classList.add('hidden');
+        document.body.classList.remove('permission-notice-open');
+        setPermissionNoticeDismissed();
+        scheduleTutorial(420);
+    }
+
+    function showPermissionNotice() {
+        if (!permissionNotice || hasDismissedPermissionNotice()) return false;
+
+        permissionNotice.classList.remove('hidden');
+        document.body.classList.add('permission-notice-open');
+        window.setTimeout(() => permissionNoticeAckBtn?.focus({ preventScroll: true }), 40);
+        return true;
+    }
+
+    function trapPermissionNoticeFocus(event) {
+        if (!permissionNotice || permissionNotice.classList.contains('hidden') || event.key !== 'Tab') return;
+
+        const focusable = Array.from(permissionNotice.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+        if (!focusable.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
         }
     }
 
@@ -3898,8 +5610,21 @@ async function updateExportEstimate() {
     tutorialSkipBtn?.addEventListener('click', () => closeTutorial(true));
     tutorialBackBtn?.addEventListener('click', goToPreviousTutorialStep);
     tutorialNextBtn?.addEventListener('click', goToNextTutorialStep);
+    permissionNoticeAckBtn?.addEventListener('click', closePermissionNotice);
+    permissionNoticeRequestLink?.addEventListener('click', closePermissionNotice);
 
     document.addEventListener('keydown', (event) => {
+        if (permissionNotice && !permissionNotice.classList.contains('hidden')) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closePermissionNotice();
+                return;
+            }
+
+            trapPermissionNoticeFocus(event);
+            return;
+        }
+
         if (!tutorialActive) return;
         if (event.key === 'Escape') closeTutorial(true);
         if (event.key === 'ArrowRight' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
@@ -3982,7 +5707,7 @@ async function updateExportEstimate() {
     openEditorTab(restoredTab);
     updateSidebarStatus();
 
-    if (!hasSeenTutorial() && !window.location.hash.startsWith('#project=')) {
-        window.setTimeout(() => startTutorial(0), 900);
+    if (!showPermissionNotice()) {
+        scheduleTutorial();
     }
 })();

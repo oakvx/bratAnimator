@@ -1,13 +1,7 @@
 # Vendor files
 
-`app.js` first tries to import `../../vendor/mp4-muxer.mjs` from `assets/js/app.js`.
+`vendor/mp4-muxer.mjs` is the pinned browser ESM build of `mp4-muxer@5.2.2`.
 
-To remove the CDN dependency completely, download the exact `mp4-muxer` browser module used by the project and place it here as:
+Brat Animator uses it only for the optional fast video-only MP4 export path with WebCodecs. Audio exports still use MediaRecorder real-time recording.
 
-```text
-vendor/mp4-muxer.mjs
-```
-
-If the local file is missing, the app falls back to jsDelivr.
-
-I'm too bored to actually import it since its deprecated
+`mp4-muxer` is MIT licensed and deprecated upstream in favor of Mediabunny, but this app keeps the existing `Muxer` / `ArrayBufferTarget` integration for the 3.0 release.

@@ -24,15 +24,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Basic static checks
         run: |
           test -f index.html
           test -f assets/css/style.css
+          test -f assets/js/core.js
+          test -f assets/js/media.js
+          test -f assets/js/export.js
           test -f assets/js/app.js
           test -f assets/js/i18n.js
           test -f sw.js
+          test -f vendor/mp4-muxer.mjs
           test -f sitemap.xml
           test -f robots.txt
+
+      - name: JavaScript syntax checks
+        run: |
+          node --check assets/js/core.js
+          node --check assets/js/media.js
+          node --check assets/js/export.js
+          node --check assets/js/i18n.js
+          node --check assets/js/app.js
+          node --check sw.js
+
+      - name: Core tests
+        run: node --test
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -2,7 +2,7 @@
   "name": "Brat Animator",
   "short_name": "Brat Animator",
   "id": "/bratAnimator/",
-  "description": "Create square brat-style LRC lyric videos in the browser with local timing tools and video-only MP4/WebM export.",
+  "description": "Create square brat-style LRC lyric videos in the browser with local timing tools and MP4/WebM export with optional loaded audio.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

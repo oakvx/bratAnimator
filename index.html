@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="google-site-verification" content="VvUmY6lMxWNTWM75UUbpV-3Clw2QV2BKi-MjCoJvTzc" />
     <title>Brat Animator - Brat-Style LRC Lyric Video Generator</title>
-    <meta name="description" content="Create square brat-style lyric videos from synced LRC lyrics in your browser. Search lyrics, refine timing with local audio, customize the look, and export video-only MP4/WebM." />
+    <meta name="description" content="Create brat-style lyric videos from synced LRC lyrics. Time lyrics with local audio, customize the canvas, and export MP4/WebM in your browser." />
     <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
     <meta name="theme-color" content="#8ACE00" />
     <meta name="author" content="oakvx" />
@@ -19,7 +20,14 @@
     <link rel="alternate" hreflang="zh-CN" href="https://oakvx.github.io/bratAnimator/zh/" />
     <link rel="alternate" hreflang="x-default" href="https://oakvx.github.io/bratAnimator/" />
     <link rel="stylesheet" href="assets/css/style.css" />
-    <link rel="manifest" href="site.webmanifest" />
+    <script>
+        if (/^https?:$/.test(window.location.protocol)) {
+            const manifestLink = document.createElement("link");
+            manifestLink.rel = "manifest";
+            manifestLink.href = "site.webmanifest";
+            document.head.appendChild(manifestLink);
+        }
+    </script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon-192.png" />
     <meta property="og:locale" content="en_US" />
@@ -27,7 +35,7 @@
     <meta property="og:locale:alternate" content="zh_CN" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Brat Animator - LRC Lyric Video Generator" />
-    <meta property="og:description" content="Generate square brat-style lyric videos from LRC lyrics, refine timing with optional audio, and export video-only MP4/WebM directly in the browser." />
+    <meta property="og:description" content="Create brat-style lyric videos from synced LRC lyrics, refine timing with local media, customize the canvas, and export MP4/WebM with optional loaded audio." />
     <meta property="og:url" content="https://oakvx.github.io/bratAnimator/" />
     <meta property="og:site_name" content="Brat Animator" />
     <meta property="og:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
@@ -36,219 +44,214 @@
     <meta property="og:image:alt" content="Brat Animator preview showing a green brat-style lyric video canvas." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Brat Animator - LRC Lyric Video Generator" />
-    <meta name="twitter:description" content="Create brat-style lyric videos from synced LRC lyrics and export video-only files locally in the browser." />
+    <meta name="twitter:description" content="Create brat-style lyric videos from synced LRC lyrics, customize the canvas, and export MP4/WebM with optional loaded audio in your browser." />
     <meta name="twitter:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
     <meta name="twitter:image:alt" content="Brat Animator preview showing a green brat-style lyric video canvas." />
-    <script type="application/ld+json">{
-    "@context": "https://schema.org",
-    "@graph": [
+    <script type="application/ld+json">
         {
-            "@type": "Person",
-            "@id": "https://oakvx.github.io/bratAnimator/#creator",
-            "name": "oakvx"
-        },
-        {
-            "@type": "WebSite",
-            "@id": "https://oakvx.github.io/bratAnimator/#website",
-            "name": "Brat Animator",
-            "url": "https://oakvx.github.io/bratAnimator/",
-            "publisher": {
-                "@id": "https://oakvx.github.io/bratAnimator/#creator"
-            },
-            "inLanguage": [
-                "en",
-                "ru",
-                "zh-CN"
-            ]
-        },
-        {
-            "@type": "ImageObject",
-            "@id": "https://oakvx.github.io/bratAnimator/#primaryimage",
-            "url": "https://oakvx.github.io/bratAnimator/social-preview.png",
-            "width": 1200,
-            "height": 630,
-            "caption": "Brat Animator preview showing a green brat-style lyric video canvas."
-        },
-        {
-            "@type": "BreadcrumbList",
-            "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb",
-            "itemListElement": [
+            "@context": "https://schema.org",
+            "@graph": [{
+                    "@type": "Person",
+                    "@id": "https://oakvx.github.io/bratAnimator/#creator",
+                    "name": "oakvx"
+                },
                 {
-                    "@type": "ListItem",
-                    "position": 1,
+                    "@type": "WebSite",
+                    "@id": "https://oakvx.github.io/bratAnimator/#website",
                     "name": "Brat Animator",
-                    "item": "https://oakvx.github.io/bratAnimator/"
-                }
-            ]
-        },
-        {
-            "@type": "WebPage",
-            "@id": "https://oakvx.github.io/bratAnimator/#webpage",
-            "url": "https://oakvx.github.io/bratAnimator/",
-            "name": "Brat Animator - Brat-Style LRC Lyric Video Generator",
-            "description": "Create square brat-style lyric videos from synced LRC lyrics in your browser with local timing tools and video-only MP4/WebM export.",
-            "isPartOf": {
-                "@id": "https://oakvx.github.io/bratAnimator/#website"
-            },
-            "about": {
-                "@id": "https://oakvx.github.io/bratAnimator/#app"
-            },
-            "primaryImageOfPage": {
-                "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
-            },
-            "breadcrumb": {
-                "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb"
-            },
-            "inLanguage": [
-                "en",
-                "ru",
-                "zh-CN"
-            ]
-        },
-        {
-            "@type": "WebApplication",
-            "@id": "https://oakvx.github.io/bratAnimator/#app",
-            "name": "Brat Animator",
-            "alternateName": [
-                "Brat lyric video maker",
-                "LRC lyric video generator"
-            ],
-            "url": "https://oakvx.github.io/bratAnimator/",
-            "applicationCategory": "MultimediaApplication",
-            "operatingSystem": "Web",
-            "isAccessibleForFree": true,
-            "creator": {
-                "@id": "https://oakvx.github.io/bratAnimator/#creator"
-            },
-            "image": {
-                "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
-            },
-            "screenshot": "https://oakvx.github.io/bratAnimator/social-preview.png",
-            "inLanguage": [
-                "en",
-                "ru",
-                "zh-CN"
-            ],
-            "browserRequirements": "Modern browser with JavaScript, Canvas, MediaRecorder or WebCodecs support for export",
-            "featureList": [
-                "Search synced lyrics from LRCLIB",
-                "Paste or import timestamped LRC lyric files",
-                "Refine lyric timing with optional local audio assistance",
-                "Customize square lyric video typography, color, motion, and canvas settings",
-                "Export video-only MP4 or WebM files locally in the browser",
-                "Save snapshots and copy shareable project links"
-            ],
-            "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "EUR"
-            },
-            "description": "Static browser app for creating brat-style LRC lyric videos with optional audio-assisted timing, browser preview, project snapshots, and video-only MP4/WebM export."
-        },
-        {
-            "@type": "HowTo",
-            "@id": "https://oakvx.github.io/bratAnimator/#howto",
-            "name": "How to create a brat-style LRC lyric video",
-            "description": "Use Brat Animator to turn synced LRC lyrics into a square video-only MP4 or WebM export.",
-            "tool": [
-                {
-                    "@type": "HowToTool",
-                    "name": "Synced LRC lyrics"
+                    "url": "https://oakvx.github.io/bratAnimator/",
+                    "publisher": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#creator"
+                    },
+                    "inLanguage": [
+                        "en",
+                        "ru",
+                        "zh-CN"
+                    ]
                 },
                 {
-                    "@type": "HowToTool",
-                    "name": "Optional local audio file for timing assistance"
-                }
-            ],
-            "step": [
-                {
-                    "@type": "HowToStep",
-                    "name": "Add lyrics",
-                    "text": "Search for a song on LRCLIB or paste timestamped LRC lyrics into the editor."
+                    "@type": "ImageObject",
+                    "@id": "https://oakvx.github.io/bratAnimator/#primaryimage",
+                    "url": "https://oakvx.github.io/bratAnimator/social-preview.png",
+                    "width": 1200,
+                    "height": 630,
+                    "caption": "Brat Animator preview showing a green brat-style lyric video canvas."
                 },
                 {
-                    "@type": "HowToStep",
-                    "name": "Refine timing",
-                    "text": "Optionally load an audio file in the browser to check and adjust lyric timing."
+                    "@type": "BreadcrumbList",
+                    "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb",
+                    "itemListElement": [{
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Brat Animator",
+                        "item": "https://oakvx.github.io/bratAnimator/"
+                    }]
                 },
                 {
-                    "@type": "HowToStep",
-                    "name": "Customize the design",
-                    "text": "Adjust typography, color, motion, canvas size, and layout before exporting."
+                    "@type": "WebPage",
+                    "@id": "https://oakvx.github.io/bratAnimator/#webpage",
+                    "url": "https://oakvx.github.io/bratAnimator/",
+                    "name": "Brat Animator - Brat-Style LRC Lyric Video Generator",
+                    "description": "Create brat-style lyric videos from synced LRC lyrics with local audio timing, canvas customization, and MP4/WebM export in your browser.",
+                    "isPartOf": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#website"
+                    },
+                    "about": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#app"
+                    },
+                    "primaryImageOfPage": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
+                    },
+                    "breadcrumb": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb"
+                    },
+                    "inLanguage": [
+                        "en",
+                        "ru",
+                        "zh-CN"
+                    ]
                 },
                 {
-                    "@type": "HowToStep",
-                    "name": "Export the video",
-                    "text": "Render a video-only MP4 when supported, with WebM fallback available in compatible browsers."
-                }
-            ]
-        },
-        {
-            "@type": "FAQPage",
-            "@id": "https://oakvx.github.io/bratAnimator/#faq",
-            "mainEntity": [
-                {
-                    "@type": "Question",
-                    "name": "Does Brat Animator export audio?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "No. The final export contains only video. Uploaded audio is used only as timing assistance."
-                    }
+                    "@type": "WebApplication",
+                    "@id": "https://oakvx.github.io/bratAnimator/#app",
+                    "name": "Brat Animator",
+                    "alternateName": [
+                        "Brat lyric video maker",
+                        "LRC lyric video generator"
+                    ],
+                    "url": "https://oakvx.github.io/bratAnimator/",
+                    "applicationCategory": "MultimediaApplication",
+                    "operatingSystem": "Web",
+                    "isAccessibleForFree": true,
+                    "creator": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#creator"
+                    },
+                    "image": {
+                        "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
+                    },
+                    "screenshot": "https://oakvx.github.io/bratAnimator/social-preview.png",
+                    "inLanguage": [
+                        "en",
+                        "ru",
+                        "zh-CN"
+                    ],
+                    "browserRequirements": "Modern browser with JavaScript, Canvas, MediaRecorder or WebCodecs support for export",
+                    "featureList": [
+                        "Search synced lyrics from LRCLIB",
+                        "Paste or import timestamped LRC lyric files",
+                        "Refine lyric timing with optional local audio assistance",
+                        "Customize square lyric video typography, color, motion, and canvas settings",
+                        "Export fast video-only MP4/WebM or real-time exports with loaded audio",
+                        "Save snapshots and copy shareable project links"
+                    ],
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "0",
+                        "priceCurrency": "EUR"
+                    },
+                    "description": "Static browser app for creating brat-style LRC lyric videos with local audio/video timing, browser preview, project snapshots, canvas customization, and MP4/WebM export with optional loaded audio."
                 },
                 {
-                    "@type": "Question",
-                    "name": "Is audio uploaded to a server?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "No. Audio files are loaded locally in the browser for timing assistance and are not included in the final export."
-                    }
+                    "@type": "HowTo",
+                    "@id": "https://oakvx.github.io/bratAnimator/#howto",
+                    "name": "How to create a brat-style LRC lyric video",
+                    "description": "Use Brat Animator to turn synced LRC lyrics into a square MP4 or WebM export with optional loaded audio.",
+                    "tool": [{
+                            "@type": "HowToTool",
+                            "name": "Synced LRC lyrics"
+                        },
+                        {
+                            "@type": "HowToTool",
+                            "name": "Optional local audio/video file for timing assistance"
+                        }
+                    ],
+                    "step": [{
+                            "@type": "HowToStep",
+                            "name": "Add lyrics",
+                            "text": "Search for a song on LRCLIB or paste timestamped LRC lyrics into the editor."
+                        },
+                        {
+                            "@type": "HowToStep",
+                            "name": "Refine timing",
+                            "text": "Optionally load an audio or video file in the browser to decode audio, check timing, and export with loaded audio."
+                        },
+                        {
+                            "@type": "HowToStep",
+                            "name": "Customize the design",
+                            "text": "Adjust typography, color, motion, canvas size, and layout before exporting."
+                        },
+                        {
+                            "@type": "HowToStep",
+                            "name": "Export the video",
+                            "text": "Render MP4/WebM with or without loaded media audio in compatible browsers."
+                        }
+                    ]
                 },
                 {
-                    "@type": "Question",
-                    "name": "Can I save or share a project?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Yes. Project snapshots can be saved in the current browser, and project JSON or share links can be copied from the project tools."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "Can I use or redistribute this project?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Usage, copying, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "Does it work on GitHub Pages?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Yes. The project is fully static and can run on GitHub Pages without a custom backend."
-                    }
+                    "@type": "FAQPage",
+                    "@id": "https://oakvx.github.io/bratAnimator/#faq",
+                    "mainEntity": [{
+                            "@type": "Question",
+                            "name": "Does Brat Animator export audio?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "Yes, when enabled and when you load permitted local or direct CORS-enabled media audio. YouTube preview links are not downloaded or extracted."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            "name": "Is audio uploaded to a server?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "No. Local files stay in the browser. Direct media URLs are fetched by the browser only when you choose to load them."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            "name": "Can I save or share a project?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "Yes. Project snapshots can be saved in the current browser, and project JSON or share links can be copied from the project tools."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            "name": "Can I use or redistribute this project?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "You can use Brat Animator freely. Publishing, public sharing, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            "name": "Does it work on GitHub Pages?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "Yes. The project is fully static and can run on GitHub Pages without a custom backend."
+                            }
+                        }
+                    ]
                 }
             ]
         }
-    ]
-}</script>
+    </script>
+    <script src="assets/js/core.js" defer></script>
+    <script src="assets/js/media.js" defer></script>
+    <script src="assets/js/export.js" defer></script>
     <script src="assets/js/i18n.js" defer></script>
     <script src="assets/js/app.js" defer></script>
 </head>
+
 <body>
-<noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
+    <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
 
     <div class="topbar main-menu-v3" aria-label="main workspace menu">
-        <div class="menu-brand" aria-label="Brat Animator version 3.0">
-            <span class="menu-mark" aria-hidden="true">ba</span>
-            <span class="menu-brand-copy">
-                <strong>brat animator</strong>
-                <span>version 3.0</span>
-            </span>
-        </div>
+
         <div class="menu-command-group" aria-label="editor commands">
             <button id="togglePanelBtn" class="chip" data-i18n="controls" aria-controls="panel" aria-expanded="true">controls</button>
             <button id="loadDemoBtn" class="chip" data-i18n="loadDemo">load demo</button>
             <button id="tutorialBtn" class="chip" type="button">help</button>
+            <a class="chip menu-link" href="#about" data-i18n="aboutLink">about</a>
         </div>
         <div class="menu-spacer" aria-hidden="true"></div>
         <div class="footer-controls menu-command-group" aria-label="theme controls">
@@ -260,19 +263,25 @@
             <button class="chip lang-btn" data-lang="ru" aria-label="Русский">RU</button>
             <button class="chip lang-btn" data-lang="zh" aria-label="中文">ZH</button>
         </div>
-        <a id="permissionLink" class="chip link-chip" href="mailto:oakvx7@gmail.com?subject=Brat%20Animator%20permission%20request" data-i18n="requestPermission">request permission</a>
+        <a id="permissionLink" class="chip link-chip" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">request permission</a>
     </div>
 
     <div id="panel" class="panel" aria-label="editor controls">
         <div class="panel-header">
             <div>
-                <h1 data-i18n="panelTitle">brat video lyrics</h1>
+                <h1 data-i18n="panelTitle">brat lyric video editor</h1>
                 <p data-i18n="panelIntro">
-                    Search a song on LRCLIB, paste or load LRC lyrics, optionally use audio to refine timing,
-                    and export a video-only animation. Audio is never included in the final export.
+                    Search a song on LRCLIB, paste or load LRC lyrics, use cleared audio/video for timing,
+                    and optionally merge extracted audio into the final export.
                 </p>
             </div>
             <span class="autosave-pill" id="autosaveBadge">autosaved</span>
+        </div>
+
+        <div id="recoveryBanner" class="recovery-banner hidden" role="status">
+            <span data-i18n="recoveryText">autosaved project restored in this browser</span>
+            <button id="recoveryKeepBtn" type="button" data-i18n="recoveryKeep">keep</button>
+            <button id="recoveryDiscardBtn" type="button" data-i18n="recoveryDiscard">discard</button>
         </div>
 
         <div class="project-status-bar" aria-label="project status">
@@ -293,11 +302,12 @@
 
         <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
             <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
-            <label class="label" for="searchQueryInput" data-i18n="searchSongLabel">search a song</label>
-            <input id="searchQueryInput" type="text" placeholder="artist - title" data-i18n-placeholder="searchPlaceholder" />
+            <label class="label" for="searchQueryInput" data-i18n="searchSongLabel">search LRCLIB or paste YouTube link</label>
+            <input id="searchQueryInput" type="text" placeholder="artist - title or YouTube link" data-i18n-placeholder="searchPlaceholder" />
+            <p class="mini-copy">Use artist/title for lyrics, or paste a YouTube link to load the video preview. Audio can come from an uploaded audio/video file or a permitted direct media URL.</p>
 
             <div class="row">
-                <button id="searchSongBtn" class="primary" data-i18n="search">search</button>
+                <button id="searchSongBtn" class="primary" data-i18n="search">search / load</button>
                 <button id="clearResultsBtn" data-i18n="clearResults">clear results</button>
             </div>
 
@@ -321,17 +331,33 @@
                 <button id="normalizeLrcBtn">normalize timestamps</button>
                 <button id="shiftBackBtn">shift -0.50s</button>
                 <button id="shiftForwardBtn">shift +0.50s</button>
+                <button id="undoBtn" type="button">undo</button>
+                <button id="redoBtn" type="button">redo</button>
                 <button id="copyLrcBtn" type="button">copy LRC</button>
                 <button id="starterLrcBtn" type="button">starter LRC</button>
             </div>
 
             <details class="advanced-block" open>
                 <summary>visual LRC editor</summary>
+                <label class="label" for="lrcSearchInput">search lyric</label>
+                <input id="lrcSearchInput" type="search" placeholder="filter visible lines" />
                 <div class="editor-toolbar">
                     <button id="refreshEditorBtn">refresh rows</button>
                     <button id="applyEditorBtn" class="primary">apply rows to LRC</button>
                     <button id="addLrcRowBtn">+ add line</button>
                     <button id="syncCurrentRowBtn">sync selected to playhead</button>
+                    <button id="splitLrcRowBtn" type="button">split</button>
+                    <button id="mergeLrcRowBtn" type="button">merge next</button>
+                    <button id="moveLrcUpBtn" type="button">move up</button>
+                    <button id="moveLrcDownBtn" type="button">move down</button>
+                    <button id="duplicateLrcRowBtn" type="button">duplicate</button>
+                    <button id="playSelectedRowBtn" type="button">play lyric</button>
+                </div>
+                <div class="editor-toolbar timing-toolbar">
+                    <label>offset <input id="timingOffsetInput" type="number" step="0.05" value="0.50" /></label>
+                    <button id="shiftSelectedBackBtn" type="button">selected -</button>
+                    <button id="shiftSelectedForwardBtn" type="button">selected +</button>
+                    <button id="shiftAllByInputBtn" type="button">shift all</button>
                 </div>
                 <div id="lrcRows" class="lrc-rows" aria-live="polite"></div>
             </details>
@@ -348,13 +374,21 @@
                 <div id="tapSyncStatus" class="meta muted">tap sync idle</div>
             </details>
 
-            <label class="label" for="audioFileInput" data-i18n="optionalAudio">optional audio for timing analysis</label>
-            <input id="audioFileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" />
+            <label class="label" for="audioFileInput" data-i18n="optionalAudio">optional audio/video for timing analysis</label>
+            <input id="audioFileInput" type="file" accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.mp4,.mov,.m4v,.webm" />
             <div id="audioDropZone" class="drop-zone" tabindex="0" role="button" data-i18n="dropAudio">
-                Drop an audio file here or click to load audio
+                Drop an audio or video file here to extract audio
+            </div>
+            <div class="audio-url-row">
+                <label class="label" for="audioUrlInput">audio/video URL</label>
+                <div class="row">
+                    <input id="audioUrlInput" type="url" placeholder="https://example.com/cleared-media.mp4" />
+                    <button id="loadAudioUrlBtn" type="button">load media URL</button>
+                </div>
+                <p class="mini-copy">Use a direct CORS-enabled audio/video file you have permission to use. YouTube links stay preview-only and are not downloaded.</p>
             </div>
             <div id="audioStatus" class="meta muted" data-status-key="noAudio">no audio loaded</div>
-            <audio id="syncAudio" controls class="sync-audio hidden"></audio>
+            <div id="syncMediaMount" class="sync-media-mount hidden"></div>
             <canvas id="waveformCanvas" class="waveform-canvas" width="900" height="120" aria-label="audio waveform"></canvas>
             <canvas id="timelineCanvas" class="timeline-canvas" width="900" height="92" aria-label="lyric timeline"></canvas>
 
@@ -402,6 +436,7 @@
                     <select id="animationModeSelect">
                         <option value="typewriter" selected>typewriter</option>
                         <option value="word">word by word</option>
+                        <option value="letter-chunks">letter chunks</option>
                         <option value="phrase">phrase by phrase</option>
                         <option value="line">full line</option>
                         <option value="fade">fade in</option>
@@ -454,6 +489,7 @@
                 <label>vertical position <input id="verticalPositionInput" type="range" min="-30" max="30" value="0" /></label>
                 <label>stretch <input id="stretchInput" type="range" min="70" max="130" value="94" /></label>
                 <label>letter spacing <input id="letterSpacingInput" type="range" min="-8" max="20" value="0" /></label>
+                <label>letters per step <input id="letterChunkSizeInput" type="range" min="1" max="12" value="2" /></label>
                 <label>line spacing <input id="lineSpacingInput" type="range" min="70" max="130" value="92" /></label>
             </div>
 
@@ -477,6 +513,27 @@
                     <label>dim opacity <input id="musicDimOpacityInput" type="range" min="12" max="60" value="20" /></label>
                     <label>scroll anchor <input id="musicScrollPositionInput" type="range" min="35" max="65" value="50" /></label>
                 </div>
+                <div class="row">
+                    <div>
+                        <label class="label" for="wordAnimationModeSelect">word animation</label>
+                        <select id="wordAnimationModeSelect">
+                            <option value="progress" selected>progress</option>
+                            <option value="fade">fade</option>
+                            <option value="scale">scale</option>
+                            <option value="pop">pop</option>
+                            <option value="glow">glow</option>
+                            <option value="shake">shake</option>
+                            <option value="color">color transition</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label" for="wordAnimationColorInput">word color</label>
+                        <input id="wordAnimationColorInput" type="color" value="#ffffff" />
+                    </div>
+                </div>
+                <div class="range-grid">
+                    <label>word intensity <input id="wordAnimationIntensityInput" type="range" min="0" max="100" value="70" /></label>
+                </div>
                 <div class="beautiful-note">Use <code>[bg]</code>, <code>[side]</code> or <code>[rom]</code> before a lyric line to render backing vocals, side vocals or secondary/romanized lines.</div>
                 <div class="row">
                     <label class="inline-check"><input id="beautifulDynamicBgCheckbox" type="checkbox" checked /> dynamic blurred background</label>
@@ -495,6 +552,45 @@
                 <label class="inline-check"><input id="safeZonesCheckbox" type="checkbox" /> show social safe zones</label>
                 <button id="fullscreenBtn">fullscreen preview</button>
             </div>
+
+            <details class="advanced-block" open>
+                <summary>background media</summary>
+                <label class="label" for="backgroundFileInput">background file</label>
+                <input id="backgroundFileInput" type="file" accept="image/*,video/*" />
+                <div class="row background-grid">
+                    <input id="backgroundUrlInput" type="url" placeholder="https://example.com/background.jpg" />
+                    <button id="loadBackgroundUrlBtn" type="button">load URL</button>
+                    <button id="clearBackgroundBtn" type="button">clear</button>
+                    <button id="useArtworkBgBtn" type="button">use artwork</button>
+                </div>
+                <div class="range-grid">
+                    <label>opacity <input id="bgMediaOpacityInput" type="range" min="0" max="100" value="100" /></label>
+                    <label>blur <input id="bgMediaBlurInput" type="range" min="0" max="40" value="0" /></label>
+                    <label>brightness <input id="bgMediaBrightnessInput" type="range" min="0" max="200" value="100" /></label>
+                    <label>saturation <input id="bgMediaSaturationInput" type="range" min="0" max="200" value="100" /></label>
+                    <label>scale <input id="bgMediaScaleInput" type="range" min="50" max="250" value="100" /></label>
+                    <label>x position <input id="bgMediaPositionXInput" type="range" min="0" max="100" value="50" /></label>
+                    <label>y position <input id="bgMediaPositionYInput" type="range" min="0" max="100" value="50" /></label>
+                </div>
+                <div id="backgroundStatus" class="meta muted">no background media</div>
+            </details>
+
+            <details class="advanced-block">
+                <summary>preset library</summary>
+                <label class="label" for="presetNameInput">preset name</label>
+                <input id="presetNameInput" type="text" placeholder="my lyric style" />
+                <div class="row preset-row">
+                    <button id="savePresetBtn" type="button" class="primary">save as preset</button>
+                    <select id="userPresetSelect" aria-label="saved presets"></select>
+                    <button id="loadPresetBtn" type="button">load preset</button>
+                    <button id="deletePresetBtn" type="button">delete preset</button>
+                </div>
+                <div class="row preset-row">
+                    <button id="exportPresetBtn" type="button">export preset JSON</button>
+                    <label class="file-button">import preset JSON <input id="importPresetInput" type="file" accept="application/json,.json" hidden /></label>
+                </div>
+                <div id="presetStatus" class="meta muted">no saved presets yet</div>
+            </details>
         </div>
 
         <div id="section-canvas" class="section editor-section" data-editor-tab="canvas" role="tabpanel" aria-labelledby="tab-canvas">
@@ -515,13 +611,16 @@
                 <button id="canvasFullscreenBtn" type="button">fullscreen preview</button>
                 <button id="canvasSafeToggleBtn" type="button">toggle safe zones</button>
             </div>
+            <div class="range-grid">
+                <label>preview zoom <input id="previewZoomInput" type="range" min="50" max="140" value="100" /></label>
+            </div>
         </div>
 
         <div id="section-export" class="section editor-section" data-editor-tab="export" role="tabpanel" aria-labelledby="tab-export">
             <div class="section-title" data-i18n="export">export</div>
             <p data-i18n="exportIntro">
-                The exported file contains only the rendered video. No external iframe and no audio track are included.
-                On compatible browsers, fast export can render without waiting for the full real-time lyric duration.
+                Video-only export stays fast when supported. If loaded audio is enabled, export records in real time
+                and merges only extracted local or direct CORS-enabled media audio you have permission to use.
             </p>
 
             <div class="row">
@@ -570,6 +669,21 @@
                 </div>
             </div>
 
+            <div class="export-audio-option">
+                <label class="inline-check">
+                    <input id="includeAudioInExportCheckbox" type="checkbox" checked />
+                    <span data-i18n="includeAudioInExport">include loaded audio</span>
+                </label>
+                <div class="range-grid">
+                    <label>volume <input id="exportAudioVolumeInput" type="range" min="0" max="200" value="100" /></label>
+                    <label>fade in <input id="exportAudioFadeInInput" type="range" min="0" max="1000" value="0" /></label>
+                    <label>fade out <input id="exportAudioFadeOutInput" type="range" min="0" max="1000" value="0" /></label>
+                </div>
+                <p id="exportAudioNote" class="mini-copy" data-i18n="exportAudioNoFile">
+                    Load one audio/video file in Timing; export can merge the extracted audio automatically.
+                </p>
+            </div>
+
             <div class="row">
                 <button id="exportVideoBtn" class="primary" data-i18n="exportVideo">export video</button>
                 <button id="exportPngBtn" data-i18n="exportPng">export PNG frame</button>
@@ -585,7 +699,7 @@
 
             <div id="exportStatus" class="meta muted" data-status-key="noExport">no export yet</div>
             <div id="exportEstimate" class="meta muted" data-status-key="estimateNA">estimated export time: n/a</div>
-            <div class="pill-note" data-i18n="exportNote">video-only output • fast export when supported • MP4 if available, otherwise WebM fallback</div>
+            <div class="pill-note" data-i18n="exportNote">video-only by default; loaded local audio can be merged when enabled</div>
         </div>
 
         <div id="section-project" class="section editor-section" data-editor-tab="project" role="tabpanel" aria-labelledby="tab-project">
@@ -599,6 +713,7 @@
             <input id="snapshotNameInput" type="text" placeholder="late-night lyric pass" />
             <div class="project-actions-inline">
                 <button id="saveSnapshotBtn" type="button" class="primary">save snapshot</button>
+                <button id="duplicateProjectBtn" type="button">duplicate project</button>
                 <button id="shareProjectLinkBtn" type="button">copy share link</button>
                 <button id="copyProjectJsonBtn" type="button">copy project JSON</button>
             </div>
@@ -617,6 +732,21 @@
         </div>
     </div>
 
+    <div id="permissionNotice" class="permission-notice-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
+        <div class="permission-notice-card" tabindex="-1">
+            <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">usage note</p>
+            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">use it freely. ask before publishing.</h2>
+            <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
+                You are free to use Brat Animator as much as you want. To publish, share publicly, redistribute,
+                self-host, commercialize, or integrate anything made with it, please ask permission first.
+            </p>
+            <div class="permission-notice-actions">
+                <button id="permissionNoticeAckBtn" type="button" class="primary" data-i18n="permissionNoticeAcknowledge">i understand</button>
+                <a id="permissionNoticeRequestLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="permissionNoticePermission">ask permission</a>
+            </div>
+        </div>
+    </div>
+
     <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
         <div class="tutorial-card">
             <div id="tutorialProgress" class="tutorial-progress">step 1 of 6</div>
@@ -632,6 +762,14 @@
         </div>
     </div>
 
+    <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+        <div class="command-palette-card">
+            <h2 id="commandPaletteTitle">commands</h2>
+            <input id="commandPaletteInput" type="search" placeholder="type a command" aria-label="command search" />
+            <div id="commandPaletteList" class="command-palette-list"></div>
+        </div>
+    </div>
+
     <div id="playerWrap" class="player-wrap hidden">
         <div class="player-head">
             <strong data-i18n="videoPreview">video preview</strong>
@@ -641,7 +779,7 @@
     </div>
 
     <main class="page-shell">
-        <div class="app">
+        <div class="app" id="editor">
             <div class="stage-wrap">
                 <div id="stage" class="stage">
                     <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
@@ -655,30 +793,39 @@
             <h2 data-i18n="aboutTitle">Brat-style LRC lyric video generator</h2>
             <p data-i18n="aboutText">
                 Brat Animator is a static, browser-based creative tool for turning synced LRC lyrics into square lyric videos.
-                It runs on GitHub Pages, processes lyrics locally in the browser, and exports video-only MP4/WebM files when supported.
+                It runs on GitHub Pages, processes lyrics locally in the browser, and exports MP4/WebM files with or without loaded audio when supported.
             </p>
+            <nav class="internal-links" aria-label="site links">
+                <strong data-i18n="siteLinksTitle">Site links</strong>
+                <a href="#editor" data-i18n="jumpEditor">Open editor</a>
+                <a href="#about" data-i18n="jumpAbout">About Brat Animator</a>
+                <a href="en/" hreflang="en" data-i18n="openEnglish">English page</a>
+                <a href="ru/" hreflang="ru" data-i18n="openRussian">Russian page</a>
+                <a href="zh/" hreflang="zh-CN" data-i18n="openChinese">Chinese page</a>
+                <a href="sitemap.xml" data-i18n="openSitemap">Sitemap</a>
+            </nav>
             <div class="seo-grid">
                 <div class="seo-card">
                     <h3 data-i18n="whyTitle">Why it exists</h3>
                     <ul class="feature-list">
                         <li data-i18n="whyOne">Create fast brat-style lyric visuals without editing software.</li>
-                        <li data-i18n="whyTwo">Use audio only as timing assistance; the exported video contains no audio.</li>
+                        <li data-i18n="whyTwo">Use YouTube only as preview/reference; merge audio only from local files or permitted CORS URLs.</li>
                         <li data-i18n="whyThree">Keep everything static and deployable on GitHub Pages.</li>
                     </ul>
                 </div>
                 <div class="seo-card">
                     <h3 data-i18n="permissionTitle">Permission required</h3>
                     <p data-i18n="permissionText">
-                        Usage, copying, modification, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author.
+                        You can use Brat Animator freely. Publishing, public sharing, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author.
                     </p>
-                    <p><a class="text-link" href="mailto:investingtoro@icloud.com?subject=Brat%20Animator%20permission%20request" data-i18n="requestPermission">request permission</a></p>
+                    <p><a class="text-link" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">request permission</a></p>
                 </div>
                 <div class="seo-card">
                     <h3 data-i18n="workflowTitle">How it works</h3>
                     <ol class="feature-list">
                         <li data-i18n="workflowOne">Search LRCLIB or paste synced LRC lyrics.</li>
-                        <li data-i18n="workflowTwo">Use optional local audio to check timing.</li>
-                        <li data-i18n="workflowThree">Customize the square canvas and export video-only MP4/WebM.</li>
+                        <li data-i18n="workflowTwo">Use optional local audio/video to check timing and export with volume/fades.</li>
+                        <li data-i18n="workflowThree">Customize the square canvas and export MP4/WebM with or without loaded audio.</li>
                     </ol>
                 </div>
                 <div class="seo-card">
@@ -694,4 +841,5 @@
 
     </main>
 </body>
+
 </html>
