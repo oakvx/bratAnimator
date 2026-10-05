@@ -1,4 +1,4 @@
-# Brat Animator 3.0 Manual Checklist
+# Brat Animator 4.0 Manual Checklist
 
 Run these checks before tagging a release or pushing to GitHub Pages.
 
@@ -6,6 +6,8 @@ Run these checks before tagging a release or pushing to GitHub Pages.
 
 - Open `index.html` with `file://` and confirm there is no manifest or service worker registration error.
 - Confirm all six editor tabs are visible on desktop and narrow mobile widths.
+- Confirm the editor header, tabs, and timing controls remain evenly spaced without horizontal overflow.
+- Confirm canvas zoom, fit, playback, seek, restart, and fullscreen controls work from the stage toolbar.
 - Confirm the permission notice appears once, can be acknowledged, and the permission button opens `mailto:oakvx@icloud.com`.
 
 ## Localhost / PWA
@@ -31,9 +33,15 @@ Run these checks before tagging a release or pushing to GitHub Pages.
 
 ## Background
 
+- Switch between solid, linear, and radial fills; confirm the gradient color and linear angle persist after reload.
+- Enable color exchange and verify alternating palettes by line, word, and typewriter letter, including intervals greater than one.
+- Confirm word exchange also follows Enhanced LRC timestamps and works with the full-line animation.
+- Apply a video to text fill and confirm the video is visible only inside the lyrics, including PNG and video export.
 - Upload local image and video backgrounds and confirm opacity, blur, brightness, saturation, scale, and position controls.
+- Export with a video background and confirm the real-time path preserves the moving video.
 - Paste a CORS-enabled image/video background URL and confirm export is allowed.
 - Paste a non-CORS remote background URL and confirm preview may show but export is blocked with a clear message.
+- Set matching foreground/background colors and confirm Auto contrast chooses readable text and updates the ratio badge.
 
 ## Export
 
@@ -41,7 +49,7 @@ Run these checks before tagging a release or pushing to GitHub Pages.
 - Export WebM fallback if fast MP4 is unavailable.
 - Export with loaded audio enabled and confirm MediaRecorder realtime export includes volume/fade.
 - Export PNG frame and preview frames.
-- Import an old v2/v3 project JSON and confirm it migrates to v3 state.
+- Import an old v2/v3 project JSON and confirm it migrates to v4 state.
 
 ## Project Tools
 
@@ -49,3 +57,12 @@ Run these checks before tagging a release or pushing to GitHub Pages.
 - Refresh after autosave and confirm recovery banner behavior.
 - Export/import project JSON and preset JSON.
 - Use command palette and shortcuts outside inputs; confirm shortcuts do not fire while typing.
+
+## Timing and text analysis
+
+- Compare word reveal, typewriter and karaoke using Enhanced LRC with multiple words per marker and a terminal `<MM:SS.xx>` marker; word onsets must match.
+- Check a timestamp-only empty row: text should clear until the next lyric.
+- Enable “start timeline from 0:00” on lyrics beginning after an intro; preview audio, waveform seeking and exported audio must trim the same intro.
+- Test emoji with skin tones/joiners, combining accents and CJK text without spaces; characters must not be split during typewriter reveal.
+- Test tightly spaced lines and out-of-order word timestamps; inspect the timing warnings below the transport controls.
+- Compare silent, constant-energy and antiphase stereo audio. Silence/flat energy should use text estimates; stereo should retain its energy.

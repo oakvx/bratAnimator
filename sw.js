@@ -1,9 +1,10 @@
-const CACHE_NAME = "brat-animator-v3-feature-complete";
+const CACHE_NAME = "brat-animator-v4-timing-3";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./assets/css/style.css",
   "./assets/js/core.js",
+  "./assets/js/timing.js",
   "./assets/js/media.js",
   "./assets/js/export.js",
   "./assets/js/i18n.js",

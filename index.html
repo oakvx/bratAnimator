@@ -236,6 +236,7 @@
         }
     </script>
     <script src="assets/js/core.js" defer></script>
+    <script src="assets/js/timing.js" defer></script>
     <script src="assets/js/media.js" defer></script>
     <script src="assets/js/export.js" defer></script>
     <script src="assets/js/i18n.js" defer></script>
@@ -243,18 +244,25 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#editor">skip to editor</a>
     <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
 
-    <div class="topbar main-menu-v3" aria-label="main workspace menu">
+    <header class="topbar main-menu-v4" aria-label="main menu">
+        <a class="menu-brand" href="#editor" aria-label="Brat Animator editor">
+            <span class="menu-brand-copy">
+                <strong>brat animator</strong>
+                <span>4.0</span>
+            </span>
+        </a>
 
-        <div class="menu-command-group" aria-label="editor commands">
+        <nav class="menu-command-group" aria-label="editor commands">
             <button id="togglePanelBtn" class="chip" data-i18n="controls" aria-controls="panel" aria-expanded="true">controls</button>
             <button id="loadDemoBtn" class="chip" data-i18n="loadDemo">load demo</button>
+            <button id="commandPaletteBtn" class="chip command-trigger" type="button" aria-haspopup="dialog" aria-controls="commandPalette">commands <kbd>Ctrl K</kbd></button>
             <button id="tutorialBtn" class="chip" type="button">help</button>
-            <a class="chip menu-link" href="#about" data-i18n="aboutLink">about</a>
-        </div>
+        </nav>
         <div class="menu-spacer" aria-hidden="true"></div>
-        <div class="footer-controls menu-command-group" aria-label="theme controls">
+        <div class="footer-controls menu-command-group theme-switch" aria-label="theme controls">
             <button id="bgBtn">green</button>
             <button id="darkBtn">dark</button>
         </div>
@@ -264,7 +272,7 @@
             <button class="chip lang-btn" data-lang="zh" aria-label="中文">ZH</button>
         </div>
         <a id="permissionLink" class="chip link-chip" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">request permission</a>
-    </div>
+    </header>
 
     <div id="panel" class="panel" aria-label="editor controls">
         <div class="panel-header">
@@ -412,6 +420,10 @@
             </div>
 
             <div id="meta" class="meta">0 lines • 0 blocks • 0.00s timeline</div>
+            <div id="timingReport" class="timing-report" hidden>
+                <p id="timingAnalysis"></p>
+                <ul id="timingWarnings" hidden></ul>
+            </div>
         </div>
 
         <div id="section-design" class="section editor-section" data-editor-tab="design" role="tabpanel" aria-labelledby="tab-design">
@@ -425,9 +437,7 @@
                         <option value="white-label">white label</option>
                         <option value="pink">pink</option>
                         <option value="blue">blue</option>
-                        <optgroup label="Beta">
-                            <option value="beautiful-lyrics">Beautiful Lyrics</option>
-                        </optgroup>
+                        <option value="beautiful-lyrics">cinematic</option>
                         <option value="custom">custom</option>
                     </select>
                 </div>
@@ -449,15 +459,13 @@
                     <select id="lyricsDisplayModeSelect">
                         <option value="brat" selected>brat canvas</option>
                         <option value="music">music synced scroll</option>
-                        <optgroup label="Beta">
-                            <option value="beautiful">Beautiful Lyrics</option>
-                        </optgroup>
+                        <option value="beautiful">cinematic scroll</option>
                     </select>
                 </div>
             </div>
 
             <div class="mode-note" id="musicModeNote">
-                The Beta → Beautiful Lyrics option uses an Apple-like SF Pro typography stack, liquid-glass dynamic background, line-by-line live lyrics, depth-based dimming and per-word sung highlighting. Enhanced LRC word tags are supported for precise karaoke timing; normal LRC is interpolated word-by-word automatically. Not affiliated with Apple Music, Spotify or Beautiful Lyrics.
+                Enhanced LRC word timestamps are used when available. Standard LRC timing is interpolated automatically.
             </div>
 
             <div class="row color-row">
@@ -481,6 +489,60 @@
                         <option value="Courier New, monospace">Courier New</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="contrast-tool">
+                <div>
+                    <span class="contrast-kicker">accessibility check</span>
+                    <strong id="contrastRatio">contrast 1.00:1</strong>
+                    <p id="contrastStatus">Choose readable text for the current background.</p>
+                </div>
+                <button id="autoContrastBtn" type="button">auto contrast</button>
+            </div>
+
+            <div class="effect-settings-grid">
+                <fieldset class="effect-setting">
+                    <legend>background fill</legend>
+                    <label class="label" for="backgroundFillTypeSelect">fill type</label>
+                    <select id="backgroundFillTypeSelect">
+                        <option value="solid" selected>solid color</option>
+                        <option value="linear">linear gradient</option>
+                        <option value="radial">radial gradient</option>
+                    </select>
+                    <div id="gradientOptions" class="gradient-options" hidden>
+                        <div>
+                            <label class="label" for="gradientColorInput">second color</label>
+                            <input id="gradientColorInput" type="color" value="#315f4b" />
+                        </div>
+                        <div>
+                            <label class="label" for="gradientAngleInput">angle</label>
+                            <input id="gradientAngleInput" type="range" min="0" max="360" value="135" />
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="effect-setting">
+                    <legend>color exchange</legend>
+                    <label class="inline-toggle" for="colorSwapEnabledCheckbox">
+                        <input id="colorSwapEnabledCheckbox" type="checkbox" aria-describedby="colorSwapHint" />
+                        swap text and background
+                    </label>
+                    <div id="colorSwapOptions" class="swap-options">
+                        <div>
+                            <label class="label" for="colorSwapUnitSelect">change on</label>
+                            <select id="colorSwapUnitSelect">
+                                <option value="line" selected>line</option>
+                                <option value="word">word</option>
+                                <option value="letter">letter</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label" for="colorSwapIntervalInput">every</label>
+                            <input id="colorSwapIntervalInput" type="number" min="1" max="12" step="1" value="1" inputmode="numeric" />
+                        </div>
+                    </div>
+                    <p id="colorSwapHint" class="mini-copy">Swap every line. Letter mode follows the typewriter animation.</p>
+                </fieldset>
             </div>
 
             <div class="range-grid">
@@ -554,11 +616,18 @@
             </div>
 
             <details class="advanced-block" open>
-                <summary>background media</summary>
-                <label class="label" for="backgroundFileInput">background file</label>
-                <input id="backgroundFileInput" type="file" accept="image/*,video/*" />
+                <summary>background image or video</summary>
+                <p class="mini-copy">Upload an image, MP4 or WebM loop. Local video backgrounds are included in preview and export.</p>
+                <label class="label" for="backgroundFileInput">image or video file</label>
+                <input id="backgroundFileInput" type="file" accept="image/*,video/*,.mp4,.webm,.mov,.m4v" />
+                <label class="label" for="backgroundTargetSelect">apply image or video to</label>
+                <select id="backgroundTargetSelect">
+                    <option value="background" selected>background</option>
+                    <option value="text">text fill</option>
+                    <option value="both">background and text</option>
+                </select>
                 <div class="row background-grid">
-                    <input id="backgroundUrlInput" type="url" placeholder="https://example.com/background.jpg" />
+                    <input id="backgroundUrlInput" type="url" placeholder="direct image or video URL" />
                     <button id="loadBackgroundUrlBtn" type="button">load URL</button>
                     <button id="clearBackgroundBtn" type="button">clear</button>
                     <button id="useArtworkBgBtn" type="button">use artwork</button>
@@ -572,7 +641,7 @@
                     <label>x position <input id="bgMediaPositionXInput" type="range" min="0" max="100" value="50" /></label>
                     <label>y position <input id="bgMediaPositionYInput" type="range" min="0" max="100" value="50" /></label>
                 </div>
-                <div id="backgroundStatus" class="meta muted">no background media</div>
+                <div id="backgroundStatus" class="meta muted">no background image or video</div>
             </details>
 
             <details class="advanced-block">
@@ -781,64 +850,35 @@
     <main class="page-shell">
         <div class="app" id="editor">
             <div class="stage-wrap">
-                <div id="stage" class="stage">
-                    <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
+                <div class="stage-toolbar" aria-label="preview tools">
+                    <div class="stage-title">
+                        <div><strong>preview</strong><span id="stageFormatLabel">1080 × 1080</span></div>
+                    </div>
+                    <div class="stage-zoom-controls">
+                        <button id="stageZoomOutBtn" type="button" aria-label="zoom preview out">−</button>
+                        <output id="stageZoomValue" for="previewZoomInput">100%</output>
+                        <button id="stageZoomInBtn" type="button" aria-label="zoom preview in">+</button>
+                        <button id="stageFitBtn" type="button">fit</button>
+                        <button id="stageFullscreenBtn" type="button">fullscreen</button>
+                    </div>
                 </div>
-                <div class="hint" data-i18n="hint">export a frame or render the video</div>
+                <div class="stage-canvas-zone">
+                    <div id="stage" class="stage">
+                        <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
+                    </div>
+                </div>
+                <div class="stage-transport" aria-label="preview playback">
+                    <button id="stageRestartBtn" class="transport-icon" type="button" aria-label="restart preview">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v5h5M5.6 17a8 8 0 1 0 .2-10.2L4 8" /></svg>
+                    </button>
+                    <button id="stagePlayBtn" class="transport-play" type="button" aria-label="play preview" aria-pressed="false">play</button>
+                    <span id="stageCurrentTime" class="transport-time">0:00</span>
+                    <input id="stageSeekInput" type="range" min="0" max="1000" value="0" step="1" aria-label="preview playhead" />
+                    <span id="stageDuration" class="transport-time">0:00</span>
+                </div>
+                <div class="hint"><span data-i18n="hint">export a frame or render the video</span><kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> seek</div>
             </div>
         </div>
-
-
-        <section class="seo-copy" id="about">
-            <h2 data-i18n="aboutTitle">Brat-style LRC lyric video generator</h2>
-            <p data-i18n="aboutText">
-                Brat Animator is a static, browser-based creative tool for turning synced LRC lyrics into square lyric videos.
-                It runs on GitHub Pages, processes lyrics locally in the browser, and exports MP4/WebM files with or without loaded audio when supported.
-            </p>
-            <nav class="internal-links" aria-label="site links">
-                <strong data-i18n="siteLinksTitle">Site links</strong>
-                <a href="#editor" data-i18n="jumpEditor">Open editor</a>
-                <a href="#about" data-i18n="jumpAbout">About Brat Animator</a>
-                <a href="en/" hreflang="en" data-i18n="openEnglish">English page</a>
-                <a href="ru/" hreflang="ru" data-i18n="openRussian">Russian page</a>
-                <a href="zh/" hreflang="zh-CN" data-i18n="openChinese">Chinese page</a>
-                <a href="sitemap.xml" data-i18n="openSitemap">Sitemap</a>
-            </nav>
-            <div class="seo-grid">
-                <div class="seo-card">
-                    <h3 data-i18n="whyTitle">Why it exists</h3>
-                    <ul class="feature-list">
-                        <li data-i18n="whyOne">Create fast brat-style lyric visuals without editing software.</li>
-                        <li data-i18n="whyTwo">Use YouTube only as preview/reference; merge audio only from local files or permitted CORS URLs.</li>
-                        <li data-i18n="whyThree">Keep everything static and deployable on GitHub Pages.</li>
-                    </ul>
-                </div>
-                <div class="seo-card">
-                    <h3 data-i18n="permissionTitle">Permission required</h3>
-                    <p data-i18n="permissionText">
-                        You can use Brat Animator freely. Publishing, public sharing, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author.
-                    </p>
-                    <p><a class="text-link" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">request permission</a></p>
-                </div>
-                <div class="seo-card">
-                    <h3 data-i18n="workflowTitle">How it works</h3>
-                    <ol class="feature-list">
-                        <li data-i18n="workflowOne">Search LRCLIB or paste synced LRC lyrics.</li>
-                        <li data-i18n="workflowTwo">Use optional local audio/video to check timing and export with volume/fades.</li>
-                        <li data-i18n="workflowThree">Customize the square canvas and export MP4/WebM with or without loaded audio.</li>
-                    </ol>
-                </div>
-                <div class="seo-card">
-                    <h3 data-i18n="browserTitle">Browser-first tools</h3>
-                    <ul class="feature-list">
-                        <li data-i18n="browserOne">Project snapshots stay in this browser.</li>
-                        <li data-i18n="browserTwo">Share links and project JSON make handoff simple.</li>
-                        <li data-i18n="browserThree">The built-in tutorial helps first-time users start quickly.</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
     </main>
 </body>
 

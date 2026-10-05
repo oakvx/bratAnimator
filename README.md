@@ -4,18 +4,26 @@
 
 Live demo: **https://oakvx.github.io/bratAnimator/**
 
-## Version 3.0
+## Version 4.0
 
 - Static app, no framework and no `package.json`.
-- Stable project schema `version: 3` with migration from older v2/v3 JSON.
+- Reworked editor layout with a unified charcoal/ivory visual system, responsive controls, preview toolbar, and transport controls.
+- Live zoom controls, keyboard-first commands, and automatic WCAG contrast correction.
+- Solid, linear, and radial canvas fills with optional text/background palette exchange by line, word, or typewriter letter.
+- Uploaded images and videos can fill the background, the text, or both. Exchanging a gradient palette places the gradient inside the text.
+- Stable project schema `version: 4` with migration from older v2/v3 JSON.
 - Local IndexedDB media storage for uploaded audio/video/background blobs; project JSON stores metadata and references, not binary blobs.
 - LRCLIB search, LRC import/paste, Enhanced LRC word timing, compact LRC editor, multi-select timing tools, undo/redo, and waveform/timeline marker dragging.
-- Background image/video uploads or direct CORS-enabled URLs, with export preflight for tainted canvas cases.
+- Shared word/character timeline for typewriter, word reveal and karaoke, with punctuation-aware text estimates, Unicode grapheme handling, explicit Enhanced LRC anchors, repeated timestamps and instrumental gaps.
+- Channel-independent audio energy analysis guides estimated word boundaries without replacing explicit timestamps. It is not speech recognition or forced alignment; review estimated timings before exporting.
+- Starting the timeline at zero trims the same leading interval from preview and exported audio. Timing analysis reports dense lines and inconsistent word timestamps in the editor.
+- Normalizing or shifting editable rows preserves Enhanced LRC tags, millisecond word precision, metadata offsets and timestamp-only gap markers. Rewriting lyric text discards stale word anchors for that row.
+- Background image/video uploads or direct CORS-enabled URLs, with real-time export for frame-accurate video backgrounds and preflight for tainted canvas cases.
 - Word animation modes: `progress`, `fade`, `scale`, `pop`, `glow`, `shake`, `color`, plus configurable letter chunks with spaces excluded.
 - Fast MP4 is vendored through `vendor/mp4-muxer.mjs` pinned to `mp4-muxer@5.2.2` (MIT).
 - Fast MP4 remains video-only when supported. Audio export uses realtime MediaRecorder and can merge loaded local or direct CORS-enabled media audio with volume/fade controls.
 - YouTube is preview/reference only. The app does not download YouTube videos and does not extract audio from YouTube.
-- EN/RU/ZH UI strings, localized SEO pages, manifest, sitemap, service worker cache list, GitHub Pages workflow, core tests, and manual QA checklist are aligned for 3.0.
+- EN/RU/ZH UI strings, localized SEO pages, manifest, sitemap, service worker cache list, GitHub Pages workflow, core tests, and manual QA checklist are aligned for 4.0.
 
 ## Running Locally
 
@@ -31,6 +39,7 @@ Then open `http://localhost:4173/`.
 
 ```bash
 node --check assets/js/core.js
+node --check assets/js/timing.js
 node --check assets/js/media.js
 node --check assets/js/export.js
 node --check assets/js/i18n.js

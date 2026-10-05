@@ -5,13 +5,39 @@
     }
     root.BratCore = core;
 })(typeof globalThis !== "undefined" ? globalThis : window, function () {
-    const PROJECT_VERSION = 3;
+    const PROJECT_VERSION = 4;
     const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
     const INLINE_WORD_TIMESTAMP_RE = /<(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)>/g;
     const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
 
     function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
+    }
+
+    function normalizeBackgroundFill(fill = {}) {
+        const type = ["solid", "linear", "radial"].includes(fill?.type) ? fill.type : "solid";
+        const color2 = /^#[0-9a-f]{6}$/i.test(String(fill?.color2 || "")) ? fill.color2 : "#315f4b";
+        return {
+            type,
+            color2,
+            angle: clamp(Number(fill?.angle ?? 135), 0, 360)
+        };
+    }
+
+    function normalizeColorSwap(swap = {}) {
+        const unit = ["line", "word", "letter"].includes(swap?.unit) ? swap.unit : "line";
+        return {
+            enabled: swap?.enabled === true,
+            unit,
+            interval: clamp(Math.round(Number(swap?.interval ?? 1) || 1), 1, 12)
+        };
+    }
+
+    function shouldSwapPalette(swap, stepIndex) {
+        const normalized = normalizeColorSwap(swap);
+        if (!normalized.enabled) return false;
+        const safeStep = Math.max(0, Math.floor(Number(stepIndex) || 0));
+        return Math.floor(safeStep / normalized.interval) % 2 === 1;
     }
 
     function normalizeLRCText(text) {
@@ -24,12 +50,12 @@
     function parseTimeTag(minutesStr, secondsStr) {
         const minutes = Number(minutesStr);
         const seconds = Number(String(secondsStr).replace(",", "."));
-        if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) return null;
+        if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || seconds >= 60 || seconds < 0) return null;
         return minutes * 60 + seconds;
     }
 
     function secondsToTag(seconds) {
-        const safe = Math.max(0, Number(seconds) || 0);
+        const safe = Math.round(Math.max(0, Number(seconds) || 0) * 100) / 100;
         const minutes = Math.floor(safe / 60);
         const secs = safe - minutes * 60;
         return `[${String(minutes).padStart(2, "0")}:${secs.toFixed(2).padStart(5, "0")}]`;
@@ -52,20 +78,25 @@
         }
 
         const wordTimings = [];
+        let wordEndTimestamp;
         for (let i = 0; i < matches.length; i += 1) {
             const match = matches[i];
             const next = matches[i + 1];
             const rawTime = parseTimeTag(match[1], match[2]);
             const rawSegment = String(lineBody).slice(match.index + match[0].length, next ? next.index : undefined);
             const token = rawSegment.replace(INLINE_WORD_TIMESTAMP_RE, "").replace(/\s+/g, " ").trim();
-            if (rawTime == null || !token) continue;
+            if (rawTime == null) continue;
+            if (!token) {
+                if (!next) wordEndTimestamp = Math.max(0, rawTime + offsetSeconds);
+                continue;
+            }
             wordTimings.push({
                 timestamp: Math.max(0, rawTime + offsetSeconds),
                 text: token
             });
         }
 
-        return { cleanText: cleanText || wordTimings.map(item => item.text).join(" "), wordTimings };
+        return { cleanText: cleanText || wordTimings.map(item => item.text).join(" "), wordTimings, wordEndTimestamp };
     }
 
     function parseVocalRoleAndText(text) {
@@ -84,17 +115,18 @@
     function parseLRC(lrcText, startFromZero = false) {
         const text = normalizeLRCText(lrcText);
         const parsed = [];
+        const boundaries = [];
         let offsetMs = 0;
+        for (const line of text.split("\n")) {
+            const match = line.trim().match(/^\[offset:([^\]]*)\]$/i);
+            if (match && Number.isFinite(Number(match[1]))) offsetMs = Number(match[1]);
+        }
 
         for (const rawLine of text.split("\n")) {
             const line = rawLine.trim();
             if (!line) continue;
             const metaMatch = line.match(META_TAG_RE);
             if (metaMatch) {
-                if (metaMatch[1].toLowerCase() === "offset") {
-                    const parsedOffset = Number(metaMatch[2].trim());
-                    if (Number.isFinite(parsedOffset)) offsetMs = parsedOffset;
-                }
                 continue;
             }
 
@@ -104,16 +136,20 @@
             const bodyWithInlineTags = line.replace(LINE_TIMESTAMP_RE, "").trim();
             const enhanced = extractEnhancedLrcLine(bodyWithInlineTags, offsetMs / 1000);
             const vocal = parseVocalRoleAndText(enhanced.cleanText);
-            if (!vocal.text) continue;
+            const firstTimestamp = parseTimeTag(timestamps[0][1], timestamps[0][2]);
 
             for (const match of timestamps) {
                 const rawTimestamp = parseTimeTag(match[1], match[2]);
                 if (rawTimestamp == null) continue;
+                const timestamp = Math.max(0, rawTimestamp + offsetMs / 1000);
+                if (!vocal.text) { boundaries.push(timestamp); continue; }
+                const repeatOffset = rawTimestamp - (firstTimestamp ?? rawTimestamp);
                 parsed.push({
-                    timestamp: Math.max(0, rawTimestamp + offsetMs / 1000),
+                    timestamp,
                     text: vocal.text,
                     role: vocal.role,
-                    wordTimings: enhanced.wordTimings
+                    wordTimings: enhanced.wordTimings.map(word => ({ ...word, timestamp: Math.max(0, word.timestamp + repeatOffset) })),
+                    wordEndTimestamp: Number.isFinite(enhanced.wordEndTimestamp) ? enhanced.wordEndTimestamp + repeatOffset : undefined
                 });
             }
         }
@@ -126,6 +162,8 @@
             lineIndex,
             sourceTimestamp: line.timestamp,
             timestamp: Math.max(0, line.timestamp - base),
+            boundaryTimestamp: boundaries.filter(time => time > line.timestamp).reduce((earliest, time) => Math.min(earliest, time - base), Infinity),
+            wordEndTimestamp: Number.isFinite(line.wordEndTimestamp) ? Math.max(0, line.wordEndTimestamp - base) : undefined,
             wordTimings: line.wordTimings.map(word => ({
                 ...word,
                 timestamp: Math.max(0, word.timestamp - base)
@@ -139,14 +177,23 @@
             const line = raw.trim();
             if (!line || META_TAG_RE.test(line)) continue;
             const timestamps = [...line.matchAll(LINE_TIMESTAMP_RE)];
-            const extracted = extractEnhancedLrcLine(line.replace(LINE_TIMESTAMP_RE, "").trim());
+            const inlineText = line.replace(LINE_TIMESTAMP_RE, "").trim();
+            const extracted = extractEnhancedLrcLine(inlineText);
             if (!timestamps.length && extracted.cleanText) {
                 rows.push({ time: 0, text: extracted.cleanText });
                 continue;
             }
             for (const match of timestamps) {
                 const time = parseTimeTag(match[1], match[2]);
-                if (time != null && extracted.cleanText) rows.push({ time, text: extracted.cleanText });
+                if (time != null) {
+                    const row = { time, text: extracted.cleanText };
+                    if (extracted.wordTimings.length || Number.isFinite(extracted.wordEndTimestamp)) {
+                        row.inlineText = inlineText;
+                        row.originalText = extracted.cleanText;
+                        row.inlineBase = parseTimeTag(timestamps[0][1], timestamps[0][2]) ?? time;
+                    }
+                    rows.push(row);
+                }
             }
         }
         return rows.sort((a, b) => a.time - b.time);
@@ -154,9 +201,23 @@
 
     function rowsToLrc(rows) {
         return rows
-            .filter(row => String(row.text || "").trim())
+            .filter(row => Number.isFinite(Number(row.time)))
             .sort((a, b) => (Number(a.time) || 0) - (Number(b.time) || 0))
-            .map(row => `${secondsToTag(row.time)} ${String(row.text || "").trim()}`)
+            .map(row => {
+                let body = String(row.text || "").trim();
+                if (row.inlineText && body === row.originalText && Number.isFinite(row.inlineBase)) {
+                    const delta = row.time - row.inlineBase;
+                    body = row.inlineText.replace(INLINE_WORD_TIMESTAMP_RE, (tag, minutes, seconds) => {
+                        const time = parseTimeTag(minutes, seconds);
+                        if (time == null || delta === 0) return tag;
+                        const shifted = Math.round(Math.max(0, time + delta) * 1000) / 1000;
+                        const shiftedMinutes = Math.floor(shifted / 60);
+                        const shiftedSeconds = (shifted - shiftedMinutes * 60).toFixed(3).padStart(6, "0");
+                        return `<${String(shiftedMinutes).padStart(2, "0")}:${shiftedSeconds}>`;
+                    });
+                }
+                return `${secondsToTag(row.time)}${body ? ` ${body}` : ""}`;
+            })
             .join("\n");
     }
 
@@ -235,6 +296,7 @@
         const bg = payload.background || {};
         return {
             kind: bg.kind || "none",
+            target: ["background", "text", "both"].includes(bg.target) ? bg.target : "background",
             assetId: bg.assetId || "",
             url: bg.url || "",
             name: bg.name || "",
@@ -252,6 +314,8 @@
         const source = payload && typeof payload === "object" ? payload : {};
         const style = {
             ...(source.style || {}),
+            backgroundFill: normalizeBackgroundFill(source.style?.backgroundFill),
+            colorSwap: normalizeColorSwap(source.style?.colorSwap),
             wordAnimation: {
                 mode: source.style?.wordAnimation?.mode || "progress",
                 intensity: clamp(Number(source.style?.wordAnimation?.intensity ?? 0.7), 0, 1),
@@ -294,6 +358,9 @@
         INLINE_WORD_TIMESTAMP_RE,
         META_TAG_RE,
         clamp,
+        normalizeBackgroundFill,
+        normalizeColorSwap,
+        shouldSwapPalette,
         normalizeLRCText,
         parseTimeTag,
         secondsToTag,

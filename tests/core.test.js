@@ -39,17 +39,41 @@ test("splits, merges, and moves rows", () => {
     assert.deepEqual(moved.map(row => row.text), ["again", "hello world"]);
 });
 
-test("migrates legacy project payloads to v3", () => {
+test("migrates legacy project payloads to v4", () => {
     const migrated = core.migrateProjectPayload({
         version: 3,
         lyrics: "[00:01.00] legacy",
         includeAudioInExport: false,
         style: { textColor: "#111111" }
     });
-    assert.equal(migrated.version, 3);
+    assert.equal(migrated.version, 4);
     assert.equal(migrated.audio.includeInExport, false);
     assert.equal(migrated.style.wordAnimation.mode, "progress");
+    assert.equal(migrated.style.backgroundFill.type, "solid");
+    assert.equal(migrated.style.colorSwap.enabled, false);
     assert.equal(migrated.background.kind, "none");
+});
+
+test("normalizes gradient and color swap settings", () => {
+    const migrated = core.migrateProjectPayload({
+        style: {
+            backgroundFill: { type: "linear", color2: "#ff8fcb", angle: 405 },
+            colorSwap: { enabled: true, unit: "word", interval: 3 }
+        }
+    });
+    assert.deepEqual(migrated.style.backgroundFill, {
+        type: "linear",
+        color2: "#ff8fcb",
+        angle: 360
+    });
+    assert.deepEqual(migrated.style.colorSwap, {
+        enabled: true,
+        unit: "word",
+        interval: 3
+    });
+    assert.equal(core.shouldSwapPalette(migrated.style.colorSwap, 2), false);
+    assert.equal(core.shouldSwapPalette(migrated.style.colorSwap, 3), true);
+    assert.equal(core.shouldSwapPalette(migrated.style.colorSwap, 6), false);
 });
 
 test("migrates v2 payloads with audio and background defaults", () => {
@@ -59,7 +83,7 @@ test("migrates v2 payloads with audio and background defaults", () => {
         audio: { mediaKind: "video" },
         style: { bgColor: "#8ACE00" }
     });
-    assert.equal(migrated.version, 3);
+    assert.equal(migrated.version, 4);
     assert.equal(migrated.audio.volume, 1);
     assert.equal(migrated.audio.fadeIn, 0);
     assert.equal(migrated.audio.assetId, "");
@@ -67,7 +91,7 @@ test("migrates v2 payloads with audio and background defaults", () => {
     assert.equal(migrated.background.opacity, 1);
 });
 
-test("round-trips v3 project schema without binary blobs", () => {
+test("round-trips v4 project schema without binary blobs", () => {
     const payload = core.migrateProjectPayload({
         version: 3,
         lyrics: "[00:01.00] chorus",
@@ -108,7 +132,7 @@ test("round-trips v3 project schema without binary blobs", () => {
         }
     });
     const roundTrip = core.migrateProjectPayload(JSON.parse(JSON.stringify(payload)));
-    assert.equal(roundTrip.version, 3);
+    assert.equal(roundTrip.version, 4);
     assert.equal(roundTrip.audio.mediaKind, "video");
     assert.equal(roundTrip.audio.volume, 0.65);
     assert.equal(roundTrip.metadata.trackName, "Track");
@@ -132,12 +156,13 @@ test("exports preset payloads without lyrics", () => {
 test("preset payload carries style, format, and background settings", () => {
     const preset = core.buildPresetPayload({
         style: { bgColor: "#111111", wordAnimation: { mode: "glow", intensity: 0.8, color: "#ffffff" } },
-        background: { kind: "video", url: "https://cdn.example.com/bg.webm", opacity: 0.7 },
+        background: { kind: "video", target: "text", url: "https://cdn.example.com/bg.webm", opacity: 0.7 },
         formatPreset: "landscape",
         exportSize: "1440",
         exportFps: "60"
     }, "stage");
     assert.equal(preset.background.kind, "video");
+    assert.equal(preset.background.target, "text");
     assert.equal(preset.background.opacity, 0.7);
     assert.equal(preset.style.wordAnimation.mode, "glow");
     assert.equal(preset.exportFps, "60");

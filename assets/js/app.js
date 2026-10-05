@@ -9,9 +9,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         const APPLE_LIKE_FONT_STACK = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro Rounded", "Helvetica Neue", "Segoe UI", system-ui, sans-serif';
         const BratCore = window.BratCore || {};
+        const BratTiming = window.BratTiming;
         const BratMedia = window.BratMedia || {};
         const BratExport = window.BratExport || {};
-        const PROJECT_VERSION = BratCore.PROJECT_VERSION || 3;
+        const PROJECT_VERSION = BratCore.PROJECT_VERSION || 4;
 
         const previewCanvas = document.getElementById("previewCanvas");
         const previewCtx = previewCanvas.getContext("2d", {
@@ -90,6 +91,15 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const beautifulEdgeFadeInput = document.getElementById("beautifulEdgeFadeInput");
         const bgColorInput = document.getElementById("bgColorInput");
         const textColorInput = document.getElementById("textColorInput");
+        const backgroundFillTypeSelect = document.getElementById("backgroundFillTypeSelect");
+        const gradientOptions = document.getElementById("gradientOptions");
+        const gradientColorInput = document.getElementById("gradientColorInput");
+        const gradientAngleInput = document.getElementById("gradientAngleInput");
+        const colorSwapEnabledCheckbox = document.getElementById("colorSwapEnabledCheckbox");
+        const colorSwapOptions = document.getElementById("colorSwapOptions");
+        const colorSwapUnitSelect = document.getElementById("colorSwapUnitSelect");
+        const colorSwapIntervalInput = document.getElementById("colorSwapIntervalInput");
+        const colorSwapHint = document.getElementById("colorSwapHint");
         const fontFamilySelect = document.getElementById("fontFamilySelect");
         const fontScaleInput = document.getElementById("fontScaleInput");
         const blurInput = document.getElementById("blurInput");
@@ -102,6 +112,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const safeZonesCheckbox = document.getElementById("safeZonesCheckbox");
         const fullscreenBtn = document.getElementById("fullscreenBtn");
         const backgroundFileInput = document.getElementById("backgroundFileInput");
+        const backgroundTargetSelect = document.getElementById("backgroundTargetSelect");
         const backgroundUrlInput = document.getElementById("backgroundUrlInput");
         const loadBackgroundUrlBtn = document.getElementById("loadBackgroundUrlBtn");
         const clearBackgroundBtn = document.getElementById("clearBackgroundBtn");
@@ -225,6 +236,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             },
             background: {
                 kind: "none",
+                target: "background",
                 assetId: "",
                 url: "",
                 name: "",
@@ -254,6 +266,16 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             style: {
                 bgColor: "#8ACE00",
                 textColor: "#000000",
+                backgroundFill: {
+                    type: "solid",
+                    color2: "#315f4b",
+                    angle: 135
+                },
+                colorSwap: {
+                    enabled: false,
+                    unit: "line",
+                    interval: 1
+                },
                 fontFamily: "Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif",
                 fontScale: 1,
                 blur: 1.05,
@@ -289,12 +311,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 [00:27.28] aunque no haya puntuación la frase respira igual
 [00:29.56] y por eso no quiero que tutta la línea salga junta`;
 
-        const DEFAULT_TYPING_SECONDS_PER_WEIGHT = 0.065;
-        const SHORT_LINE_THRESHOLD = 42;
-        const SHORT_LINE_SPEED_MULTIPLIER = 1.28;
-        const MIN_LINE_CONTENT_WINDOW = 0.42;
-        const MAX_LINE_TRAILING_HOLD = 0.55;
-
         let sharedAudioContext = null;
         let syncAudio = null;
 
@@ -326,6 +342,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 background: payload?.background || { kind: "none" },
                 style: {
                     ...(payload?.style || {}),
+                    backgroundFill: BratCore.normalizeBackgroundFill
+                        ? BratCore.normalizeBackgroundFill(payload?.style?.backgroundFill)
+                        : { type: "solid", color2: "#315f4b", angle: 135 },
+                    colorSwap: BratCore.normalizeColorSwap
+                        ? BratCore.normalizeColorSwap(payload?.style?.colorSwap)
+                        : { enabled: false, unit: "line", interval: 1 },
                     wordAnimation: payload?.style?.wordAnimation || { mode: "progress", intensity: 0.7, color: "#ffffff" }
                 }
             };
@@ -360,13 +382,14 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function getBackgroundSettingsFromControls() {
             state.background = {
                 ...state.background,
-                opacity: clamp((Number(bgMediaOpacityInput?.value) || 100) / 100, 0, 1),
+                target: backgroundTargetSelect?.value || "background",
+                opacity: clamp(Number(bgMediaOpacityInput?.value ?? 100) / 100, 0, 1),
                 blur: clamp(Number(bgMediaBlurInput?.value) || 0, 0, 40),
-                brightness: clamp((Number(bgMediaBrightnessInput?.value) || 100) / 100, 0, 2),
-                saturation: clamp((Number(bgMediaSaturationInput?.value) || 100) / 100, 0, 2),
+                brightness: clamp(Number(bgMediaBrightnessInput?.value ?? 100) / 100, 0, 2),
+                saturation: clamp(Number(bgMediaSaturationInput?.value ?? 100) / 100, 0, 2),
                 scale: clamp((Number(bgMediaScaleInput?.value) || 100) / 100, 0.25, 3),
-                positionX: clamp((Number(bgMediaPositionXInput?.value) || 50) / 100, 0, 1),
-                positionY: clamp((Number(bgMediaPositionYInput?.value) || 50) / 100, 0, 1)
+                positionX: clamp(Number(bgMediaPositionXInput?.value ?? 50) / 100, 0, 1),
+                positionY: clamp(Number(bgMediaPositionYInput?.value ?? 50) / 100, 0, 1)
             };
             return state.background;
         }
@@ -374,6 +397,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function writeBackgroundControls(background = state.background) {
             const next = migrateProjectPayload({ background }).background;
             state.background = { ...state.background, ...next };
+            if (backgroundTargetSelect) backgroundTargetSelect.value = next.target || "background";
             if (bgMediaOpacityInput) bgMediaOpacityInput.value = Math.round((next.opacity ?? 1) * 100);
             if (bgMediaBlurInput) bgMediaBlurInput.value = Math.round(next.blur ?? 0);
             if (bgMediaBrightnessInput) bgMediaBrightnessInput.value = Math.round((next.brightness ?? 1) * 100);
@@ -567,129 +591,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
         }
 
-        function splitWordsWithIndices(text) {
-            const words = [];
-            const regex = /\S+/g;
-            let match;
-
-            while ((match = regex.exec(text)) !== null) {
-                words.push({
-                    word: match[0],
-                    start: match.index,
-                    end: match.index + match[0].length - 1
-                });
-            }
-
-            return words;
-        }
-
-        function estimatePhraseBreaks(text) {
-            const words = splitWordsWithIndices(text);
-            const breakCharIndices = new Set();
-
-            if (!words.length) return breakCharIndices;
-
-            for (const item of words) {
-                if (/[,:;.!?…]$/.test(item.word)) {
-                    breakCharIndices.add(item.end);
-                }
-            }
-
-            const explicitBreakCount = breakCharIndices.size;
-            const wordCount = words.length;
-
-            if (explicitBreakCount >= Math.max(1, Math.floor(wordCount / 5))) {
-                return breakCharIndices;
-            }
-
-            let targetChunkSize = 3;
-            if (wordCount >= 7) targetChunkSize = 4;
-            if (wordCount >= 11) targetChunkSize = 5;
-            if (wordCount >= 16) targetChunkSize = 6;
-
-            let cursor = 0;
-            while (cursor < words.length) {
-                let next = cursor + targetChunkSize;
-                if (next >= words.length) break;
-
-                const remaining = words.length - next;
-                if (remaining === 1) next -= 1;
-
-                const breakWord = words[next - 1];
-                if (breakWord) {
-                    breakCharIndices.add(breakWord.end);
-                }
-
-                cursor = next;
-            }
-
-            return breakCharIndices;
-        }
-
-        function buildPhraseChunks(text) {
-            const words = splitWordsWithIndices(text);
-            if (!words.length) return [];
-
-            const breaks = estimatePhraseBreaks(text);
-            const chunks = [];
-            let chunkStart = words[0].start;
-
-            for (let i = 0; i < words.length; i += 1) {
-                const currentWord = words[i];
-                const isLastWord = i === words.length - 1;
-                const shouldBreak = breaks.has(currentWord.end) || isLastWord;
-
-                if (!shouldBreak) continue;
-
-                const chunkEnd = currentWord.end;
-                const chunkText = text.slice(chunkStart, chunkEnd + 1).trim();
-
-                if (chunkText) {
-                    chunks.push({
-                        startChar: chunkStart,
-                        endChar: chunkEnd,
-                        text: chunkText
-                    });
-                }
-
-                let nextStart = chunkEnd + 1;
-                while (nextStart < text.length && /\s/.test(text[nextStart])) {
-                    nextStart += 1;
-                }
-                chunkStart = nextStart;
-            }
-
-            if (!chunks.length) {
-                chunks.push({
-                    startChar: 0,
-                    endChar: text.length - 1,
-                    text: text.trim()
-                });
-            }
-
-            return chunks.filter(chunk => chunk.text.length > 0);
-        }
-
-        function getCharWeight(char, nextChar) {
-            if (char === " ") return 0.16;
-            if (char === ",") return 1.7;
-            if (char === ";") return 2.0;
-            if (char === ":") return 2.1;
-            if (char === ".") return nextChar === "." ? 1.2 : 2.35;
-            if (char === "!") return 2.35;
-            if (char === "?") return 2.45;
-            if (char === "…") return 3.1;
-            if (char === "-" || char === "—") return 1.35;
-            if (char === "\u2019" || char === "'") return 0.35;
-            if (/[0-9]/.test(char)) return 1.05;
-            return 1;
-        }
-
-        function getBlockPauseFactor(text) {
-            if (/[.!?…]$/.test(text)) return 0.34;
-            if (/[,:;]$/.test(text)) return 0.26;
-            return 0.18;
-        }
 
         async function getAudioContext() {
             if (!sharedAudioContext) {
@@ -707,10 +608,24 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function bindSyncMediaEvents(element) {
             element.addEventListener("timeupdate", () => {
                 if (!state.isPlaying) {
-                    state.pausedElapsedSec = element.currentTime || state.pausedElapsedSec;
+                    state.pausedElapsedSec = Math.max(0, element.currentTime - getAudioTimelineOffset());
                     renderPreviewAt(state.pausedElapsedSec);
                     drawWaveform();
                     renderTimeline();
+                }
+            });
+            element.addEventListener("ended", () => {
+                if (state.isPlaying) {
+                    state.pausedElapsedSec = Math.max(0, element.currentTime - getAudioTimelineOffset());
+                    state.playStartMs = performance.now();
+                }
+            });
+            element.addEventListener("pause", () => {
+                if (state.isPlaying && !element.ended) {
+                    const elapsed = Math.max(0, element.currentTime - getAudioTimelineOffset());
+                    stopPlayback(true);
+                    state.pausedElapsedSec = elapsed;
+                    renderPreviewAt(state.pausedElapsedSec);
                 }
             });
         }
@@ -739,458 +654,41 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             syncMediaMount.classList.remove("hidden");
         }
 
-        function analyzeAudioEnergy(audioBuffer, frameMs = 18) {
-            const channelCount = audioBuffer.numberOfChannels;
-            const sampleRate = audioBuffer.sampleRate;
-            const frameSize = Math.max(1, Math.floor(sampleRate * frameMs / 1000));
-            const frameDuration = frameSize / sampleRate;
-            const channels = Array.from({
-                length: channelCount
-            }, (_, i) => audioBuffer.getChannelData(i));
-
-            const rawFrames = [];
-
-            for (let start = 0; start < audioBuffer.length; start += frameSize) {
-                const end = Math.min(start + frameSize, audioBuffer.length);
-                let sum = 0;
-
-                for (let i = start; i < end; i += 1) {
-                    let mono = 0;
-                    for (let c = 0; c < channelCount; c += 1) {
-                        mono += channels[c][i] || 0;
-                    }
-                    mono /= channelCount;
-                    sum += mono * mono;
-                }
-
-                rawFrames.push({
-                    time: start / sampleRate,
-                    rms: Math.sqrt(sum / Math.max(1, end - start))
-                });
-            }
-
-            const frames = rawFrames.map((frame, i) => {
-                let sum = 0;
-                let count = 0;
-
-                for (let j = Math.max(0, i - 2); j <= Math.min(rawFrames.length - 1, i + 2); j += 1) {
-                    sum += rawFrames[j].rms;
-                    count += 1;
-                }
-
-                return {
-                    time: frame.time,
-                    rms: sum / count
-                };
-            });
-
-            const rmsValues = frames.map(frame => frame.rms);
-            const lowRms = percentile(rmsValues, 0.12);
-            const medianRms = percentile(rmsValues, 0.50);
-            const highRms = percentile(rmsValues, 0.88);
-            const silenceThreshold = lowRms + (medianRms - lowRms) * 0.28;
-
-            return {
-                duration: audioBuffer.duration,
-                frameDuration,
-                frames,
-                lowRms,
-                medianRms,
-                highRms,
-                silenceThreshold
-            };
-        }
-
-        function getFramesInWindow(audioAnalysis, startSec, endSec) {
-            if (!audioAnalysis || !audioAnalysis.frames.length) return [];
-
-            const safeStart = clamp(startSec, 0, audioAnalysis.duration);
-            const safeEnd = clamp(endSec, safeStart, audioAnalysis.duration);
-
-            const startIndex = clamp(
-                Math.floor(safeStart / audioAnalysis.frameDuration),
-                0,
-                audioAnalysis.frames.length - 1
-            );
-
-            const endIndex = clamp(
-                Math.ceil(safeEnd / audioAnalysis.frameDuration),
-                startIndex,
-                audioAnalysis.frames.length - 1
-            );
-
-            return audioAnalysis.frames.slice(startIndex, endIndex + 1);
-        }
-
-        function estimateTrailingSilence(audioAnalysis, startSec, endSec) {
-            const frames = getFramesInWindow(audioAnalysis, startSec, endSec);
-            if (frames.length < 3) return 0;
-
-            const threshold = audioAnalysis.silenceThreshold * 1.12;
-            let trailingCount = 0;
-
-            for (let i = frames.length - 1; i >= 0; i -= 1) {
-                if (frames[i].rms <= threshold) {
-                    trailingCount += 1;
-                } else if (trailingCount > 0) {
-                    break;
-                }
-            }
-
-            return clamp(
-                trailingCount * audioAnalysis.frameDuration,
-                0,
-                Math.max(0, endSec - startSec)
-            );
-        }
-
-        function findAudioAwareBoundaries(audioAnalysis, startSec, endSec, targetRatios) {
-            if (!audioAnalysis || !targetRatios.length) return [];
-
-            const frames = getFramesInWindow(audioAnalysis, startSec, endSec);
-            if (frames.length < 4) return [];
-
-            const localDuration = endSec - startSec;
-            if (localDuration <= 0.12) return [];
-
-            const rmsRange = Math.max(audioAnalysis.highRms - audioAnalysis.lowRms, 1e-6);
-            const boundaries = [];
-            let previousBoundary = startSec;
-
-            for (let i = 0; i < targetRatios.length; i += 1) {
-                const ratio = targetRatios[i];
-                const targetTime = startSec + localDuration * ratio;
-                const searchRadius = clamp(localDuration * 0.14, 0.08, 0.30);
-
-                const minAllowed = previousBoundary + 0.06;
-                const maxAllowed = endSec - 0.06 * (targetRatios.length - i);
-
-                const windowStart = Math.max(minAllowed, targetTime - searchRadius);
-                const windowEnd = Math.min(maxAllowed, targetTime + searchRadius);
-
-                const candidates = frames.filter(frame =>
-                    frame.time >= windowStart && frame.time <= windowEnd
-                );
-
-                let boundary = clamp(targetTime, minAllowed, maxAllowed);
-
-                if (candidates.length) {
-                    let bestCandidate = candidates[0];
-                    let bestScore = Infinity;
-
-                    for (const candidate of candidates) {
-                        const energyNorm = (candidate.rms - audioAnalysis.lowRms) / rmsRange;
-                        const distanceNorm = Math.abs(candidate.time - targetTime) / Math.max(searchRadius, 1e-6);
-                        const score = energyNorm * 0.85 + distanceNorm * 0.35;
-
-                        if (score < bestScore) {
-                            bestScore = score;
-                            bestCandidate = candidate;
-                        }
-                    }
-
-                    boundary = clamp(bestCandidate.time, minAllowed, maxAllowed);
-                }
-
-                previousBoundary = boundary;
-                boundaries.push(boundary);
-            }
-
-            return boundaries;
-        }
-
-        function scheduleCharsInsideBlock(blockText, blockStart, typingDuration, lineIndex, blockIndex) {
-            const chars = Array.from(blockText);
-            const weights = chars.map((char, index) => {
-                const nextChar = chars[index + 1] || "";
-                let weight = getCharWeight(char, nextChar);
-
-                if (/[A-ZÀ-Ý]/.test(char)) weight += 0.04;
-                if (/[mwMW]/.test(char)) weight += 0.08;
-                if (/[iltI]/.test(char)) weight -= 0.03;
-
-                return Math.max(0.08, weight);
-            });
-
-            const totalWeight = weights.reduce((sum, value) => sum + value, 0) || 1;
-            let cursor = blockStart;
-
-            return chars.map((char, charIndex) => {
-                const duration = (weights[charIndex] / totalWeight) * typingDuration;
-                const timestamp = cursor;
-                cursor += duration;
-
-                return {
-                    char,
-                    lineIndex,
-                    blockIndex,
-                    charIndex,
-                    timestamp,
-                    duration
-                };
-            });
+        function analyzeAudioEnergy(buffer, frameMs = 18) {
+            return BratTiming.analyzeAudioEnergy(buffer, frameMs);
         }
 
         function getActiveAudioAnalysis() {
             return useAudioTimingCheckbox.checked ? state.audioAnalysis : null;
         }
 
-        function scheduleBlocksForLine(
-            text,
-            lineStart,
-            nextLineStart,
-            lineIndex,
-            sourceLineStart = null,
-            sourceNextLineStart = null,
-            audioAnalysis = null
-        ) {
-            const chunks = buildPhraseChunks(text);
-
-            const fallbackDuration = Math.max(2.1, text.length * 0.082);
-            const reservedGap = 0.05;
-
-            const lineEnd =
-                typeof nextLineStart === "number" ?
-                Math.max(lineStart + 0.42, nextLineStart - reservedGap) :
-                lineStart + fallbackDuration;
-
-            const availableDuration = Math.max(0.42, lineEnd - lineStart);
-
-            const trimmedLength = text.trim().length;
-            const speedMultiplier =
-                trimmedLength <= SHORT_LINE_THRESHOLD ? SHORT_LINE_SPEED_MULTIPLIER : 1;
-
-            const weightedChunks = chunks.map((chunk) => {
-                const chars = Array.from(chunk.text);
-                const charWeights = chars.map((char, index) =>
-                    getCharWeight(char, chars[index + 1] || "")
-                );
-                const typingWeight =
-                    charWeights.reduce((sum, value) => sum + value, 0) || 1;
-                const pauseFactor = getBlockPauseFactor(chunk.text);
-                const totalWeight = typingWeight * (1 + pauseFactor);
-
-                return {
-                    ...chunk,
-                    typingWeight,
-                    pauseFactor,
-                    totalWeight
-                };
-            });
-
-            const totalLineWeight =
-                weightedChunks.reduce((sum, chunk) => sum + chunk.totalWeight, 0) || 1;
-
-            const naturalContentDuration =
-                (totalLineWeight * DEFAULT_TYPING_SECONDS_PER_WEIGHT) / speedMultiplier;
-
-            let contentWindow = Math.max(
-                MIN_LINE_CONTENT_WINDOW,
-                Math.min(naturalContentDuration, availableDuration)
-            );
-
-            let trailingHold = Math.max(
-                0,
-                Math.min(availableDuration - contentWindow, MAX_LINE_TRAILING_HOLD)
-            );
-
-            let boundaryOffsets = null;
-
-            if (
-                audioAnalysis &&
-                Number.isFinite(sourceLineStart) &&
-                weightedChunks.length > 1
-            ) {
-                const absoluteIntervalEnd =
-                    Number.isFinite(sourceNextLineStart) ?
-                    sourceNextLineStart :
-                    sourceLineStart + availableDuration;
-
-                const audioTrailingHold = estimateTrailingSilence(
-                    audioAnalysis,
-                    sourceLineStart,
-                    absoluteIntervalEnd
-                );
-
-                const maxAllowedTrailingHold = Math.max(
-                    0,
-                    Math.min(MAX_LINE_TRAILING_HOLD, availableDuration - MIN_LINE_CONTENT_WINDOW)
-                );
-
-                trailingHold = clamp(
-                    Math.max(trailingHold, audioTrailingHold * 0.85),
-                    0,
-                    maxAllowedTrailingHold
-                );
-
-                contentWindow = Math.max(
-                    MIN_LINE_CONTENT_WINDOW,
-                    Math.min(naturalContentDuration, availableDuration - trailingHold)
-                );
-
-                const targetRatios = [];
-                let runningRatio = 0;
-
-                for (let i = 0; i < weightedChunks.length - 1; i += 1) {
-                    runningRatio += weightedChunks[i].totalWeight / totalLineWeight;
-                    targetRatios.push(runningRatio);
-                }
-
-                const audioBoundaries = findAudioAwareBoundaries(
-                    audioAnalysis,
-                    sourceLineStart,
-                    sourceLineStart + contentWindow,
-                    targetRatios
-                );
-
-                if (audioBoundaries.length === weightedChunks.length - 1) {
-                    boundaryOffsets = [
-                        0,
-                        ...audioBoundaries.map(boundary =>
-                            clamp(boundary - sourceLineStart, 0, contentWindow)
-                        ),
-                        contentWindow
-                    ];
-                }
-            }
-
-            let cursor = lineStart;
-
-            return weightedChunks.map((chunk, blockIndex) => {
-                let blockStartTime = cursor;
-                let blockDuration =
-                    contentWindow * (chunk.totalWeight / totalLineWeight);
-
-                if (boundaryOffsets) {
-                    blockStartTime = lineStart + boundaryOffsets[blockIndex];
-                    blockDuration = Math.max(
-                        0.08,
-                        boundaryOffsets[blockIndex + 1] - boundaryOffsets[blockIndex]
-                    );
-                }
-
-                const typingDuration =
-                    blockDuration * (chunk.typingWeight / chunk.totalWeight);
-
-                let holdDuration = blockDuration - typingDuration;
-
-                if (blockIndex === weightedChunks.length - 1) {
-                    holdDuration += trailingHold;
-                }
-
-                const chars = scheduleCharsInsideBlock(
-                    chunk.text,
-                    blockStartTime,
-                    typingDuration,
-                    lineIndex,
-                    blockIndex
-                );
-
-                const displayStart = blockStartTime;
-                const fullVisibleAt = chars[chars.length - 1]?.timestamp ?? blockStartTime;
-                const displayEnd = blockStartTime + typingDuration + holdDuration;
-
-                const block = {
-                    lineIndex,
-                    blockIndex,
-                    text: chunk.text,
-                    startChar: chunk.startChar,
-                    endChar: chunk.endChar,
-                    chars,
-                    displayStart,
-                    fullVisibleAt,
-                    displayEnd
-                };
-
-                cursor = displayEnd;
-                return block;
-            });
-        }
-
-        function parseLRC(lrcText, startFromZero, audioAnalysis = null) {
-            const text = normalizeLRCText(lrcText);
-            const rawLines = text.split("\n");
-            const parsed = [];
-            let offsetMs = 0;
-
-            for (const rawLine of rawLines) {
-                const line = rawLine.trim();
-                if (!line) continue;
-
-                const metaMatch = line.match(META_TAG_RE);
-                if (metaMatch) {
-                    if (metaMatch[1].toLowerCase() === "offset") {
-                        const parsedOffset = Number(metaMatch[2].trim());
-                        if (Number.isFinite(parsedOffset)) {
-                            offsetMs = parsedOffset;
-                        }
-                    }
-                    continue;
-                }
-
-                const timestamps = [...line.matchAll(LINE_TIMESTAMP_RE)];
-                if (!timestamps.length) continue;
-
-                const bodyWithInlineTags = line.replace(LINE_TIMESTAMP_RE, "").trim();
-                const enhanced = extractEnhancedLrcLine(bodyWithInlineTags, offsetMs / 1000);
-                const vocal = parseVocalRoleAndText(enhanced.cleanText);
-                const textWithoutTags = vocal.text;
-                if (!textWithoutTags) continue;
-
-                for (const match of timestamps) {
-                    const rawTimestamp = parseTimeTag(match[1], match[2]);
-                    if (rawTimestamp == null) continue;
-
-                    parsed.push({
-                        timestamp: Math.max(0, rawTimestamp + offsetMs / 1000),
-                        text: textWithoutTags,
-                        role: vocal.role,
-                        wordTimings: enhanced.wordTimings
-                    });
-                }
-            }
-
-            parsed.sort((a, b) => a.timestamp - b.timestamp);
-            if (!parsed.length) return [];
-
-            const base = startFromZero ? 0 : parsed[0].timestamp;
-
-            const normalized = parsed.map((line, index) => ({
-                ...line,
-                sourceTimestamp: line.timestamp,
-                lineIndex: index,
-                timestamp: Math.max(0, line.timestamp - base),
-                wordTimings: Array.isArray(line.wordTimings)
-                    ? line.wordTimings.map(word => ({ ...word, timestamp: Math.max(0, word.timestamp - base) }))
-                    : []
-            }));
-
-            return normalized.map((line, index) => {
-                const nextLineStart = normalized[index + 1]?.timestamp;
-                const nextSourceLineStart = normalized[index + 1]?.sourceTimestamp;
-
-                const blocks = scheduleBlocksForLine(
-                    line.text,
-                    line.timestamp,
-                    nextLineStart,
-                    index,
-                    line.sourceTimestamp,
-                    nextSourceLineStart,
-                    audioAnalysis
-                );
-
-                return {
-                    ...line,
-                    blocks,
-                    displayStart: blocks[0]?.displayStart ?? line.timestamp,
-                    displayEnd: blocks[blocks.length - 1]?.displayEnd ?? line.timestamp
-                };
-            });
+        function parseLRC(text, startFromZero, audioAnalysis = null) {
+            return BratTiming.buildTimeline(BratCore.parseLRC(text, startFromZero), audioAnalysis);
         }
 
         function getElapsedSeconds() {
             if (state.playStartMs == null) return state.pausedElapsedSec;
-            return state.pausedElapsedSec + (Date.now() - state.playStartMs) / 1000;
+            if (syncAudio && !syncAudio.paused && !state.tapSync?.active) {
+                return Math.max(0, syncAudio.currentTime - getAudioTimelineOffset());
+            }
+            return state.pausedElapsedSec + (performance.now() - state.playStartMs) / 1000;
+        }
+
+        function getAudioTimelineOffset(timeline = state.timeline) {
+            const first = timeline[0];
+            return first ? Math.max(0, first.sourceTimestamp - first.timestamp) : 0;
+        }
+
+        function getAudioExportDuration(timeline = state.timeline) {
+            return Math.max(0, (state.audioBuffer?.duration || 0) - getAudioTimelineOffset(timeline));
+        }
+
+        function startPreviewAudio() {
+            if (!syncAudio || state.exportInProgress || state.tapSync?.active) return;
+            const target = state.pausedElapsedSec + getAudioTimelineOffset();
+            if (!Number.isFinite(syncAudio.duration) || target >= syncAudio.duration) return;
+            syncAudio.currentTime = Math.max(0, target);
+            syncAudio.play().catch(() => {});
         }
 
         function cancelAnimation() {
@@ -1200,140 +698,41 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
         }
 
-        function revealTextByNonSpaceLimit(text, nonSpaceLimit) {
-            if (nonSpaceLimit <= 0) return "";
-
-            const chars = Array.from(String(text || ""));
-            let visibleNonSpace = 0;
-            let revealIndex = -1;
-
-            for (let i = 0; i < chars.length; i += 1) {
-                const isVisibleChar = /\S/.test(chars[i]);
-
-                if (isVisibleChar) {
-                    if (visibleNonSpace >= nonSpaceLimit) break;
-                    visibleNonSpace += 1;
-                }
-
-                revealIndex = i;
-            }
-
-            while (revealIndex + 1 < chars.length && !/\S/.test(chars[revealIndex + 1])) {
-                revealIndex += 1;
-            }
-
-            return chars.slice(0, revealIndex + 1).join("");
-        }
 
         function getTimelineDuration() {
-            const lastLine = state.timeline[state.timeline.length - 1];
-            return lastLine ? lastLine.displayEnd : 0;
+            return state.timeline.reduce((end, line) => Math.max(end, line.displayEnd), 0);
         }
 
         function getVisibleTextAt(timeSec) {
-            if (!state.timeline.length) {
-                return { text: "brat", active: false, alpha: 1, progress: 0 };
-            }
-
-            let activeLineIndex = -1;
-
-            for (let i = 0; i < state.timeline.length; i += 1) {
-                const line = state.timeline[i];
-                if (timeSec >= line.displayStart && timeSec <= line.displayEnd) {
-                    activeLineIndex = i;
-                    break;
-                }
-                if (timeSec >= line.displayStart) activeLineIndex = i;
-            }
-
-            if (activeLineIndex === -1) return { text: "brat", active: false, alpha: 1, progress: 0 };
-
-            const line = state.timeline[activeLineIndex];
-            const lineDuration = Math.max(0.001, line.displayEnd - line.displayStart);
-            const lineProgress = clamp((timeSec - line.displayStart) / lineDuration, 0, 1);
-            let activeBlockIndex = -1;
-
-            for (let i = 0; i < line.blocks.length; i += 1) {
-                const block = line.blocks[i];
-                if (timeSec >= block.displayStart && timeSec <= block.displayEnd) {
-                    activeBlockIndex = i;
-                    break;
-                }
-                if (timeSec >= block.displayStart) activeBlockIndex = i;
-            }
-
-            if (activeBlockIndex === -1) return { text: "", active: true, alpha: 1, progress: lineProgress, line };
-
+            if (!state.timeline.length) return { text: "brat", active: false, alpha: 1, progress: 0 };
+            const line = state.timeline.find(item => timeSec >= item.displayStart && timeSec < item.displayEnd);
+            if (!line) return { text: "", active: false, alpha: 1, progress: 0 };
+            const lineProgress = clamp((timeSec - line.displayStart) / Math.max(0.001, line.displayEnd - line.displayStart), 0, 1);
             const mode = state.animationMode || "typewriter";
-            const block = line.blocks[activeBlockIndex];
-            const blockDuration = Math.max(0.001, block.displayEnd - block.displayStart);
-            const blockProgress = clamp((timeSec - block.displayStart) / blockDuration, 0, 1);
-
-            if (mode === "line" || mode === "fade" || mode === "pulse") {
-                return {
-                    text: line.text,
-                    active: true,
-                    line,
-                    block,
-                    progress: lineProgress,
-                    alpha: mode === "fade" ? clamp(lineProgress * 5, 0, 1) : 1
-                };
+            const block = line.blocks.find(item => timeSec >= item.displayStart && timeSec < item.displayEnd);
+            const progress = block ? clamp((timeSec - block.displayStart) / Math.max(0.001, block.displayEnd - block.displayStart), 0, 1) : lineProgress;
+            const result = { active: true, line, block, progress, alpha: 1 };
+            if (["line", "fade", "pulse"].includes(mode)) {
+                return { ...result, text: line.text, progress: lineProgress, alpha: mode === "fade" ? clamp(lineProgress * 5, 0, 1) : 1 };
             }
-
+            let revealUntil = -1;
             if (mode === "phrase" || mode === "jitter") {
-                const revealUntil = block.endChar;
-                return {
-                    text: Array.from(line.text).slice(0, revealUntil + 1).join(""),
-                    active: true,
-                    line,
-                    block,
-                    progress: blockProgress,
-                    alpha: 1
-                };
-            }
-
-            if (mode === "word") {
-                const textUntilBlock = Array.from(line.text).slice(0, block.startChar).join("");
-                const words = block.text.split(/(\s+)/);
-                const wordIndexes = words.map((token, index) => /\S/.test(token) ? index : -1).filter(index => index >= 0);
-                const visibleWordCount = Math.max(1, Math.ceil(wordIndexes.length * blockProgress));
-                const lastTokenIndex = wordIndexes[Math.min(visibleWordCount - 1, wordIndexes.length - 1)] ?? words.length - 1;
-                const visibleBlock = words.slice(0, lastTokenIndex + 1).join("");
-                return { text: textUntilBlock + visibleBlock, active: true, line, block, progress: blockProgress, alpha: 1 };
-            }
-
-            if (mode === "letter-chunks") {
-                const textUntilBlock = Array.from(line.text).slice(0, block.startChar).join("");
-                const nonSpaceChars = block.chars.filter(item => /\S/.test(item.char));
-                const chunkSize = clamp(Math.round(state.style.letterChunkSize || 2), 1, 12);
-                let visibleNonSpace = 0;
-
-                while (visibleNonSpace < nonSpaceChars.length && timeSec >= nonSpaceChars[visibleNonSpace].timestamp) {
-                    visibleNonSpace += 1;
+                revealUntil = line.blocks.filter(item => timeSec >= item.displayStart).at(-1)?.endChar ?? -1;
+            } else if (mode === "word") {
+                revealUntil = line.timedWords.filter(item => timeSec >= item.start).at(-1)?.endChar ?? -1;
+            } else {
+                const visible = line.chars.filter(item => timeSec >= item.timestamp);
+                revealUntil = visible.at(-1)?.endChar ?? -1;
+                if (mode === "letter-chunks" && visible.length) {
+                    const last = visible.at(-1);
+                    const wordChars = line.chars.filter(item => item.wordIndex === last.wordIndex);
+                    const count = wordChars.filter(item => timeSec >= item.timestamp).length;
+                    const chunkSize = clamp(Math.round(state.style.letterChunkSize || 2), 1, 12);
+                    const chunkEnd = Math.min(wordChars.length, Math.ceil(count / chunkSize) * chunkSize) - 1;
+                    revealUntil = wordChars[chunkEnd]?.endChar ?? revealUntil;
                 }
-
-                if (timeSec >= block.fullVisibleAt) {
-                    visibleNonSpace = nonSpaceChars.length;
-                }
-
-                const chunkedVisibleNonSpace = Math.min(
-                    nonSpaceChars.length,
-                    Math.ceil(visibleNonSpace / chunkSize) * chunkSize
-                );
-                const visibleBlock = revealTextByNonSpaceLimit(block.text, chunkedVisibleNonSpace);
-
-                return { text: textUntilBlock + visibleBlock, active: true, line, block, progress: blockProgress, alpha: 1 };
             }
-
-            let visibleChars = 0;
-            while (visibleChars < block.chars.length && timeSec >= block.chars[visibleChars].timestamp) {
-                visibleChars += 1;
-            }
-            if (timeSec >= block.fullVisibleAt) visibleChars = block.chars.length;
-
-            const revealUntil = block.startChar + visibleChars - 1;
-            const visibleText = revealUntil >= 0 ? Array.from(line.text).slice(0, revealUntil + 1).join("") : "";
-            return { text: visibleText, active: true, line, block, progress: blockProgress, alpha: 1 };
+            return { ...result, text: Array.from(line.text).slice(0, revealUntil + 1).join("") };
         }
 
         function measureWrappedLines(ctx, text, maxWidth) {
@@ -1378,7 +777,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const maxWidth = width * 0.76;
             const maxHeight = height * 0.48;
             let finalSize = 56;
-            let finalLines = [text || "brat"];
+            let finalLines = [text];
             const family = state.style.fontFamily || "Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif";
             const scale = state.style.fontScale || 1;
             const lineSpacing = state.style.lineSpacing || 0.92;
@@ -1386,7 +785,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             for (let size = Math.floor(width * 0.118 * scale); size >= Math.max(22, Math.floor(width * 0.032)); size -= 2) {
                 ctx.save();
                 ctx.font = `400 ${size}px ${family}`;
-                const lines = measureWrappedLines(ctx, text || "brat", maxWidth);
+                const lines = measureWrappedLines(ctx, text, maxWidth);
                 const lineHeight = size * lineSpacing;
                 const widest = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
                 const totalHeight = lines.length * lineHeight;
@@ -1410,6 +809,104 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             };
         }
 
+        function countWords(text) {
+            return BratTiming.tokenize(text).filter(token => !token.isSpace).length;
+        }
+
+        function countVisibleLetters(text) {
+            return BratTiming.graphemes(text).filter(item => /\S/u.test(item.char)).length;
+        }
+
+        function getPaletteStepIndex(timeSec, visible = null) {
+            const swap = state.style.colorSwap || {};
+            let unit = swap.unit || "line";
+            const isBratTypewriter = state.style.lyricsMode === "brat" && state.animationMode === "typewriter";
+            if (unit === "letter" && !isBratTypewriter) unit = "line";
+
+            const lineIndex = state.style.lyricsMode === "brat"
+                ? Math.max(0, Number(visible?.line?.lineIndex ?? 0))
+                : Math.max(0, getActiveMusicLineIndex(timeSec));
+            if (unit === "line") return lineIndex;
+
+            let previousUnits = 0;
+            for (let index = 0; index < lineIndex; index += 1) {
+                previousUnits += unit === "word"
+                    ? Math.max(1, countWords(state.timeline[index]?.text))
+                    : Math.max(1, countVisibleLetters(state.timeline[index]?.text));
+            }
+
+            if (unit === "letter") {
+                return previousUnits + Math.max(0, countVisibleLetters(visible?.text) - 1);
+            }
+
+            const line = state.timeline[lineIndex];
+            const hasEnhancedTiming = Boolean(line?.wordTimings?.length);
+            if (!hasEnhancedTiming && state.style.lyricsMode === "brat" && ["typewriter", "word", "letter-chunks", "phrase", "jitter"].includes(state.animationMode)) {
+                return previousUnits + Math.max(0, countWords(visible?.text) - 1);
+            }
+
+            const words = getTimedWordTokens(line, lineIndex, timeSec).filter(token => !token.isSpace);
+            let currentWordIndex = 0;
+            for (const token of words) {
+                if (timeSec >= token.start) currentWordIndex = token.wordIndex;
+                else break;
+            }
+            return previousUnits + Math.max(0, currentWordIndex);
+        }
+
+        function getFrameTheme(timeSec, visible = null) {
+            const base = getThemeColors();
+            const swap = state.style.colorSwap || {};
+            const stepIndex = getPaletteStepIndex(timeSec, visible);
+            const swapped = BratCore.shouldSwapPalette
+                ? BratCore.shouldSwapPalette(swap, stepIndex)
+                : Boolean(swap.enabled && Math.floor(stepIndex / Math.max(1, swap.interval || 1)) % 2 === 1);
+            return {
+                ...base,
+                stage: swapped ? base.text : base.stage,
+                text: swapped ? base.stage : base.text,
+                swapped
+            };
+        }
+
+        function drawConfiguredBackground(ctx, width, height, theme) {
+            const fill = state.style.backgroundFill || { type: "solid", color2: "#315f4b", angle: 135 };
+            const type = ["linear", "radial"].includes(fill.type) ? fill.type : "solid";
+            if (type === "solid" || theme.swapped) {
+                ctx.fillStyle = theme.stage;
+                ctx.fillRect(0, 0, width, height);
+                return;
+            }
+
+            const secondColor = fill.color2 || "#315f4b";
+            let gradient;
+            if (type === "radial") {
+                gradient = ctx.createRadialGradient(
+                    width * 0.5,
+                    height * 0.45,
+                    0,
+                    width * 0.5,
+                    height * 0.5,
+                    Math.hypot(width, height) * 0.58
+                );
+            } else {
+                const radians = ((Number(fill.angle) || 0) - 90) * Math.PI / 180;
+                const span = Math.abs(width * Math.cos(radians)) + Math.abs(height * Math.sin(radians));
+                const dx = Math.cos(radians) * span * 0.5;
+                const dy = Math.sin(radians) * span * 0.5;
+                gradient = ctx.createLinearGradient(
+                    width * 0.5 - dx,
+                    height * 0.5 - dy,
+                    width * 0.5 + dx,
+                    height * 0.5 + dy
+                );
+            }
+            gradient.addColorStop(0, theme.stage);
+            gradient.addColorStop(1, secondColor);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
+
         function updateBackgroundStatus(message = "") {
             if (!backgroundStatus) return;
             if (message) {
@@ -1418,7 +915,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
             const bg = state.background || {};
             if (!bg.kind || bg.kind === "none") {
-                backgroundStatus.textContent = "no background media";
+                backgroundStatus.textContent = "no background image or video";
                 return;
             }
             backgroundStatus.textContent = `${bg.kind} background ${bg.name || bg.url || bg.assetId ? "ready" : "selected"}`;
@@ -1466,6 +963,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function releaseBackgroundObjectUrl() {
+            state.backgroundElement?.pause?.();
             if (state.backgroundObjectUrl) {
                 URL.revokeObjectURL(state.backgroundObjectUrl);
                 state.backgroundObjectUrl = "";
@@ -1484,8 +982,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                     element.preload = "auto";
                     element.addEventListener("loadeddata", () => resolve(element), { once: true });
                     element.addEventListener("error", reject, { once: true });
+                    element.addEventListener("seeked", () => {
+                        if (state.backgroundElement === element && !state.isPlaying && !state.exportInProgress && !state.backgroundFramePreparing) {
+                            renderPreviewAt(state.pausedElapsedSec);
+                        }
+                    });
                     element.src = src;
-                    element.play?.().catch(() => {});
                     return;
                 }
 
@@ -1515,12 +1017,14 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             try {
                 const element = await makeBackgroundElement(kind, src, fromUrl);
                 const exportSafe = !fromUrl || canExportBackgroundElement(kind, element);
+                state.backgroundElement?.pause?.();
                 state.backgroundElement = element;
                 state.backgroundExportSafe = exportSafe;
                 state.background = { ...state.background, kind, url: fromUrl ? src : "", name, assetId };
                 writeBackgroundControls(state.background);
                 renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
                 updateBackgroundStatus(exportSafe ? `${kind} background ready` : `${kind} background is preview-only; upload it locally to export`);
+                updateExportEstimate();
                 saveProjectSettings();
             } catch (error) {
                 state.backgroundElement = null;
@@ -1558,7 +1062,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         async function restoreBackgroundMedia(background) {
             writeBackgroundControls(background);
-            if (!background || background.kind === "none") return;
+            if (!background || background.kind === "none") {
+                releaseBackgroundObjectUrl();
+                state.backgroundElement = null;
+                state.backgroundExportSafe = true;
+                return;
+            }
             if (background.assetId) {
                 const record = await loadMediaBlob(background.assetId);
                 if (record?.blob) {
@@ -1580,6 +1089,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             state.background = migrateProjectPayload({}).background;
             writeBackgroundControls(state.background);
             renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            updateExportEstimate();
             saveProjectSettings();
         }
 
@@ -1603,9 +1113,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
             if (bg.kind === "video" && Number.isFinite(element.duration) && element.duration > 0 && !element.seeking) {
                 const target = timeSec % element.duration;
-                if (Math.abs((element.currentTime || 0) - target) > 0.35) {
+                const moving = state.isPlaying || state.exportInProgress;
+                if (!moving) element.pause();
+                if (Math.abs((element.currentTime || 0) - target) > (moving ? 0.15 : 0.02)) {
                     try { element.currentTime = target; } catch (_) {}
                 }
+                if (moving && element.paused) element.play().catch(() => {});
             }
 
             const coverScale = Math.max(width / mediaWidth, height / mediaHeight) * (bg.scale || 1);
@@ -1622,6 +1135,33 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return true;
         }
 
+        async function prepareBackgroundFrame(timeSec) {
+            const element = state.backgroundElement;
+            if (state.background.kind !== "video" || !element) return;
+            element.pause();
+            if (!Number.isFinite(element.duration) || element.duration <= 0) return;
+            const target = Math.max(0, timeSec) % element.duration;
+            if (!element.seeking && Math.abs(element.currentTime - target) <= 0.02) return;
+            state.backgroundFramePreparing = true;
+            try {
+                await new Promise((resolve, reject) => {
+                    const cleanup = () => {
+                        clearTimeout(timeout);
+                        element.removeEventListener("seeked", ready);
+                        element.removeEventListener("error", failed);
+                    };
+                    const ready = () => { cleanup(); resolve(); };
+                    const failed = () => { cleanup(); reject(new Error("Video frame could not be decoded.")); };
+                    const timeout = setTimeout(failed, 5000);
+                    element.addEventListener("seeked", ready, { once: true });
+                    element.addEventListener("error", failed, { once: true });
+                    try { element.currentTime = target; } catch (_) { failed(); }
+                });
+            } finally {
+                state.backgroundFramePreparing = false;
+            }
+        }
+
         function getActiveMusicLineIndex(timeSec) {
             if (!state.timeline.length) return -1;
             let activeIndex = -1;
@@ -1636,73 +1176,14 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function getMusicHighlightRatio(line, lineIndex, timeSec) {
             if (!line) return 0;
-            const nextLine = state.timeline[lineIndex + 1];
-            const lineEnd = nextLine?.displayStart ?? line.displayEnd;
-            const duration = Math.max(0.001, lineEnd - line.displayStart);
-
-            const words = Array.isArray(line.wordTimings) ? line.wordTimings.filter(word => Number.isFinite(word.timestamp)) : [];
-            if (words.length > 1) {
-                if (timeSec < words[0].timestamp) return 0;
-                for (let i = 0; i < words.length; i += 1) {
-                    const current = words[i];
-                    const next = words[i + 1];
-                    if (!next || timeSec < next.timestamp) {
-                        const segmentEnd = next?.timestamp ?? lineEnd;
-                        const local = clamp((timeSec - current.timestamp) / Math.max(0.001, segmentEnd - current.timestamp), 0, 1);
-                        return clamp((i + local) / words.length, 0, 1);
-                    }
-                }
-                return 1;
-            }
-
-            return clamp((timeSec - line.displayStart) / duration, 0, 1);
+            const word = line.timedWords.find(item => timeSec >= item.start && timeSec < item.end);
+            if (!word) return timeSec >= line.displayEnd ? 1 : 0;
+            const progress = clamp((timeSec - word.start) / Math.max(0.001, word.end - word.start), 0, 1);
+            return (word.startChar + (word.endChar + 1 - word.startChar) * progress) / Math.max(1, Array.from(line.text).length);
         }
 
-        function getTimedWordTokens(line, lineIndex, timeSec) {
-            const rawTokens = String(line?.text || "").match(/\s+|\S+/g) || [];
-            const wordTokens = rawTokens.filter(token => /\S/.test(token));
-            const nextLine = state.timeline[lineIndex + 1];
-            const lineEnd = nextLine?.displayStart ?? line?.displayEnd ?? ((line?.displayStart || 0) + 2);
-            const lineStart = line?.displayStart ?? 0;
-            const duration = Math.max(0.001, lineEnd - lineStart);
-            const enhanced = Array.isArray(line?.wordTimings)
-                ? line.wordTimings.filter(word => Number.isFinite(word.timestamp))
-                : [];
-
-            const wordTiming = [];
-            if (enhanced.length) {
-                for (let i = 0; i < wordTokens.length; i += 1) {
-                    const current = enhanced[Math.min(i, enhanced.length - 1)];
-                    const next = enhanced[Math.min(i + 1, enhanced.length - 1)];
-                    const start = Math.max(lineStart, current?.timestamp ?? lineStart);
-                    const end = i + 1 < enhanced.length
-                        ? Math.max(start + 0.035, next.timestamp)
-                        : lineEnd;
-                    wordTiming.push({ start, end: Math.max(start + 0.035, end) });
-                }
-            } else {
-                const weights = wordTokens.map(token => Math.max(0.45, token.replace(/[.,!?;:]+$/g, "").length));
-                const total = weights.reduce((sum, value) => sum + value, 0) || 1;
-                let cursor = lineStart;
-                for (let i = 0; i < wordTokens.length; i += 1) {
-                    const isLast = i === wordTokens.length - 1;
-                    const segment = isLast ? (lineEnd - cursor) : duration * (weights[i] / total);
-                    const start = cursor;
-                    const end = isLast ? lineEnd : Math.min(lineEnd, cursor + Math.max(0.08, segment));
-                    wordTiming.push({ start, end: Math.max(start + 0.035, end) });
-                    cursor = end;
-                }
-            }
-
-            let wordIndex = 0;
-            return rawTokens.map(token => {
-                const isSpace = !/\S/.test(token);
-                if (isSpace) return { text: token, isSpace: true, start: lineStart, end: lineEnd, wordIndex: -1 };
-                const timing = wordTiming[wordIndex] || { start: lineStart, end: lineEnd };
-                const output = { text: token, isSpace: false, start: timing.start, end: timing.end, wordIndex };
-                wordIndex += 1;
-                return output;
-            });
+        function getTimedWordTokens(line) {
+            return BratTiming.getTimedWordTokens(line);
         }
 
         function layoutTimedTokens(ctx, tokens, maxWidth) {
@@ -1797,7 +1278,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const wordAnimation = state.style.wordAnimation || { mode: "progress", intensity: 0.7, color: "#ffffff" };
             const wordMode = wordAnimation.mode || "progress";
             const wordIntensity = clamp(wordAnimation.intensity ?? 0.7, 0, 1);
-            const currentColor = wordMode === "color" ? (wordAnimation.color || "#ffffff") : "#ffffff";
+            const currentColor = wordMode === "color" ? (wordAnimation.color || textColor) : textColor;
             const haloColor = mixHex(textColor, "#ffffff", 0.52);
 
             ctx.save();
@@ -1842,7 +1323,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                         const currentAlpha = wordMode === "fade" ? Math.max(0.2, local) : 1;
                         const effectiveGlow = glow * (wordMode === "glow" ? 1 + wordIntensity * 1.35 : 1);
 
-                        // Soft Apple-like luminous band centered on the currently sung word.
+                        // Soft luminous band centered on the currently sung word.
                         const glowGradient = ctx.createRadialGradient(
                             centerX,
                             rowY,
@@ -1913,27 +1394,26 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const text = theme.text || "#f5f5f7";
 
             if (!beautiful) {
-                const gradient = ctx.createLinearGradient(0, 0, width, height);
-                gradient.addColorStop(0, base);
-                gradient.addColorStop(1, state.theme === "dark" ? "#050505" : "rgba(255,255,255,0.35)");
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, width, height);
+                drawConfiguredBackground(ctx, width, height, theme);
                 return;
             }
 
-            // Liquid-glass style background: dark base, moving blurred blobs,
-            // soft center light, vignette and a faint noise veil.
+            // Dark moving background with soft center light, vignette and faint texture.
             const deepA = mixHex(base, "#000000", dynamic ? 0.70 : 0.40);
             const deepB = mixHex(base, "#12151c", dynamic ? 0.52 : 0.28);
             const soft = mixHex(base, "#ffffff", dynamic ? 0.18 + depth * 0.10 : 0.10);
             const accent = mixHex(text, base, 0.34);
 
-            const bg = ctx.createLinearGradient(0, 0, width, height);
-            bg.addColorStop(0, deepA);
-            bg.addColorStop(0.46, mixHex(base, "#0b0d12", 0.58));
-            bg.addColorStop(1, deepB);
-            ctx.fillStyle = bg;
-            ctx.fillRect(0, 0, width, height);
+            if (state.style.backgroundFill?.type && state.style.backgroundFill.type !== "solid") {
+                drawConfiguredBackground(ctx, width, height, theme);
+            } else {
+                const bg = ctx.createLinearGradient(0, 0, width, height);
+                bg.addColorStop(0, deepA);
+                bg.addColorStop(0.46, mixHex(base, "#0b0d12", 0.58));
+                bg.addColorStop(1, deepB);
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, width, height);
+            }
 
             const t = timeSec * (0.16 + motion * 0.10);
             const blobs = [
@@ -2025,25 +1505,27 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function drawMusicSyncedScene(ctx, width, height, timeSec, options = {}) {
-            const theme = getThemeColors();
+            const activeIndex = state.timeline.length ? getActiveMusicLineIndex(timeSec) : -1;
+            const theme = getFrameTheme(timeSec);
             const beautiful = state.style.lyricsMode === "beautiful";
             ctx.save();
             ctx.clearRect(0, 0, width, height);
-            drawMusicBackground(ctx, width, height, theme, timeSec);
-            drawBackgroundMedia(ctx, width, height, timeSec);
+            if (!options.textOnly) {
+                drawMusicBackground(ctx, width, height, theme, timeSec);
+                if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
+            }
 
             if (!state.timeline.length) {
                 ctx.fillStyle = theme.text;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.font = `800 ${Math.max(42, width * 0.095)}px ${state.style.fontFamily || "Arial, Helvetica, sans-serif"}`;
-                ctx.fillText(beautiful ? "Beautiful Lyrics" : "lyrics", width / 2, height / 2);
+                ctx.fillText("lyrics", width / 2, height / 2);
                 ctx.restore();
                 if (options.guides) drawSafeZones(ctx, width, height);
                 return;
             }
 
-            const activeIndex = getActiveMusicLineIndex(timeSec);
             const nextLine = state.timeline[activeIndex + 1];
             const previousLine = state.timeline[activeIndex - 1];
             const transitionWindow = beautiful ? 0.82 : 0.44;
@@ -2159,24 +1641,25 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             ctx.filter = "none";
             ctx.globalAlpha = 1;
             ctx.restore();
-            if (beautiful) applyEdgeFade(ctx, width, height);
+            if (beautiful && !options.textOnly) applyEdgeFade(ctx, width, height);
             if (options.guides) drawSafeZones(ctx, width, height);
         }
 
-        function drawScene(ctx, width, height, timeSec, options = {}) {
+        function drawSceneContent(ctx, width, height, timeSec, options = {}) {
             if (state.style.lyricsMode === "music" || state.style.lyricsMode === "beautiful") {
                 drawMusicSyncedScene(ctx, width, height, timeSec, options);
                 return;
             }
-            const theme = getThemeColors();
             const visible = getVisibleTextAt(timeSec);
-            const displayText = visible.text || (visible.active ? "" : "brat");
+            const theme = getFrameTheme(timeSec, visible);
+            const displayText = visible.text;
 
             ctx.save();
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = theme.stage;
-            ctx.fillRect(0, 0, width, height);
-            drawBackgroundMedia(ctx, width, height, timeSec);
+            if (!options.textOnly) {
+                drawConfiguredBackground(ctx, width, height, theme);
+                if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
+            }
 
             const layout = fitTextLayout(ctx, displayText, width, height);
             const centerX = width / 2;
@@ -2218,6 +1701,47 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (options.guides) drawSafeZones(ctx, width, height);
         }
 
+        const textMaskCanvas = document.createElement("canvas");
+        const textMaskCtx = textMaskCanvas.getContext("2d");
+
+        function drawScene(ctx, width, height, timeSec, options = {}) {
+            const visible = state.style.lyricsMode === "brat" ? getVisibleTextAt(timeSec) : null;
+            const theme = getFrameTheme(timeSec, visible);
+            const mediaText = Boolean(state.backgroundElement && ["text", "both"].includes(state.background.target));
+            const gradientText = theme.swapped && ["linear", "radial"].includes(state.style.backgroundFill?.type);
+            if (!mediaText && !gradientText) {
+                drawSceneContent(ctx, width, height, timeSec, options);
+                return;
+            }
+
+            if (textMaskCanvas.width !== width || textMaskCanvas.height !== height) {
+                textMaskCanvas.width = width;
+                textMaskCanvas.height = height;
+            }
+            drawSceneContent(textMaskCtx, width, height, timeSec, { textOnly: true, guides: false });
+            textMaskCtx.save();
+            textMaskCtx.globalCompositeOperation = "source-in";
+            if (mediaText) {
+                drawBackgroundMedia(textMaskCtx, width, height, timeSec);
+            } else {
+                drawConfiguredBackground(textMaskCtx, width, height, { ...getThemeColors(), swapped: false });
+            }
+            textMaskCtx.restore();
+
+            ctx.save();
+            ctx.clearRect(0, 0, width, height);
+            if (["music", "beautiful"].includes(state.style.lyricsMode)) {
+                drawMusicBackground(ctx, width, height, theme, timeSec);
+            } else {
+                drawConfiguredBackground(ctx, width, height, theme);
+            }
+            if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
+            ctx.drawImage(textMaskCanvas, 0, 0);
+            ctx.restore();
+            if (state.style.lyricsMode === "beautiful") applyEdgeFade(ctx, width, height);
+            if (options.guides) drawSafeZones(ctx, width, height);
+        }
+
         function renderPreviewAt(timeSec = 0) {
             drawScene(previewCtx, previewCanvas.width, previewCanvas.height, timeSec, { guides: true });
             drawWaveform();
@@ -2234,13 +1758,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const now = getElapsedSeconds();
             renderPreviewAt(now);
 
-            const endTime = getTimelineDuration() + 0.08;
+            const audioEnd = Number.isFinite(syncAudio?.duration) ? Math.max(0, syncAudio.duration - getAudioTimelineOffset()) : 0;
+            const endTime = Math.max(getTimelineDuration() + 0.08, audioEnd);
 
             if (now > endTime) {
-                state.isPlaying = false;
-                state.playStartMs = null;
-                syncPlaybackButtonLabel();
-                cancelAnimation();
+                stopPlayback(false);
                 renderPreviewAt(0);
                 return;
             }
@@ -2253,8 +1775,9 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
             cancelAnimation();
             state.pausedElapsedSec = 0;
-            state.playStartMs = Date.now();
+            state.playStartMs = performance.now();
             state.isPlaying = true;
+            startPreviewAudio();
             syncPlaybackButtonLabel();
             state.animationFrame = requestAnimationFrame(animationTick);
         }
@@ -2304,7 +1827,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
             const lineCount = parsedPreview.length;
             const blockCount = parsedPreview.reduce((sum, line) => sum + (line.blocks?.length || 0), 0);
-            const totalTime = lineCount ? parsedPreview[parsedPreview.length - 1].displayEnd : 0;
+            const totalTime = parsedPreview.reduce((end, line) => Math.max(end, line.displayEnd), 0);
 
             const audioLabel =
                 state.audioAnalysis ?
@@ -2312,6 +1835,24 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 "";
 
             meta.textContent = `${lineCount} lines • ${blockCount} blocks • ${totalTime.toFixed(2)}s timeline${audioLabel}`;
+            const analysis = document.getElementById("timingAnalysis");
+            if (analysis) {
+                const wordCount = parsedPreview.reduce((sum, line) => sum + line.analysis.wordCount, 0);
+                const enhanced = parsedPreview.filter(line => line.analysis.timingSource === "enhanced").length;
+                const guided = parsedPreview.filter(line => line.analysis.timingSource === "audio").length;
+                const warnings = parsedPreview.flatMap((line, index) => line.analysis.warnings.map(warning => `Line ${index + 1}: ${warning}`));
+                analysis.hidden = !lineCount;
+                document.getElementById("timingReport").hidden = !lineCount;
+                analysis.textContent = `${wordCount} words · ${enhanced} lines with word timestamps · ${guided} audio-guided estimates. ${warnings.length ? `${warnings.length} timing warnings — see details below.` : "Remaining word times are estimated from text and punctuation."}`;
+                analysis.title = warnings.join("\n");
+                const details = document.getElementById("timingWarnings");
+                details.hidden = !warnings.length;
+                details.replaceChildren(...warnings.map(warning => {
+                    const item = document.createElement("li");
+                    item.textContent = warning;
+                    return item;
+                }));
+            }
         }
 
         function stopPlayback(keepCurrentTime = true) {
@@ -2322,6 +1863,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
             state.playStartMs = null;
             state.isPlaying = false;
+            if (!state.tapSync?.active) syncAudio?.pause();
+            if (!keepCurrentTime && syncAudio && Number.isFinite(syncAudio.duration)) {
+                syncAudio.currentTime = Math.min(getAudioTimelineOffset(), syncAudio.duration);
+            }
             syncPlaybackButtonLabel();
             cancelAnimation();
         }
@@ -2837,7 +2382,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const source = audioContext.createBufferSource();
             const gain = audioContext.createGain();
             const audio = getAudioSettingsFromControls();
-            const duration = Math.max(0.001, state.audioBuffer?.duration || 0);
+            const offset = getAudioTimelineOffset();
+            const duration = Math.max(0.001, getAudioExportDuration());
             const volume = clamp(audio.volume ?? 1, 0, 2);
             const fadeIn = clamp(audio.fadeIn ?? 0, 0, duration);
             const fadeOut = clamp(audio.fadeOut ?? 0, 0, duration);
@@ -2864,7 +2410,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                         gain.gain.setValueAtTime(volume, fadeStart);
                         gain.gain.linearRampToValueAtTime(0, now + duration);
                     }
-                    source.start(0);
+                    source.start(0, Math.min(offset, Math.max(0, source.buffer.duration - 0.001)));
                     started = true;
                 },
                 stop() {
@@ -2965,10 +2511,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
 
         function secondsToTag(seconds) {
-            const safe = Math.max(0, Number(seconds) || 0);
-            const minutes = Math.floor(safe / 60);
-            const secs = safe - minutes * 60;
-            return `[${String(minutes).padStart(2, "0")}:${secs.toFixed(2).padStart(5, "0")}]`;
+            return BratCore.secondsToTag(seconds);
         }
 
         function tagToSeconds(tag) {
@@ -3095,6 +2638,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function refreshFromRows(rows, { preserveSelection = true } = {}) {
             if (!lrcRows) return;
             lrcRows.__rows = rows.map(row => ({
+                ...row,
                 time: Number(row.time) || 0,
                 text: String(row.text || "")
             }));
@@ -3136,7 +2680,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 wrapper.querySelector(".seek-row")?.addEventListener("click", (event) => {
                     event.stopPropagation();
                     setSelectedRowIndexes([index]);
-                    seekTo(row.time);
+                    seekTo(rawLrcTimeToTimeline(row.time));
                     refreshFromRows(readRowsFromEditor());
                 });
 
@@ -3175,19 +2719,21 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 const index = Number(rowEl.dataset.index);
                 if (!Number.isInteger(index) || !rows[index]) return;
                 rows[index] = {
+                    ...rows[index],
                     time: tagToSeconds(rowEl.querySelector(".lrc-time")?.value || "0:00.00"),
                     text: rowEl.querySelector(".lrc-text")?.value || ""
                 };
             });
-            return rows.filter(row => row.text.trim());
+            return rows;
         }
 
         function writeRowsToEditor(rows, options = {}) {
             if (!lrcRows) return;
             const normalizedRows = rows
-                .filter(row => String(row.text || "").trim())
-                .map(row => ({ time: Math.max(0, Number(row.time) || 0), text: String(row.text || "").trim() }));
-            lyricsInput.value = normalizedRows.map(row => `${secondsToTag(row.time)} ${row.text}`).join("\n");
+                .map(row => ({ ...row, time: Math.max(0, Number(row.time) || 0), text: String(row.text || "").trim() }));
+            const metadata = normalizeLRCText(lyricsInput.value).split("\n").map(line => line.trim()).filter(line => META_TAG_RE.test(line));
+            const body = BratCore.rowsToLrc(normalizedRows);
+            lyricsInput.value = [...metadata, body].filter(Boolean).join("\n");
             if (Array.isArray(options.selection)) setSelectedRowIndexes(options.selection);
             renderLrcRows();
             rebuildTimelineFromCurrentInputs();
@@ -3277,7 +2823,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const [index] = getSelectedRowIndexes();
             const rows = readRowsFromEditor();
             if (!rows[index]) return;
-            seekTo(rows[index].time);
+            seekTo(rawLrcTimeToTimeline(rows[index].time));
             if (!state.isPlaying) playPauseBtn?.click();
         }
 
@@ -3311,11 +2857,50 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             saveProjectSettings();
         }
 
+        function syncEffectControlState() {
+            const fillType = backgroundFillTypeSelect?.value || "solid";
+            if (gradientOptions) gradientOptions.hidden = fillType === "solid";
+            if (gradientAngleInput) gradientAngleInput.disabled = fillType !== "linear";
+
+            const swapEnabled = Boolean(colorSwapEnabledCheckbox?.checked);
+            if (colorSwapUnitSelect) colorSwapUnitSelect.disabled = !swapEnabled;
+            if (colorSwapIntervalInput) colorSwapIntervalInput.disabled = !swapEnabled;
+            colorSwapOptions?.setAttribute("aria-disabled", String(!swapEnabled));
+            colorSwapOptions?.closest(".effect-setting")?.classList.toggle("is-disabled", !swapEnabled);
+
+            if (!colorSwapHint) return;
+            if (!swapEnabled) {
+                colorSwapHint.textContent = "Enable to alternate the text and background palette.";
+                return;
+            }
+
+            const unit = colorSwapUnitSelect?.value || "line";
+            const interval = clamp(Math.round(Number(colorSwapIntervalInput?.value) || 1), 1, 12);
+            const unitLabel = interval === 1 ? unit : `${unit}s`;
+            const letterNeedsTypewriter = unit === "letter" && (
+                (animationModeSelect?.value || state.animationMode) !== "typewriter" ||
+                (lyricsDisplayModeSelect?.value || state.style.lyricsMode) !== "brat"
+            );
+            colorSwapHint.textContent = letterNeedsTypewriter
+                ? "Letter exchange applies to brat canvas with the typewriter animation; this mode falls back to each line."
+                : `Swap every ${interval === 1 ? "" : `${interval} `}${unitLabel}.`;
+        }
+
         function readStyleControls() {
             state.animationMode = animationModeSelect?.value || state.animationMode || "typewriter";
             state.style = {
                 bgColor: bgColorInput?.value || state.style.bgColor,
                 textColor: textColorInput?.value || state.style.textColor,
+                backgroundFill: {
+                    type: backgroundFillTypeSelect?.value || state.style.backgroundFill?.type || "solid",
+                    color2: gradientColorInput?.value || state.style.backgroundFill?.color2 || "#315f4b",
+                    angle: clamp(Number(gradientAngleInput?.value) || 0, 0, 360)
+                },
+                colorSwap: {
+                    enabled: Boolean(colorSwapEnabledCheckbox?.checked),
+                    unit: colorSwapUnitSelect?.value || state.style.colorSwap?.unit || "line",
+                    interval: clamp(Math.round(Number(colorSwapIntervalInput?.value) || 1), 1, 12)
+                },
                 fontFamily: fontFamilySelect?.value || state.style.fontFamily,
                 fontScale: (Number(fontScaleInput?.value) || 100) / 100,
                 blur: (Number(blurInput?.value) || 0) / 100,
@@ -3347,6 +2932,18 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function writeStyleControls(style = state.style, mode = state.animationMode) {
             if (animationModeSelect) animationModeSelect.value = mode || "typewriter";
+            const backgroundFill = BratCore.normalizeBackgroundFill
+                ? BratCore.normalizeBackgroundFill(style.backgroundFill)
+                : (style.backgroundFill || { type: "solid", color2: "#315f4b", angle: 135 });
+            const colorSwap = BratCore.normalizeColorSwap
+                ? BratCore.normalizeColorSwap(style.colorSwap)
+                : (style.colorSwap || { enabled: false, unit: "line", interval: 1 });
+            if (backgroundFillTypeSelect) backgroundFillTypeSelect.value = backgroundFill.type;
+            if (gradientColorInput) gradientColorInput.value = backgroundFill.color2;
+            if (gradientAngleInput) gradientAngleInput.value = Math.round(backgroundFill.angle);
+            if (colorSwapEnabledCheckbox) colorSwapEnabledCheckbox.checked = colorSwap.enabled;
+            if (colorSwapUnitSelect) colorSwapUnitSelect.value = colorSwap.unit;
+            if (colorSwapIntervalInput) colorSwapIntervalInput.value = colorSwap.interval;
             if (lyricsDisplayModeSelect) lyricsDisplayModeSelect.value = style.lyricsMode || "brat";
             if (musicAlignSelect) musicAlignSelect.value = style.musicAlign || "left";
             if (wordHighlightCheckbox) wordHighlightCheckbox.checked = style.musicWordHighlight !== false;
@@ -3373,6 +2970,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (letterChunkSizeInput) letterChunkSizeInput.value = clamp(Math.round(style.letterChunkSize || 2), 1, 12);
             if (lineSpacingInput) lineSpacingInput.value = Math.round((style.lineSpacing || 0.92) * 100);
             if (safeZonesCheckbox) safeZonesCheckbox.checked = Boolean(style.safeZones);
+            syncEffectControlState();
             readStyleControls();
         }
 
@@ -3436,65 +3034,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             ctx.restore();
         }
 
-        function drawWaveform() {
-            if (!waveformCanvas) return;
-            const ctx = waveformCanvas.getContext("2d");
-            const width = waveformCanvas.width;
-            const height = waveformCanvas.height;
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "rgba(255,255,255,.75)";
-            ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = "rgba(0,0,0,.12)";
-            ctx.fillRect(0, height / 2 - 1, width, 2);
-            if (!state.audioAnalysis?.frames?.length) {
-                ctx.fillStyle = "rgba(0,0,0,.52)";
-                ctx.font = "13px Arial, sans-serif";
-                ctx.fillText("waveform appears after audio upload", 14, 25);
-                return;
-            }
-            const frames = state.audioAnalysis.frames;
-            const max = Math.max(...frames.map(f => f.rms), 0.001);
-            ctx.fillStyle = "rgba(0,0,0,.68)";
-            for (let x = 0; x < width; x += 1) {
-                const index = Math.floor((x / width) * frames.length);
-                const rms = frames[index]?.rms || 0;
-                const amp = (rms / max) * (height * 0.46);
-                ctx.fillRect(x, height / 2 - amp, 1, Math.max(1, amp * 2));
-            }
-            const duration = state.audioAnalysis.duration || getTimelineDuration() || 1;
-            const playhead = clamp((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) / duration, 0, 1) * width;
-            ctx.fillStyle = "rgba(0,0,0,.95)";
-            ctx.fillRect(playhead, 0, 2, height);
-        }
-
-        function renderTimeline() {
-            if (!timelineCanvas) return;
-            const ctx = timelineCanvas.getContext("2d");
-            const width = timelineCanvas.width;
-            const height = timelineCanvas.height;
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "rgba(255,255,255,.75)";
-            ctx.fillRect(0, 0, width, height);
-            const duration = Math.max(getTimelineDuration(), 1);
-            ctx.font = "11px Arial, sans-serif";
-            state.timeline.forEach((line, i) => {
-                const x = (line.displayStart / duration) * width;
-                const w = Math.max(3, ((line.displayEnd - line.displayStart) / duration) * width);
-                ctx.fillStyle = i % 2 ? "rgba(0,0,0,.48)" : "rgba(0,0,0,.72)";
-                ctx.fillRect(x, 18, w, 28);
-            });
-            const playhead = clamp((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) / duration, 0, 1) * width;
-            ctx.fillStyle = "rgba(0,0,0,.96)";
-            ctx.fillRect(playhead, 0, 2, height);
-            ctx.fillStyle = "rgba(0,0,0,.62)";
-            ctx.fillText(`${state.timeline.length} lines · ${formatClock(duration)}`, 10, 13);
-        }
 
         function drawLyricMarkers(ctx, width, height, duration) {
             const rows = getLrcLineObjects();
             const selected = new Set(getSelectedRowIndexes());
             rows.forEach((row, index) => {
-                const x = clamp(row.time / duration, 0, 1) * width;
+                const x = clamp((row.time + getTimingCanvasShift(ctx.canvas)) / duration, 0, 1) * width;
                 ctx.save();
                 ctx.strokeStyle = selected.has(index) ? "#8ACE00" : "rgba(18,19,15,.48)";
                 ctx.lineWidth = selected.has(index) ? 3 : 1;
@@ -3519,7 +3064,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
             if (state.audioAnalysis?.frames?.length) {
                 const frames = state.audioAnalysis.frames;
-                const max = Math.max(...frames.map(f => f.rms), 0.001);
+                const max = frames.reduce((peak, frame) => Math.max(peak, frame.rms), 0.001);
                 ctx.fillStyle = "rgba(0,0,0,.68)";
                 for (let x = 0; x < width; x += 1) {
                     const index = Math.floor((x / width) * frames.length);
@@ -3535,7 +3080,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
             const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
             drawLyricMarkers(ctx, width, height, duration);
-            const playhead = clamp((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) / duration, 0, 1) * width;
+            const sourceTime = (state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) + getAudioTimelineOffset();
+            const playhead = clamp(sourceTime / duration, 0, 1) * width;
             ctx.fillStyle = "rgba(0,0,0,.95)";
             ctx.fillRect(playhead, 0, 2, height);
         }
@@ -3569,6 +3115,22 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return clamp(((event.clientX - rect.left) / rect.width) * duration, 0, duration);
         }
 
+        function getLrcMetadataOffset() {
+            let offset = 0;
+            for (const match of lyricsInput.value.matchAll(/^\s*\[offset:([^\]]*)\]\s*$/gim)) {
+                if (Number.isFinite(Number(match[1]))) offset = Number(match[1]) / 1000;
+            }
+            return offset;
+        }
+
+        function rawLrcTimeToTimeline(time) {
+            return Math.max(0, time + getLrcMetadataOffset() - getAudioTimelineOffset());
+        }
+
+        function getTimingCanvasShift(canvas) {
+            return getLrcMetadataOffset() - (canvas === timelineCanvas ? getAudioTimelineOffset() : 0);
+        }
+
         function findNearestTimingRow(event, canvas, duration) {
             const rows = getLrcLineObjects();
             if (!rows.length) return -1;
@@ -3577,7 +3139,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             let nearest = -1;
             let nearestDistance = 14;
             rows.forEach((row, index) => {
-                const x = clamp(row.time / duration, 0, 1) * rect.width;
+                const x = clamp((row.time + getTimingCanvasShift(canvas)) / duration, 0, 1) * rect.width;
                 const distance = Math.abs(pointerX - x);
                 if (distance < nearestDistance) {
                     nearest = index;
@@ -3590,7 +3152,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function beginTimingPointer(event, canvas, duration) {
             const nearest = findNearestTimingRow(event, canvas, duration);
             if (nearest < 0) {
-                seekTo(canvasTimeFromPointer(event, canvas, duration));
+                const time = canvasTimeFromPointer(event, canvas, duration);
+                seekTo(canvas === waveformCanvas ? time - getAudioTimelineOffset() : time);
                 return;
             }
             event.preventDefault();
@@ -3598,6 +3161,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             setSelectedRowIndexes([nearest]);
             state.dragEdit = {
                 pointerId: event.pointerId,
+                coordinateShift: getTimingCanvasShift(canvas),
                 index: nearest,
                 beforePayload: buildProjectPayload(),
                 rows: readRowsFromEditor()
@@ -3609,7 +3173,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (!state.dragEdit || state.dragEdit.pointerId !== event.pointerId) return;
             const rows = state.dragEdit.rows.map(row => ({ ...row }));
             if (!rows[state.dragEdit.index]) return;
-            rows[state.dragEdit.index].time = canvasTimeFromPointer(event, canvas, duration);
+            rows[state.dragEdit.index].time = Math.max(0, canvasTimeFromPointer(event, canvas, duration) - state.dragEdit.coordinateShift);
             state.dragEdit.rows = rows;
             writeRowsToEditor(rows, { selection: [state.dragEdit.index] });
         }
@@ -3630,8 +3194,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function seekTo(seconds) {
             stopPlayback(true);
-            state.pausedElapsedSec = clamp(seconds, 0, Math.max(getTimelineDuration(), state.audioAnalysis?.duration || 0));
-            if (syncAudio && !Number.isNaN(syncAudio.duration)) syncAudio.currentTime = clamp(seconds, 0, syncAudio.duration || seconds);
+            state.pausedElapsedSec = clamp(seconds, 0, Math.max(getTimelineDuration(), (state.audioAnalysis?.duration || 0) - getAudioTimelineOffset()));
+            if (syncAudio && Number.isFinite(syncAudio.duration)) syncAudio.currentTime = clamp(state.pausedElapsedSec + getAudioTimelineOffset(), 0, syncAudio.duration);
             renderPreviewAt(state.pausedElapsedSec);
             drawWaveform();
             renderTimeline();
@@ -4147,19 +3711,20 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             };
         }
 
-        function exportPreviewFrames() {
+        async function exportPreviewFrames() {
             const dims = getExportDimensions();
             const duration = Math.max(getTimelineDuration(), 1);
-            [0.15, 0.5, 0.85].forEach((ratio, index) => {
+            for (const [index, ratio] of [0.15, 0.5, 0.85].entries()) {
                 const frameCanvas = document.createElement("canvas");
                 frameCanvas.width = dims.width;
                 frameCanvas.height = dims.height;
                 const frameCtx = frameCanvas.getContext("2d", { alpha: false });
+                await prepareBackgroundFrame(duration * ratio);
                 drawScene(frameCtx, dims.width, dims.height, duration * ratio, { guides: false });
                 frameCanvas.toBlob((blob) => {
                     if (blob) downloadBlob(blob, `${buildExportFileBase()}-frame-${index + 1}.png`);
                 }, "image/png");
-            });
+            }
             exportStatus.textContent = "3 preview frames exported";
         }
 
@@ -4182,6 +3747,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const done = new Promise(resolve => recorder.onstop = resolve);
             recorder.start();
             for (let frame = 0; frame <= duration * fps; frame += 1) {
+                await prepareBackgroundFrame(frame / fps);
                 drawScene(clipCtx, dims.width, dims.height, frame / fps, { guides: false });
                 await wait(1000 / fps);
             }
@@ -4198,6 +3764,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             exportProgress.value = clamp(Number(percent) || 0, 0, 100);
         }
 
+        function usesVideoBackground() {
+            return state.background?.kind === "video" && Boolean(state.backgroundElement);
+        }
+
         async function updateCompatibilityPanel() {
             if (!compatFastMp4 || !compatMediaRecorder || !compatRecommendation) return;
 
@@ -4205,9 +3775,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const fps = Number(exportFpsSelect.value) || 30;
             const canRecord = typeof MediaRecorder !== "undefined";
             const includeAudio = shouldIncludeAudioInExport();
+            const videoBackground = usesVideoBackground();
             let fastMp4 = false;
 
-            if (!includeAudio) {
+            if (!includeAudio && !videoBackground) {
                 try {
                     fastMp4 = await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule();
                 } catch (error) {
@@ -4215,20 +3786,26 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 }
             }
 
-            compatFastMp4.textContent = includeAudio ? "disabled with audio" : (fastMp4 ? "supported" : "not supported");
+            compatFastMp4.textContent = includeAudio
+                ? "disabled with audio"
+                : videoBackground
+                    ? "realtime for video background"
+                    : (fastMp4 ? "supported" : "not supported");
             compatMediaRecorder.textContent = canRecord ? "supported" : "not supported";
             compatRecommendation.textContent = includeAudio
                 ? `${dims.width}×${dims.height} · ${fps} fps · audio uses real-time export`
-                : Math.max(dims.width, dims.height) >= 1920 || fps >= 60
-                    ? `${dims.width}×${dims.height} works, but 1080 base · 30 fps is safer`
-                    : `${dims.width}×${dims.height} · ${fps} fps`;
+                : videoBackground
+                    ? `${dims.width}×${dims.height} · ${fps} fps · background video uses real-time export`
+                    : Math.max(dims.width, dims.height) >= 1920 || fps >= 60
+                        ? `${dims.width}×${dims.height} works, but 1080 base · 30 fps is safer`
+                        : `${dims.width}×${dims.height} · ${fps} fps`;
         }
 
         function saveProjectSettings() {
             try {
                 const payload = buildProjectPayload();
                 const raw = JSON.stringify(payload);
-                localStorage.setItem("bratAnimator.project.v3", raw);
+                localStorage.setItem("bratAnimator.project.v4", raw);
             } catch (error) {
                 console.warn("autosave failed", error);
             }
@@ -4236,7 +3813,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function loadProjectSettings() {
             try {
-                const raw = localStorage.getItem("bratAnimator.project.v3") || localStorage.getItem("bratAnimator.project.v2");
+                const raw = localStorage.getItem("bratAnimator.project.v4") || localStorage.getItem("bratAnimator.project.v3") || localStorage.getItem("bratAnimator.project.v2");
                 return raw ? JSON.parse(raw) : null;
             } catch (error) {
                 console.warn("restore failed", error);
@@ -4291,6 +3868,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function clearSavedProject() {
             localStorage.removeItem("bratAnimator.project.v2");
             localStorage.removeItem("bratAnimator.project.v3");
+            localStorage.removeItem("bratAnimator.project.v4");
             lyricsInput.value = "";
             searchQueryInput.value = "";
             startFromZeroCheckbox.checked = false;
@@ -4543,8 +4121,8 @@ async function updateExportEstimate() {
             const size = Math.max(dims.width, dims.height);
             const fps = Number(exportFpsSelect.value) || 30;
             const includeAudio = shouldIncludeAudioInExport();
-            const baseDuration = Math.max(1, parsed[parsed.length - 1].displayEnd + 0.6);
-            const duration = includeAudio ? Math.max(baseDuration, state.audioBuffer.duration || 0) : baseDuration;
+            const baseDuration = Math.max(1, parsed.reduce((end, line) => Math.max(end, line.displayEnd), 0) + 0.6);
+            const duration = includeAudio ? Math.max(baseDuration, getAudioExportDuration(parsed)) : baseDuration;
 
             if (includeAudio) {
                 const estimated = estimateExportSeconds(duration, size, fps, false);
@@ -4552,7 +4130,7 @@ async function updateExportEstimate() {
                 return;
             }
 
-            if (await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
+            if (!usesVideoBackground() && await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
                 const estimated = estimateExportSeconds(duration, size, fps, true);
                 exportEstimate.textContent = `estimated export time: about ${formatClock(estimated)} • fast export, no need to wait for the full lyric duration`;
                 return;
@@ -4560,7 +4138,9 @@ async function updateExportEstimate() {
 
             const estimated = estimateExportSeconds(duration, size, fps, false);
             const minimum = Math.max(duration, 1);
-            exportEstimate.textContent = `estimated export time: about ${formatClock(estimated)} • traditional fallback, browser can approach real duration (${formatClock(minimum)})`;
+            exportEstimate.textContent = usesVideoBackground()
+                ? `estimated export time: about ${formatClock(estimated)} • video background uses real-time export (${formatClock(minimum)})`
+                : `estimated export time: about ${formatClock(estimated)} • traditional fallback, browser can approach real duration (${formatClock(minimum)})`;
         }
 
         function setPlayerOpenState(isOpen) {
@@ -4617,7 +4197,7 @@ async function updateExportEstimate() {
             const size = Math.max(dims.width, dims.height);
             const fps = Number(exportFpsSelect.value) || 30;
             const baseDuration = Math.max(1, getTimelineDuration() + 0.6);
-            const duration = includeAudio ? Math.max(baseDuration, state.audioBuffer.duration || 0) : baseDuration;
+            const duration = includeAudio ? Math.max(baseDuration, getAudioExportDuration(parsed)) : baseDuration;
             const totalFrames = Math.ceil(duration * fps);
             const exportCanvas = document.createElement("canvas");
             exportCanvas.width = dims.width;
@@ -4635,8 +4215,9 @@ async function updateExportEstimate() {
                 window.setTimeout(() => setExportProgress(0, false), 800);
 
                 if (wasPlaying) {
-                    state.playStartMs = Date.now();
+                    state.playStartMs = performance.now();
                     state.isPlaying = true;
+                    startPreviewAudio();
                     syncPlaybackButtonLabel();
                     cancelAnimation();
                     state.animationFrame = requestAnimationFrame(animationTick);
@@ -4650,7 +4231,7 @@ async function updateExportEstimate() {
             let activeAudioExport = null;
 
             try {
-                if (!includeAudio && await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
+                if (!includeAudio && !usesVideoBackground() && await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
                     exportStatus.textContent = "preparing fast MP4 export...";
                     const {
                         Muxer,
@@ -4769,6 +4350,7 @@ async function updateExportEstimate() {
                     recorder.onstop = () => resolve();
                 });
 
+                await prepareBackgroundFrame(0);
                 recorder.start();
                 await activeAudioExport?.start();
                 exportStatus.textContent = `fallback export: ${extension.toUpperCase()} - ${fps} fps - ${includeAudio ? "with loaded audio" : "no audio"}`;
@@ -4818,7 +4400,7 @@ async function updateExportEstimate() {
             }
         }
 
-        function exportCurrentFramePng() {
+        async function exportCurrentFramePng() {
             const dims = getExportDimensions();
             const frameCanvas = document.createElement("canvas");
             frameCanvas.width = dims.width;
@@ -4828,6 +4410,7 @@ async function updateExportEstimate() {
             });
             const timeSec = state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec;
 
+            await prepareBackgroundFrame(timeSec);
             drawScene(frameCtx, frameCanvas.width, frameCanvas.height, timeSec, { guides: false });
 
             frameCanvas.toBlob((blob) => {
@@ -4941,8 +4524,9 @@ async function updateExportEstimate() {
                 return;
             }
 
-            state.playStartMs = Date.now();
+            state.playStartMs = performance.now();
             state.isPlaying = true;
+            startPreviewAudio();
             syncPlaybackButtonLabel();
             cancelAnimation();
             state.animationFrame = requestAnimationFrame(animationTick);
@@ -4999,16 +4583,18 @@ async function updateExportEstimate() {
 
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
-        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
+        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
-                if (themePresetSelect && [bgColorInput, textColorInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput].includes(control)) {
+                if (themePresetSelect && [bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput].includes(control)) {
                     themePresetSelect.value = "custom";
                 }
+                syncEffectControlState();
                 readStyleControls();
                 renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
                 saveProjectSettings();
             });
             control?.addEventListener("change", () => {
+                syncEffectControlState();
                 readStyleControls();
                 renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
                 saveProjectSettings();
@@ -5025,7 +4611,7 @@ async function updateExportEstimate() {
         });
         clearBackgroundBtn?.addEventListener("click", () => commitProjectChange("clear background", clearBackgroundMedia));
         useArtworkBgBtn?.addEventListener("click", useArtworkAsBackground);
-        [bgMediaOpacityInput, bgMediaBlurInput, bgMediaBrightnessInput, bgMediaSaturationInput, bgMediaScaleInput, bgMediaPositionXInput, bgMediaPositionYInput].forEach((control) => {
+        [backgroundTargetSelect, bgMediaOpacityInput, bgMediaBlurInput, bgMediaBrightnessInput, bgMediaSaturationInput, bgMediaScaleInput, bgMediaPositionXInput, bgMediaPositionYInput].forEach((control) => {
             control?.addEventListener("input", () => {
                 getBackgroundSettingsFromControls();
                 updateBackgroundStatus();
@@ -5058,7 +4644,7 @@ async function updateExportEstimate() {
             const rows = readRowsFromEditor();
             const idx = clamp(state.selectedLrcRowIndex, 0, Math.max(0, rows.length - 1));
             if (!rows[idx]) return;
-            rows[idx].time = state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec;
+            rows[idx].time = Math.max(0, (state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) + getAudioTimelineOffset() - getLrcMetadataOffset());
             commitRowsChange("sync lyric", rows, [idx]);
         });
         splitLrcRowBtn?.addEventListener("click", splitSelectedRow);
@@ -5083,7 +4669,7 @@ async function updateExportEstimate() {
         waveformCanvas?.addEventListener("click", (event) => {
             const rect = waveformCanvas.getBoundingClientRect();
             const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
-            seekTo(((event.clientX - rect.left) / rect.width) * duration);
+            seekTo(((event.clientX - rect.left) / rect.width) * duration - getAudioTimelineOffset());
         });
         waveformCanvas?.addEventListener("pointerdown", (event) => {
             const duration = state.audioAnalysis?.duration || getTimelineDuration() || 1;
@@ -5239,6 +4825,7 @@ async function updateExportEstimate() {
         if (!restored) {
             setTheme("green");
         }
+        syncEffectControlState();
         renderLrcRows();
         renderUserPresets();
         renderSnapshots();
@@ -5710,4 +5297,215 @@ async function updateExportEstimate() {
     if (!showPermissionNotice()) {
         scheduleTutorial();
     }
+})();
+
+/* --- Version 4 editor controls --- */
+(function setupV4Studio() {
+    const commandPaletteBtn = document.getElementById('commandPaletteBtn');
+    const autoContrastBtn = document.getElementById('autoContrastBtn');
+    const contrastRatio = document.getElementById('contrastRatio');
+    const contrastStatus = document.getElementById('contrastStatus');
+    const stageFormatLabel = document.getElementById('stageFormatLabel');
+    const stageZoomOutBtn = document.getElementById('stageZoomOutBtn');
+    const stageZoomInBtn = document.getElementById('stageZoomInBtn');
+    const stageZoomValue = document.getElementById('stageZoomValue');
+    const stageFitBtn = document.getElementById('stageFitBtn');
+    const stageFullscreenBtn = document.getElementById('stageFullscreenBtn');
+    const stageRestartBtn = document.getElementById('stageRestartBtn');
+    const stagePlayBtn = document.getElementById('stagePlayBtn');
+    const stageCurrentTime = document.getElementById('stageCurrentTime');
+    const stageDuration = document.getElementById('stageDuration');
+    const stageSeekInput = document.getElementById('stageSeekInput');
+
+    function formatStudioClock(seconds) {
+        const total = Math.max(0, Number(seconds) || 0);
+        const minutes = Math.floor(total / 60);
+        const secs = Math.floor(total % 60);
+        return `${minutes}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '').replace('#', '').trim();
+        if (!/^[0-9a-f]{6}$/i.test(normalized)) return { r: 0, g: 0, b: 0 };
+        return {
+            r: parseInt(normalized.slice(0, 2), 16),
+            g: parseInt(normalized.slice(2, 4), 16),
+            b: parseInt(normalized.slice(4, 6), 16)
+        };
+    }
+
+    function relativeLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const channels = [r, g, b].map((value) => {
+            const channel = value / 255;
+            return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    }
+
+    function getContrastRatio(foreground, background) {
+        const first = relativeLuminance(foreground);
+        const second = relativeLuminance(background);
+        return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+    }
+
+    function getConfiguredBackgroundColors() {
+        const colors = [bgColorInput?.value || '#8ACE00'];
+        if ((backgroundFillTypeSelect?.value || 'solid') !== 'solid' && gradientColorInput?.value) {
+            colors.push(gradientColorInput.value);
+        }
+        return colors;
+    }
+
+    function getMinimumContrast(foreground) {
+        return Math.min(...getConfiguredBackgroundColors().map(background => getContrastRatio(foreground, background)));
+    }
+
+    function updateContrastBadge() {
+        if (!contrastRatio || !contrastStatus) return;
+        const ratio = getMinimumContrast(textColorInput?.value || '#000000');
+        const passesAA = ratio >= 4.5;
+        contrastRatio.textContent = `${getConfiguredBackgroundColors().length > 1 ? 'minimum ' : ''}contrast ${ratio.toFixed(2)}:1`;
+        contrastStatus.textContent = passesAA
+            ? 'AA ready for standard text.'
+            : 'Low contrast: use auto contrast before export.';
+        contrastRatio.classList.toggle('is-pass', passesAA);
+        contrastRatio.classList.toggle('is-fail', !passesAA);
+    }
+
+    function applyAutomaticContrast() {
+        if (!bgColorInput || !textColorInput) return;
+        const darkText = '#171915';
+        const lightText = '#f7f7f2';
+        textColorInput.value = getMinimumContrast(darkText) >= getMinimumContrast(lightText)
+            ? darkText
+            : lightText;
+        if (themePresetSelect) themePresetSelect.value = 'custom';
+        state.theme = 'custom';
+        syncThemeButtons();
+        readStyleControls();
+        renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+        saveProjectSettings();
+        updateContrastBadge();
+    }
+
+    function updateStageFormatLabel() {
+        const dims = getExportDimensions();
+        if (stageFormatLabel) stageFormatLabel.textContent = `${dims.width} × ${dims.height}`;
+    }
+
+    function updateZoomLabel() {
+        if (!previewZoomInput || !stageZoomValue) return;
+        stageZoomValue.textContent = `${previewZoomInput.value}%`;
+    }
+
+    function setPreviewZoom(nextValue) {
+        if (!previewZoomInput) return;
+        previewZoomInput.value = String(clamp(Number(nextValue) || 100, 50, 140));
+        applyPreviewZoom();
+        updateZoomLabel();
+    }
+
+    function ensureTimeline() {
+        if (state.timeline.length) return true;
+        if (!lyricsInput?.value.trim()) return false;
+        rebuildTimelineFromCurrentInputs();
+        return state.timeline.length > 0;
+    }
+
+    function updateStageTransport(timeSec = state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) {
+        if (!stageSeekInput) return;
+        const duration = Math.max(getTimelineDuration(), state.audioAnalysis?.duration || 0, 0);
+        const safeTime = clamp(Number(timeSec) || 0, 0, duration || 0);
+        const progress = duration > 0 ? safeTime / duration : 0;
+        stageSeekInput.value = String(Math.round(progress * 1000));
+        stageSeekInput.style.setProperty('--range-progress', `${progress * 100}%`);
+        if (stageCurrentTime) stageCurrentTime.textContent = formatStudioClock(safeTime);
+        if (stageDuration) stageDuration.textContent = formatStudioClock(duration);
+        if (stagePlayBtn) {
+            stagePlayBtn.textContent = state.isPlaying ? 'pause' : 'play';
+            stagePlayBtn.setAttribute('aria-pressed', String(state.isPlaying));
+            stagePlayBtn.setAttribute('aria-label', `${state.isPlaying ? 'pause' : 'play'} preview`);
+        }
+    }
+
+    const renderPreviewBeforeStudio = renderPreviewAt;
+    renderPreviewAt = function renderPreviewWithStudio(timeSec = 0) {
+        renderPreviewBeforeStudio(timeSec);
+        updateStageTransport(timeSec);
+    };
+
+    const syncPlaybackBeforeStudio = syncPlaybackButtonLabel;
+    syncPlaybackButtonLabel = function syncPlaybackWithStudio() {
+        syncPlaybackBeforeStudio();
+        updateStageTransport();
+    };
+
+    const updateMetaBeforeStudio = updateMeta;
+    updateMeta = function updateMetaWithStudio() {
+        updateMetaBeforeStudio();
+        updateStageFormatLabel();
+        updateStageTransport();
+    };
+
+    commandPaletteBtn?.addEventListener('click', openCommandPalette);
+    autoContrastBtn?.addEventListener('click', applyAutomaticContrast);
+    const markPaletteCustom = () => {
+        state.theme = 'custom';
+        syncThemeButtons();
+    };
+    bgColorInput?.addEventListener('input', markPaletteCustom, { capture: true });
+    textColorInput?.addEventListener('input', markPaletteCustom, { capture: true });
+    bgColorInput?.addEventListener('input', updateContrastBadge);
+    textColorInput?.addEventListener('input', updateContrastBadge);
+    backgroundFillTypeSelect?.addEventListener('change', updateContrastBadge);
+    gradientColorInput?.addEventListener('input', updateContrastBadge);
+    stageZoomOutBtn?.addEventListener('click', () => setPreviewZoom(Number(previewZoomInput?.value) - 10));
+    stageZoomInBtn?.addEventListener('click', () => setPreviewZoom(Number(previewZoomInput?.value) + 10));
+    stageFitBtn?.addEventListener('click', () => setPreviewZoom(100));
+    stageFullscreenBtn?.addEventListener('click', () => fullscreenBtn?.click());
+    stageRestartBtn?.addEventListener('click', () => restartBtn?.click());
+    stagePlayBtn?.addEventListener('click', () => {
+        if (!ensureTimeline()) {
+            document.querySelector('[data-open-tab="timing"]')?.click();
+            lyricsInput?.focus();
+            return;
+        }
+        playPauseBtn?.click();
+    });
+    stageSeekInput?.addEventListener('input', () => {
+        if (!ensureTimeline()) return;
+        const duration = Math.max(getTimelineDuration(), state.audioAnalysis?.duration || 0, 0);
+        seekTo((Number(stageSeekInput.value) / 1000) * duration);
+    });
+    previewZoomInput?.addEventListener('input', updateZoomLabel);
+
+    [lyricsInput, startFromZeroCheckbox, useAudioTimingCheckbox, formatPresetSelect, exportSizeSelect, exportFpsSelect].forEach((control) => {
+        control?.addEventListener('input', updateStageFormatLabel);
+        control?.addEventListener('change', updateStageFormatLabel);
+    });
+
+    document.querySelectorAll('.editor-tab').forEach((tab, tabIndex, tabs) => {
+        tab.addEventListener('keydown', (event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            let nextIndex = tabIndex;
+            if (event.key === 'ArrowLeft') nextIndex = (tabIndex - 1 + tabs.length) % tabs.length;
+            if (event.key === 'ArrowRight') nextIndex = (tabIndex + 1) % tabs.length;
+            if (event.key === 'Home') nextIndex = 0;
+            if (event.key === 'End') nextIndex = tabs.length - 1;
+            tabs[nextIndex]?.focus();
+            tabs[nextIndex]?.click();
+        });
+    });
+
+    commandDefinitions.push(
+        { name: 'auto contrast', run: applyAutomaticContrast },
+        { name: 'fit preview', run: () => setPreviewZoom(100) }
+    );
+
+    updateContrastBadge();
+    updateZoomLabel();
+    updateStageFormatLabel();
+    updateStageTransport();
 })();
