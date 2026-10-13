@@ -8,13 +8,20 @@ Live demo: **https://oakvx.github.io/bratAnimator/**
 
 - Static app, no framework and no `package.json`.
 - Reworked editor layout with a unified charcoal/ivory visual system, responsive controls, preview toolbar, and transport controls.
+- Task-oriented menu: Text → Sync → Appearance → Export, with separate Project tools, closed advanced groups and an optional four-step guide.
+- Lyrics search, import and paste share the Text tab; the export review shows the actual output format and whether audio is included before rendering starts.
 - Live zoom controls, keyboard-first commands, and automatic WCAG contrast correction.
 - Solid, linear, and radial canvas fills with optional text/background palette exchange by line, word, or typewriter letter.
+- Adjustable motion blur, light shake, phrase impacts and slow sway, plus a rotating star that inverts the background beneath it. Effects share the preview/export renderer and persist in projects, snapshots and presets; existing projects start with effects off.
 - Uploaded images and videos can fill the background, the text, or both. Exchanging a gradient palette places the gradient inside the text.
 - Stable project schema `version: 4` with migration from older v2/v3 JSON.
 - Local IndexedDB media storage for uploaded audio/video/background blobs; project JSON stores metadata and references, not binary blobs.
 - LRCLIB search, LRC import/paste, Enhanced LRC word timing, compact LRC editor, multi-select timing tools, undo/redo, and waveform/timeline marker dragging.
 - Shared word/character timeline for typewriter, word reveal and karaoke, with punctuation-aware text estimates, Unicode grapheme handling, explicit Enhanced LRC anchors, repeated timestamps and instrumental gaps.
+- Natural phrase durations no longer stretch to fill the interval before the next lyric. Punctuation creates pauses, repeated vowels add a separate sung hold, and completed text stays still until the next line or an explicit empty timestamp.
+- Estimated speed (0.5–2×) is stored with projects, snapshots and JSON; explicit LRC onsets and terminal word timestamps remain fixed. The timing report distinguishes the sung window from the estimated trailing pause.
+- Word rhythm uses Italian and English pronunciation estimates, including elisions, contractions, silent vowels and common exceptions. Choose Automatic, Italian or English in Sync; this setting is independent of the interface language and survives projects, snapshots and undo/redo. Other scripts retain generic estimates.
+- Estimated tempo adapts to up to eight nearby valid lines of the same vocal role, with global/default fallback when fewer than three samples are available. Explicit empty boundaries, stretched vowels and inconsistent anchors are excluded from calibration. Short phrases still finish naturally instead of filling their slots. Without audio or per-word timestamps, timing remains approximate.
 - Channel-independent audio energy analysis guides estimated word boundaries without replacing explicit timestamps. It is not speech recognition or forced alignment; review estimated timings before exporting.
 - Starting the timeline at zero trims the same leading interval from preview and exported audio. Timing analysis reports dense lines and inconsistent word timestamps in the editor.
 - Normalizing or shifting editable rows preserves Enhanced LRC tags, millisecond word precision, metadata offsets and timestamp-only gap markers. Rewriting lyric text discards stale word anchors for that row.
@@ -49,6 +56,10 @@ node --test
 ```
 
 Manual release checks live in [tests/manual-checklist.md](tests/manual-checklist.md).
+
+For the browser timing regression check, run `node tests/natural-timing-browser.mjs` with Chrome installed. It uses an isolated temporary profile and checks rendering, palette holds, project persistence and preview/export frame parity.
+
+Additional browser checks: run `node tests/menu-browser.mjs` for first-use navigation, keyboard focus, translations, project recovery, audio/silent exports and responsive screenshots. Run `node tests/export-format-browser.mjs` to verify actual image/video dimensions. These checks use isolated temporary Chrome profiles.
 
 ## Media And Rights
 

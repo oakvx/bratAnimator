@@ -4,6 +4,33 @@ const core = require("../assets/js/core.js");
 const media = require("../assets/js/media.js");
 const exportHelpers = require("../assets/js/export.js");
 
+test("visual effects stay off in old projects and invalid values have safe bounds", () => {
+    const defaults = core.migrateProjectPayload({ version: 2 }).style.effects;
+    assert.equal(defaults.motionBlur, 0);
+    assert.equal(defaults.shake.mode, "off");
+    assert.equal(defaults.star.enabled, false);
+    const effects = core.normalizeVisualEffects({
+        motionBlur: Infinity,
+        shake: { mode: "invalid", intensity: -5, speed: NaN },
+        star: { enabled: true, points: 9, size: 10, speed: -3, x: -1, y: 9 }
+    });
+    assert.equal(effects.motionBlur, 0);
+    assert.deepEqual(effects.shake, { mode: "off", intensity: 0, speed: 1 });
+    assert.deepEqual(effects.star, { enabled: true, points: 4, size: 0.18, speed: 0, x: 0, y: 1 });
+});
+
+test("project and preset round trips preserve motion, shake and star settings", () => {
+    const effects = core.normalizeVisualEffects({
+        motionBlur: 0.7,
+        shake: { mode: "impact", intensity: 0.8, speed: 1.4 },
+        star: { enabled: true, points: 5, size: 0.12, speed: 0.6, x: 0.25, y: 0.75 }
+    });
+    const project = core.migrateProjectPayload(JSON.parse(JSON.stringify({ version: 4, style: { effects } })));
+    assert.deepEqual(project.style.effects, effects);
+    assert.deepEqual(core.buildPresetPayload(project).style.effects, effects);
+    assert.equal(project.version, 4);
+});
+
 test("parses standard LRC timestamps", () => {
     const rows = core.parseLRC("[00:01.20] first\n[00:03,40] second");
     assert.equal(rows.length, 2);
@@ -52,6 +79,38 @@ test("migrates legacy project payloads to v4", () => {
     assert.equal(migrated.style.backgroundFill.type, "solid");
     assert.equal(migrated.style.colorSwap.enabled, false);
     assert.equal(migrated.background.kind, "none");
+    assert.deepEqual(migrated.timing, { speed: 1, language: "auto" });
+});
+
+test("normalizes estimated timing speed with safe finite defaults", () => {
+    assert.deepEqual(core.normalizeTimingSettings(), { speed: 1, language: "auto" });
+    assert.deepEqual(core.normalizeTimingSettings(null), { speed: 1, language: "auto" });
+    assert.deepEqual(core.normalizeTimingSettings({ speed: 1.35 }), { speed: 1.35, language: "auto" });
+    assert.deepEqual(core.normalizeTimingSettings({ speed: 0.1 }), { speed: 0.5, language: "auto" });
+    assert.deepEqual(core.normalizeTimingSettings({ speed: 5 }), { speed: 2, language: "auto" });
+    for (const speed of [NaN, Infinity, -Infinity, "invalid"]) {
+        assert.deepEqual(core.normalizeTimingSettings({ speed }), { speed: 1, language: "auto" });
+    }
+});
+
+test("migrates timing settings without changing the v4 project schema", () => {
+    const migrated = core.migrateProjectPayload({ version: 4, timing: { speed: 3 } });
+    assert.equal(migrated.version, 4);
+    assert.deepEqual(migrated.timing, { speed: 2, language: "auto" });
+    const legacy = core.migrateProjectPayload({ version: 2 });
+    assert.deepEqual(legacy.timing, { speed: 1, language: "auto" });
+});
+
+test("normalizes and round-trips lyrics language independently of interface language", () => {
+    for (const language of ["auto", "it", "en"]) {
+        const project = core.migrateProjectPayload({ version: 4, language: "ru", timing: { speed: 1.25, language } });
+        const restored = core.migrateProjectPayload(JSON.parse(JSON.stringify(project)));
+        assert.deepEqual(restored.timing, { speed: 1.25, language });
+        assert.equal(restored.version, 4);
+    }
+    for (const language of [undefined, null, "ru", "IT", 1]) {
+        assert.equal(core.normalizeTimingSettings({ language }).language, "auto");
+    }
 });
 
 test("normalizes gradient and color swap settings", () => {
@@ -95,6 +154,7 @@ test("round-trips v4 project schema without binary blobs", () => {
     const payload = core.migrateProjectPayload({
         version: 3,
         lyrics: "[00:01.00] chorus",
+        timing: { speed: 1.45 },
         audio: {
             includeInExport: true,
             volume: 0.65,
@@ -138,12 +198,14 @@ test("round-trips v4 project schema without binary blobs", () => {
     assert.equal(roundTrip.metadata.trackName, "Track");
     assert.equal(roundTrip.background.assetId, "local-image");
     assert.equal(roundTrip.style.wordAnimation.mode, "color");
+    assert.deepEqual(roundTrip.timing, { speed: 1.45, language: "auto" });
     assert.equal(Object.hasOwn(roundTrip.audio, "blob"), false);
 });
 
 test("exports preset payloads without lyrics", () => {
     const preset = core.buildPresetPayload({
         lyrics: "[00:01.00] do not include",
+        timing: { speed: 1.8 },
         style: { bgColor: "#8ACE00" },
         formatPreset: "vertical"
     }, "mobile");
@@ -151,6 +213,7 @@ test("exports preset payloads without lyrics", () => {
     assert.equal(preset.name, "mobile");
     assert.equal(preset.formatPreset, "vertical");
     assert.equal(Object.hasOwn(preset, "lyrics"), false);
+    assert.equal(Object.hasOwn(preset, "timing"), false);
 });
 
 test("preset payload carries style, format, and background settings", () => {

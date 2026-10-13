@@ -33,6 +33,14 @@
         };
     }
 
+    function normalizeTimingSettings(timing = {}) {
+        const speed = Number(timing?.speed ?? 1);
+        return {
+            speed: Number.isFinite(speed) ? clamp(speed, 0.5, 2) : 1,
+            language: ["it", "en"].includes(timing?.language) ? timing.language : "auto"
+        };
+    }
+
     function shouldSwapPalette(swap, stepIndex) {
         const normalized = normalizeColorSwap(swap);
         if (!normalized.enabled) return false;
@@ -310,12 +318,39 @@
         };
     }
 
+    function normalizeVisualEffects(value) {
+        const effects = value && typeof value === "object" ? value : {};
+        const shake = effects.shake || {};
+        const star = effects.star || {};
+        const number = (input, fallback, min, max) => {
+            const parsed = Number(input ?? fallback);
+            return Number.isFinite(parsed) ? clamp(parsed, min, max) : fallback;
+        };
+        return {
+            motionBlur: number(effects.motionBlur, 0, 0, 1),
+            shake: {
+                mode: ["off", "soft", "impact", "sway"].includes(shake.mode) ? shake.mode : "off",
+                intensity: number(shake.intensity, 0.35, 0, 1),
+                speed: number(shake.speed, 1, 0.25, 3)
+            },
+            star: {
+                enabled: star.enabled === true,
+                points: Number(star.points) === 5 ? 5 : 4,
+                size: number(star.size, 0.07, 0.02, 0.18),
+                speed: number(star.speed, 0.25, 0, 1.5),
+                x: number(star.x, 0.84, 0, 1),
+                y: number(star.y, 0.18, 0, 1)
+            }
+        };
+    }
+
     function migrateProjectPayload(payload) {
         const source = payload && typeof payload === "object" ? payload : {};
         const style = {
             ...(source.style || {}),
             backgroundFill: normalizeBackgroundFill(source.style?.backgroundFill),
             colorSwap: normalizeColorSwap(source.style?.colorSwap),
+            effects: normalizeVisualEffects(source.style?.effects),
             wordAnimation: {
                 mode: source.style?.wordAnimation?.mode || "progress",
                 intensity: clamp(Number(source.style?.wordAnimation?.intensity ?? 0.7), 0, 1),
@@ -332,6 +367,7 @@
             audio: defaultAudioSettings(source),
             metadata: defaultMetadata(source),
             background: defaultBackground(source),
+            timing: normalizeTimingSettings(source.timing),
             style
         };
     }
@@ -360,6 +396,8 @@
         clamp,
         normalizeBackgroundFill,
         normalizeColorSwap,
+        normalizeTimingSettings,
+        normalizeVisualEffects,
         shouldSwapPalette,
         normalizeLRCText,
         parseTimeTag,

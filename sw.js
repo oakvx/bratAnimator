@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v4-timing-3";
+const CACHE_NAME = "brat-animator-v4-word-rhythm-1";
 const APP_ASSETS = [
   "./",
   "./index.html",

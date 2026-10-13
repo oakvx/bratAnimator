@@ -244,639 +244,1486 @@
 </head>
 
 <body>
-    <a class="skip-link" href="#editor">skip to editor</a>
-    <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
-
-    <header class="topbar main-menu-v4" aria-label="main menu">
-        <a class="menu-brand" href="#editor" aria-label="Brat Animator editor">
+    <a class="skip-link" href="#editor">
+        skip to editor
+    </a>
+    <noscript>
+        This app requires JavaScript to parse LRC lyrics and export videos.
+    </noscript>
+    <header aria-label="main menu" class="topbar main-menu-v4">
+        <a aria-label="Brat Animator editor" class="menu-brand" href="#editor">
             <span class="menu-brand-copy">
-                <strong>brat animator</strong>
-                <span>4.0</span>
+                <strong>
+                    brat animator
+                </strong>
+                <span>
+                    4.0
+                </span>
             </span>
         </a>
-
-        <nav class="menu-command-group" aria-label="editor commands">
-            <button id="togglePanelBtn" class="chip" data-i18n="controls" aria-controls="panel" aria-expanded="true">controls</button>
-            <button id="loadDemoBtn" class="chip" data-i18n="loadDemo">load demo</button>
-            <button id="commandPaletteBtn" class="chip command-trigger" type="button" aria-haspopup="dialog" aria-controls="commandPalette">commands <kbd>Ctrl K</kbd></button>
-            <button id="tutorialBtn" class="chip" type="button">help</button>
+        <nav aria-label="editor commands" class="menu-command-group">
+            <button aria-controls="panel" aria-expanded="true" class="chip" data-i18n="controls" id="togglePanelBtn">
+                controls
+            </button>
+            <button class="chip" data-i18n="help" id="tutorialBtn" type="button">
+                Help
+            </button>
         </nav>
-        <div class="menu-spacer" aria-hidden="true"></div>
-        <div class="footer-controls menu-command-group theme-switch" aria-label="theme controls">
-            <button id="bgBtn">green</button>
-            <button id="darkBtn">dark</button>
+        <div aria-hidden="true" class="menu-spacer">
         </div>
-        <div class="lang-switch menu-command-group" aria-label="language selector">
-            <button class="chip lang-btn" data-lang="en" aria-label="English">EN</button>
-            <button class="chip lang-btn" data-lang="ru" aria-label="Русский">RU</button>
-            <button class="chip lang-btn" data-lang="zh" aria-label="中文">ZH</button>
-        </div>
-        <a id="permissionLink" class="chip link-chip" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">request permission</a>
+        <details class="more-menu" id="moreMenu">
+            <summary data-i18n="more">
+                More
+            </summary>
+            <div class="more-menu-content">
+                <span class="utility-label" data-i18n="language">
+                    Language
+                </span>
+                <div aria-label="language selector" class="lang-switch menu-command-group">
+                    <button aria-label="English" class="chip lang-btn" data-lang="en">
+                        EN
+                    </button>
+                    <button aria-label="Русский" class="chip lang-btn" data-lang="ru">
+                        RU
+                    </button>
+                    <button aria-label="中文" class="chip lang-btn" data-lang="zh">
+                        ZH
+                    </button>
+                </div>
+                <button aria-controls="commandPalette" aria-haspopup="dialog" class="chip command-trigger" data-i18n="findCommand" id="commandPaletteBtn" type="button">
+                    Find a command · Ctrl K
+                </button>
+                <a class="chip link-chip" data-i18n="requestPermission" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" id="permissionLink">
+                    request permission
+                </a>
+            </div>
+        </details>
     </header>
-
-    <div id="panel" class="panel" aria-label="editor controls">
+    <div aria-label="editor controls" class="panel" id="panel">
         <div class="panel-header">
             <div>
-                <h1 data-i18n="panelTitle">brat lyric video editor</h1>
+                <h1 data-i18n="panelTitle">
+                    brat lyric video editor
+                </h1>
                 <p data-i18n="panelIntro">
                     Search a song on LRCLIB, paste or load LRC lyrics, use cleared audio/video for timing,
                     and optionally merge extracted audio into the final export.
                 </p>
             </div>
-            <span class="autosave-pill" id="autosaveBadge">autosaved</span>
+            <span class="autosave-pill compact-save-status" data-i18n="autosaved" id="autosaveBadge">
+                autosaved
+            </span>
         </div>
-
-        <div id="recoveryBanner" class="recovery-banner hidden" role="status">
-            <span data-i18n="recoveryText">autosaved project restored in this browser</span>
-            <button id="recoveryKeepBtn" type="button" data-i18n="recoveryKeep">keep</button>
-            <button id="recoveryDiscardBtn" type="button" data-i18n="recoveryDiscard">discard</button>
+        <div class="recovery-banner hidden" id="recoveryBanner" role="status">
+            <span data-i18n="recoveryText">
+                autosaved project restored in this browser
+            </span>
+            <button data-i18n="recoveryKeep" id="recoveryKeepBtn" type="button">
+                keep
+            </button>
+            <button data-i18n="recoveryDiscard" id="recoveryDiscardBtn" type="button">
+                discard
+            </button>
         </div>
-
-        <div class="project-status-bar" aria-label="project status">
-            <div><span>duration</span><strong id="statusDuration">0.00s</strong></div>
-            <div><span>format</span><strong id="statusFormat">1080×1080</strong></div>
-            <div><span>fps</span><strong id="statusFps">30</strong></div>
-            <div><span>lines</span><strong id="statusLines">0</strong></div>
+        <div aria-label="project status" class="project-status-bar">
+            <div>
+                <span>
+                    duration
+                </span>
+                <strong id="statusDuration">
+                    0.00s
+                </strong>
+            </div>
+            <div>
+                <span>
+                    format
+                </span>
+                <strong id="statusFormat">
+                    1080×1080
+                </strong>
+            </div>
+            <div>
+                <span>
+                    fps
+                </span>
+                <strong id="statusFps">
+                    30
+                </strong>
+            </div>
+            <div>
+                <span>
+                    lines
+                </span>
+                <strong id="statusLines">
+                    0
+                </strong>
+            </div>
         </div>
-
-        <nav class="editor-tabs" aria-label="editor sections" role="tablist">
-            <button id="tab-lyrics" class="editor-tab active" data-open-tab="lyrics" type="button" role="tab" aria-selected="true" aria-controls="section-lyrics"><span>1</span> lyrics</button>
-            <button id="tab-timing" class="editor-tab" data-open-tab="timing" type="button" role="tab" aria-selected="false" aria-controls="section-timing"><span>2</span> timing</button>
-            <button id="tab-design" class="editor-tab" data-open-tab="design" type="button" role="tab" aria-selected="false" aria-controls="section-design"><span>3</span> design</button>
-            <button id="tab-canvas" class="editor-tab" data-open-tab="canvas" type="button" role="tab" aria-selected="false" aria-controls="section-canvas"><span>4</span> canvas</button>
-            <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export"><span>5</span> export</button>
-            <button id="tab-project" class="editor-tab" data-open-tab="project" type="button" role="tab" aria-selected="false" aria-controls="section-project"><span>6</span> project</button>
+        <nav aria-label="editor sections" class="editor-tabs" role="tablist">
+            <button aria-controls="section-lyrics" aria-selected="true" class="editor-tab active" data-open-tab="lyrics" id="tab-lyrics" role="tab" type="button">
+                <span aria-hidden="true" class="step-number">
+                    1
+                </span>
+                <span class="tab-label" data-i18n="tabText">
+                    Text
+                </span>
+            </button>
+            <button aria-controls="section-timing" aria-selected="false" class="editor-tab" data-open-tab="timing" id="tab-timing" role="tab" type="button">
+                <span aria-hidden="true" class="step-number">
+                    2
+                </span>
+                <span class="tab-label" data-i18n="tabSync">
+                    Sync
+                </span>
+            </button>
+            <button aria-controls="section-design" aria-selected="false" class="editor-tab" data-open-tab="design" id="tab-design" role="tab" type="button">
+                <span aria-hidden="true" class="step-number">
+                    3
+                </span>
+                <span class="tab-label" data-i18n="tabAppearance">
+                    Appearance
+                </span>
+            </button>
+            <button aria-controls="section-export" aria-selected="false" class="editor-tab" data-open-tab="export" id="tab-export" role="tab" type="button">
+                <span aria-hidden="true" class="step-number">
+                    4
+                </span>
+                <span class="tab-label" data-i18n="tabDownload">
+                    Export
+                </span>
+            </button>
+            <button aria-controls="section-project" aria-selected="false" class="editor-tab project-tab" data-open-tab="project" id="tab-project" role="tab" type="button">
+                <span class="tab-label" data-i18n="tabProject">
+                    Project
+                </span>
+            </button>
         </nav>
-
-        <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
-            <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
-            <label class="label" for="searchQueryInput" data-i18n="searchSongLabel">search LRCLIB or paste YouTube link</label>
-            <input id="searchQueryInput" type="text" placeholder="artist - title or YouTube link" data-i18n-placeholder="searchPlaceholder" />
-            <p class="mini-copy">Use artist/title for lyrics, or paste a YouTube link to load the video preview. Audio can come from an uploaded audio/video file or a permitted direct media URL.</p>
-
-            <div class="row">
-                <button id="searchSongBtn" class="primary" data-i18n="search">search / load</button>
-                <button id="clearResultsBtn" data-i18n="clearResults">clear results</button>
+        <div aria-labelledby="tab-lyrics" class="section editor-section active" data-editor-tab="lyrics" id="section-lyrics" role="tabpanel">
+            <div class="section-heading">
+                <h2 data-i18n="textTitle">
+                    Add your lyrics
+                </h2>
+                <p data-i18n="textIntro">
+                    Search for a song, import an LRC file, or paste lyrics with timestamps.
+                </p>
             </div>
-
-            <div id="searchStatus" class="meta muted" data-status-key="noSearch">no search yet</div>
-            <div id="lrclibResults" class="results"></div>
-        </div>
-
-        <div id="section-timing" class="section editor-section" data-editor-tab="timing" role="tabpanel" aria-labelledby="tab-timing">
-            <div class="section-title" data-i18n="lyricsTiming">lyrics and timing</div>
-
-            <label class="label" for="lyricsInput" data-i18n="lrcText">LRC lyrics</label>
-            <textarea id="lyricsInput" spellcheck="false" placeholder="[00:21.62] y dime que me amas, aunque
-[00:24.48] no lo digas con palabras
-[00:27.28] yo sé que en esa pausa también hay algo"></textarea>
-            <div id="lrcDropZone" class="drop-zone" tabindex="0" role="button" data-i18n="dropLrc">
-                Drop a .lrc file here or click to load lyrics
-            </div>
-
-            <div class="tool-strip" aria-label="LRC tools">
-                <button id="cleanLrcBtn">clean LRC</button>
-                <button id="normalizeLrcBtn">normalize timestamps</button>
-                <button id="shiftBackBtn">shift -0.50s</button>
-                <button id="shiftForwardBtn">shift +0.50s</button>
-                <button id="undoBtn" type="button">undo</button>
-                <button id="redoBtn" type="button">redo</button>
-                <button id="copyLrcBtn" type="button">copy LRC</button>
-                <button id="starterLrcBtn" type="button">starter LRC</button>
-            </div>
-
-            <details class="advanced-block" open>
-                <summary>visual LRC editor</summary>
-                <label class="label" for="lrcSearchInput">search lyric</label>
-                <input id="lrcSearchInput" type="search" placeholder="filter visible lines" />
-                <div class="editor-toolbar">
-                    <button id="refreshEditorBtn">refresh rows</button>
-                    <button id="applyEditorBtn" class="primary">apply rows to LRC</button>
-                    <button id="addLrcRowBtn">+ add line</button>
-                    <button id="syncCurrentRowBtn">sync selected to playhead</button>
-                    <button id="splitLrcRowBtn" type="button">split</button>
-                    <button id="mergeLrcRowBtn" type="button">merge next</button>
-                    <button id="moveLrcUpBtn" type="button">move up</button>
-                    <button id="moveLrcDownBtn" type="button">move down</button>
-                    <button id="duplicateLrcRowBtn" type="button">duplicate</button>
-                    <button id="playSelectedRowBtn" type="button">play lyric</button>
-                </div>
-                <div class="editor-toolbar timing-toolbar">
-                    <label>offset <input id="timingOffsetInput" type="number" step="0.05" value="0.50" /></label>
-                    <button id="shiftSelectedBackBtn" type="button">selected -</button>
-                    <button id="shiftSelectedForwardBtn" type="button">selected +</button>
-                    <button id="shiftAllByInputBtn" type="button">shift all</button>
-                </div>
-                <div id="lrcRows" class="lrc-rows" aria-live="polite"></div>
-            </details>
-
-            <details class="advanced-block">
-                <summary>tap to sync</summary>
-                <p class="mini-copy">Paste plain lyrics, start the timer, then press SPACE or “tap next line” when each lyric begins. The tool writes LRC timestamps automatically.</p>
-                <textarea id="plainLyricsInput" class="compact-textarea" spellcheck="false" placeholder="one lyric line per row"></textarea>
-                <div class="tool-strip">
-                    <button id="startTapSyncBtn">start tap sync</button>
-                    <button id="tapNextLineBtn" class="primary">tap next line</button>
-                    <button id="finishTapSyncBtn">finish to LRC</button>
-                </div>
-                <div id="tapSyncStatus" class="meta muted">tap sync idle</div>
-            </details>
-
-            <label class="label" for="audioFileInput" data-i18n="optionalAudio">optional audio/video for timing analysis</label>
-            <input id="audioFileInput" type="file" accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.mp4,.mov,.m4v,.webm" />
-            <div id="audioDropZone" class="drop-zone" tabindex="0" role="button" data-i18n="dropAudio">
-                Drop an audio or video file here to extract audio
-            </div>
-            <div class="audio-url-row">
-                <label class="label" for="audioUrlInput">audio/video URL</label>
-                <div class="row">
-                    <input id="audioUrlInput" type="url" placeholder="https://example.com/cleared-media.mp4" />
-                    <button id="loadAudioUrlBtn" type="button">load media URL</button>
-                </div>
-                <p class="mini-copy">Use a direct CORS-enabled audio/video file you have permission to use. YouTube links stay preview-only and are not downloaded.</p>
-            </div>
-            <div id="audioStatus" class="meta muted" data-status-key="noAudio">no audio loaded</div>
-            <div id="syncMediaMount" class="sync-media-mount hidden"></div>
-            <canvas id="waveformCanvas" class="waveform-canvas" width="900" height="120" aria-label="audio waveform"></canvas>
-            <canvas id="timelineCanvas" class="timeline-canvas" width="900" height="92" aria-label="lyric timeline"></canvas>
-
-            <div class="inline-toggle">
-                <label><input id="useAudioTimingCheckbox" type="checkbox" checked /> <span data-i18n="useAudioTiming">use audio to improve timing</span></label>
-            </div>
-
-            <div class="inline-toggle">
-                <label><input id="startFromZeroCheckbox" type="checkbox" /> <span data-i18n="startFromZero">start timeline from 0:00</span></label>
-            </div>
-
-            <div class="row">
-                <button id="clearSavedBtn" data-i18n="clearSaved">clear saved project</button>
-            </div>
-
-            <div class="row">
-                <button id="startBtn" class="primary" data-i18n="start">start</button>
-                <button id="playPauseBtn" data-i18n="play" aria-pressed="false">play</button>
-                <button id="restartBtn" data-i18n="restart">restart</button>
-                <button id="resetBtn" data-i18n="reset">reset</button>
-            </div>
-
-            <div id="meta" class="meta">0 lines • 0 blocks • 0.00s timeline</div>
-            <div id="timingReport" class="timing-report" hidden>
-                <p id="timingAnalysis"></p>
-                <ul id="timingWarnings" hidden></ul>
-            </div>
-        </div>
-
-        <div id="section-design" class="section editor-section" data-editor-tab="design" role="tabpanel" aria-labelledby="tab-design">
-            <div class="section-title">style and animation</div>
-            <div class="row">
-                <div>
-                    <label class="label" for="themePresetSelect">style preset</label>
-                    <select id="themePresetSelect">
-                        <option value="classic" selected>brat classic</option>
-                        <option value="dark-green">dark green</option>
-                        <option value="white-label">white label</option>
-                        <option value="pink">pink</option>
-                        <option value="blue">blue</option>
-                        <option value="beautiful-lyrics">cinematic</option>
-                        <option value="custom">custom</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="label" for="animationModeSelect">animation</label>
-                    <select id="animationModeSelect">
-                        <option value="typewriter" selected>typewriter</option>
-                        <option value="word">word by word</option>
-                        <option value="letter-chunks">letter chunks</option>
-                        <option value="phrase">phrase by phrase</option>
-                        <option value="line">full line</option>
-                        <option value="fade">fade in</option>
-                        <option value="jitter">jitter</option>
-                        <option value="pulse">pulse</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="label" for="lyricsDisplayModeSelect">lyrics display</label>
-                    <select id="lyricsDisplayModeSelect">
-                        <option value="brat" selected>brat canvas</option>
-                        <option value="music">music synced scroll</option>
-                        <option value="beautiful">cinematic scroll</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="mode-note" id="musicModeNote">
-                Enhanced LRC word timestamps are used when available. Standard LRC timing is interpolated automatically.
-            </div>
-
-            <div class="row color-row">
-                <div>
-                    <label class="label" for="bgColorInput">background</label>
-                    <input id="bgColorInput" type="color" value="#8ACE00" />
-                </div>
-                <div>
-                    <label class="label" for="textColorInput">text</label>
-                    <input id="textColorInput" type="color" value="#000000" />
-                </div>
-                <div>
-                    <label class="label" for="fontFamilySelect">font</label>
-                    <select id="fontFamilySelect">
-                        <option value="Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif" selected>Arial Narrow</option>
-                        <option value='"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", system-ui, sans-serif'>Apple / SF Pro</option>
-                        <option value="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">System UI</option>
-                        <option value="Arial, Helvetica, sans-serif">Arial</option>
-                        <option value="Impact, Haettenschweiler, Arial Narrow Bold, sans-serif">Impact</option>
-                        <option value="Georgia, serif">Georgia</option>
-                        <option value="Courier New, monospace">Courier New</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="contrast-tool">
-                <div>
-                    <span class="contrast-kicker">accessibility check</span>
-                    <strong id="contrastRatio">contrast 1.00:1</strong>
-                    <p id="contrastStatus">Choose readable text for the current background.</p>
-                </div>
-                <button id="autoContrastBtn" type="button">auto contrast</button>
-            </div>
-
-            <div class="effect-settings-grid">
-                <fieldset class="effect-setting">
-                    <legend>background fill</legend>
-                    <label class="label" for="backgroundFillTypeSelect">fill type</label>
-                    <select id="backgroundFillTypeSelect">
-                        <option value="solid" selected>solid color</option>
-                        <option value="linear">linear gradient</option>
-                        <option value="radial">radial gradient</option>
-                    </select>
-                    <div id="gradientOptions" class="gradient-options" hidden>
-                        <div>
-                            <label class="label" for="gradientColorInput">second color</label>
-                            <input id="gradientColorInput" type="color" value="#315f4b" />
-                        </div>
-                        <div>
-                            <label class="label" for="gradientAngleInput">angle</label>
-                            <input id="gradientAngleInput" type="range" min="0" max="360" value="135" />
+            <details class="lyrics-picker" id="lyricsPicker" open="">
+                <summary data-i18n="chooseLyrics" id="lyricsPickerSummary">
+                    Choose lyrics
+                </summary>
+                <div class="lyrics-picker-content">
+                    <div class="welcome-card" id="welcomeCard">
+                        <strong data-i18n="welcomeTitle">
+                            Your first lyric video starts here
+                        </strong>
+                        <p data-i18n="welcomeBody">
+                            Try an example to see how text, style and playback work together.
+                        </p>
+                        <div class="row">
+                            <button class="primary" data-i18n="tryExample" id="welcomeExampleBtn" type="button">
+                                Try an example
+                            </button>
+                            <button data-i18n="quickGuide" id="welcomeGuideBtn" type="button">
+                                Quick guide
+                            </button>
+                            <button data-i18n="dismissWelcome" id="dismissWelcomeBtn" type="button">
+                                Got it
+                            </button>
                         </div>
                     </div>
-                </fieldset>
-
-                <fieldset class="effect-setting">
-                    <legend>color exchange</legend>
-                    <label class="inline-toggle" for="colorSwapEnabledCheckbox">
-                        <input id="colorSwapEnabledCheckbox" type="checkbox" aria-describedby="colorSwapHint" />
-                        swap text and background
+                    <label class="label" data-i18n="searchSongLabel" for="searchQueryInput">
+                        Find a song by artist and title
                     </label>
-                    <div id="colorSwapOptions" class="swap-options">
+                    <input aria-describedby="searchStatus" data-i18n-placeholder="searchPlaceholder" id="searchQueryInput" placeholder="artist - song title" type="text"/>
+                    <div class="row">
+                        <button class="primary" data-i18n="search" id="searchSongBtn">
+                            search / load
+                        </button>
+                        <button data-i18n="clearResults" id="clearResultsBtn">
+                            clear results
+                        </button>
+                        <button class="chip" data-i18n="tryExample" id="loadDemoBtn" type="button">
+                            Try an example
+                        </button>
+                    </div>
+                    <div aria-live="polite" class="meta muted" data-status-key="noSearch" id="searchStatus" role="status">
+                        no search yet
+                    </div>
+                    <button data-i18n="useReference" hidden="" id="useReferenceBtn" type="button">
+                        Use as a video reference
+                    </button>
+                    <div class="results" id="lrclibResults">
+                    </div>
+                    <div class="drop-zone" data-i18n="dropLrc" id="lrcDropZone" role="button" tabindex="0">
+                        Drop a .lrc file here or click to load lyrics
+                    </div>
+                </div>
+            </details>
+            <section aria-label="Lyrics editor" class="lyrics-source-editor">
+                <label class="label" data-i18n="lrcText" for="lyricsInput">
+                    Lyrics with timestamps (LRC)
+                </label>
+                <textarea aria-describedby="lyricsHelp lyricsError" id="lyricsInput" placeholder="[00:21.62] y dime que me amas, aunque
+[00:24.48] no lo digas con palabras
+[00:27.28] yo sé que en esa pausa también hay algo" rows="18" spellcheck="false"></textarea>
+                <p class="mini-copy" data-i18n="lyricsHelp" id="lyricsHelp">
+                    LRC means lyrics with timestamps, for example [00:01.20] Hello. For plain text, use manual sync in Sync.
+                </p>
+                <button data-i18n="manualSync" id="manualSyncLinkBtn" type="button">
+                    Sync plain text manually
+                </button>
+                <p class="field-error" hidden="" id="lyricsError" role="alert">
+                </p>
+                <section class="lyrics-text-tools">
+                    <h3 data-i18n="advancedText">
+                        Text editing tools
+                    </h3>
+                    <div class="tool-strip">
+                        <button data-i18n="cleanText" id="cleanLrcBtn">
+                            Remove empty lines
+                        </button>
+                        <button data-i18n="normalizeTimes" id="normalizeLrcBtn">
+                            Sort and normalize times
+                        </button>
+                        <button data-i18n="copyLyrics" id="copyLrcBtn" type="button">
+                            Copy timed lyrics
+                        </button>
+                        <button data-i18n="starterText" id="starterLrcBtn" type="button">
+                            Generate example lyrics
+                        </button>
+                    </div>
+                    <button data-i18n="openLineEditor" data-navigate-tab="timing" type="button">
+                        Open the line editor
+                    </button>
+                </section>
+            </section>
+        </div>
+        <div aria-labelledby="tab-timing" class="section editor-section" data-editor-tab="timing" id="section-timing" role="tabpanel">
+            <div class="section-heading">
+                <h2 data-i18n="syncTitle">
+                    Match the lyrics to your song
+                </h2>
+                <p data-i18n="syncIntro">
+                    Audio is optional. Load a file to listen and adjust when each phrase begins.
+                </p>
+            </div>
+            <div class="tool-strip">
+                <button data-i18n="advanceAll" id="shiftBackBtn">
+                    All lyrics 0.5s earlier
+                </button>
+                <button data-i18n="delayAll" id="shiftForwardBtn">
+                    All lyrics 0.5s later
+                </button>
+            </div>
+            <section class="line-editor">
+                <h3 data-i18n="lineEditorTitle">
+                    Lyrics and start times
+                </h3>
+                <label class="label" data-i18n="findPhrase" for="lrcSearchInput">
+                    Find a phrase
+                </label>
+                <input id="lrcSearchInput" placeholder="filter visible lines" type="search"/>
+                <p class="mini-copy" data-i18n="lineEditorHelp">
+                    Edit a time or phrase; changes are saved when you leave the field.
+                </p>
+                <div class="editor-toolbar">
+                    <button data-i18n="addLine" id="addLrcRowBtn">
+                        Add a phrase
+                    </button>
+                    <button class="primary" data-i18n="applyChanges" id="applyEditorBtn">
+                        Apply changes
+                    </button>
+                    <button data-i18n="undo" id="undoBtn" type="button">
+                        Undo
+                    </button>
+                    <button data-i18n="redo" id="redoBtn" type="button">
+                        Redo
+                    </button>
+                </div>
+                <section class="line-editing-tools">
+                    <h4 data-i18n="advancedRows">
+                        Line editing tools
+                    </h4>
+                    <div class="editor-toolbar">
+                        <button data-i18n="refreshRows" id="refreshEditorBtn">
+                            Reload phrases
+                        </button>
+                        <button data-i18n="syncToPlayhead" id="syncCurrentRowBtn">
+                            Set selected time to playhead
+                        </button>
+                        <button data-i18n="splitPhrase" id="splitLrcRowBtn" type="button">
+                            Split phrase
+                        </button>
+                        <button data-i18n="mergePhrase" id="mergeLrcRowBtn" type="button">
+                            Merge with next
+                        </button>
+                        <button data-i18n="moveUp" id="moveLrcUpBtn" type="button">
+                            Move up
+                        </button>
+                        <button data-i18n="moveDown" id="moveLrcDownBtn" type="button">
+                            Move down
+                        </button>
+                        <button data-i18n="duplicatePhrase" id="duplicateLrcRowBtn" type="button">
+                            Duplicate phrase
+                        </button>
+                        <button data-i18n="playPhrase" id="playSelectedRowBtn" type="button">
+                            Play selected phrase
+                        </button>
+                    </div>
+                    <div class="editor-toolbar timing-toolbar">
+                        <label>
+                            offset
+                            <input id="timingOffsetInput" step="0.05" type="number" value="0.50"/>
+                        </label>
+                        <button data-i18n="advanceSelected" id="shiftSelectedBackBtn" type="button">
+                            Selected phrases earlier
+                        </button>
+                        <button data-i18n="delaySelected" id="shiftSelectedForwardBtn" type="button">
+                            Selected phrases later
+                        </button>
+                        <button data-i18n="shiftAll" id="shiftAllByInputBtn" type="button">
+                            Shift all phrases
+                        </button>
+                    </div>
+                </section>
+                <div aria-live="polite" class="lrc-rows" id="lrcRows">
+                </div>
+            </section>
+            <label class="label" data-i18n="optionalAudio" for="audioFileInput">
+                Audio or video file (optional)
+            </label>
+            <input accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.mp4,.mov,.m4v,.webm" id="audioFileInput" type="file"/>
+            <div class="drop-zone" data-i18n="dropAudio" id="audioDropZone" role="button" tabindex="0">
+                Drop an audio or video file here to extract audio
+            </div>
+            <div aria-live="polite" class="meta muted" data-status-key="noAudio" id="audioStatus" role="status">
+                no audio loaded
+            </div>
+            <div class="sync-media-mount hidden" id="syncMediaMount">
+            </div>
+            <canvas aria-label="audio waveform" class="waveform-canvas" height="120" id="waveformCanvas" width="900">
+            </canvas>
+            <canvas aria-label="lyric timeline" class="timeline-canvas" height="92" id="timelineCanvas" width="900">
+            </canvas>
+            <details class="advanced-block" id="advancedSyncDetails">
+                <summary data-i18n="advancedSync">
+                    Advanced sync and references
+                </summary>
+                <details class="advanced-block" id="manualSyncDetails">
+                    <summary data-i18n="manualSync">
+                        Sync plain text manually
+                    </summary>
+                    <p class="mini-copy" data-i18n="manualSyncHelp">
+                        Paste one phrase per line, start the timer, then tap when each phrase begins. Finish to add timestamps.
+                    </p>
+                    <textarea class="compact-textarea" id="plainLyricsInput" placeholder="one lyric line per row" spellcheck="false"></textarea>
+                    <div class="tool-strip">
+                        <button data-i18n="startManualSync" id="startTapSyncBtn">
+                            Start timer
+                        </button>
+                        <button class="primary" data-i18n="tapNext" id="tapNextLineBtn">
+                            Tap next phrase
+                        </button>
+                        <button data-i18n="finishManualSync" id="finishTapSyncBtn">
+                            Finish and use lyrics
+                        </button>
+                    </div>
+                    <div class="meta muted" id="tapSyncStatus">
+                        tap sync idle
+                    </div>
+                </details>
+                <div class="audio-url-row">
+                    <label class="label" for="audioUrlInput">
+                        audio/video URL
+                    </label>
+                    <div class="row">
+                        <input id="audioUrlInput" placeholder="https://example.com/cleared-media.mp4" type="url"/>
+                        <button data-i18n="loadMediaUrl" id="loadAudioUrlBtn" type="button">
+                            Load media URL
+                        </button>
+                    </div>
+                    <p class="mini-copy">
+                        Use a direct CORS-enabled audio/video file you have permission to use. YouTube links stay preview-only and are not downloaded.
+                    </p>
+                </div>
+                <details class="advanced-block" id="referenceDetails">
+                    <summary data-i18n="referenceTitle">
+                        YouTube reference · preview only
+                    </summary>
+                    <p class="mini-copy" data-i18n="referenceHelp">
+                        This video is only a reference. To include sound in your download, load an audio or video file above.
+                    </p>
+                    <label class="label" data-i18n="youtubeLink" for="youtubeUrlInput">
+                        YouTube link
+                    </label>
+                    <div class="row">
+                        <input aria-describedby="youtubeStatus" id="youtubeUrlInput" placeholder="https://www.youtube.com/watch?v=…" type="url"/>
+                        <button data-i18n="loadReference" id="loadYoutubeBtn" type="button">
+                            Load reference
+                        </button>
+                    </div>
+                    <div class="meta muted" data-status-key="noVideo" id="youtubeStatus">
+                        no video loaded
+                    </div>
+                    <div class="yt-grid" id="youtubeResults">
+                    </div>
+                </details>
+                <div class="inline-toggle">
+                    <label>
+                        <input checked="" id="useAudioTimingCheckbox" type="checkbox"/>
+                        <span data-i18n="useAudioTiming">
+                            use audio to improve timing
+                        </span>
+                    </label>
+                </div>
+                <div class="field">
+                    <label class="label" data-i18n="timingLanguage" for="timingLanguageSelect">Lyrics language</label>
+                    <select aria-describedby="timingLanguageHelp" id="timingLanguageSelect">
+                        <option data-i18n="timingLanguageAuto" value="auto">Automatic · Italian / English</option>
+                        <option data-i18n="timingLanguageItalian" value="it">Italian</option>
+                        <option data-i18n="timingLanguageEnglish" value="en">English</option>
+                    </select>
+                    <p class="mini-copy" data-i18n="timingLanguageHelp" id="timingLanguageHelp">Used to estimate word rhythm. Explicit timestamps stay fixed; other scripts use generic estimates.</p>
+                </div>
+                <div class="timing-speed">
+                    <div class="timing-speed-label">
+                        <label class="label" data-i18n="timingSpeed" for="timingSpeedInput">
+                            estimated speed
+                        </label>
+                        <output for="timingSpeedInput" id="timingSpeedValue">
+                            1.00×
+                        </output>
+                    </div>
+                    <input aria-describedby="timingSpeedHelp" id="timingSpeedInput" max="2" min="0.5" step="0.05" type="range" value="1"/>
+                    <p class="mini-copy" data-i18n="timingSpeedHelp" id="timingSpeedHelp">
+                        Adjust estimated sung speed; explicit LRC timestamps stay fixed.
+                    </p>
+                </div>
+                <div class="inline-toggle">
+                    <label>
+                        <input id="startFromZeroCheckbox" type="checkbox"/>
+                        <span data-i18n="startFromZero">
+                            start timeline from 0:00
+                        </span>
+                    </label>
+                </div>
+                <div class="meta" id="meta">
+                    0 lines • 0 blocks • 0.00s timeline
+                </div>
+                <div class="timing-report" hidden="" id="timingReport">
+                    <p id="timingAnalysis">
+                    </p>
+                    <p class="mini-copy" data-i18n="timingEstimateHelp">
+                        Text-based pauses are estimates, not confirmed instrumental sections.
+                    </p>
+                    <ul hidden="" id="timingWarnings">
+                    </ul>
+                </div>
+            </details>
+        </div>
+        <div aria-labelledby="tab-design" class="section editor-section" data-editor-tab="design" id="section-design" role="tabpanel">
+            <div class="section-heading">
+                <h2 data-i18n="appearanceTitle">
+                    Make it yours
+                </h2>
+                <p data-i18n="appearanceIntro">
+                    Choose a style and video shape. Watch the preview update as you change them.
+                </p>
+            </div>
+            <div class="row">
+                <div>
+                    <label class="label" data-i18n="stylePreset" for="themePresetSelect">
+                        Style preset
+                    </label>
+                    <select id="themePresetSelect">
+                        <option selected="" value="classic">
+                            brat classic
+                        </option>
+                        <option value="dark-green">
+                            dark green
+                        </option>
+                        <option value="white-label">
+                            white label
+                        </option>
+                        <option value="pink">
+                            pink
+                        </option>
+                        <option value="blue">
+                            blue
+                        </option>
+                        <option value="beautiful-lyrics">
+                            cinematic
+                        </option>
+                        <option value="custom">
+                            custom
+                        </option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label" data-i18n="animationLabel" for="animationModeSelect">
+                        Animation
+                    </label>
+                    <select id="animationModeSelect">
+                        <option selected="" value="typewriter">
+                            typewriter
+                        </option>
+                        <option value="word">
+                            word by word
+                        </option>
+                        <option value="letter-chunks">
+                            letter chunks
+                        </option>
+                        <option value="phrase">
+                            phrase by phrase
+                        </option>
+                        <option value="line">
+                            full line
+                        </option>
+                        <option value="fade">
+                            fade in
+                        </option>
+                        <option value="jitter">
+                            jitter
+                        </option>
+                        <option value="pulse">
+                            pulse
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div aria-label="Style presets" class="footer-controls menu-command-group theme-switch">
+                <button data-i18n="greenPreset" id="bgBtn">
+                    Classic green
+                </button>
+                <button data-i18n="darkPreset" id="darkBtn">
+                    Dark green
+                </button>
+            </div>
+            <div class="row color-row">
+                <div>
+                    <label class="label" data-i18n="backgroundColor" for="bgColorInput">
+                        Background color
+                    </label>
+                    <input id="bgColorInput" type="color" value="#8ACE00"/>
+                </div>
+                <div>
+                    <label class="label" data-i18n="textColor" for="textColorInput">
+                        Text color
+                    </label>
+                    <input id="textColorInput" type="color" value="#000000"/>
+                </div>
+            </div>
+            <label>
+                <span data-i18n="textSize">
+                    Text size
+                </span>
+                <input id="fontScaleInput" max="150" min="70" type="range" value="100"/>
+            </label>
+            <div>
+                <label class="label" data-i18n="videoShape" for="formatPresetSelect">
+                    Video shape
+                </label>
+                <select id="formatPresetSelect">
+                    <option data-i18n="formatSquare" selected="" value="square">
+                        Square · 1080×1080
+                    </option>
+                    <option data-i18n="formatVertical" value="vertical">
+                        TikTok/Reels/Shorts · 1080×1920
+                    </option>
+                    <option data-i18n="formatStory" value="story">
+                        Story · 1080×1920
+                    </option>
+                    <option data-i18n="formatLandscape" value="landscape">
+                        Landscape · 1920×1080
+                    </option>
+                    <option data-i18n="formatCover" value="cover">
+                        Cover PNG · 3000×3000
+                    </option>
+                </select>
+            </div>
+            <div class="tool-strip format-quick-actions">
+                <button data-i18n="shapeSquare" data-preset-quick="square" type="button">
+                    square
+                </button>
+                <button data-i18n="shapeVertical" data-preset-quick="vertical" type="button">
+                    vertical
+                </button>
+                <button data-i18n="shapeLandscape" data-preset-quick="landscape" type="button">
+                    landscape
+                </button>
+                <button data-i18n="shapeCover" data-preset-quick="cover" type="button">
+                    cover
+                </button>
+            </div>
+            <details class="advanced-block visual-effects" id="visualEffectsDetails">
+                <summary data-i18n="visualEffects">Effects: motion blur, shake and star</summary>
+                <p class="mini-copy" data-i18n="visualEffectsHelp">Press Play to see the movement. These effects also appear in your downloads.</p>
+                <fieldset class="effect-setting">
+                    <legend data-i18n="motionBlur">Motion blur</legend>
+                    <label for="motionBlurInput"><span data-i18n="effectAmount">Amount</span> <output for="motionBlurInput" id="motionBlurInputValue">0%</output></label>
+                    <input aria-describedby="motionBlurHelp" id="motionBlurInput" type="range" min="0" max="100" value="0"/>
+                    <p class="mini-copy" id="motionBlurHelp" data-i18n="motionBlurHelp">Adds a soft trail to moving text and the star. Set to 0 to turn it off.</p>
+                </fieldset>
+                <fieldset class="effect-setting">
+                    <legend data-i18n="shakeEffect">Shake and movement</legend>
+                    <label class="label" for="shakeModeSelect" data-i18n="shakeStyle">Movement style</label>
+                    <select id="shakeModeSelect">
+                        <option value="off" data-i18n="effectOff">Off</option>
+                        <option value="soft" data-i18n="shakeSoft">Light shake</option>
+                        <option value="impact" data-i18n="shakeImpact">Impact at each phrase</option>
+                        <option value="sway" data-i18n="shakeSway">Slow sway</option>
+                    </select>
+                    <div class="range-grid">
+                        <label><span data-i18n="effectAmount">Amount</span> <output for="shakeIntensityInput" id="shakeIntensityInputValue">35%</output><input id="shakeIntensityInput" type="range" min="0" max="100" value="35"/></label>
+                        <label><span data-i18n="effectSpeed">Speed</span> <output for="shakeSpeedInput" id="shakeSpeedInputValue">1.00×</output><input id="shakeSpeedInput" type="range" min="25" max="300" value="100"/></label>
+                    </div>
+                </fieldset>
+                <fieldset class="effect-setting">
+                    <legend data-i18n="rotatingStar">Rotating star</legend>
+                    <label class="inline-toggle"><input id="starEnabledCheckbox" type="checkbox" aria-describedby="starHelp"/><span data-i18n="showStar">Show star</span></label>
+                    <p class="mini-copy" id="starHelp" data-i18n="starHelp">Inverts the background beneath it, including gradients, photos and videos. The lyrics stay in front.</p>
+                    <label class="label" for="starPointsSelect" data-i18n="starShape">Star shape</label>
+                    <select id="starPointsSelect">
+                        <option value="4" data-i18n="starSparkle">Sparkle · 4 points</option>
+                        <option value="5" data-i18n="starClassic">Classic · 5 points</option>
+                    </select>
+                    <div class="range-grid">
+                        <label><span data-i18n="starSize">Size</span> <output for="starSizeInput" id="starSizeInputValue">7%</output><input id="starSizeInput" type="range" min="2" max="18" value="7"/></label>
+                        <label><span data-i18n="starSpeed">Turns per second</span> <output for="starSpeedInput" id="starSpeedInputValue">0.25</output><input id="starSpeedInput" type="range" min="0" max="150" value="25"/></label>
+                        <label><span data-i18n="starX">Horizontal position</span> <output for="starXInput" id="starXInputValue">84%</output><input id="starXInput" type="range" min="0" max="100" value="84"/></label>
+                        <label><span data-i18n="starY">Vertical position</span> <output for="starYInput" id="starYInputValue">18%</output><input id="starYInput" type="range" min="0" max="100" value="18"/></label>
+                    </div>
+                </fieldset>
+                <button type="button" id="resetVisualEffectsBtn" data-i18n="resetVisualEffects">Reset these effects</button>
+            </details>
+            <details class="advanced-block">
+                <summary data-i18n="advancedAppearance">
+                    Advanced appearance
+                </summary>
+                <div>
+                    <label class="label" for="lyricsDisplayModeSelect">
+                        lyrics display
+                    </label>
+                    <select id="lyricsDisplayModeSelect">
+                        <option selected="" value="brat">
+                            brat canvas
+                        </option>
+                        <option value="music">
+                            music synced scroll
+                        </option>
+                        <option value="beautiful">
+                            cinematic scroll
+                        </option>
+                    </select>
+                </div>
+                <div class="mode-note" id="musicModeNote">
+                    Enhanced LRC word timestamps are used when available. Standard LRC timing is interpolated automatically.
+                </div>
+                <div>
+                    <label class="label" for="fontFamilySelect">
+                        font
+                    </label>
+                    <select id="fontFamilySelect">
+                        <option selected="" value="Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif">
+                            Arial Narrow
+                        </option>
+                        <option value='"SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", system-ui, sans-serif'>
+                            Apple / SF Pro
+                        </option>
+                        <option value="system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+                            System UI
+                        </option>
+                        <option value="Arial, Helvetica, sans-serif">
+                            Arial
+                        </option>
+                        <option value="Impact, Haettenschweiler, Arial Narrow Bold, sans-serif">
+                            Impact
+                        </option>
+                        <option value="Georgia, serif">
+                            Georgia
+                        </option>
+                        <option value="Courier New, monospace">
+                            Courier New
+                        </option>
+                    </select>
+                </div>
+                <div class="contrast-tool">
+                    <div>
+                        <span class="contrast-kicker">
+                            accessibility check
+                        </span>
+                        <strong id="contrastRatio">
+                            contrast 1.00:1
+                        </strong>
+                        <p id="contrastStatus">
+                            Choose readable text for the current background.
+                        </p>
+                    </div>
+                    <button id="autoContrastBtn" type="button">
+                        auto contrast
+                    </button>
+                </div>
+                <div class="effect-settings-grid">
+                    <fieldset class="effect-setting">
+                        <legend>
+                            background fill
+                        </legend>
+                        <label class="label" for="backgroundFillTypeSelect">
+                            fill type
+                        </label>
+                        <select id="backgroundFillTypeSelect">
+                            <option selected="" value="solid">
+                                solid color
+                            </option>
+                            <option value="linear">
+                                linear gradient
+                            </option>
+                            <option value="radial">
+                                radial gradient
+                            </option>
+                        </select>
+                        <div class="gradient-options" hidden="" id="gradientOptions">
+                            <div>
+                                <label class="label" for="gradientColorInput">
+                                    second color
+                                </label>
+                                <input id="gradientColorInput" type="color" value="#315f4b"/>
+                            </div>
+                            <div>
+                                <label class="label" for="gradientAngleInput">
+                                    angle
+                                </label>
+                                <input id="gradientAngleInput" max="360" min="0" type="range" value="135"/>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="effect-setting">
+                        <legend>
+                            color exchange
+                        </legend>
+                        <label class="inline-toggle" for="colorSwapEnabledCheckbox">
+                            <input aria-describedby="colorSwapHint" id="colorSwapEnabledCheckbox" type="checkbox"/>
+                            swap text and background
+                        </label>
+                        <div class="swap-options" id="colorSwapOptions">
+                            <div>
+                                <label class="label" for="colorSwapUnitSelect">
+                                    change on
+                                </label>
+                                <select id="colorSwapUnitSelect">
+                                    <option selected="" value="line">
+                                        line
+                                    </option>
+                                    <option value="word">
+                                        word
+                                    </option>
+                                    <option value="letter">
+                                        letter
+                                    </option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label" for="colorSwapIntervalInput">
+                                    every
+                                </label>
+                                <input id="colorSwapIntervalInput" inputmode="numeric" max="12" min="1" step="1" type="number" value="1"/>
+                            </div>
+                        </div>
+                        <p class="mini-copy" id="colorSwapHint">
+                            Swap every line. Letter mode follows the typewriter animation.
+                        </p>
+                    </fieldset>
+                </div>
+                <div class="range-grid">
+                    <label>
+                        blur
+                        <input id="blurInput" max="300" min="0" type="range" value="105"/>
+                    </label>
+                    <label>
+                        vertical position
+                        <input id="verticalPositionInput" max="30" min="-30" type="range" value="0"/>
+                    </label>
+                    <label>
+                        stretch
+                        <input id="stretchInput" max="130" min="70" type="range" value="94"/>
+                    </label>
+                    <label>
+                        letter spacing
+                        <input id="letterSpacingInput" max="20" min="-8" type="range" value="0"/>
+                    </label>
+                    <label>
+                        letters per step
+                        <input id="letterChunkSizeInput" max="12" min="1" type="range" value="2"/>
+                    </label>
+                    <label>
+                        line spacing
+                        <input id="lineSpacingInput" max="130" min="70" type="range" value="92"/>
+                    </label>
+                </div>
+                <details class="advanced-block music-options">
+                    <summary>
+                        music synced scroll options
+                    </summary>
+                    <div class="row">
                         <div>
-                            <label class="label" for="colorSwapUnitSelect">change on</label>
-                            <select id="colorSwapUnitSelect">
-                                <option value="line" selected>line</option>
-                                <option value="word">word</option>
-                                <option value="letter">letter</option>
+                            <label class="label" for="musicAlignSelect">
+                                lyrics alignment
+                            </label>
+                            <select id="musicAlignSelect">
+                                <option selected="" value="left">
+                                    left
+                                </option>
+                                <option value="center">
+                                    center
+                                </option>
                             </select>
                         </div>
                         <div>
-                            <label class="label" for="colorSwapIntervalInput">every</label>
-                            <input id="colorSwapIntervalInput" type="number" min="1" max="12" step="1" value="1" inputmode="numeric" />
+                            <label class="label" for="wordHighlightCheckbox">
+                                highlight
+                            </label>
+                            <label class="inline-check">
+                                <input checked="" id="wordHighlightCheckbox" type="checkbox"/>
+                                word-progress highlight
+                            </label>
                         </div>
                     </div>
-                    <p id="colorSwapHint" class="mini-copy">Swap every line. Letter mode follows the typewriter animation.</p>
-                </fieldset>
-            </div>
-
-            <div class="range-grid">
-                <label>font scale <input id="fontScaleInput" type="range" min="70" max="150" value="100" /></label>
-                <label>blur <input id="blurInput" type="range" min="0" max="300" value="105" /></label>
-                <label>vertical position <input id="verticalPositionInput" type="range" min="-30" max="30" value="0" /></label>
-                <label>stretch <input id="stretchInput" type="range" min="70" max="130" value="94" /></label>
-                <label>letter spacing <input id="letterSpacingInput" type="range" min="-8" max="20" value="0" /></label>
-                <label>letters per step <input id="letterChunkSizeInput" type="range" min="1" max="12" value="2" /></label>
-                <label>line spacing <input id="lineSpacingInput" type="range" min="70" max="130" value="92" /></label>
-            </div>
-
-            <details class="advanced-block music-options" open>
-                <summary>music synced scroll options</summary>
-                <div class="row">
-                    <div>
-                        <label class="label" for="musicAlignSelect">lyrics alignment</label>
-                        <select id="musicAlignSelect">
-                            <option value="left" selected>left</option>
-                            <option value="center">center</option>
+                    <div class="range-grid">
+                        <label>
+                            active scale
+                            <input id="musicActiveScaleInput" max="135" min="100" type="range" value="122"/>
+                        </label>
+                        <label>
+                            dim opacity
+                            <input id="musicDimOpacityInput" max="60" min="12" type="range" value="20"/>
+                        </label>
+                        <label>
+                            scroll anchor
+                            <input id="musicScrollPositionInput" max="65" min="35" type="range" value="50"/>
+                        </label>
+                    </div>
+                    <div class="row">
+                        <div>
+                            <label class="label" for="wordAnimationModeSelect">
+                                word animation
+                            </label>
+                            <select id="wordAnimationModeSelect">
+                                <option selected="" value="progress">
+                                    progress
+                                </option>
+                                <option value="fade">
+                                    fade
+                                </option>
+                                <option value="scale">
+                                    scale
+                                </option>
+                                <option value="pop">
+                                    pop
+                                </option>
+                                <option value="glow">
+                                    glow
+                                </option>
+                                <option value="shake">
+                                    shake
+                                </option>
+                                <option value="color">
+                                    color transition
+                                </option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label" for="wordAnimationColorInput">
+                                word color
+                            </label>
+                            <input id="wordAnimationColorInput" type="color" value="#ffffff"/>
+                        </div>
+                    </div>
+                    <div class="range-grid">
+                        <label>
+                            word intensity
+                            <input id="wordAnimationIntensityInput" max="100" min="0" type="range" value="70"/>
+                        </label>
+                    </div>
+                    <div class="beautiful-note">
+                        Use
+                        <code>
+                            [bg]
+                        </code>
+                        ,
+                        <code>
+                            [side]
+                        </code>
+                        or
+                        <code>
+                            [rom]
+                        </code>
+                        before a lyric line to render backing vocals, side vocals or secondary/romanized lines.
+                    </div>
+                    <div class="row">
+                        <label class="inline-check">
+                            <input checked="" id="beautifulDynamicBgCheckbox" type="checkbox"/>
+                            dynamic blurred background
+                        </label>
+                        <label class="inline-check">
+                            <input checked="" id="beautifulSideVocalsCheckbox" type="checkbox"/>
+                            side / backing vocals
+                        </label>
+                    </div>
+                    <div class="range-grid">
+                        <label>
+                            background motion
+                            <input id="beautifulMotionInput" max="100" min="0" type="range" value="86"/>
+                        </label>
+                        <label>
+                            depth / vignette
+                            <input id="beautifulDepthInput" max="100" min="0" type="range" value="96"/>
+                        </label>
+                        <label>
+                            lyric glow
+                            <input id="beautifulGlowInput" max="100" min="0" type="range" value="88"/>
+                        </label>
+                        <label>
+                            edge fade
+                            <input id="beautifulEdgeFadeInput" max="100" min="0" type="range" value="92"/>
+                        </label>
+                    </div>
+                </details>
+                <div class="tool-strip">
+                    <button id="randomStyleBtn">
+                        randomize style
+                    </button>
+                    <label class="inline-check">
+                        <input id="safeZonesCheckbox" type="checkbox"/>
+                        show social safe zones
+                    </label>
+                    <button id="fullscreenBtn">
+                        fullscreen preview
+                    </button>
+                </div>
+                <details class="advanced-block">
+                    <summary>
+                        background image or video
+                    </summary>
+                    <p class="mini-copy">
+                        Upload an image, MP4 or WebM loop. Local video backgrounds are included in preview and export.
+                    </p>
+                    <label class="label" for="backgroundFileInput">
+                        image or video file
+                    </label>
+                    <input accept="image/*,video/*,.mp4,.webm,.mov,.m4v" id="backgroundFileInput" type="file"/>
+                    <label class="label" for="backgroundTargetSelect">
+                        apply image or video to
+                    </label>
+                    <select id="backgroundTargetSelect">
+                        <option selected="" value="background">
+                            background
+                        </option>
+                        <option value="text">
+                            text fill
+                        </option>
+                        <option value="both">
+                            background and text
+                        </option>
+                    </select>
+                    <div class="row background-grid">
+                        <input id="backgroundUrlInput" placeholder="direct image or video URL" type="url"/>
+                        <button id="loadBackgroundUrlBtn" type="button">
+                            load URL
+                        </button>
+                        <button id="clearBackgroundBtn" type="button">
+                            clear
+                        </button>
+                        <button id="useArtworkBgBtn" type="button">
+                            use artwork
+                        </button>
+                    </div>
+                    <div class="range-grid">
+                        <label>
+                            opacity
+                            <input id="bgMediaOpacityInput" max="100" min="0" type="range" value="100"/>
+                        </label>
+                        <label>
+                            blur
+                            <input id="bgMediaBlurInput" max="40" min="0" type="range" value="0"/>
+                        </label>
+                        <label>
+                            brightness
+                            <input id="bgMediaBrightnessInput" max="200" min="0" type="range" value="100"/>
+                        </label>
+                        <label>
+                            saturation
+                            <input id="bgMediaSaturationInput" max="200" min="0" type="range" value="100"/>
+                        </label>
+                        <label>
+                            scale
+                            <input id="bgMediaScaleInput" max="250" min="50" type="range" value="100"/>
+                        </label>
+                        <label>
+                            x position
+                            <input id="bgMediaPositionXInput" max="100" min="0" type="range" value="50"/>
+                        </label>
+                        <label>
+                            y position
+                            <input id="bgMediaPositionYInput" max="100" min="0" type="range" value="50"/>
+                        </label>
+                    </div>
+                    <div class="meta muted" id="backgroundStatus">
+                        no background image or video
+                    </div>
+                </details>
+                <details class="advanced-block">
+                    <summary>
+                        preset library
+                    </summary>
+                    <label class="label" for="presetNameInput">
+                        preset name
+                    </label>
+                    <input id="presetNameInput" placeholder="my lyric style" type="text"/>
+                    <div class="row preset-row">
+                        <button class="primary" id="savePresetBtn" type="button">
+                            save as preset
+                        </button>
+                        <select aria-label="saved presets" id="userPresetSelect">
                         </select>
+                        <button id="loadPresetBtn" type="button">
+                            load preset
+                        </button>
+                        <button id="deletePresetBtn" type="button">
+                            delete preset
+                        </button>
+                    </div>
+                    <div class="row preset-row">
+                        <button id="exportPresetBtn" type="button">
+                            export preset JSON
+                        </button>
+                        <label class="file-button">
+                            import preset JSON
+                            <input accept="application/json,.json" hidden="" id="importPresetInput" type="file"/>
+                        </label>
+                    </div>
+                    <div class="meta muted" id="presetStatus">
+                        no saved presets yet
+                    </div>
+                </details>
+                <p class="mini-copy">
+                    Choose the output shape, preview safe zones and check what will fit before exporting.
+                </p>
+                <div class="canvas-summary-grid">
+                    <div>
+                        <span>
+                            current format
+                        </span>
+                        <strong id="canvasFormatSummary">
+                            1080×1080
+                        </strong>
                     </div>
                     <div>
-                        <label class="label" for="wordHighlightCheckbox">highlight</label>
-                        <label class="inline-check"><input id="wordHighlightCheckbox" type="checkbox" checked /> word-progress highlight</label>
-                    </div>
-                </div>
-                <div class="range-grid">
-                    <label>active scale <input id="musicActiveScaleInput" type="range" min="100" max="135" value="122" /></label>
-                    <label>dim opacity <input id="musicDimOpacityInput" type="range" min="12" max="60" value="20" /></label>
-                    <label>scroll anchor <input id="musicScrollPositionInput" type="range" min="35" max="65" value="50" /></label>
-                </div>
-                <div class="row">
-                    <div>
-                        <label class="label" for="wordAnimationModeSelect">word animation</label>
-                        <select id="wordAnimationModeSelect">
-                            <option value="progress" selected>progress</option>
-                            <option value="fade">fade</option>
-                            <option value="scale">scale</option>
-                            <option value="pop">pop</option>
-                            <option value="glow">glow</option>
-                            <option value="shake">shake</option>
-                            <option value="color">color transition</option>
-                        </select>
+                        <span>
+                            safe zones
+                        </span>
+                        <strong id="canvasSafeSummary">
+                            off
+                        </strong>
                     </div>
                     <div>
-                        <label class="label" for="wordAnimationColorInput">word color</label>
-                        <input id="wordAnimationColorInput" type="color" value="#ffffff" />
+                        <span>
+                            recommended fps
+                        </span>
+                        <strong>
+                            30
+                        </strong>
                     </div>
                 </div>
-                <div class="range-grid">
-                    <label>word intensity <input id="wordAnimationIntensityInput" type="range" min="0" max="100" value="70" /></label>
-                </div>
-                <div class="beautiful-note">Use <code>[bg]</code>, <code>[side]</code> or <code>[rom]</code> before a lyric line to render backing vocals, side vocals or secondary/romanized lines.</div>
-                <div class="row">
-                    <label class="inline-check"><input id="beautifulDynamicBgCheckbox" type="checkbox" checked /> dynamic blurred background</label>
-                    <label class="inline-check"><input id="beautifulSideVocalsCheckbox" type="checkbox" checked /> side / backing vocals</label>
-                </div>
-                <div class="range-grid">
-                    <label>background motion <input id="beautifulMotionInput" type="range" min="0" max="100" value="86" /></label>
-                    <label>depth / vignette <input id="beautifulDepthInput" type="range" min="0" max="100" value="96" /></label>
-                    <label>lyric glow <input id="beautifulGlowInput" type="range" min="0" max="100" value="88" /></label>
-                    <label>edge fade <input id="beautifulEdgeFadeInput" type="range" min="0" max="100" value="92" /></label>
-                </div>
-            </details>
-
-            <div class="tool-strip">
-                <button id="randomStyleBtn">randomize style</button>
-                <label class="inline-check"><input id="safeZonesCheckbox" type="checkbox" /> show social safe zones</label>
-                <button id="fullscreenBtn">fullscreen preview</button>
-            </div>
-
-            <details class="advanced-block" open>
-                <summary>background image or video</summary>
-                <p class="mini-copy">Upload an image, MP4 or WebM loop. Local video backgrounds are included in preview and export.</p>
-                <label class="label" for="backgroundFileInput">image or video file</label>
-                <input id="backgroundFileInput" type="file" accept="image/*,video/*,.mp4,.webm,.mov,.m4v" />
-                <label class="label" for="backgroundTargetSelect">apply image or video to</label>
-                <select id="backgroundTargetSelect">
-                    <option value="background" selected>background</option>
-                    <option value="text">text fill</option>
-                    <option value="both">background and text</option>
-                </select>
-                <div class="row background-grid">
-                    <input id="backgroundUrlInput" type="url" placeholder="direct image or video URL" />
-                    <button id="loadBackgroundUrlBtn" type="button">load URL</button>
-                    <button id="clearBackgroundBtn" type="button">clear</button>
-                    <button id="useArtworkBgBtn" type="button">use artwork</button>
+                <div class="tool-strip">
+                    <button id="canvasFullscreenBtn" type="button">
+                        fullscreen preview
+                    </button>
+                    <button id="canvasSafeToggleBtn" type="button">
+                        toggle safe zones
+                    </button>
                 </div>
                 <div class="range-grid">
-                    <label>opacity <input id="bgMediaOpacityInput" type="range" min="0" max="100" value="100" /></label>
-                    <label>blur <input id="bgMediaBlurInput" type="range" min="0" max="40" value="0" /></label>
-                    <label>brightness <input id="bgMediaBrightnessInput" type="range" min="0" max="200" value="100" /></label>
-                    <label>saturation <input id="bgMediaSaturationInput" type="range" min="0" max="200" value="100" /></label>
-                    <label>scale <input id="bgMediaScaleInput" type="range" min="50" max="250" value="100" /></label>
-                    <label>x position <input id="bgMediaPositionXInput" type="range" min="0" max="100" value="50" /></label>
-                    <label>y position <input id="bgMediaPositionYInput" type="range" min="0" max="100" value="50" /></label>
+                    <label>
+                        preview zoom
+                        <input id="previewZoomInput" max="140" min="50" type="range" value="100"/>
+                    </label>
                 </div>
-                <div id="backgroundStatus" class="meta muted">no background image or video</div>
-            </details>
-
-            <details class="advanced-block">
-                <summary>preset library</summary>
-                <label class="label" for="presetNameInput">preset name</label>
-                <input id="presetNameInput" type="text" placeholder="my lyric style" />
-                <div class="row preset-row">
-                    <button id="savePresetBtn" type="button" class="primary">save as preset</button>
-                    <select id="userPresetSelect" aria-label="saved presets"></select>
-                    <button id="loadPresetBtn" type="button">load preset</button>
-                    <button id="deletePresetBtn" type="button">delete preset</button>
-                </div>
-                <div class="row preset-row">
-                    <button id="exportPresetBtn" type="button">export preset JSON</button>
-                    <label class="file-button">import preset JSON <input id="importPresetInput" type="file" accept="application/json,.json" hidden /></label>
-                </div>
-                <div id="presetStatus" class="meta muted">no saved presets yet</div>
             </details>
         </div>
-
-        <div id="section-canvas" class="section editor-section" data-editor-tab="canvas" role="tabpanel" aria-labelledby="tab-canvas">
-            <div class="section-title">canvas and safe areas</div>
-            <p class="mini-copy">Choose the output shape, preview safe zones and check what will fit before exporting.</p>
-            <div class="row canvas-quick-actions">
-                <button type="button" data-preset-quick="square">square</button>
-                <button type="button" data-preset-quick="vertical">vertical</button>
-                <button type="button" data-preset-quick="landscape">landscape</button>
-                <button type="button" data-preset-quick="cover">cover</button>
+        <div aria-labelledby="tab-export" class="section editor-section" data-editor-tab="export" id="section-export" role="tabpanel">
+            <div class="section-heading">
+                <h2 data-i18n="downloadTitle">
+                    Download your creation
+                </h2>
+                <p data-i18n="downloadIntro">
+                    Check the video format and sound before downloading.
+                </p>
             </div>
-            <div class="canvas-summary-grid">
-                <div><span>current format</span><strong id="canvasFormatSummary">1080×1080</strong></div>
-                <div><span>safe zones</span><strong id="canvasSafeSummary">off</strong></div>
-                <div><span>recommended fps</span><strong>30</strong></div>
-            </div>
-            <div class="tool-strip">
-                <button id="canvasFullscreenBtn" type="button">fullscreen preview</button>
-                <button id="canvasSafeToggleBtn" type="button">toggle safe zones</button>
-            </div>
-            <div class="range-grid">
-                <label>preview zoom <input id="previewZoomInput" type="range" min="50" max="140" value="100" /></label>
-            </div>
-        </div>
-
-        <div id="section-export" class="section editor-section" data-editor-tab="export" role="tabpanel" aria-labelledby="tab-export">
-            <div class="section-title" data-i18n="export">export</div>
-            <p data-i18n="exportIntro">
-                Video-only export stays fast when supported. If loaded audio is enabled, export records in real time
-                and merges only extracted local or direct CORS-enabled media audio you have permission to use.
-            </p>
-
-            <div class="row">
+            <div aria-live="polite" class="export-summary">
                 <div>
-                    <label class="label" for="formatPresetSelect">format preset</label>
-                    <select id="formatPresetSelect">
-                        <option value="square" selected>Square · 1080×1080</option>
-                        <option value="vertical">TikTok/Reels/Shorts · 1080×1920</option>
-                        <option value="story">Story · 1080×1920</option>
-                        <option value="landscape">Landscape · 1920×1080</option>
-                        <option value="cover">Cover PNG · 3000×3000</option>
-                    </select>
+                    <span data-i18n="outputFormat">
+                        Video format
+                    </span>
+                    <strong id="exportFormatSummary">
+                    </strong>
                 </div>
                 <div>
-                    <label class="label" for="exportSizeSelect" data-i18n="videoSize">video size</label>
-                    <select id="exportSizeSelect">
-                        <option value="720">base 720</option>
-                        <option value="1080" selected>base 1080</option>
-                        <option value="1440">base 1440</option>
-                        <option value="1920">base 1920</option>
-                        <option value="3000">base 3000</option>
-                    </select>
+                    <span data-i18n="outputAudio">
+                        Sound
+                    </span>
+                    <strong id="exportSoundSummary">
+                    </strong>
                 </div>
-                <div>
-                    <label class="label" for="exportFpsSelect">fps</label>
-                    <select id="exportFpsSelect">
-                        <option value="24">24 fps</option>
-                        <option value="30" selected>30 fps</option>
-                        <option value="60">60 fps</option>
-                    </select>
-                </div>
+                <button data-i18n="changeFormat" data-navigate-tab="design" type="button">
+                    Change format
+                </button>
+                <button data-i18n="addAudio" data-navigate-tab="timing" type="button">
+                    Add audio
+                </button>
             </div>
-
-            <div id="compatPanel" class="compat-panel" aria-live="polite">
-                <div class="compat-item">
-                    <strong data-i18n="fastMp4">Fast MP4</strong>
-                    <span id="compatFastMp4">checking...</span>
-                </div>
-                <div class="compat-item">
-                    <strong data-i18n="mediaRecorder">MediaRecorder</strong>
-                    <span id="compatMediaRecorder">checking...</span>
-                </div>
-                <div class="compat-item">
-                    <strong data-i18n="recommendedPreset">Recommended</strong>
-                    <span id="compatRecommendation">1080p · 30 fps</span>
-                </div>
-            </div>
-
             <div class="export-audio-option">
                 <label class="inline-check">
-                    <input id="includeAudioInExportCheckbox" type="checkbox" checked />
-                    <span data-i18n="includeAudioInExport">include loaded audio</span>
+                    <input checked="" id="includeAudioInExportCheckbox" type="checkbox"/>
+                    <span data-i18n="includeAudioInExport">
+                        include loaded audio
+                    </span>
                 </label>
-                <div class="range-grid">
-                    <label>volume <input id="exportAudioVolumeInput" type="range" min="0" max="200" value="100" /></label>
-                    <label>fade in <input id="exportAudioFadeInInput" type="range" min="0" max="1000" value="0" /></label>
-                    <label>fade out <input id="exportAudioFadeOutInput" type="range" min="0" max="1000" value="0" /></label>
-                </div>
-                <p id="exportAudioNote" class="mini-copy" data-i18n="exportAudioNoFile">
+                <p class="mini-copy" id="exportAudioNote">
                     Load one audio/video file in Timing; export can merge the extracted audio automatically.
                 </p>
             </div>
-
             <div class="row">
-                <button id="exportVideoBtn" class="primary" data-i18n="exportVideo">export video</button>
-                <button id="exportPngBtn" data-i18n="exportPng">export PNG frame</button>
-                <button id="exportFramesBtn">export 3 preview frames</button>
-                <button id="exportPreviewClipBtn">export 5s WebM preview</button>
+                <button class="primary" data-i18n="downloadVideo" id="exportVideoBtn">
+                    Download video
+                </button>
+                <button data-i18n="downloadFrame" id="exportPngBtn">
+                    Download image
+                </button>
+            </div>
+            <progress hidden="" id="exportProgress" max="100" value="0">
+            </progress>
+            <div aria-live="polite" class="meta muted" data-status-key="noExport" id="exportStatus" role="status">
+                no export yet
+            </div>
+            <div class="meta muted" data-status-key="estimateNA" id="exportEstimate">
+                estimated export time: n/a
+            </div>
+            <details class="advanced-block">
+                <summary data-i18n="advancedExport">
+                    Advanced export settings
+                </summary>
+                <div class="row">
+                    <div>
+                        <label class="label" data-i18n="videoSize" for="exportSizeSelect">
+                            video size
+                        </label>
+                        <select id="exportSizeSelect">
+                            <option value="720">
+                                base 720
+                            </option>
+                            <option selected="" value="1080">
+                                base 1080
+                            </option>
+                            <option value="1440">
+                                base 1440
+                            </option>
+                            <option value="1920">
+                                base 1920
+                            </option>
+                            <option value="3000">
+                                base 3000
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label" for="exportFpsSelect">
+                            fps
+                        </label>
+                        <select id="exportFpsSelect">
+                            <option value="24">
+                                24 fps
+                            </option>
+                            <option selected="" value="30">
+                                30 fps
+                            </option>
+                            <option value="60">
+                                60 fps
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div aria-live="polite" class="compat-panel" id="compatPanel">
+                    <div class="compat-item">
+                        <strong data-i18n="fastMp4">
+                            Fast MP4
+                        </strong>
+                        <span id="compatFastMp4">
+                            checking...
+                        </span>
+                    </div>
+                    <div class="compat-item">
+                        <strong data-i18n="mediaRecorder">
+                            MediaRecorder
+                        </strong>
+                        <span id="compatMediaRecorder">
+                            checking...
+                        </span>
+                    </div>
+                    <div class="compat-item">
+                        <strong data-i18n="recommendedPreset">
+                            Recommended
+                        </strong>
+                        <span id="compatRecommendation">
+                            1080p · 30 fps
+                        </span>
+                    </div>
+                </div>
+                <div class="range-grid">
+                    <label>
+                        volume
+                        <input id="exportAudioVolumeInput" max="200" min="0" type="range" value="100"/>
+                    </label>
+                    <label>
+                        fade in
+                        <input id="exportAudioFadeInInput" max="1000" min="0" type="range" value="0"/>
+                    </label>
+                    <label>
+                        fade out
+                        <input id="exportAudioFadeOutInput" max="1000" min="0" type="range" value="0"/>
+                    </label>
+                </div>
+                <div class="tool-strip">
+                    <button data-i18n="downloadFrames" id="exportFramesBtn">
+                        Download 3 preview images
+                    </button>
+                    <button data-i18n="downloadClip" id="exportPreviewClipBtn">
+                        Download 5s preview
+                    </button>
+                </div>
+            </details>
+        </div>
+        <div aria-labelledby="tab-project" class="section editor-section" data-editor-tab="project" id="section-project" role="tabpanel">
+            <div class="section-heading">
+                <h2 data-i18n="projectTitle">
+                    Save and return later
+                </h2>
+                <p data-i18n="projectIntro">
+                    Autosave and snapshots stay in this browser. Download a project file to keep a separate copy.
+                </p>
             </div>
             <div class="row">
-                <button id="exportProjectBtn">export project JSON</button>
-                <label class="file-button">import project JSON <input id="importProjectInput" type="file" accept="application/json,.json" hidden /></label>
+                <button data-i18n="downloadProject" id="exportProjectBtn">
+                    Download project
+                </button>
+                <label class="file-button">
+                    <span data-i18n="openProject">
+                        Open project file
+                    </span>
+                    <input accept="application/json,.json" hidden="" id="importProjectInput" type="file"/>
+                </label>
             </div>
-
-            <progress id="exportProgress" value="0" max="100" hidden></progress>
-
-            <div id="exportStatus" class="meta muted" data-status-key="noExport">no export yet</div>
-            <div id="exportEstimate" class="meta muted" data-status-key="estimateNA">estimated export time: n/a</div>
-            <div class="pill-note" data-i18n="exportNote">video-only by default; loaded local audio can be merged when enabled</div>
-        </div>
-
-        <div id="section-project" class="section editor-section" data-editor-tab="project" role="tabpanel" aria-labelledby="tab-project">
-            <div class="section-title" data-i18n="externalPreview">external video preview</div>
-            <label class="label" data-i18n="videoSelection">video selection</label>
-            <div id="youtubeStatus" class="meta muted" data-status-key="noVideo">no video loaded</div>
-            <div id="youtubeResults" class="yt-grid"></div>
-
-            <div class="section-title project-tools-title">project tools</div>
-            <label class="label" for="snapshotNameInput">snapshot name</label>
-            <input id="snapshotNameInput" type="text" placeholder="late-night lyric pass" />
+            <label class="label" data-i18n="videoSelection">
+                video selection
+            </label>
+            <label class="label" data-i18n="snapshotName" for="snapshotNameInput">
+                Snapshot name
+            </label>
+            <input id="snapshotNameInput" placeholder="late-night lyric pass" type="text"/>
             <div class="project-actions-inline">
-                <button id="saveSnapshotBtn" type="button" class="primary">save snapshot</button>
-                <button id="duplicateProjectBtn" type="button">duplicate project</button>
-                <button id="shareProjectLinkBtn" type="button">copy share link</button>
-                <button id="copyProjectJsonBtn" type="button">copy project JSON</button>
+                <button class="primary" data-i18n="saveSnapshot" id="saveSnapshotBtn" type="button">
+                    Save snapshot
+                </button>
+                <button data-i18n="duplicateProject" id="duplicateProjectBtn" type="button">
+                    Duplicate project
+                </button>
+                <button data-i18n="shareLink" id="shareProjectLinkBtn" type="button">
+                    Copy share link
+                </button>
             </div>
-            <div id="projectFeatureStatus" class="meta muted">snapshots stay in this browser</div>
-            <div id="snapshotList" class="snapshot-list" aria-live="polite"></div>
-
+            <div class="meta muted" id="projectFeatureStatus">
+                snapshots stay in this browser
+            </div>
+            <div aria-live="polite" class="snapshot-list" id="snapshotList">
+            </div>
             <div class="project-actions-inline">
-                <button id="sidebarExportProjectBtn" type="button">export project JSON</button>
-                <button id="sidebarClearSavedBtn" type="button">clear autosave</button>
             </div>
+            <details class="advanced-block">
+                <summary data-i18n="advancedProject">
+                    Advanced project tools
+                </summary>
+                <button data-i18n="copyJson" id="copyProjectJsonBtn" type="button">
+                    Copy project JSON
+                </button>
+                <div class="danger-zone">
+                    <h3 data-i18n="resetTitle">
+                        Reset and remove saved data
+                    </h3>
+                    <p data-i18n="resetHelp">
+                        Reset playback stops the preview and closes the reference video. Clear project removes the current edit and its autosave; snapshots remain.
+                    </p>
+                    <button data-i18n="resetPlayback" id="resetBtn">
+                        Reset playback and reference
+                    </button>
+                    <button data-i18n="clearCurrentProject" id="clearSavedBtn">
+                        Clear current project and autosave
+                    </button>
+                </div>
+            </details>
         </div>
-
         <div class="sidebar-action-dock">
-            <button id="dockPreviewBtn" type="button">preview</button>
-            <button id="dockExportBtn" class="primary" type="button">export</button>
+            <button data-i18n="previewFromStart" id="dockPreviewBtn" type="button">
+                Preview from start
+            </button>
+            <button class="primary" data-i18n="reviewExport" id="dockExportBtn" type="button">
+                Export…
+            </button>
         </div>
     </div>
-
-    <div id="permissionNotice" class="permission-notice-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
+    <div aria-describedby="permissionNoticeBody" aria-labelledby="permissionNoticeTitle" aria-modal="true" class="permission-notice-overlay hidden" id="permissionNotice" role="dialog">
         <div class="permission-notice-card" tabindex="-1">
-            <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">usage note</p>
-            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">use it freely. ask before publishing.</h2>
-            <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
+            <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">
+                usage note
+            </p>
+            <h2 data-i18n="permissionNoticeTitle" id="permissionNoticeTitle">
+                use it freely. ask before publishing.
+            </h2>
+            <p data-i18n="permissionNoticeText" id="permissionNoticeBody">
                 You are free to use Brat Animator as much as you want. To publish, share publicly, redistribute,
                 self-host, commercialize, or integrate anything made with it, please ask permission first.
             </p>
             <div class="permission-notice-actions">
-                <button id="permissionNoticeAckBtn" type="button" class="primary" data-i18n="permissionNoticeAcknowledge">i understand</button>
-                <a id="permissionNoticeRequestLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="permissionNoticePermission">ask permission</a>
+                <button class="primary" data-i18n="permissionNoticeAcknowledge" id="permissionNoticeAckBtn" type="button">
+                    i understand
+                </button>
+                <a data-i18n="permissionNoticePermission" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" id="permissionNoticeRequestLink">
+                    ask permission
+                </a>
             </div>
         </div>
     </div>
-
-    <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
+    <div aria-describedby="tutorialBody" aria-labelledby="tutorialTitle" aria-modal="true" class="tutorial-overlay hidden" id="tutorialOverlay" role="dialog">
         <div class="tutorial-card">
-            <div id="tutorialProgress" class="tutorial-progress">step 1 of 6</div>
-            <h2 id="tutorialTitle">start with the preview</h2>
-            <p id="tutorialBody">The green canvas is the video you will export. The controls panel changes what appears here.</p>
-            <div id="tutorialTip" class="tutorial-tip" hidden></div>
+            <div class="tutorial-progress" id="tutorialProgress">
+                1 / 4
+            </div>
+            <h2 id="tutorialTitle">
+                Add your lyrics
+            </h2>
+            <p id="tutorialBody">
+                Search for a song, import an LRC file, or try an example.
+            </p>
+            <div class="tutorial-tip" hidden="" id="tutorialTip">
+            </div>
             <div class="tutorial-actions">
-                <button id="tutorialSkipBtn" type="button">skip</button>
-                <button id="tutorialBackBtn" type="button">back</button>
-                <button id="tutorialActionBtn" type="button" class="hidden">try it</button>
-                <button id="tutorialNextBtn" type="button" class="primary">next</button>
+                <button data-i18n="skipGuide" id="tutorialSkipBtn" type="button">
+                    Close guide
+                </button>
+                <button data-i18n="backGuide" id="tutorialBackBtn" type="button">
+                    Back
+                </button>
+                <button class="hidden" id="tutorialActionBtn" type="button">
+                    try it
+                </button>
+                <button class="primary" data-i18n="nextGuide" id="tutorialNextBtn" type="button">
+                    Next
+                </button>
             </div>
         </div>
     </div>
-
-    <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+    <div aria-labelledby="commandPaletteTitle" aria-modal="true" class="command-palette hidden" id="commandPalette" role="dialog">
         <div class="command-palette-card">
-            <h2 id="commandPaletteTitle">commands</h2>
-            <input id="commandPaletteInput" type="search" placeholder="type a command" aria-label="command search" />
-            <div id="commandPaletteList" class="command-palette-list"></div>
+            <h2 id="commandPaletteTitle">
+                commands
+            </h2>
+            <input aria-label="command search" id="commandPaletteInput" placeholder="type a command" type="search"/>
+            <div class="command-palette-list" id="commandPaletteList">
+            </div>
         </div>
     </div>
-
-    <div id="playerWrap" class="player-wrap hidden">
+    <div class="player-wrap hidden" id="playerWrap">
         <div class="player-head">
-            <strong data-i18n="videoPreview">video preview</strong>
-            <button id="closePlayerBtn" data-i18n="closePreview">close preview</button>
+            <strong data-i18n="videoPreview">
+                video preview
+            </strong>
+            <button data-i18n="closePreview" id="closePlayerBtn">
+                close preview
+            </button>
         </div>
-        <div id="playerBox" class="player-box"></div>
+        <div class="player-box" id="playerBox">
+        </div>
     </div>
-
     <main class="page-shell">
         <div class="app" id="editor">
             <div class="stage-wrap">
-                <div class="stage-toolbar" aria-label="preview tools">
+                <div aria-label="preview tools" class="stage-toolbar">
                     <div class="stage-title">
-                        <div><strong>preview</strong><span id="stageFormatLabel">1080 × 1080</span></div>
+                        <div>
+                            <strong>
+                                preview
+                            </strong>
+                            <span id="stageFormatLabel">
+                                1080 × 1080
+                            </span>
+                        </div>
                     </div>
                     <div class="stage-zoom-controls">
-                        <button id="stageZoomOutBtn" type="button" aria-label="zoom preview out">−</button>
-                        <output id="stageZoomValue" for="previewZoomInput">100%</output>
-                        <button id="stageZoomInBtn" type="button" aria-label="zoom preview in">+</button>
-                        <button id="stageFitBtn" type="button">fit</button>
-                        <button id="stageFullscreenBtn" type="button">fullscreen</button>
+                        <button aria-label="zoom preview out" id="stageZoomOutBtn" type="button">
+                            −
+                        </button>
+                        <output for="previewZoomInput" id="stageZoomValue">
+                            100%
+                        </output>
+                        <button aria-label="zoom preview in" id="stageZoomInBtn" type="button">
+                            +
+                        </button>
+                        <button id="stageFitBtn" type="button">
+                            fit
+                        </button>
+                        <button id="stageFullscreenBtn" type="button">
+                            fullscreen
+                        </button>
                     </div>
                 </div>
                 <div class="stage-canvas-zone">
-                    <div id="stage" class="stage">
-                        <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
+                    <div class="stage" id="stage">
+                        <canvas aria-label="lyric video preview" height="1080" id="previewCanvas" width="1080">
+                        </canvas>
                     </div>
                 </div>
-                <div class="stage-transport" aria-label="preview playback">
-                    <button id="stageRestartBtn" class="transport-icon" type="button" aria-label="restart preview">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v5h5M5.6 17a8 8 0 1 0 .2-10.2L4 8" /></svg>
+                <div aria-label="preview playback" class="stage-transport">
+                    <button aria-label="restart preview" class="transport-icon" data-i18n-aria-label="restartPreview" id="stageRestartBtn" type="button">
+                        <svg aria-hidden="true" viewbox="0 0 24 24">
+                            <path d="M4 8v5h5M5.6 17a8 8 0 1 0 .2-10.2L4 8">
+                            </path>
+                        </svg>
                     </button>
-                    <button id="stagePlayBtn" class="transport-play" type="button" aria-label="play preview" aria-pressed="false">play</button>
-                    <span id="stageCurrentTime" class="transport-time">0:00</span>
-                    <input id="stageSeekInput" type="range" min="0" max="1000" value="0" step="1" aria-label="preview playhead" />
-                    <span id="stageDuration" class="transport-time">0:00</span>
+                    <button aria-label="play preview" aria-pressed="false" class="transport-play" data-i18n-aria-label="play" id="stagePlayBtn" type="button">
+                        play
+                    </button>
+                    <span class="transport-time" id="stageCurrentTime">
+                        0:00
+                    </span>
+                    <input aria-label="preview playhead" id="stageSeekInput" max="1000" min="0" step="1" type="range" value="0"/>
+                    <span class="transport-time" id="stageDuration">
+                        0:00
+                    </span>
                 </div>
-                <div class="hint"><span data-i18n="hint">export a frame or render the video</span><kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> seek</div>
+                <div class="hint">
+                    <span data-i18n="hint">
+                        export a frame or render the video
+                    </span>
+                    <kbd>
+                        Space
+                    </kbd>
+                    play ·
+                    <kbd>
+                        ←
+                    </kbd>
+                    <kbd>
+                        →
+                    </kbd>
+                    seek
+                </div>
             </div>
         </div>
     </main>
