@@ -215,87 +215,28 @@ try {
         state.audioAnalysis = null;
         return result;
     }));
-    await test('speed and lyrics language persist in JSON, autosave, snapshots and legacy restore', () => evaluate(() => {
+    await test('speed persists in JSON, autosave, snapshots and legacy restore', () => evaluate(() => {
         auditSetLyrics('[00:00.00] Ciao\n[00:10.00] Torno');
-        timingLanguageSelect.value = 'it';
-        timingLanguageSelect.dispatchEvent(new Event('change', { bubbles: true }));
         timingSpeedInput.value = '1.55';
         timingSpeedInput.dispatchEvent(new Event('input', { bubbles: true }));
         const payload = JSON.parse(JSON.stringify(buildProjectPayload()));
-        auditAssert(payload.version === 4 && payload.timing.speed === 1.55, 'JSON missing speed');
-        auditAssert(payload.timing.language === 'it', 'speed control discarded lyrics language');
+        auditAssert(payload.version === 5 && payload.timing.speed === 1.55, 'JSON missing speed');
         saveProjectSettings();
-        const saved = JSON.parse(localStorage.getItem('bratAnimator.project.v4'));
+        const saved = JSON.parse(localStorage.getItem('bratAnimator.project.v5'));
         auditAssert(saved.timing.speed === 1.55, 'autosave missing speed');
-        auditAssert(saved.timing.language === 'it', 'autosave missing lyrics language');
         snapshotNameInput.value = 'natural timing audit';
         saveSnapshot();
         const snapshot = loadSnapshots()[0].payload;
         auditAssert(snapshot.timing.speed === 1.55, 'snapshot missing speed');
-        auditAssert(snapshot.timing.language === 'it', 'snapshot missing lyrics language');
-        timingLanguageSelect.value = 'en';
-        timingLanguageSelect.dispatchEvent(new Event('change', { bubbles: true }));
         timingSpeedInput.value = '0.5';
         timingSpeedInput.dispatchEvent(new Event('input', { bubbles: true }));
         restoreProjectSettings(payload);
         auditAssert(state.timing.speed === 1.55 && Number(timingSpeedInput.value) === 1.55, 'JSON restore failed');
-        auditAssert(state.timing.language === 'it' && timingLanguageSelect.value === 'it', 'JSON language restore failed');
-        restoreProjectSettings(snapshot);
-        auditAssert(state.timing.language === 'it', 'snapshot language restore failed');
         const legacy = { ...payload };
         delete legacy.timing;
         restoreProjectSettings(legacy);
         auditAssert(state.timing.speed === 1 && Number(timingSpeedInput.value) === 1, 'legacy did not reset default speed');
-        auditAssert(state.timing.language === 'auto' && timingLanguageSelect.value === 'auto', 'legacy language default missing');
-        return { version: payload.version, savedSpeed: saved.timing.speed, savedLanguage: saved.timing.language, restoredDefault: state.timing };
-    }));
-    await test('language changes reweight words, preserve anchors and support undo/redo', () => evaluate(() => {
-        auditSetLyrics('[00:00.00]<00:00.50>come sale <00:03.00>cuore love<00:05.00>\n[00:10.00] Torno');
-        state.undoStack = [];
-        state.redoStack = [];
-        const starts = {};
-        for (const language of ['it', 'en']) {
-            timingLanguageSelect.value = language;
-            timingLanguageSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            const line = state.timeline[0];
-            auditAssert(line.timedWords[0].start === 0.5 && line.timedWords[2].start === 3 && line.vocalEnd === 5, 'language moved explicit anchors');
-            starts[language] = line.timedWords[1].start;
-            line.timedWords.forEach(word => auditAssert(line.chars.find(char => char.wordIndex === word.wordIndex).timestamp === word.start, 'character and word onset differ'));
-        }
-        auditAssert(starts.it > starts.en, 'language selection did not change pronunciation estimate');
-        undoProjectChange();
-        auditAssert(state.timing.language === 'it' && timingLanguageSelect.value === 'it', 'language undo failed');
-        redoProjectChange();
-        auditAssert(state.timing.language === 'en' && timingLanguageSelect.value === 'en', 'language redo failed');
-        for (const uiLanguage of ['en', 'ru', 'zh']) {
-            BratI18n.applyLanguage(uiLanguage);
-            auditAssert(timingLanguageSelect.value === 'en' && state.timing.language === 'en', 'interface language changed lyrics language');
-            auditAssert(document.querySelector('label[for="timingLanguageSelect"]').textContent === BratI18n.t('timingLanguage'), 'lyrics language label not translated');
-        }
-        BratI18n.applyLanguage('en');
-        return { starts, restoredLanguage: state.timing.language };
-    }));
-    await test('Italian and English preview/export frames match around word boundaries', () => evaluate(() => {
-        const hashes = {};
-        for (const language of ['auto', 'it', 'en']) {
-            auditSetLyrics('[00:00.00] come one amore\n[00:10.00] Torno', 'word');
-            timingLanguageSelect.value = language;
-            timingLanguageSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            const boundary = state.timeline[0].timedWords[1].start;
-            for (const mode of ['word', 'typewriter', 'music']) {
-                state.style.lyricsMode = mode === 'music' ? 'music' : 'brat';
-                state.animationMode = mode === 'music' ? 'line' : mode;
-                animationModeSelect.value = state.animationMode;
-                state.style.colorSwap = { enabled: true, unit: 'word', interval: 1 };
-                for (const time of [boundary - 0.001, boundary + 0.001]) {
-                    const preview = auditFrame(time, true);
-                    const exported = auditFrame(time);
-                    auditAssert(preview === exported, JSON.stringify({ language, mode, time, preview, exported }));
-                }
-                hashes[`${language}-${mode}`] = boundary;
-            }
-        }
-        return hashes;
+        return { version: payload.version, savedSpeed: saved.timing.speed, restoredDefault: state.timing.speed };
     }));
     await test('preview and export scene match for the same pause frame', () => evaluate(() => {
         auditSetLyrics('[00:00.00] Ciao amico\n[00:10.00] Torno');
@@ -357,7 +298,6 @@ try {
         await evaluate(() => {
             auditSetLyrics('[00:00.00] Ciao, amico.\n[00:10.00] Ciaoooooooo');
             document.querySelector('[data-open-tab="timing"]')?.click();
-            document.getElementById('advancedSyncDetails').open = true;
             window.dispatchEvent(new Event('resize'));
             renderPreviewAt(5);
         });
@@ -366,9 +306,7 @@ try {
             const width = window.innerWidth;
             const scrollWidth = document.documentElement.scrollWidth;
             auditAssert(scrollWidth <= width + 1, JSON.stringify({ width, scrollWidth }));
-            const language = document.getElementById('timingLanguageSelect');
-            auditAssert(language && language.getBoundingClientRect().width > 0, 'lyrics language selector missing');
-            return { width, scrollWidth, speedControlPresent: Boolean(document.getElementById('timingSpeedInput')), languageControlPresent: Boolean(language) };
+            return { width, scrollWidth, speedControlPresent: Boolean(document.getElementById('timingSpeedInput')) };
         }));
         const screenshot = await cdp('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
         await writeFile(path.join(artifacts, `${label}.png`), Buffer.from(screenshot.data, 'base64'));

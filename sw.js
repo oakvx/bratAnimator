@@ -1,15 +1,21 @@
-const CACHE_NAME = "brat-animator-v4-word-rhythm-1";
+const CACHE_NAME = "brat-animator-v5-editor-1";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./assets/css/style.css",
+  "./assets/css/editor-v5.css",
   "./assets/js/core.js",
   "./assets/js/timing.js",
   "./assets/js/media.js",
   "./assets/js/export.js",
   "./assets/js/i18n.js",
   "./assets/js/app.js",
+  "./assets/js/motion.js",
+  "./assets/js/project-assets.js",
+  "./assets/js/editor-v5.js",
+  "./assets/js/italian-ui.js",
   "./vendor/mp4-muxer.mjs",
+  "./vendor/fflate.min.js",
   "./favicon.svg",
   "./icon-192.png",
   "./icon-512.png",

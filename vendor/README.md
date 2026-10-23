@@ -5,3 +5,10 @@
 Brat Animator uses it only for the optional fast video-only MP4 export path with WebCodecs. Audio exports still use MediaRecorder real-time recording.
 
 `mp4-muxer` is MIT licensed and deprecated upstream in favor of Mediabunny, but this app keeps the existing `Muxer` / `ArrayBufferTarget` integration for the 3.0 release.
+
+`vendor/fflate.min.js` is the pinned UMD build of `fflate@0.8.2`, used for complete
+`.brat.zip` projects. It works with classic scripts, including a direct `file://`
+launch, without a build step or CDN request. Media and fonts use ZIP STORE to avoid
+recompressing already compressed content. The upstream license is included in
+`vendor/fflate.LICENSE.txt` (MIT). Source: https://github.com/101arrowz/fflate,
+published artifact: https://unpkg.com/fflate@0.8.2/umd/index.js.

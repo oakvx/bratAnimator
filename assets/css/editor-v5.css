@@ -1,0 +1,293 @@
+body[data-ui-mode="simple"] .editor-tab > span {
+    display: none;
+}
+
+.v5-short-label { display: none; }
+body[data-ui-mode="simple"] #editCanvasBtn { display: none; }
+@media(max-width: 620px) {
+    #editCanvasBtn .v5-long-label { display: none; }
+    #editCanvasBtn .v5-short-label { display: inline; }
+}
+
+.v5-preferences {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--line);
+}
+
+.v5-preferences .v5-field {
+    flex: 0 0 140px;
+    margin: 0;
+}
+
+.v5-preferences label,
+.v5-field>label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-weight: 650;
+}
+
+.v5-block {
+    min-width: 0;
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--paper-raised);
+}
+
+.v5-block legend {
+    padding: 0 6px;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.v5-field {
+    min-width: 0;
+    margin: 12px 0;
+}
+
+.v5-field textarea {
+    min-height: 65px;
+}
+
+.v5-range {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 12px;
+    align-items: center;
+}
+
+.v5-range output {
+    text-align: right;
+    font: 11px var(--font-mono);
+}
+
+.v5-scope {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+}
+
+.v5-scope button,
+.v5-font-upload button {
+    font-size: 11px;
+}
+
+.v5-error {
+    color: var(--danger);
+    font-size: 12px;
+}
+
+.v5-checks {
+    display: grid;
+    gap: 4px;
+    margin-top: 12px;
+}
+
+.v5-unmatched-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    margin-block: 8px;
+    font-size: 12px;
+}
+
+.v5-unmatched-row>span {
+    overflow-wrap: anywhere;
+}
+
+.v5-unmatched button {
+    font-size: 10px;
+}
+
+.v5-block progress {
+    width: 100%;
+}
+
+.row-style-btn {
+    font-size: 9px;
+    grid-column: 2 / -1;
+    justify-self: start;
+}
+
+#editCanvasBtn {
+    min-width: 0;
+    max-width: 170px;
+    margin-left: auto;
+    padding: 6px 8px;
+    font-size: 10px;
+    background: transparent;
+    border-color: var(--line-dark);
+    color: var(--paper);
+}
+
+#editCanvasBtn[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--ink);
+}
+
+.v5-edit-hint {
+    margin: 0;
+    padding: 8px 14px;
+    color: var(--paper);
+    background: var(--studio-bg-raised);
+    font-size: 11px;
+}
+
+.v5-canvas-overlay {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.v5-text-box {
+    position: absolute;
+    min-width: 16px;
+    min-height: 16px;
+    outline: 1px solid #a8d86d;
+    cursor: move;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.v5-text-box:focus-visible {
+    outline: 3px solid #a8d86d;
+    outline-offset: 3px;
+}
+
+.v5-handle {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    min-height: 15px;
+    padding: 0;
+    border-radius: 3px;
+    border: 1px solid #171915;
+    background: #a8d86d;
+    touch-action: none;
+}
+
+.v5-handle-nw {
+    left: -7px;
+    top: -7px;
+    cursor: nwse-resize;
+}
+
+.v5-handle-ne {
+    right: -7px;
+    top: -7px;
+    cursor: nesw-resize;
+}
+
+.v5-handle-sw {
+    left: -7px;
+    bottom: -7px;
+    cursor: nesw-resize;
+}
+
+.v5-handle-se {
+    right: -7px;
+    bottom: -7px;
+    cursor: nwse-resize;
+}
+
+.v5-handle-e {
+    right: -7px;
+    top: calc(50% - 7px);
+    cursor: ew-resize;
+}
+
+.v5-handle-s {
+    bottom: -7px;
+    left: calc(50% - 7px);
+    cursor: ns-resize;
+}
+
+.v5-guide-x,
+.v5-guide-y {
+    display: none;
+    position: absolute;
+    background: rgba(168, 216, 109, .55);
+}
+
+.v5-centered-x .v5-guide-x {
+    display: block;
+    width: 1px;
+    height: 100%;
+    left: 50%;
+}
+
+.v5-centered-y .v5-guide-y {
+    display: block;
+    height: 1px;
+    width: 100%;
+    top: 50%;
+}
+
+body[data-ui-mode="simple"] .advanced-only {
+    display: none !important;
+}
+
+body[data-ui-mode="simple"] [data-open-tab="canvas"],
+body[data-ui-mode="simple"] [data-open-tab="project"] {
+    display: none;
+}
+
+body[data-ui-mode="simple"] .editor-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+body[data-ui-mode="simple"] #section-design>.tool-strip {
+    display: none;
+}
+
+@media(max-width: 1080px) {
+    #editCanvasBtn {
+        font-size: 9px;
+        max-width: 110px;
+    }
+}
+
+@media(max-width: 900px) {
+    .v5-preferences {
+        padding-inline: 18px;
+    }
+}
+
+@media(max-width: 620px) {
+    #editCanvasBtn {
+        max-width: 70px;
+        overflow-wrap: anywhere;
+        line-height: 1.15;
+    }
+
+    .stage-toolbar {
+        gap: 4px;
+    }
+
+    .v5-block {
+        padding: 12px;
+    }
+
+    .v5-unmatched-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(max-width: 400px) {
+    #stageTextSettingsBtn {
+        max-width: 70px;
+        white-space: normal;
+        line-height: 1.15;
+    }
+
+    .v5-preferences {
+        gap: 8px;
+    }
+}

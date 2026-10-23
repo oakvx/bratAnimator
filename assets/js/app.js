@@ -12,7 +12,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const BratTiming = window.BratTiming;
         const BratMedia = window.BratMedia || {};
         const BratExport = window.BratExport || {};
-        const PROJECT_VERSION = BratCore.PROJECT_VERSION || 4;
+        const PROJECT_VERSION = BratCore.PROJECT_VERSION || 5;
 
         const previewCanvas = document.getElementById("previewCanvas");
         const previewCtx = previewCanvas.getContext("2d", {
@@ -22,9 +22,9 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         const togglePanelBtn = document.getElementById("togglePanelBtn");
         const loadDemoBtn = document.getElementById("loadDemoBtn");
-        const startBtn = document.getElementById("dockPreviewBtn");
-        const playPauseBtn = document.getElementById("stagePlayBtn");
-        const restartBtn = document.getElementById("stageRestartBtn");
+        const startBtn = document.getElementById("startBtn");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const restartBtn = document.getElementById("restartBtn");
         const resetBtn = document.getElementById("resetBtn");
         const bgBtn = document.getElementById("bgBtn");
         const darkBtn = document.getElementById("darkBtn");
@@ -49,7 +49,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const useAudioTimingCheckbox = document.getElementById("useAudioTimingCheckbox");
         const timingSpeedInput = document.getElementById("timingSpeedInput");
         const timingSpeedValue = document.getElementById("timingSpeedValue");
-        const timingLanguageSelect = document.getElementById("timingLanguageSelect");
         const startFromZeroCheckbox = document.getElementById("startFromZeroCheckbox");
 
         const exportVideoBtn = document.getElementById("exportVideoBtn");
@@ -105,19 +104,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const colorSwapHint = document.getElementById("colorSwapHint");
         const fontFamilySelect = document.getElementById("fontFamilySelect");
         const fontScaleInput = document.getElementById("fontScaleInput");
+        const fontScaleValue = document.getElementById("fontScaleValue");
+        const textSizeDecreaseBtn = document.getElementById("textSizeDecreaseBtn");
+        const textSizeIncreaseBtn = document.getElementById("textSizeIncreaseBtn");
+        const resetTextSettingsBtn = document.getElementById("resetTextSettingsBtn");
         const blurInput = document.getElementById("blurInput");
-        const motionBlurInput = document.getElementById("motionBlurInput");
-        const shakeModeSelect = document.getElementById("shakeModeSelect");
-        const shakeIntensityInput = document.getElementById("shakeIntensityInput");
-        const shakeSpeedInput = document.getElementById("shakeSpeedInput");
-        const starEnabledCheckbox = document.getElementById("starEnabledCheckbox");
-        const starPointsSelect = document.getElementById("starPointsSelect");
-        const starSizeInput = document.getElementById("starSizeInput");
-        const starSpeedInput = document.getElementById("starSpeedInput");
-        const starXInput = document.getElementById("starXInput");
-        const starYInput = document.getElementById("starYInput");
-        const visualEffectControls = [motionBlurInput, shakeModeSelect, shakeIntensityInput, shakeSpeedInput,
-            starEnabledCheckbox, starPointsSelect, starSizeInput, starSpeedInput, starXInput, starYInput];
         const verticalPositionInput = document.getElementById("verticalPositionInput");
         const stretchInput = document.getElementById("stretchInput");
         const letterSpacingInput = document.getElementById("letterSpacingInput");
@@ -206,6 +197,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const UNDO_LIMIT = 60;
 
         const state = {
+            lyricRows: [],
+            seed: 1337,
+            fonts: [],
+            beatEffects: { enabled: false, source: "audio", bpm: 120, offset: 0, pulse: 0.03, textPulse: true, backgroundZoom: false, colorCycle: false },
+            exportRange: { enabled: false, start: 0, end: null },
             timeline: [],
             isPlaying: false,
             animationFrame: null,
@@ -216,7 +212,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             selectedVideoBase: null,
             audioBuffer: null,
             audioAnalysis: null,
-            timing: { speed: 1, language: "auto" },
+            timing: { speed: 1 },
             audioFileName: "",
             audioObjectUrl: "",
             audioRemoteUrl: "",
@@ -317,8 +313,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 beautifulDepth: 0.86,
                 beautifulGlow: 0.84,
                 beautifulEdgeFade: 0.82,
-                safeZones: false,
-                effects: BratCore.normalizeVisualEffects()
+                safeZones: false
             },
             exportInProgress: false
         };
@@ -450,7 +445,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             restoreProjectSettings(entry.payload, { skipHistory: true });
             setProjectFeatureStatus(`undid ${entry.label}`);
             updateUndoRedoState();
-            saveProjectSettings();
         }
 
         function redoProjectChange() {
@@ -461,7 +455,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             restoreProjectSettings(entry.payload, { skipHistory: true });
             setProjectFeatureStatus(`redid ${entry.label}`);
             updateUndoRedoState();
-            saveProjectSettings();
         }
 
         function openMediaDb() {
@@ -682,7 +675,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function parseLRC(text, startFromZero, audioAnalysis = null) {
-            return BratTiming.buildTimeline(BratCore.parseLRC(text, startFromZero), audioAnalysis, {
+            if (BratCore.reconcileLyricRows) state.lyricRows = BratCore.reconcileLyricRows(BratCore.lrcToRows(text), state.lyricRows);
+            return BratTiming.buildTimeline(BratCore.parseLRC(text, startFromZero, state.lyricRows), audioAnalysis, {
                 ...state.timing,
                 mediaDuration: state.audioBuffer?.duration || (Number.isFinite(syncAudio?.duration) ? syncAudio.duration : undefined)
             });
@@ -690,7 +684,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function writeTimingControls(settings = { speed: 1 }) {
             state.timing = BratCore.normalizeTimingSettings(settings);
-            if (timingLanguageSelect) timingLanguageSelect.value = state.timing.language;
             if (timingSpeedInput) {
                 timingSpeedInput.value = String(state.timing.speed);
                 timingSpeedInput.setAttribute("aria-valuetext", `${state.timing.speed.toFixed(2)}×`);
@@ -815,27 +808,35 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function fitTextLayout(ctx, text, width, height) {
             const maxWidth = width * 0.76;
             const maxHeight = height * 0.48;
-            let finalSize = 56;
-            let finalLines = [text];
             const family = state.style.fontFamily || "Arial Narrow, Arial, Helvetica Neue Condensed, sans-serif";
-            const scale = state.style.fontScale || 1;
+            const requestedScale = Number(state.style.fontScale ?? 1);
+            const scale = Number.isFinite(requestedScale) ? clamp(requestedScale, 0.1, 2) : 1;
             const lineSpacing = state.style.lineSpacing || 0.92;
+            let finalSize = Math.max(1, Math.floor(width * 0.118));
+            let finalLines = [""];
+            let widest = 0;
 
-            for (let size = Math.floor(width * 0.118 * scale); size >= Math.max(22, Math.floor(width * 0.032)); size -= 2) {
-                ctx.save();
+            ctx.save();
+            for (let size = finalSize; ; size = Math.max(1, size - 2)) {
                 ctx.font = `400 ${size}px ${family}`;
                 const lines = measureWrappedLines(ctx, text, maxWidth);
                 const lineHeight = size * lineSpacing;
-                const widest = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
+                widest = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
                 const totalHeight = lines.length * lineHeight;
-                ctx.restore();
+                finalSize = size;
+                finalLines = lines;
 
-                if (widest <= maxWidth && totalHeight <= maxHeight) {
-                    finalSize = size;
-                    finalLines = lines;
-                    break;
-                }
+                if ((widest <= maxWidth && totalHeight <= maxHeight) || size === 1) break;
             }
+            ctx.restore();
+
+            // Scale the fitted layout so smaller text keeps its wrapping and shrinks proportionally.
+            const availableScale = Math.min(
+                widest > 0 ? maxWidth / widest : Infinity,
+                maxHeight / (finalLines.length * finalSize * lineSpacing)
+            );
+            const baselineFit = Math.min(1, availableScale);
+            finalSize *= baselineFit * Math.min(scale, availableScale / baselineFit);
 
             return { fontSize: finalSize, lines: finalLines, lineHeight: finalSize * lineSpacing, maxWidth };
         }
@@ -1580,7 +1581,9 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const maxWidth = width * (align === "center" ? (beautiful ? 0.86 : 0.84) : (beautiful ? 0.82 : 0.78));
             const anchorY = height * (state.style.musicScrollPosition || 0.50);
             const beautifulBase = Math.max(26, Math.min(width * 0.068, height * 0.076));
-            const baseSize = Math.max(28, beautiful ? beautifulBase : Math.min(width * 0.074, height * 0.082)) * (state.style.fontScale || 1);
+            const fontScale = state.style.fontScale || 1;
+            const baseSize = Math.max(28, beautiful ? beautifulBase : Math.min(width * 0.074, height * 0.082)) * fontScale;
+            const minFontSize = 18 * Math.min(1, fontScale);
             const lineGap = baseSize * (beautiful ? 1.62 : 1.58);
             const dimOpacity = clamp(state.style.musicDimOpacity ?? 0.34, 0.08, 0.80);
             const activeScale = clamp(state.style.musicActiveScale ?? 1.16, 1, 1.45);
@@ -1593,6 +1596,143 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             ctx.textBaseline = "middle";
             try { ctx.letterSpacing = `${Math.max(0, state.style.letterSpacing || 0)}px`; } catch (error) {}
             ctx.filter = `blur(${Math.max(0, (state.style.blur || 0) * (beautiful ? 0.08 : 0.42))}px)`;
+
+            const editor = window.BratEditor;
+            const beatSettings = state.beatEffects || {};
+            const hasTextPulse = beatSettings.enabled && beatSettings.textPulse;
+            const customGlobalFont = state.fonts?.some(font => font.family === state.style.fontFamily);
+            const visibleRows = [];
+            for (let index = first; index <= last; index += 1) {
+                const line = state.timeline[index];
+                const row = editor?.getRow(line);
+                visibleRows.push({ line, row, index, style: editor?.getLineStyle(line) || state.style });
+            }
+            const enhancedRows = customGlobalFont || hasTextPulse || visibleRows.some(item => item.row?.translation || ["fontFamily", "fontScale", "textColor"].some(key => Object.hasOwn(item.row?.style || {}, key)));
+            if (enhancedRows) {
+                const envelope = editor?.getBeatEnvelope(timeSec) || 0;
+                const pulseMaximum = hasTextPulse ? 1 + clamp(Number(beatSettings.pulse) || 0, 0, 0.1) : 1;
+                const pulse = hasTextPulse ? 1 + envelope * clamp(Number(beatSettings.pulse) || 0, 0, 0.1) : 1;
+                const availableWidth = maxWidth / pulseMaximum;
+                const models = new Map();
+
+                // Measure every complete bilingual group before positioning neighbors.
+                // The same rows are retained throughout word highlighting and beat pulses.
+                const fitRows = (text, family, weight, preferred, minimum, maxRows) => {
+                    let size = Math.max(0.25, preferred);
+                    let rows;
+                    for (;;) {
+                        ctx.font = `${weight} ${size}px ${family}`;
+                        rows = wrapPlainMusicText(ctx, text, availableWidth);
+                        if (rows.length <= maxRows || size <= minimum) break;
+                        size = Math.max(minimum, size - 1.5);
+                    }
+                    const widest = Math.max(...rows.map(row => row.width), 0);
+                    if (widest > availableWidth) {
+                        size *= availableWidth / widest;
+                        ctx.font = `${weight} ${size}px ${family}`;
+                        rows = wrapPlainMusicText(ctx, text, availableWidth);
+                    }
+                    return { size, rows };
+                };
+
+                for (const item of visibleRows) {
+                    const { line, row, index, style } = item;
+                    const role = line.role || "lead";
+                    if (beautiful && ["side", "background"].includes(role) && state.style.beautifulSideVocals === false) continue;
+                    const distance = index - activeIndex;
+                    const isActive = distance === 0;
+                    const roleScale = role === "side" ? 0.72 : role === "background" ? 0.78 : role === "secondary" ? 0.66 : 1;
+                    const distanceScale = Math.max(0.78, 1 - Math.abs(distance) * (beautiful ? 0.045 : 0.07));
+                    const localScale = (isActive ? activeScale * (beautiful ? 0.96 + 0.04 * settle : 1) : distanceScale) * roleScale;
+                    const rowScale = clamp(Number(style.fontScale) || 1, 0.1, 2);
+                    const rowBaseSize = baseSize / fontScale * rowScale;
+                    const weight = isActive && role !== "secondary" ? 760 : (role === "lead" ? 690 : 560);
+                    const family = beautiful ? (row?.style?.fontFamily || (customGlobalFont ? style.fontFamily : APPLE_LIKE_FONT_STACK)) : (style.fontFamily || "Arial, Helvetica, sans-serif");
+                    const primary = fitRows(line.text || "", family, weight, rowBaseSize * localScale, Math.max(18 * Math.min(1, rowScale), rowBaseSize * 0.45), isActive ? 2 : 1);
+                    const primaryLineHeight = primary.size * (beautiful ? 1.08 : 1.25);
+                    const primaryHeight = primary.rows.length * primaryLineHeight;
+                    let color = Object.hasOwn(row?.style || {}, "textColor") ? style.textColor : theme.text;
+                    if (Object.hasOwn(row?.style || {}, "textColor") && beatSettings.enabled && beatSettings.colorCycle) color = mixHex(color, state.style.wordAnimation?.color || "#ffffff", envelope * 0.55);
+                    const translation = String(row?.translation || "");
+                    const translationStyle = state.style.translation || {};
+                    const translationFamily = translationStyle.fontFamily || family;
+                    const translated = translation ? fitRows(translation, translationFamily, 500, primary.size * clamp(Number(translationStyle.fontScale) || 0.6, 0.1, 1), primary.size * 0.2, 3) : null;
+                    const translationLineHeight = translated ? translated.size * 1.2 : 0;
+                    const translationHeight = translated ? translated.rows.length * translationLineHeight : 0;
+                    const translationGap = translated ? primary.size * 0.26 : 0;
+                    const groupHeight = primaryHeight + translationGap + translationHeight;
+                    models.set(index, { ...item, role, isActive, family, weight, primary, primaryLineHeight, primaryHeight, color, translated, translationFamily, translationLineHeight, translationHeight, translationGap, groupHeight, reservedHeight: groupHeight * pulseMaximum });
+                }
+
+                const modelGap = (left, right) => Math.max(lineGap, ((models.get(left)?.reservedHeight || lineGap) + (models.get(right)?.reservedHeight || lineGap)) / 2 + baseSize * 0.22);
+                const offsets = new Map([[activeIndex, 0]]);
+                for (let index = activeIndex + 1; index <= last; index += 1) offsets.set(index, offsets.get(index - 1) + modelGap(index - 1, index));
+                for (let index = activeIndex - 1; index >= first; index -= 1) offsets.set(index, offsets.get(index + 1) - modelGap(index, index + 1));
+                const scrollOffset = transition * modelGap(activeIndex, activeIndex + 1);
+
+                for (const [index, model] of models) {
+                    const { line, role, isActive, family, weight, primary, primaryLineHeight, primaryHeight, translated, groupHeight } = model;
+                    const distance = index - activeIndex;
+                    let groupY = anchorY + offsets.get(index) - scrollOffset;
+                    if (beautiful) groupY += Math.sin(textTime * 0.32 + index * 0.72) * 0.8 * depth;
+                    if (groupY + model.reservedHeight / 2 < -lineGap || groupY - model.reservedHeight / 2 > height + lineGap) continue;
+                    const side = role === "side" || role === "background";
+                    const secondary = role === "secondary";
+                    const effectiveAlign = beautiful && role === "side" && align !== "center" ? "right" : align;
+                    const lineX = effectiveAlign === "right" ? width * 0.92 : textX;
+                    const primaryY = groupY - groupHeight / 2 + primaryHeight / 2;
+                    const baseOpacity = side || secondary ? Math.max(0.32, dimOpacity) : Math.max(0.24, dimOpacity * 0.72);
+                    let distanceOpacity = dimOpacity * Math.max(0.10, 1 - Math.abs(distance) * (beautiful ? 0.22 : 0.18));
+                    if (side) distanceOpacity *= beautiful ? 0.70 : 0.82;
+                    if (secondary) distanceOpacity *= 0.62;
+                    ctx.save();
+                    ctx.translate(lineX, groupY); ctx.scale(pulse, pulse); ctx.translate(-lineX, -groupY);
+                    ctx.font = `${weight} ${primary.size}px ${family}`;
+                    ctx.textAlign = effectiveAlign;
+                    if (beautiful) {
+                        ctx.shadowColor = rgbaFromHex(model.color, glow * (isActive ? 0.40 : 0.16));
+                        ctx.shadowBlur = (isActive ? 28 : 10) * glow;
+                        ctx.shadowOffsetY = 10 * depth;
+                    }
+                    if (isActive && beautiful && state.style.musicWordHighlight) {
+                        ctx.filter = "none";
+                        drawBeautifulActiveLine(ctx, line, index, timeSec, lineX, primaryY, effectiveAlign, availableWidth, primary.size, { ...theme, text: model.color }, glow, depth, baseOpacity);
+                    } else {
+                        ctx.globalAlpha = isActive ? 1 : distanceOpacity;
+                        ctx.fillStyle = model.color;
+                        if (beautiful && !isActive) ctx.filter = `blur(${Math.min(3.6, Math.max(0.18, Math.abs(distance) * 0.42 * depth))}px)`;
+                        const ratio = isActive && state.style.musicWordHighlight ? getMusicHighlightRatio(line, index, timeSec) : 1;
+                        let remaining = Math.max(0, Array.from(line.text || "").length * ratio);
+                        let consumed = 0;
+                        primary.rows.forEach((visual, rowIndex) => {
+                            const y = primaryY - primaryHeight / 2 + (rowIndex + 0.5) * primaryLineHeight;
+                            if (isActive && ratio < 1) {
+                                ctx.save(); ctx.globalAlpha = baseOpacity; ctx.fillText(visual.text, lineX, y); ctx.restore();
+                                const charCount = Array.from(visual.text).length;
+                                const rowRatio = clamp((remaining - consumed) / Math.max(1, charCount), 0, 1);
+                                const left = effectiveAlign === "center" ? lineX - visual.width / 2 : effectiveAlign === "right" ? lineX - visual.width : lineX;
+                                ctx.save(); ctx.beginPath(); ctx.rect(left - 2, y - primaryLineHeight / 2, visual.width * rowRatio + (rowRatio > 0 ? 4 : 0), primaryLineHeight); ctx.clip();
+                                ctx.fillText(visual.text, lineX, y); ctx.restore();
+                                consumed += charCount + 1;
+                            } else ctx.fillText(visual.text, lineX, y);
+                        });
+                    }
+                    if (translated) {
+                        ctx.filter = "none"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                        ctx.globalAlpha = isActive ? 0.92 : Math.max(0.12, distanceOpacity);
+                        ctx.fillStyle = state.style.translation?.color || model.color;
+                        ctx.font = `500 ${translated.size}px ${model.translationFamily}`;
+                        ctx.textAlign = effectiveAlign;
+                        const top = groupY - groupHeight / 2 + primaryHeight + model.translationGap;
+                        translated.rows.forEach((visual, rowIndex) => ctx.fillText(visual.text, lineX, top + (rowIndex + 0.5) * model.translationLineHeight));
+                    }
+                    ctx.restore();
+                }
+                ctx.restore();
+                if (beautiful && !options.textOnly) applyEdgeFade(ctx, width, height);
+                if (options.guides) drawSafeZones(ctx, width, height);
+                return;
+            }
 
             for (let i = first; i <= last; i += 1) {
                 const line = state.timeline[i];
@@ -1618,8 +1758,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 const fontWeight = isActive && !isSecondary ? 760 : (isSide || isBackground || isSecondary ? 560 : 690);
                 const preferredFontSize = baseSize * localScale;
                 const fontSize = beautiful
-                    ? fitWrappedMusicLineFont(ctx, text, maxWidth, preferredFontSize, Math.max(18, baseSize * 0.45), isActive ? 2 : 1)
-                    : fitMusicLineFont(ctx, text, maxWidth / Math.max(0.1, localScale), preferredFontSize, Math.max(18, baseSize * 0.48));
+                    ? fitWrappedMusicLineFont(ctx, text, maxWidth, preferredFontSize, Math.max(minFontSize, baseSize * 0.45), isActive ? 2 : 1)
+                    : fitMusicLineFont(ctx, text, maxWidth / Math.max(0.1, localScale), preferredFontSize, Math.max(minFontSize, baseSize * 0.48));
                 ctx.font = `${fontWeight} ${fontSize}px ${beautiful ? APPLE_LIKE_FONT_STACK : (state.style.fontFamily || "Arial, Helvetica, sans-serif")}`;
                 const measured = ctx.measureText(text).width;
 
@@ -1745,7 +1885,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const textMaskCanvas = document.createElement("canvas");
         const textMaskCtx = textMaskCanvas.getContext("2d");
 
-        function drawSceneWithoutEffects(ctx, width, height, timeSec, options = {}) {
+        function drawScene(ctx, width, height, timeSec, options = {}) {
             const visible = state.style.lyricsMode === "brat" ? getVisibleTextAt(timeSec) : null;
             const theme = getFrameTheme(timeSec, visible);
             const mediaText = Boolean(state.backgroundElement && ["text", "both"].includes(state.background.target));
@@ -1778,128 +1918,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
             if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
             ctx.drawImage(textMaskCanvas, 0, 0);
-            ctx.restore();
-            if (state.style.lyricsMode === "beautiful") applyEdgeFade(ctx, width, height);
-            if (options.guides) drawSafeZones(ctx, width, height);
-        }
-
-        const effectsTextCanvas = document.createElement("canvas");
-        const effectsTextCtx = effectsTextCanvas.getContext("2d");
-        const effectsStarCanvas = document.createElement("canvas");
-        const effectsStarCtx = effectsStarCanvas.getContext("2d");
-
-        function getVisualShake(timeSec, width, height, shake) {
-            let amplitude = Math.min(width, height) * 0.025 * shake.intensity;
-            let phase = timeSec * shake.speed;
-            if (shake.mode === "off" || amplitude === 0) return { x: 0, y: 0, rotation: 0 };
-            if (shake.mode === "impact") {
-                let onset = -Infinity;
-                for (let i = state.timeline.length - 1; i >= 0; i -= 1) {
-                    if (state.timeline[i].timestamp <= timeSec && state.timeline[i].text.trim()) {
-                        onset = state.timeline[i].timestamp;
-                        break;
-                    }
-                }
-                const age = timeSec - onset;
-                if (!Number.isFinite(age)) return { x: 0, y: 0, rotation: 0 };
-                amplitude *= Math.exp(-age * 10);
-                phase = age * shake.speed;
-            }
-            const sway = shake.mode === "sway";
-            return {
-                x: amplitude * Math.sin(phase * (sway ? 2.2 : 47)),
-                y: amplitude * 0.65 * Math.sin(phase * (sway ? 3.1 : 61) + 0.8),
-                rotation: amplitude / Math.min(width, height) * 0.45 * Math.sin(phase * (sway ? 1.8 : 37))
-            };
-        }
-
-        function applyVisualShake(ctx, width, height, shake) {
-            ctx.translate(width / 2 + shake.x, height / 2 + shake.y);
-            ctx.rotate(shake.rotation);
-            ctx.translate(-width / 2, -height / 2);
-        }
-
-        function drawRotatingStar(ctx, width, height, timeSec, star) {
-            const radius = Math.min(width, height) * star.size / 2;
-            // Keep the whole star inside the frame, including its rotation.
-            const x = radius + (width - radius * 2) * star.x;
-            const y = radius + (height - radius * 2) * star.y;
-            ctx.translate(x, y);
-            ctx.rotate(timeSec * star.speed * Math.PI * 2);
-            ctx.beginPath();
-            for (let i = 0; i < star.points * 2; i += 1) {
-                const angle = i * Math.PI / star.points - Math.PI / 2;
-                const r = i % 2 === 0 ? radius : radius * (star.points === 4 ? 0.22 : 0.45);
-                const px = Math.cos(angle) * r;
-                const py = Math.sin(angle) * r;
-                if (i === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            ctx.fillStyle = "#ffffff";
-            ctx.fill();
-        }
-
-        function drawScene(ctx, width, height, timeSec, options = {}) {
-            const effects = state.style.effects || BratCore.normalizeVisualEffects();
-            if (effects.motionBlur === 0 && effects.shake.mode === "off" && !effects.star.enabled) {
-                drawSceneWithoutEffects(ctx, width, height, timeSec, options);
-                return;
-            }
-            const theme = getFrameTheme(timeSec, state.style.lyricsMode === "brat" ? getVisibleTextAt(timeSec) : null);
-            const mediaText = Boolean(state.backgroundElement && ["text", "both"].includes(state.background.target));
-            for (const canvas of [textMaskCanvas, effectsTextCanvas, effectsStarCanvas]) {
-                if (canvas.width !== width || canvas.height !== height) {
-                    canvas.width = width;
-                    canvas.height = height;
-                }
-            }
-            effectsTextCtx.clearRect(0, 0, width, height);
-            effectsStarCtx.clearRect(0, 0, width, height);
-            // Reconstruct exposure from absolute time, so seeking and exporting match playback.
-            // Accumulate transparent foreground only: backgrounds stay sharp and no frame history is needed.
-            const samples = effects.motionBlur > 0 ? 6 : 1;
-            const exposure = effects.motionBlur * 0.08;
-            for (let i = 0; i < samples; i += 1) {
-                const sampleTime = Math.max(0, timeSec - exposure * i / Math.max(1, samples - 1));
-                const sampleTheme = getFrameTheme(sampleTime, state.style.lyricsMode === "brat" ? getVisibleTextAt(sampleTime) : null);
-                const gradientText = sampleTheme.swapped && ["linear", "radial"].includes(state.style.backgroundFill?.type);
-                drawSceneContent(textMaskCtx, width, height, sampleTime, { textOnly: true, guides: false });
-                if (mediaText || gradientText) {
-                    textMaskCtx.save();
-                    textMaskCtx.globalCompositeOperation = "source-in";
-                    if (mediaText) drawBackgroundMedia(textMaskCtx, width, height, timeSec);
-                    else drawConfiguredBackground(textMaskCtx, width, height, { ...getThemeColors(), swapped: false });
-                    textMaskCtx.restore();
-                }
-                const shake = getVisualShake(sampleTime, width, height, effects.shake);
-                effectsTextCtx.save();
-                effectsTextCtx.globalCompositeOperation = "lighter";
-                effectsTextCtx.globalAlpha = 1 / samples;
-                applyVisualShake(effectsTextCtx, width, height, shake);
-                effectsTextCtx.drawImage(textMaskCanvas, 0, 0);
-                effectsTextCtx.restore();
-                if (effects.star.enabled) {
-                    effectsStarCtx.save();
-                    effectsStarCtx.globalCompositeOperation = "lighter";
-                    effectsStarCtx.globalAlpha = 1 / samples;
-                    applyVisualShake(effectsStarCtx, width, height, shake);
-                    drawRotatingStar(effectsStarCtx, width, height, sampleTime, effects.star);
-                    effectsStarCtx.restore();
-                }
-            }
-            ctx.save();
-            ctx.clearRect(0, 0, width, height);
-            if (["music", "beautiful"].includes(state.style.lyricsMode)) drawMusicBackground(ctx, width, height, theme, timeSec);
-            else drawConfiguredBackground(ctx, width, height, theme);
-            if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
-            if (effects.star.enabled) {
-                // White in difference mode inverts the actual background, including gradients and media.
-                ctx.globalCompositeOperation = "difference";
-                ctx.drawImage(effectsStarCanvas, 0, 0);
-                ctx.globalCompositeOperation = "source-over";
-            }
-            ctx.drawImage(effectsTextCanvas, 0, 0);
             ctx.restore();
             if (state.style.lyricsMode === "beautiful") applyEdgeFade(ctx, width, height);
             if (options.guides) drawSafeZones(ctx, width, height);
@@ -1982,8 +2000,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function updateMeta() {
-            resizeLyricsEditor();
-            syncLyricsPicker();
             const parsedPreview = parseLRC(
                 lyricsInput.value,
                 startFromZeroCheckbox.checked,
@@ -2162,7 +2178,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                     updateBackgroundStatus();
                     saveProjectSettings();
                     searchStatus.textContent = `loaded: ${(item.artistName || "")} - ${(item.trackName || "")}`.trim();
-                    finishLyricsSelection();
                 });
             });
 
@@ -2353,13 +2368,22 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const videoId = extractYouTubeVideoId(query);
             if (!videoId) return false;
 
+            state.selectedSong = null;
             state.selectedVideoBase = "";
             state.metadata = {
                 ...state.metadata,
                 thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
                 source: state.metadata?.source || "youtube"
             };
+            lrclibResults.innerHTML = `
+          <div class="result-card">
+            <div class="result-title">YouTube preview loaded</div>
+            <div class="result-sub">${escapeHtml(videoId)}</div>
+            <p class="mini-copy">This is preview/reference only. Add matching audio in Timing with an uploaded audio/video file or permitted direct media URL.</p>
+          </div>
+        `;
             youtubeResults.innerHTML = "";
+            searchStatus.textContent = "YouTube link loaded as video preview";
             loadInvidiousPlayer(videoId);
             saveProjectSettings();
             return true;
@@ -2403,16 +2427,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const query = searchQueryInput.value.trim();
 
             if (!query) {
-                searchStatus.textContent = translateUi("searchEmpty");
-                searchQueryInput.focus();
+                alert("Write a search query first.");
                 return;
             }
 
-            if (extractYouTubeVideoId(query)) {
-                searchStatus.textContent = translateUi("searchYoutubeHelp");
-                document.getElementById("useReferenceBtn").hidden = false;
-                return;
-            }
+            if (loadYouTubeLinkFromSearch(query)) return;
 
             searchStatus.textContent = `LRCLIB search: ${query}`;
             lrclibResults.innerHTML = "";
@@ -2515,7 +2534,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 includeAudioInExportCheckbox.disabled = !hasAudio;
                 includeAudioInExportCheckbox.closest(".export-audio-option")?.classList.toggle("is-disabled", !hasAudio);
             }
-            updateExportSummary();
 
             if (!exportAudioNote) return;
 
@@ -2534,7 +2552,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             );
         }
 
-        async function createAudioExportSource() {
+        async function createAudioExportSource(exportWindow = null) {
             if (!shouldIncludeAudioInExport()) return null;
 
             const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -2547,8 +2565,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const source = audioContext.createBufferSource();
             const gain = audioContext.createGain();
             const audio = getAudioSettingsFromControls();
-            const offset = getAudioTimelineOffset();
-            const duration = Math.max(0.001, getAudioExportDuration());
+            const offset = getAudioTimelineOffset() + (exportWindow?.start || 0);
+            const duration = Math.max(0.001, exportWindow?.duration ?? getAudioExportDuration());
             const volume = clamp(audio.volume ?? 1, 0, 2);
             const fadeIn = clamp(audio.fadeIn ?? 0, 0, duration);
             const fadeOut = clamp(audio.fadeOut ?? 0, 0, duration);
@@ -2575,8 +2593,10 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                         gain.gain.setValueAtTime(volume, fadeStart);
                         gain.gain.linearRampToValueAtTime(0, now + duration);
                     }
-                    source.start(0, Math.min(offset, Math.max(0, source.buffer.duration - 0.001)));
-                    started = true;
+                    if (offset < source.buffer.duration) {
+                        source.start(0, offset, Math.min(duration, source.buffer.duration - offset));
+                        started = true;
+                    }
                 },
                 stop() {
                     try {
@@ -2674,106 +2694,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return window.BratI18n?.t(key) || fallback;
         }
 
-        function navigateEditor(tabName) {
-            if (panel.classList.contains("hidden")) togglePanelBtn.click();
-            document.querySelector(`[data-open-tab="${tabName === "canvas" ? "design" : tabName}"]`)?.click();
-        }
-
-        function showLyricsError(key) {
-            navigateEditor("lyrics");
-            const error = document.getElementById("lyricsError");
-            error.textContent = translateUi(key);
-            error.dataset.i18n = key;
-            error.hidden = false;
-            lyricsInput.setAttribute("aria-invalid", "true");
-            lyricsInput.focus();
-        }
-
-        function resizeLyricsEditor() {
-            if (!lyricsInput.getClientRects().length) return;
-            lyricsInput.style.height = "auto";
-            lyricsInput.style.height = Math.max(320, lyricsInput.scrollHeight + 2) + "px";
-        }
-
-        function syncLyricsPicker(compact = false) {
-            const picker = document.getElementById("lyricsPicker");
-            const summary = document.getElementById("lyricsPickerSummary");
-            if (!picker || !summary) return;
-            const hasLyrics = Boolean(lyricsInput.value.trim());
-            summary.dataset.i18n = hasLyrics ? "changeLyrics" : "chooseLyrics";
-            summary.textContent = translateUi(summary.dataset.i18n);
-            if (!hasLyrics) picker.open = true;
-            else if (compact) picker.open = false;
-        }
-
-        function finishLyricsSelection() {
-            const picker = document.getElementById("lyricsPicker");
-            const focusWasInside = picker?.contains(document.activeElement);
-            syncLyricsPicker(true);
-            resizeLyricsEditor();
-            if (focusWasInside && lyricsInput.getClientRects().length) lyricsInput.focus();
-        }
-
-        function openManualSync() {
-            navigateEditor("timing");
-            document.getElementById("advancedSyncDetails").open = true;
-            document.getElementById("manualSyncDetails").open = true;
-            if (!plainLyricsInput.value.trim() && !parseLRC(lyricsInput.value, false).length) {
-                plainLyricsInput.value = lyricsInput.value;
-            }
-            plainLyricsInput.focus();
-        }
-
-        function validateLyrics() {
-            const parsed = parseLRC(lyricsInput.value, startFromZeroCheckbox.checked, getActiveAudioAnalysis());
-            if (!lyricsInput.value.trim() || !parsed.length) {
-                showLyricsError(lyricsInput.value.trim() ? "lyricsInvalid" : "lyricsMissing");
-                return null;
-            }
-            lyricsInput.removeAttribute("aria-invalid");
-            document.getElementById("lyricsError").hidden = true;
-            state.timeline = parsed;
-            return parsed;
-        }
-
-        function updateExportSummary() {
-            const format = document.getElementById("exportFormatSummary");
-            const sound = document.getElementById("exportSoundSummary");
-            const dims = getExportDimensions();
-            if (format) {
-                const preset = formatPresetSelect?.value || "square";
-                const shape = translateUi(`format${preset.charAt(0).toUpperCase()}${preset.slice(1)}`);
-                format.textContent = `${shape} · ${dims.width}×${dims.height} · ${exportFpsSelect.value} fps`;
-            }
-            if (sound) sound.textContent = translateUi(shouldIncludeAudioInExport() ? "soundIncluded" : "soundSilent");
-        }
-
-        function showExportError(key) {
-            navigateEditor("export");
-            exportStatus.textContent = translateUi(key);
-            exportStatus.dataset.i18n = key;
-            exportStatus.dataset.statusCustom = "true";
-            exportStatus.classList.add("field-error");
-            exportStatus.setAttribute("tabindex", "-1");
-            exportStatus.focus();
-        }
-
-        function trapDialogFocus(event, dialog) {
-            if (event.key !== "Tab") return;
-            const controls = [...dialog.querySelectorAll('button, input, select, textarea, a[href], [tabindex="0"]')]
-                .filter(node => !node.disabled && node.getClientRects().length);
-            const first = controls[0];
-            const last = controls.at(-1);
-            if (!first) return;
-            if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
-                event.preventDefault();
-                last.focus();
-            } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
-                event.preventDefault();
-                first.focus();
-            }
-        }
-
 
         function secondsToTag(seconds) {
             return BratCore.secondsToTag(seconds);
@@ -2790,7 +2710,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function getLrcLineObjects() {
-            if (BratCore.lrcToRows) return BratCore.lrcToRows(lyricsInput.value);
+            if (BratCore.lrcToRows) {
+                const rows = BratCore.lrcToRows(lyricsInput.value);
+                state.lyricRows = BratCore.reconcileLyricRows ? BratCore.reconcileLyricRows(rows, state.lyricRows) : rows;
+                return state.lyricRows.map(row => ({ ...row, style: { ...row.style } }));
+            }
             const lines = normalizeLRCText(lyricsInput.value).split("\n");
             const rows = [];
             for (const raw of lines) {
@@ -2929,15 +2853,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                     <button class="remove-row" type="button" title="remove">&times;</button>
                 `;
 
-                for (const [selector, key] of Object.entries({
-                    ".row-select": "selectPhrase", ".lrc-time": "phraseTime", ".lrc-text": "phraseText",
-                    ".seek-row": "seekPhrase", ".remove-row": "removePhrase"
-                })) {
-                    wrapper.querySelector(selector)?.setAttribute("aria-label", translateUi(key));
-                }
-                wrapper.querySelector(".seek-row").textContent = "▶";
-                wrapper.querySelector(".seek-row").removeAttribute("title");
-                wrapper.querySelector(".remove-row").removeAttribute("title");
                 wrapper.addEventListener("click", (event) => {
                     if (event.target.closest("input, button")) return;
                     setSelectedRowIndexes([index]);
@@ -2977,7 +2892,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (!rows.length || !lrcRows.children.length) {
                 const empty = document.createElement("div");
                 empty.className = "meta muted";
-                empty.textContent = translateUi(rows.length ? "noMatchingPhrases" : "noPhrases");
+                empty.textContent = rows.length ? "No lyric rows match the filter." : "No editable LRC rows yet.";
                 lrcRows.appendChild(empty);
             }
         }
@@ -3007,6 +2922,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 .map(row => ({ ...row, time: Math.max(0, Number(row.time) || 0), text: String(row.text || "").trim() }));
             const metadata = normalizeLRCText(lyricsInput.value).split("\n").map(line => line.trim()).filter(line => META_TAG_RE.test(line));
             const body = BratCore.rowsToLrc(normalizedRows);
+            state.lyricRows = BratCore.reconcileLyricRows ? BratCore.reconcileLyricRows(normalizedRows, state.lyricRows) : normalizedRows;
             lyricsInput.value = [...metadata, body].filter(Boolean).join("\n");
             if (Array.isArray(options.selection)) setSelectedRowIndexes(options.selection);
             renderLrcRows();
@@ -3088,7 +3004,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const nextRows = rows.map(row => ({ ...row }));
             indexes.slice().reverse().forEach(index => {
                 if (!rows[index]) return;
-                nextRows.splice(index + 1, 0, { ...rows[index], time: rows[index].time + 0.25 });
+                nextRows.splice(index + 1, 0, { ...rows[index], id: undefined, style: { ...rows[index].style }, time: rows[index].time + 0.25 });
             });
             commitRowsChange("duplicate lyrics", nextRows, indexes.map(index => index + 1));
         }
@@ -3129,22 +3045,9 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             updateExportEstimate();
             updateCompatibilityPanel();
             saveProjectSettings();
-            document.dispatchEvent(new CustomEvent("brat-format-change"));
         }
 
         function syncEffectControlState() {
-            const shakeEnabled = shakeModeSelect.value !== "off";
-            for (const control of [shakeIntensityInput, shakeSpeedInput]) control.disabled = !shakeEnabled;
-            for (const control of [starPointsSelect, starSizeInput, starSpeedInput, starXInput, starYInput]) {
-                control.disabled = !starEnabledCheckbox.checked;
-            }
-            for (const control of visualEffectControls) {
-                const output = document.getElementById(control.id + "Value");
-                if (!output) continue;
-                if (control === shakeSpeedInput) output.value = (Number(control.value) / 100).toFixed(2) + "×";
-                else if (control === starSpeedInput) output.value = (Number(control.value) / 100).toFixed(2);
-                else output.value = control.value + "%";
-            }
             const fillType = backgroundFillTypeSelect?.value || "solid";
             if (gradientOptions) gradientOptions.hidden = fillType === "solid";
             if (gradientAngleInput) gradientAngleInput.disabled = fillType !== "linear";
@@ -3173,9 +3076,36 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 : `Swap every ${interval === 1 ? "" : `${interval} `}${unitLabel}.`;
         }
 
+        function syncTextSettingsControls() {
+            const percent = Number(fontScaleInput?.value) || 100;
+            if (fontScaleValue) fontScaleValue.textContent = `${percent}%`;
+            if (textSizeDecreaseBtn) textSizeDecreaseBtn.disabled = percent <= Number(fontScaleInput.min);
+            if (textSizeIncreaseBtn) textSizeIncreaseBtn.disabled = percent >= Number(fontScaleInput.max);
+            document.querySelectorAll("[data-text-size]").forEach((button) => {
+                button.setAttribute("aria-pressed", String(Number(button.dataset.textSize) === percent));
+            });
+            [
+                ["blurValue", blurInput, value => `${(value / 100).toFixed(2)}px`],
+                ["verticalPositionValue", verticalPositionInput, value => `${value}%`],
+                ["stretchValue", stretchInput, value => `${value}%`],
+                ["letterSpacingValue", letterSpacingInput, value => `${value}px`],
+                ["lineSpacingValue", lineSpacingInput, value => `${value}%`]
+            ].forEach(([id, input, format]) => {
+                const output = document.getElementById(id);
+                if (output && input) output.textContent = format(Number(input.value));
+            });
+        }
+
+        function setTextSize(percent) {
+            if (!fontScaleInput) return;
+            fontScaleInput.value = String(clamp(Number(percent) || 100, Number(fontScaleInput.min), Number(fontScaleInput.max)));
+            fontScaleInput.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+
         function readStyleControls() {
             state.animationMode = animationModeSelect?.value || state.animationMode || "typewriter";
             state.style = {
+                ...state.style,
                 bgColor: bgColorInput?.value || state.style.bgColor,
                 textColor: textColorInput?.value || state.style.textColor,
                 backgroundFill: {
@@ -3213,38 +3143,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 beautifulDepth: (Number(beautifulDepthInput?.value) || 72) / 100,
                 beautifulGlow: (Number(beautifulGlowInput?.value) || 58) / 100,
                 beautifulEdgeFade: (Number(beautifulEdgeFadeInput?.value) || 70) / 100,
-                safeZones: Boolean(safeZonesCheckbox?.checked),
-                effects: BratCore.normalizeVisualEffects({
-                    motionBlur: Number(motionBlurInput.value) / 100,
-                    shake: {
-                        mode: shakeModeSelect.value,
-                        intensity: Number(shakeIntensityInput.value) / 100,
-                        speed: Number(shakeSpeedInput.value) / 100
-                    },
-                    star: {
-                        enabled: starEnabledCheckbox.checked,
-                        points: Number(starPointsSelect.value),
-                        size: Number(starSizeInput.value) / 100,
-                        speed: Number(starSpeedInput.value) / 100,
-                        x: Number(starXInput.value) / 100,
-                        y: Number(starYInput.value) / 100
-                    }
-                })
+                safeZones: Boolean(safeZonesCheckbox?.checked)
             };
+            syncTextSettingsControls();
         }
 
         function writeStyleControls(style = state.style, mode = state.animationMode) {
-            const effects = BratCore.normalizeVisualEffects(style.effects);
-            motionBlurInput.value = Math.round(effects.motionBlur * 100);
-            shakeModeSelect.value = effects.shake.mode;
-            shakeIntensityInput.value = Math.round(effects.shake.intensity * 100);
-            shakeSpeedInput.value = Math.round(effects.shake.speed * 100);
-            starEnabledCheckbox.checked = effects.star.enabled;
-            starPointsSelect.value = effects.star.points;
-            starSizeInput.value = Math.round(effects.star.size * 100);
-            starSpeedInput.value = Math.round(effects.star.speed * 100);
-            starXInput.value = Math.round(effects.star.x * 100);
-            starYInput.value = Math.round(effects.star.y * 100);
             if (animationModeSelect) animationModeSelect.value = mode || "typewriter";
             const backgroundFill = BratCore.normalizeBackgroundFill
                 ? BratCore.normalizeBackgroundFill(style.backgroundFill)
@@ -3695,7 +3599,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (!snapshots.length) {
                 const empty = document.createElement("div");
                 empty.className = "snapshot-empty";
-                empty.textContent = translateUi("noSnapshots");
+                empty.textContent = "No snapshots yet.";
                 snapshotList.appendChild(empty);
                 return;
             }
@@ -3726,7 +3630,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
                 const loadButton = document.createElement("button");
                 loadButton.type = "button";
-                loadButton.textContent = translateUi("loadSnapshot");
+                loadButton.textContent = "load";
                 loadButton.addEventListener("click", () => {
                     restoreProjectSettings(snapshot.payload);
                     saveProjectSettings();
@@ -3736,9 +3640,8 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
                 const deleteButton = document.createElement("button");
                 deleteButton.type = "button";
-                deleteButton.textContent = translateUi("deleteSnapshot");
+                deleteButton.textContent = "delete";
                 deleteButton.addEventListener("click", () => {
-                    if (!window.confirm(translateUi("confirmDeleteSnapshot"))) return;
                     writeSnapshots(loadSnapshots().filter(item => item.id !== snapshot.id));
                     renderSnapshots();
                     setProjectFeatureStatus("snapshot deleted");
@@ -3894,12 +3797,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function showTab(tabName) {
-            navigateEditor(tabName);
+            document.querySelector(`[data-open-tab="${tabName}"]`)?.click();
         }
 
         const commandDefinitions = [
             { name: "preview from start", run: () => startBtn?.click() },
-            { name: "export video", run: () => navigateEditor("export") },
+            { name: "export video", run: () => { showTab("export"); exportVideoBtn?.click(); } },
             { name: "save snapshot", run: () => saveSnapshotBtn?.click() },
             { name: "undo", run: undoProjectChange },
             { name: "redo", run: redoProjectChange },
@@ -3911,27 +3814,16 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             { name: "open lyrics", run: () => showTab("lyrics") },
             { name: "open timing", run: () => showTab("timing") },
             { name: "open design", run: () => showTab("design") },
-            { name: "open video format", run: () => showTab("design") },
+            { name: "open canvas", run: () => showTab("canvas") },
             { name: "open project", run: () => showTab("project") }
         ];
 
         function renderCommandPalette() {
             if (!commandPaletteList) return;
-            const labels = {
-                "preview from start": "previewFromStart", "export video": "reviewExport",
-                "save snapshot": "saveSnapshot", "undo": "undo", "redo": "redo",
-                "fullscreen preview": "fullscreenPreview", "play selected lyric": "playPhrase",
-                "split selected lyric": "splitPhrase", "duplicate selected lyric": "duplicatePhrase",
-                "clear background": "removeBackground", "open lyrics": "tabText",
-                "open timing": "tabSync", "open design": "tabAppearance",
-                "open video format": "videoShape", "open project": "tabProject",
-                "auto contrast": "autoContrast", "fit preview": "fitPreview"
-            };
-            const commandLabel = command => translateUi(labels[command.name] || command.name);
             const query = (commandPaletteInput?.value || "").trim().toLowerCase();
-            const commands = commandDefinitions.filter(command => command.name.includes(query) || commandLabel(command).toLowerCase().includes(query)).slice(0, 8);
+            const commands = commandDefinitions.filter(command => command.name.includes(query) || (window.BratItalianUI?.localize(command.name) || "").toLowerCase().includes(query)).slice(0, 8);
             commandPaletteList.innerHTML = commands.map((command, index) => `
-                <button type="button" data-command-index="${index}" ${index === 0 ? 'class="active"' : ""}>${escapeHtml(commandLabel(command))}</button>
+                <button type="button" data-command-index="${index}" ${index === 0 ? 'class="active"' : ""}>${escapeHtml(window.BratItalianUI?.localize(command.name) || command.name)}</button>
             `).join("");
             commandPaletteList.querySelectorAll("button").forEach((button, localIndex) => {
                 button.addEventListener("click", () => {
@@ -3943,9 +3835,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function openCommandPalette() {
             if (!commandPalette) return;
-            commandPalette.returnFocus = document.getElementById("moreMenu").open
-                ? document.querySelector("#moreMenu > summary") : document.activeElement;
-            document.getElementById("moreMenu").open = false;
             commandPalette.classList.remove("hidden");
             if (commandPaletteInput) commandPaletteInput.value = "";
             renderCommandPalette();
@@ -3954,8 +3843,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function closeCommandPalette() {
             commandPalette?.classList.add("hidden");
-            const previous = commandPalette?.returnFocus;
-            (previous?.getClientRects().length ? previous : document.querySelector("#moreMenu > summary"))?.focus();
         }
 
         function copySelectedRowsToClipboard() {
@@ -4026,6 +3913,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             getBackgroundSettingsFromControls();
             return {
                 version: PROJECT_VERSION,
+                lyricRows: getLrcLineObjects(),
+                seed: state.seed,
+                fonts: state.fonts,
+                beatEffects: state.beatEffects,
+                exportRange: state.exportRange,
                 lyrics: lyricsInput.value,
                 plainLyrics: plainLyricsInput?.value || "",
                 query: searchQueryInput.value,
@@ -4075,8 +3967,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             clipCanvas.width = dims.width;
             clipCanvas.height = dims.height;
             const clipCtx = clipCanvas.getContext("2d", { alpha: false });
-            await prepareBackgroundFrame(0);
-            drawScene(clipCtx, dims.width, dims.height, 0, { guides: false });
             const stream = clipCanvas.captureStream(fps);
             const chunks = [];
             const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm" });
@@ -4142,7 +4032,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             try {
                 const payload = buildProjectPayload();
                 const raw = JSON.stringify(payload);
-                localStorage.setItem("bratAnimator.project.v4", raw);
+                localStorage.setItem("bratAnimator.project.v5", raw);
             } catch (error) {
                 console.warn("autosave failed", error);
             }
@@ -4150,7 +4040,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function loadProjectSettings() {
             try {
-                const raw = localStorage.getItem("bratAnimator.project.v4") || localStorage.getItem("bratAnimator.project.v3") || localStorage.getItem("bratAnimator.project.v2");
+                const raw = localStorage.getItem("bratAnimator.project.v5") || localStorage.getItem("bratAnimator.project.v4") || localStorage.getItem("bratAnimator.project.v3") || localStorage.getItem("bratAnimator.project.v2");
                 return raw ? JSON.parse(raw) : null;
             } catch (error) {
                 console.warn("restore failed", error);
@@ -4169,6 +4059,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         function restoreProjectSettings(payload, options = {}) {
             if (!payload || typeof payload !== "object") return false;
             payload = migrateProjectPayload(payload);
+
+            state.lyricRows = payload.lyricRows || [];
+            state.seed = payload.seed ?? 1337;
+            state.fonts = payload.fonts || [];
+            state.beatEffects = payload.beatEffects || { enabled: false };
+            state.exportRange = payload.exportRange || { enabled: false, start: 0, end: null };
 
             if (typeof payload.lyrics === "string") lyricsInput.value = payload.lyrics;
             if (plainLyricsInput && typeof payload.plainLyrics === "string") plainLyricsInput.value = payload.plainLyrics;
@@ -4201,12 +4097,16 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 updateAudioStatus("URL media reference restored; click load media URL to decode it again.");
             }
             if (!options.skipHistory) updateUndoRedoState();
-            syncLyricsPicker(true);
             return true;
         }
 
         function clearSavedProject() {
-            if (!window.confirm(translateUi("confirmClearProject"))) return false;
+            localStorage.removeItem("bratAnimator.project.v5");
+            state.lyricRows = [];
+            state.fonts = [];
+            state.seed = 1337;
+            state.beatEffects = BratCore.normalizeBeatEffects?.() || { enabled: false };
+            state.exportRange = { enabled: false, start: 0, end: null };
             localStorage.removeItem("bratAnimator.project.v2");
             localStorage.removeItem("bratAnimator.project.v3");
             localStorage.removeItem("bratAnimator.project.v4");
@@ -4253,13 +4153,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             updateCompatibilityPanel();
             renderLrcRows();
             renderTimeline();
-            state.undoStack = [];
-            state.redoStack = [];
-            updateUndoRedoState();
-            hideRecoveryBanner();
-            for (const version of [2, 3, 4]) localStorage.removeItem("bratAnimator.project.v" + version);
-            navigateEditor("lyrics");
-            return true;
         }
 
         async function loadLrcFile(file) {
@@ -4272,7 +4165,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             renderLrcRows();
             renderTimeline();
             saveProjectSettings();
-            finishLyricsSelection();
         }
 
         async function processAudioFile(file) {
@@ -4500,30 +4392,54 @@ async function updateExportEstimate() {
 
         async function exportVideo() {
             if (state.exportInProgress) return;
+            if (window.BratEditor && !await window.BratEditor.prepareExport()) return;
 
-            const parsed = validateLyrics();
-            if (!parsed) return;
-            delete exportStatus.dataset.i18n;
-            exportStatus.classList.remove("field-error");
+            const parsed = parseLRC(
+                lyricsInput.value,
+                startFromZeroCheckbox.checked,
+                getActiveAudioAnalysis()
+            );
+
+            if (!lyricsInput.value.trim()) {
+                alert("Paste LRC lyrics first.");
+                return;
+            }
+
+            if (!parsed.length) {
+                alert("Invalid format. Use [MM:SS.xx] text.");
+                return;
+            }
 
             const includeAudio = shouldIncludeAudioInExport();
 
             if (state.background?.kind !== "none" && state.backgroundExportSafe === false) {
-                showExportError("backgroundExportError");
+                alert("The selected remote background is not CORS-enabled, so the browser cannot export it. Use a local upload or another permitted URL.");
                 return;
             }
 
             if (includeAudio && typeof MediaRecorder === "undefined") {
-                showExportError("audioExportError");
+                alert("Audio export requires MediaRecorder support in this browser.");
                 return;
             }
 
             if (typeof MediaRecorder === "undefined" && !canAttemptFastExport()) {
-                showExportError("videoExportError");
+                alert("This browser does not support video export.");
                 return;
             }
 
             state.timeline = parsed;
+            const dims = getExportDimensions();
+            const size = Math.max(dims.width, dims.height);
+            const fps = Number(exportFpsSelect.value) || 30;
+            const baseDuration = Math.max(1, getTimelineDuration() + 0.6);
+            const fullDuration = includeAudio ? Math.max(baseDuration, getAudioExportDuration(parsed)) : baseDuration;
+            let exportWindow;
+            try {
+                exportWindow = window.BratMotion ? BratMotion.resolveExportRange(state.exportRange, fullDuration) : { start: 0, end: fullDuration, duration: fullDuration };
+            } catch (error) {
+                exportStatus.textContent = error.message;
+                return;
+            }
             state.exportInProgress = true;
             setExportProgress(0, true);
             exportVideoBtn.disabled = true;
@@ -4533,11 +4449,7 @@ async function updateExportEstimate() {
             const previousElapsed = getElapsedSeconds();
             stopPlayback(true);
 
-            const dims = getExportDimensions();
-            const size = Math.max(dims.width, dims.height);
-            const fps = Number(exportFpsSelect.value) || 30;
-            const baseDuration = Math.max(1, getTimelineDuration() + 0.6);
-            const duration = includeAudio ? Math.max(baseDuration, getAudioExportDuration(parsed)) : baseDuration;
+            const duration = exportWindow.duration;
             const totalFrames = Math.ceil(duration * fps);
             const exportCanvas = document.createElement("canvas");
             exportCanvas.width = dims.width;
@@ -4616,13 +4528,13 @@ async function updateExportEstimate() {
 
                     encoder.configure(encoderConfig);
 
-                    for (let frameIndex = 0; frameIndex <= totalFrames; frameIndex += 1) {
-                        const timeSec = Math.min(duration, frameIndex / fps);
+                    for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
+                        const timeSec = exportWindow.start + frameIndex / fps;
                         drawScene(exportCtx, exportCanvas.width, exportCanvas.height, timeSec, { guides: false });
 
                         const frame = new VideoFrame(exportCanvas, {
                             timestamp: Math.round((frameIndex / fps) * 1_000_000),
-                            duration: Math.round((1 / fps) * 1_000_000)
+                            duration: Math.round(Math.min(1 / fps, duration - frameIndex / fps) * 1_000_000)
                         });
 
                         encoder.encode(frame, {
@@ -4631,8 +4543,8 @@ async function updateExportEstimate() {
                         frame.close();
                         encodedFrames += 1;
 
-                        if (frameIndex === 0 || frameIndex === totalFrames || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
-                            const progress = totalFrames > 0 ? frameIndex / totalFrames : 1;
+                        if (frameIndex === 0 || frameIndex === totalFrames - 1 || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
+                            const progress = (frameIndex + 1) / totalFrames;
                             const elapsedRealSec = (performance.now() - perfStart) / 1000;
                             const remainingSec = progress > 0 ? Math.max(0, (elapsedRealSec / progress) - elapsedRealSec) : 0;
                             exportStatus.textContent = `fast MP4 export: ${Math.round(progress * 100)}% • estimated remaining ${formatClock(remainingSec)}`;
@@ -4659,10 +4571,8 @@ async function updateExportEstimate() {
                 }
 
                 exportStatus.textContent = "preparing fallback export...";
-                await prepareBackgroundFrame(0);
-                drawScene(exportCtx, exportCanvas.width, exportCanvas.height, 0, { guides: false });
                 const stream = exportCanvas.captureStream(fps);
-                activeAudioExport = includeAudio ? await createAudioExportSource() : null;
+                activeAudioExport = includeAudio ? await createAudioExportSource(exportWindow) : null;
                 activeAudioExport?.stream.getAudioTracks().forEach(track => stream.addTrack(track));
                 const chunks = [];
                 let recorder;
@@ -4692,17 +4602,20 @@ async function updateExportEstimate() {
                     recorder.onstop = () => resolve();
                 });
 
+                await prepareBackgroundFrame(exportWindow.start);
+                drawScene(exportCtx, exportCanvas.width, exportCanvas.height, exportWindow.start, { guides: false });
                 recorder.start();
                 await activeAudioExport?.start();
                 exportStatus.textContent = `fallback export: ${extension.toUpperCase()} - ${fps} fps - ${includeAudio ? "with loaded audio" : "no audio"}`;
                 const exportPerfStart = performance.now();
 
-                for (let frameIndex = 0; frameIndex <= totalFrames; frameIndex += 1) {
-                    const timeSec = Math.min(duration, frameIndex / fps);
+                for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
+                    const timeSec = exportWindow.start + frameIndex / fps;
+                    if (usesVideoBackground()) await prepareBackgroundFrame(timeSec);
                     drawScene(exportCtx, exportCanvas.width, exportCanvas.height, timeSec, { guides: false });
 
-                    if (frameIndex === 0 || frameIndex === totalFrames || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
-                        const progress = totalFrames > 0 ? frameIndex / totalFrames : 1;
+                    if (frameIndex === 0 || frameIndex === totalFrames - 1 || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
+                        const progress = (frameIndex + 1) / totalFrames;
                         if (progress > 0) {
                             const elapsedRealSec = (performance.now() - exportPerfStart) / 1000;
                             const remainingSec = Math.max(0, (elapsedRealSec / progress) - elapsedRealSec);
@@ -4711,7 +4624,7 @@ async function updateExportEstimate() {
                         }
                     }
 
-                    await wait(1000 / fps);
+                    await wait(Math.max(0, exportPerfStart + Math.min(duration, (frameIndex + 1) / fps) * 1000 - performance.now()));
                 }
 
                 await wait(120);
@@ -4742,6 +4655,7 @@ async function updateExportEstimate() {
         }
 
         async function exportCurrentFramePng() {
+            if (window.BratEditor && !await window.BratEditor.prepareExport(false)) return;
             const dims = getExportDimensions();
             const frameCanvas = document.createElement("canvas");
             frameCanvas.width = dims.width;
@@ -4777,15 +4691,17 @@ async function updateExportEstimate() {
             searchStatus.textContent = "demo loaded";
             saveProjectSettings();
             renderPreviewAt(0);
-            finishLyricsSelection();
         });
 
         clearResultsBtn.addEventListener("click", clearSearchResults);
         searchSongBtn.addEventListener("click", runSongSearch);
 
         searchQueryInput.addEventListener("input", saveProjectSettings);
-        searchQueryInput.addEventListener("input", () => {
-            document.getElementById("useReferenceBtn").hidden = !extractYouTubeVideoId(searchQueryInput.value.trim());
+        searchQueryInput.addEventListener("paste", () => {
+            window.setTimeout(() => {
+                const pastedValue = searchQueryInput.value.trim();
+                if (extractYouTubeVideoId(pastedValue)) runSongSearch();
+            }, 0);
         });
 
         searchQueryInput.addEventListener("keydown", (event) => {
@@ -4812,15 +4728,12 @@ async function updateExportEstimate() {
         });
 
         lyricsInput.addEventListener("input", () => {
-            lyricsInput.removeAttribute("aria-invalid");
-            document.getElementById("lyricsError").hidden = true;
             rebuildTimelineFromCurrentInputs();
             updateMeta();
             updateExportEstimate();
             renderLrcRows();
             renderTimeline();
             saveProjectSettings();
-            finishLyricsSelection();
         });
 
         useAudioTimingCheckbox.addEventListener("change", () => {
@@ -4831,24 +4744,10 @@ async function updateExportEstimate() {
         });
 
         timingSpeedInput?.addEventListener("input", () => {
-            commitProjectChange("change estimated speed", () => {
-                writeTimingControls({ ...state.timing, speed: Number(timingSpeedInput.value) });
-            });
+            writeTimingControls({ speed: Number(timingSpeedInput.value) });
             rebuildTimelineFromCurrentInputs();
             updateMeta();
             updateExportEstimate();
-            renderTimeline();
-            saveProjectSettings();
-        });
-
-        timingLanguageSelect?.addEventListener("change", () => {
-            commitProjectChange("change lyrics language", () => {
-                writeTimingControls({ ...state.timing, language: timingLanguageSelect.value });
-            });
-            rebuildTimelineFromCurrentInputs();
-            updateMeta();
-            updateExportEstimate();
-            renderTimeline();
             saveProjectSettings();
         });
 
@@ -4860,11 +4759,28 @@ async function updateExportEstimate() {
         });
 
         startBtn.addEventListener("click", () => {
-            if (validateLyrics()) startFromBeginning();
+            const parsed = parseLRC(
+                lyricsInput.value,
+                startFromZeroCheckbox.checked,
+                getActiveAudioAnalysis()
+            );
+
+            if (!lyricsInput.value.trim()) {
+                alert("Paste LRC lyrics first.");
+                return;
+            }
+
+            if (!parsed.length) {
+                alert("Invalid format. Use [MM:SS.xx] text.");
+                return;
+            }
+
+            state.timeline = parsed;
+            startFromBeginning();
         });
 
         playPauseBtn.addEventListener("click", () => {
-            if (!validateLyrics()) return;
+            if (!state.timeline.length) return;
 
             if (state.isPlaying) {
                 stopPlayback(true);
@@ -4880,12 +4796,11 @@ async function updateExportEstimate() {
         });
 
         restartBtn.addEventListener("click", () => {
-            if (validateLyrics()) startFromBeginning();
+            rebuildTimelineFromCurrentInputs();
+            startFromBeginning();
         });
 
-        resetBtn.addEventListener("click", () => {
-            if (window.confirm(translateUi("confirmResetPlayback"))) resetAll();
-        });
+        resetBtn.addEventListener("click", resetAll);
 
         closePlayerBtn.addEventListener("click", () => {
             playerWrap.classList.add("hidden");
@@ -4906,7 +4821,9 @@ async function updateExportEstimate() {
         exportVideoBtn.addEventListener("click", exportVideo);
         exportPngBtn.addEventListener("click", exportCurrentFramePng);
         exportSizeSelect.addEventListener("change", () => {
-            applyFormatPreset();
+            updateExportEstimate();
+            updateCompatibilityPanel();
+            saveProjectSettings();
         });
         exportFpsSelect.addEventListener("change", () => {
             updateExportEstimate();
@@ -4929,7 +4846,7 @@ async function updateExportEstimate() {
 
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
-        [...visualEffectControls, animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
+        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
                 if (themePresetSelect && [bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput].includes(control)) {
                     themePresetSelect.value = "custom";
@@ -4946,15 +4863,29 @@ async function updateExportEstimate() {
                 saveProjectSettings();
             });
         });
-        document.getElementById("resetVisualEffectsBtn").addEventListener("click", () => {
-            commitProjectChange("reset visual effects", () => {
-                state.style = { ...state.style, effects: BratCore.normalizeVisualEffects() };
-                writeStyleControls();
-                renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
-                saveProjectSettings();
-            });
-        });
         randomStyleBtn?.addEventListener("click", randomizeStyle);
+        textSizeDecreaseBtn?.addEventListener("click", () => setTextSize(Number(fontScaleInput.value) - 5));
+        textSizeIncreaseBtn?.addEventListener("click", () => setTextSize(Number(fontScaleInput.value) + 5));
+        document.querySelectorAll("[data-text-size]").forEach((button) => {
+            button.addEventListener("click", () => setTextSize(button.dataset.textSize));
+        });
+        resetTextSettingsBtn?.addEventListener("click", () => {
+            commitProjectChange("reset text settings", () => {
+                writeStyleControls({
+                    ...state.style,
+                    fontFamily: fontFamilySelect.options[0].value,
+                    fontScale: 1,
+                    blur: 1.05,
+                    verticalPosition: 0,
+                    stretch: 0.94,
+                    letterSpacing: 0,
+                    lineSpacing: 0.92
+                });
+                if (themePresetSelect) themePresetSelect.value = "custom";
+            });
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            saveProjectSettings();
+        });
         backgroundFileInput?.addEventListener("change", () => loadBackgroundFile(backgroundFileInput.files?.[0]));
         loadBackgroundUrlBtn?.addEventListener("click", () => loadBackgroundUrl(backgroundUrlInput?.value || ""));
         backgroundUrlInput?.addEventListener("keydown", (event) => {
@@ -5083,13 +5014,6 @@ async function updateExportEstimate() {
                 closeCommandPalette();
                 return;
             }
-            if (commandPalette && !commandPalette.classList.contains("hidden")) {
-                trapDialogFocus(event, commandPalette);
-                return;
-            }
-            if (document.body.classList.contains("tutorial-open")) return;
-            if (event.defaultPrevented) return;
-            if (document.getElementById("moreMenu").open) return;
 
             const target = event.target;
             const isTyping = target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
@@ -5140,7 +5064,7 @@ async function updateExportEstimate() {
             }
             if (event.code === "Space") { event.preventDefault(); playPauseBtn.click(); }
             if (event.key?.toLowerCase() === "r") restartBtn.click();
-            if (event.key?.toLowerCase() === "e") navigateEditor("export");
+            if (event.key?.toLowerCase() === "e") exportVideoBtn.click();
             if (event.key?.toLowerCase() === "f") fullscreenBtn?.click();
             if (event.key === "ArrowLeft") seekTo((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) - 1);
             if (event.key === "ArrowRight") seekTo((state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec) + 1);
@@ -5170,6 +5094,7 @@ async function updateExportEstimate() {
         recoveryKeepBtn?.addEventListener("click", hideRecoveryBanner);
         recoveryDiscardBtn?.addEventListener("click", () => {
             clearSavedProject();
+            hideRecoveryBanner();
         });
         bgBtn.addEventListener("click", saveProjectSettings);
         darkBtn.addEventListener("click", saveProjectSettings);
@@ -5207,7 +5132,10 @@ async function updateExportEstimate() {
 (function setupEditorSidebarUpgrade() {
     const tabs = Array.from(document.querySelectorAll('.editor-tab'));
     const sections = Array.from(document.querySelectorAll('.editor-section'));
+    const dockPreviewBtn = document.getElementById('dockPreviewBtn');
     const dockExportBtn = document.getElementById('dockExportBtn');
+    const sidebarExportProjectBtn = document.getElementById('sidebarExportProjectBtn');
+    const sidebarClearSavedBtn = document.getElementById('sidebarClearSavedBtn');
     const autosaveBadge = document.getElementById('autosaveBadge');
     const statusDuration = document.getElementById('statusDuration');
     const statusFormat = document.getElementById('statusFormat');
@@ -5235,18 +5163,56 @@ async function updateExportEstimate() {
     const PERMISSION_NOTICE_SESSION_KEY = 'bratAnimator.permissionNotice.dismissed.v1';
 
     const tutorialSteps = [
-        { titleKey: 'tourTextTitle', bodyKey: 'tourTextBody', tab: 'lyrics', target: '#lyricsInput' },
-        { titleKey: 'tourSyncTitle', bodyKey: 'tourSyncBody', tab: 'timing', target: '.line-editor' },
-        { titleKey: 'tourAppearanceTitle', bodyKey: 'tourAppearanceBody', tab: 'design', target: '#themePresetSelect' },
-        { titleKey: 'tourExportTitle', bodyKey: 'tourExportBody', tab: 'export', target: '#exportVideoBtn' }
+        {
+            title: 'start with the preview',
+            body: 'The canvas is the video you will export. Every lyric, timing, style, and format change updates this preview.',
+            target: '.stage-wrap',
+            placement: 'bottom',
+            tip: 'Use the controls panel for editing. Collapse it when you want a larger preview.'
+        },
+        {
+            title: 'find lyrics',
+            body: 'Search by artist and title. Results from LRCLIB can fill the project without leaving the browser.',
+            tab: 'lyrics',
+            target: '#searchQueryInput',
+            tip: 'You can also skip search and paste your own LRC in the Timing tab.'
+        },
+        {
+            title: 'add timed lines',
+            body: 'LRC lines need timestamps like [00:01.20]. Use starter LRC for a quick working example, then edit the rows.',
+            tab: 'timing',
+            target: '#starterLrcBtn',
+            actionLabel: 'generate starter',
+            action() {
+                starterLrcBtn?.click();
+            }
+        },
+        {
+            title: 'adjust the look',
+            body: 'Choose a preset, animation mode, colors, and typography. Keep checking the canvas as you tune it.',
+            tab: 'design',
+            target: '#themePresetSelect'
+        },
+        {
+            title: 'choose the format',
+            body: 'Pick square, vertical, landscape, or cover output before exporting. Safe zones help with social layouts.',
+            tab: 'canvas',
+            target: '[data-preset-quick="vertical"]',
+            tip: 'The Export tab still controls final size and FPS.'
+        },
+        {
+            title: 'export or save',
+            body: 'Export the video, save a project snapshot, or copy a share link so you can return to the edit later.',
+            tab: 'export',
+            target: '#exportVideoBtn',
+            tip: 'Audio can be embedded only from a local upload or a direct CORS-enabled URL you have permission to use.'
+        }
     ];
 
     let tutorialIndex = 0;
     let tutorialActive = false;
 
     function openEditorTab(tabName) {
-        if (tabName === 'canvas') tabName = 'design';
-        if (!tabs.some(tab => tab.dataset.openTab === tabName)) tabName = 'lyrics';
         let activeTab = null;
         let activeSection = null;
 
@@ -5266,7 +5232,6 @@ async function updateExportEstimate() {
             if (isActive) activeSection = section;
         });
 
-        if (tabName === 'lyrics') resizeLyricsEditor();
         if (window.matchMedia('(max-width: 700px)').matches) {
             activeTab?.scrollIntoView({
                 block: 'nearest',
@@ -5299,6 +5264,14 @@ async function updateExportEstimate() {
         } catch (_) {}
     }
 
+    function hasSeenTutorial() {
+        try {
+            return localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
+        } catch (_) {
+            return true;
+        }
+    }
+
     function setPermissionNoticeDismissed() {
         try {
             sessionStorage.setItem(PERMISSION_NOTICE_SESSION_KEY, 'true');
@@ -5313,11 +5286,21 @@ async function updateExportEstimate() {
         }
     }
 
+    function shouldAutoStartTutorial() {
+        return !hasSeenTutorial() && !window.location.hash.startsWith('#project=');
+    }
+
+    function scheduleTutorial(delay = 900) {
+        if (shouldAutoStartTutorial()) {
+            window.setTimeout(() => startTutorial(0), delay);
+        }
+    }
+
     function closePermissionNotice() {
         permissionNotice?.classList.add('hidden');
         document.body.classList.remove('permission-notice-open');
         setPermissionNoticeDismissed();
-        document.querySelector('.editor-tab.active')?.focus();
+        scheduleTutorial(420);
     }
 
     function showPermissionNotice() {
@@ -5369,10 +5352,10 @@ async function updateExportEstimate() {
 
         if (step.tab) openEditorTab(step.tab);
 
-        tutorialProgress.textContent = [tutorialIndex + 1, tutorialSteps.length].join(' / ');
+        tutorialProgress.textContent = `step ${tutorialIndex + 1} of ${tutorialSteps.length}`;
         tutorialOverlay.dataset.placement = step.placement || 'top';
-        tutorialTitle.textContent = translateUi(step.titleKey);
-        tutorialBody.textContent = translateUi(step.bodyKey);
+        tutorialTitle.textContent = step.title;
+        tutorialBody.textContent = step.body;
 
         if (step.tip) {
             tutorialTip.hidden = false;
@@ -5383,7 +5366,7 @@ async function updateExportEstimate() {
         }
 
         tutorialBackBtn.disabled = tutorialIndex === 0;
-        tutorialNextBtn.textContent = translateUi(tutorialIndex === tutorialSteps.length - 1 ? 'finishGuide' : 'nextGuide');
+        tutorialNextBtn.textContent = tutorialIndex === tutorialSteps.length - 1 ? 'finish' : 'next';
 
         if (step.actionLabel && typeof step.action === 'function') {
             tutorialActionBtn.classList.remove('hidden');
@@ -5400,7 +5383,6 @@ async function updateExportEstimate() {
         clearTutorialFocus();
 
         window.setTimeout(() => {
-            if (!tutorialActive || tutorialSteps[tutorialIndex] !== step) return;
             const target = getTutorialTarget(step.target);
             if (!target) return;
             target.classList.add('tutorial-focus');
@@ -5414,7 +5396,6 @@ async function updateExportEstimate() {
     }
 
     function startTutorial(startIndex = 0) {
-        if (panel.classList.contains('hidden')) togglePanelBtn.click();
         tutorialActive = true;
         tutorialIndex = clamp(startIndex, 0, tutorialSteps.length - 1);
         tutorialOverlay?.classList.remove('hidden');
@@ -5458,8 +5439,7 @@ async function updateExportEstimate() {
         if (statusFps) statusFps.textContent = `${exportFpsSelect?.value || 30}`;
         if (statusLines) statusLines.textContent = String(lineCount);
         if (canvasFormatSummary) canvasFormatSummary.textContent = dimsLabel;
-        if (canvasSafeSummary) canvasSafeSummary.textContent = translateUi(safeZonesCheckbox?.checked ? 'enabled' : 'disabled');
-        updateExportSummary();
+        if (canvasSafeSummary) canvasSafeSummary.textContent = safeZonesCheckbox?.checked ? 'on' : 'off';
     }
 
     function flashAutosaveBadge(label = 'autosaved') {
@@ -5491,12 +5471,25 @@ async function updateExportEstimate() {
     saveProjectSettings = function patchedSaveProjectSettings() {
         originalSaveProjectSettings();
         updateSidebarStatus();
-        flashAutosaveBadge(translateUi('autosaved'));
+        flashAutosaveBadge('autosaved');
     };
 
     tabs.forEach((tab) => {
         tab.addEventListener('click', () => openEditorTab(tab.dataset.openTab));
     });
+
+    function openTextSettings() {
+        panel.classList.remove('hidden');
+        syncPanelState();
+        openEditorTab('design');
+        document.getElementById('textSettings')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+        fontScaleInput?.focus({ preventScroll: true });
+    }
+
+    document.querySelectorAll('[data-open-text-settings]').forEach((button) => {
+        button.addEventListener('click', openTextSettings);
+    });
+    commandDefinitions.push({ name: 'text settings', run: openTextSettings });
 
     tutorialBtn?.addEventListener('click', () => startTutorial(0));
     tutorialSkipBtn?.addEventListener('click', () => closeTutorial(true));
@@ -5518,7 +5511,6 @@ async function updateExportEstimate() {
         }
 
         if (!tutorialActive) return;
-        if (event.key === 'Tab') trapDialogFocus(event, tutorialOverlay);
         if (event.key === 'Escape') closeTutorial(true);
         if (event.key === 'ArrowRight' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
             goToNextTutorialStep();
@@ -5528,7 +5520,44 @@ async function updateExportEstimate() {
         }
     });
 
-    dockExportBtn?.addEventListener('click', () => navigateEditor('export'));
+    dockPreviewBtn?.addEventListener('click', () => {
+        openEditorTab('timing');
+        const parsed = parseLRC(
+            lyricsInput.value,
+            startFromZeroCheckbox.checked,
+            getActiveAudioAnalysis()
+        );
+
+        if (!lyricsInput.value.trim()) {
+            meta.textContent = 'paste or load LRC lyrics to preview';
+            lyricsInput.focus();
+            return;
+        }
+
+        if (!parsed.length) {
+            meta.textContent = 'use [MM:SS.xx] timestamps before previewing';
+            lyricsInput.focus();
+            return;
+        }
+
+        state.timeline = parsed;
+        startFromBeginning();
+    });
+
+    dockExportBtn?.addEventListener('click', () => {
+        if (!lyricsInput.value.trim()) {
+            openEditorTab('timing');
+            meta.textContent = 'paste or load LRC lyrics before exporting';
+            lyricsInput.focus();
+            return;
+        }
+
+        openEditorTab('export');
+        exportVideoBtn.click();
+    });
+
+    sidebarExportProjectBtn?.addEventListener('click', () => exportProjectBtn?.click());
+    sidebarClearSavedBtn?.addEventListener('click', () => clearSavedBtn?.click());
 
     quickPresetButtons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -5559,12 +5588,13 @@ async function updateExportEstimate() {
         restoredTab = localStorage.getItem('bratAnimator.activeSidebarTab') || restoredTab;
     } catch (_) {}
 
-    if (restoredTab === 'canvas') restoredTab = 'design';
     if (!tabs.some((tab) => tab.dataset.openTab === restoredTab)) restoredTab = 'lyrics';
     openEditorTab(restoredTab);
     updateSidebarStatus();
 
-    showPermissionNotice();
+    if (!showPermissionNotice()) {
+        scheduleTutorial();
+    }
 })();
 
 /* --- Version 4 editor controls --- */
@@ -5579,6 +5609,7 @@ async function updateExportEstimate() {
     const stageZoomValue = document.getElementById('stageZoomValue');
     const stageFitBtn = document.getElementById('stageFitBtn');
     const stageFullscreenBtn = document.getElementById('stageFullscreenBtn');
+    const stageRestartBtn = document.getElementById('stageRestartBtn');
     const stagePlayBtn = document.getElementById('stagePlayBtn');
     const stageCurrentTime = document.getElementById('stageCurrentTime');
     const stageDuration = document.getElementById('stageDuration');
@@ -5690,9 +5721,9 @@ async function updateExportEstimate() {
         if (stageCurrentTime) stageCurrentTime.textContent = formatStudioClock(safeTime);
         if (stageDuration) stageDuration.textContent = formatStudioClock(duration);
         if (stagePlayBtn) {
-            stagePlayBtn.textContent = translateUi(state.isPlaying ? 'pause' : 'play');
+            stagePlayBtn.textContent = state.isPlaying ? 'pause' : 'play';
             stagePlayBtn.setAttribute('aria-pressed', String(state.isPlaying));
-            stagePlayBtn.setAttribute('aria-label', translateUi(state.isPlaying ? 'pause' : 'play'));
+            stagePlayBtn.setAttribute('aria-label', `${state.isPlaying ? 'pause' : 'play'} preview`);
         }
     }
 
@@ -5731,6 +5762,15 @@ async function updateExportEstimate() {
     stageZoomInBtn?.addEventListener('click', () => setPreviewZoom(Number(previewZoomInput?.value) + 10));
     stageFitBtn?.addEventListener('click', () => setPreviewZoom(100));
     stageFullscreenBtn?.addEventListener('click', () => fullscreenBtn?.click());
+    stageRestartBtn?.addEventListener('click', () => restartBtn?.click());
+    stagePlayBtn?.addEventListener('click', () => {
+        if (!ensureTimeline()) {
+            document.querySelector('[data-open-tab="timing"]')?.click();
+            lyricsInput?.focus();
+            return;
+        }
+        playPauseBtn?.click();
+    });
     stageSeekInput?.addEventListener('input', () => {
         if (!ensureTimeline()) return;
         const duration = getPlaybackDuration();
@@ -5759,96 +5799,11 @@ async function updateExportEstimate() {
 
     commandDefinitions.push(
         { name: 'auto contrast', run: applyAutomaticContrast },
-            { name: 'fit preview', run: () => setPreviewZoom(100) }
+        { name: 'fit preview', run: () => setPreviewZoom(100) }
     );
 
     updateContrastBadge();
     updateZoomLabel();
     updateStageFormatLabel();
     updateStageTransport();
-    document.addEventListener('brat-format-change', updateStageFormatLabel);
-})();
-
-/* Small, optional first-use invitation and utility menu behavior. */
-(function setupBeginnerMenu() {
-    window.addEventListener('resize', resizeLyricsEditor);
-    syncLyricsPicker(Boolean(lyricsInput.value.trim()));
-    const more = document.getElementById('moreMenu');
-    const welcome = document.getElementById('welcomeCard');
-    const welcomeKey = 'bratAnimator.welcome.dismissed.v1';
-    try {
-        welcome.hidden = localStorage.getItem(welcomeKey) === 'true'
-            || Boolean(lyricsInput.value.trim())
-            || window.location.hash.startsWith('#project=');
-    } catch (_) {}
-
-    function dismissWelcome() {
-        welcome.hidden = true;
-        try { localStorage.setItem(welcomeKey, 'true'); } catch (_) {}
-    }
-    document.getElementById('dismissWelcomeBtn').addEventListener('click', () => {
-        dismissWelcome();
-        document.getElementById('lyricsPicker').open = true;
-        searchQueryInput.focus();
-    });
-    document.getElementById('welcomeGuideBtn').addEventListener('click', () => document.getElementById('tutorialBtn').click());
-    document.getElementById('manualSyncLinkBtn').addEventListener('click', openManualSync);
-    document.getElementById('welcomeExampleBtn').addEventListener('click', () => loadDemoBtn.click());
-    loadDemoBtn.addEventListener('click', () => {
-        dismissWelcome();
-        navigateEditor('lyrics');
-        lyricsInput.removeAttribute('aria-invalid');
-        document.getElementById('lyricsError').hidden = true;
-        lyricsInput.focus();
-    });
-    document.querySelectorAll('[data-navigate-tab]').forEach(button => {
-        button.addEventListener('click', () => {
-            navigateEditor(button.dataset.navigateTab);
-            document.querySelector('.editor-tab.active')?.focus();
-        });
-    });
-
-    const youtubeInput = document.getElementById('youtubeUrlInput');
-    function openReference() {
-        if (!loadYouTubeLinkFromSearch(youtubeInput.value.trim())) {
-            youtubeStatus.textContent = translateUi('invalidYoutube');
-            youtubeInput.setAttribute('aria-invalid', 'true');
-            youtubeInput.focus();
-        } else {
-            youtubeInput.removeAttribute('aria-invalid');
-            youtubeStatus.textContent = translateUi('referenceLoaded');
-        }
-    }
-    document.getElementById('loadYoutubeBtn').addEventListener('click', openReference);
-    youtubeInput.addEventListener('keydown', event => {
-        if (event.key === 'Enter') { event.preventDefault(); openReference(); }
-    });
-    document.getElementById('useReferenceBtn').addEventListener('click', () => {
-        youtubeInput.value = searchQueryInput.value.trim();
-        navigateEditor('timing');
-        document.getElementById('advancedSyncDetails').open = true;
-        document.getElementById('referenceDetails').open = true;
-        youtubeInput.focus();
-    });
-    document.addEventListener('click', event => {
-        if (more.open && !more.contains(event.target)) more.open = false;
-    });
-    more.addEventListener('keydown', event => {
-        if (event.key === 'Escape') {
-            event.preventDefault();
-            more.open = false;
-            more.querySelector('summary').focus();
-        }
-    });
-    more.addEventListener('focusout', () => {
-        window.setTimeout(() => {
-            if (!more.contains(document.activeElement)) more.open = false;
-        }, 0);
-    });
-    document.addEventListener('brat-language-change', () => {
-        updateExportSummary();
-        renderLrcRows();
-        renderSnapshots();
-    });
-    updateExportSummary();
 })();

@@ -5,13 +5,156 @@
     }
     root.BratCore = core;
 })(typeof globalThis !== "undefined" ? globalThis : window, function () {
-    const PROJECT_VERSION = 4;
+    const PROJECT_VERSION = 5;
     const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
     const INLINE_WORD_TIMESTAMP_RE = /<(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)>/g;
     const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
 
     function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
+    }
+
+    function finiteNumber(value, fallback, min, max) {
+        const number = Number(value ?? fallback);
+        return Number.isFinite(number) ? clamp(number, min, max) : fallback;
+    }
+
+    function normalizeEntrance(entrance = {}) {
+        return {
+            mode: ["none", "stretch-x", "stretch-y", "elastic"].includes(entrance?.mode) ? entrance.mode : "none",
+            duration: finiteNumber(entrance?.duration, 320, 100, 800),
+            intensity: finiteNumber(entrance?.intensity, 0.15, 0, 0.3),
+            angle: finiteNumber(entrance?.angle, 8, 0, 15),
+            randomAngles: entrance?.randomAngles === true,
+            seed: Number.isFinite(Number(entrance?.seed)) ? Number(entrance.seed) >>> 0 : 0
+        };
+    }
+
+    function normalizeBeatEffects(effects = {}) {
+        return {
+            enabled: effects?.enabled === true,
+            source: effects?.source === "manual" ? "manual" : "audio",
+            bpm: finiteNumber(effects?.bpm, 120, 40, 240),
+            offset: finiteNumber(effects?.offset, 0, -86400, 86400),
+            pulse: finiteNumber(effects?.pulse, 0.03, 0, 0.1),
+            textPulse: effects?.textPulse !== false,
+            backgroundZoom: effects?.backgroundZoom === true,
+            colorCycle: effects?.colorCycle === true
+        };
+    }
+
+    function normalizeExportRange(range = {}) {
+        return {
+            enabled: range?.enabled === true,
+            start: finiteNumber(range?.start, 0, 0, Number.MAX_SAFE_INTEGER),
+            end: range?.end == null || range.end === "" ? null : finiteNumber(range.end, null, 0, Number.MAX_SAFE_INTEGER)
+        };
+    }
+
+    let rowIdCounter = 0;
+
+    function createRowId() {
+        // IDs are created only when the document changes, never during rendering.
+        if (typeof globalThis.crypto?.randomUUID === "function") return `row-${globalThis.crypto.randomUUID()}`;
+        rowIdCounter += 1;
+        return `row-${Date.now().toString(36)}-${rowIdCounter.toString(36)}`;
+    }
+
+    function cloneValue(value) {
+        if (Array.isArray(value)) return value.map(cloneValue);
+        if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, cloneValue(entry)]));
+        return value;
+    }
+
+    function rowStyle(style) {
+        const result = style && typeof style === "object" && !Array.isArray(style) ? cloneValue(style) : {};
+        if (Object.hasOwn(result, "entrance")) result.entrance = normalizeEntrance(result.entrance);
+        return result;
+    }
+
+    function reconcileLyricRows(nextRows = [], previousRows = []) {
+        const previous = Array.isArray(previousRows) ? previousRows.filter(row => row && typeof row === "object" && !Array.isArray(row)) : [];
+        const usedPrevious = new Set();
+        const usedIds = new Set();
+        const incoming = Array.isArray(nextRows) ? nextRows : [];
+        const timeOf = row => finiteNumber(row?.time ?? row?.timestamp, 0, 0, Number.MAX_SAFE_INTEGER);
+        const textOf = row => String(row?.text ?? "");
+        const idOf = row => typeof row?.id === "string" ? row.id.trim() : "";
+        const sameTime = (left, right) => Math.abs(timeOf(left) - timeOf(right)) < 0.000001;
+        const records = incoming.map(value => ({ row: value && typeof value === "object" && !Array.isArray(value) ? value : { text: value }, id: "", matchIndex: -1 }));
+        // Resolve all strong matches before weaker ones: an edited repeated lyric
+        // must not consume an identity reserved by a later exact timestamp/text match.
+        for (const record of records) {
+            const id = idOf(record.row);
+            if (!id || usedIds.has(id)) continue;
+            record.id = id;
+            usedIds.add(id);
+            record.matchIndex = previous.findIndex((candidate, index) => !usedPrevious.has(index) && idOf(candidate) === id);
+            if (record.matchIndex >= 0) usedPrevious.add(record.matchIndex);
+        }
+        const matchers = [
+            (candidate, row) => sameTime(candidate, row) && textOf(candidate) === textOf(row),
+            (candidate, row) => textOf(candidate) === textOf(row),
+            (candidate, row) => sameTime(candidate, row)
+        ];
+        for (const matches of matchers) {
+            for (const record of records) {
+                if (record.id || record.matchIndex >= 0) continue;
+                const index = previous.findIndex((candidate, index) => !usedPrevious.has(index) && (!idOf(candidate) || !usedIds.has(idOf(candidate))) && matches(candidate, record.row));
+                if (index < 0) continue;
+                record.matchIndex = index;
+                record.id = idOf(previous[index]);
+                usedPrevious.add(index);
+                if (record.id) usedIds.add(record.id);
+            }
+        }
+        return records.map(({ row, id, matchIndex }) => {
+            if (!id) {
+                do { id = createRowId(); } while (usedIds.has(id));
+                usedIds.add(id);
+            }
+            const matched = matchIndex >= 0 ? previous[matchIndex] : {};
+            return {
+                ...cloneValue(matched),
+                ...cloneValue(row),
+                id,
+                time: timeOf(row),
+                text: textOf(row),
+                translation: String(row.translation ?? matched.translation ?? ""),
+                style: rowStyle(row.style ?? matched.style)
+            };
+        });
+    }
+
+    function associateTranslations(primaryRows = [], translatedText = "") {
+        const rows = reconcileLyricRows(primaryRows);
+        const text = normalizeLRCText(translatedText);
+        const hasTimestamps = text.split("\n").some(line => /\[\d{1,2}:\d{2}(?:[.,]\d{1,3})?\]/.test(line));
+        const unmatched = [];
+        if (!hasTimestamps) {
+            const translated = text.split("\n").map(line => line.trim()).filter(Boolean);
+            if (translated.length === rows.length) rows.forEach((row, index) => { row.translation = translated[index]; });
+            else unmatched.push(...translated.map(line => ({ text: line })));
+            return { rows, unmatched };
+        }
+        const used = new Set();
+        for (const translated of parseLRC(text)) {
+            let nearest = -1;
+            let distance = 0.020000001;
+            rows.forEach((row, index) => {
+                const candidateDistance = Math.abs(row.time - translated.timestamp);
+                if (!used.has(index) && candidateDistance < distance) {
+                    distance = candidateDistance;
+                    nearest = index;
+                }
+            });
+            if (nearest < 0) unmatched.push({ time: translated.timestamp, text: translated.text });
+            else {
+                rows[nearest].translation = translated.text;
+                used.add(nearest);
+            }
+        }
+        return { rows, unmatched };
     }
 
     function normalizeBackgroundFill(fill = {}) {
@@ -36,8 +179,7 @@
     function normalizeTimingSettings(timing = {}) {
         const speed = Number(timing?.speed ?? 1);
         return {
-            speed: Number.isFinite(speed) ? clamp(speed, 0.5, 2) : 1,
-            language: ["it", "en"].includes(timing?.language) ? timing.language : "auto"
+            speed: Number.isFinite(speed) ? clamp(speed, 0.5, 2) : 1
         };
     }
 
@@ -120,7 +262,7 @@
         return { role, text: raw.slice(match[0].length).trim() };
     }
 
-    function parseLRC(lrcText, startFromZero = false) {
+    function parseLRC(lrcText, startFromZero = false, sourceRows = null) {
         const text = normalizeLRCText(lrcText);
         const parsed = [];
         const boundaries = [];
@@ -165,8 +307,10 @@
         parsed.sort((a, b) => a.timestamp - b.timestamp);
         if (!parsed.length) return [];
         const base = startFromZero ? parsed[0].timestamp : 0;
+        const identities = Array.isArray(sourceRows) ? reconcileLyricRows(parsed.map(line => ({ time: line.timestamp, text: line.text })), sourceRows) : null;
         return parsed.map((line, lineIndex) => ({
             ...line,
+            ...(identities ? { sourceRowId: identities[lineIndex].id } : {}),
             lineIndex,
             sourceTimestamp: line.timestamp,
             timestamp: Math.max(0, line.timestamp - base),
@@ -237,7 +381,7 @@
     }
 
     function splitRow(rows, index, charIndex) {
-        const next = rows.map(row => ({ ...row }));
+        const next = reconcileLyricRows(rows);
         const row = next[index];
         if (!row) return next;
         const text = String(row.text || "");
@@ -245,28 +389,36 @@
         const first = text.slice(0, splitAt).trim();
         const second = text.slice(splitAt).trim();
         if (!first || !second) return next;
-        next.splice(index, 1, { ...row, text: first }, { time: row.time + 0.25, text: second });
+        next.splice(index, 1, { ...row, text: first }, { ...cloneValue(row), id: createRowId(), time: row.time + 0.25, text: second, translation: "" });
         return next;
     }
 
     function mergeRows(rows, index) {
-        const next = rows.map(row => ({ ...row }));
+        const next = reconcileLyricRows(rows);
         if (!next[index] || !next[index + 1]) return next;
         next[index] = {
             ...next[index],
-            text: `${next[index].text} ${next[index + 1].text}`.replace(/\s+/g, " ").trim()
+            text: `${next[index].text} ${next[index + 1].text}`.replace(/\s+/g, " ").trim(),
+            translation: `${next[index].translation} ${next[index + 1].translation}`.replace(/\s+/g, " ").trim()
         };
         next.splice(index + 1, 1);
         return next;
     }
 
     function moveRow(rows, index, direction) {
-        const next = rows.map(row => ({ ...row }));
+        const next = reconcileLyricRows(rows);
         const target = index + direction;
         if (index < 0 || target < 0 || index >= next.length || target >= next.length) return next;
         const temp = next[index];
         next[index] = next[target];
         next[target] = temp;
+        return next;
+    }
+
+    function duplicateRow(rows, index) {
+        const next = reconcileLyricRows(rows);
+        if (!next[index]) return next;
+        next.splice(index + 1, 0, { ...cloneValue(next[index]), id: createRowId() });
         return next;
     }
 
@@ -318,39 +470,13 @@
         };
     }
 
-    function normalizeVisualEffects(value) {
-        const effects = value && typeof value === "object" ? value : {};
-        const shake = effects.shake || {};
-        const star = effects.star || {};
-        const number = (input, fallback, min, max) => {
-            const parsed = Number(input ?? fallback);
-            return Number.isFinite(parsed) ? clamp(parsed, min, max) : fallback;
-        };
-        return {
-            motionBlur: number(effects.motionBlur, 0, 0, 1),
-            shake: {
-                mode: ["off", "soft", "impact", "sway"].includes(shake.mode) ? shake.mode : "off",
-                intensity: number(shake.intensity, 0.35, 0, 1),
-                speed: number(shake.speed, 1, 0.25, 3)
-            },
-            star: {
-                enabled: star.enabled === true,
-                points: Number(star.points) === 5 ? 5 : 4,
-                size: number(star.size, 0.07, 0.02, 0.18),
-                speed: number(star.speed, 0.25, 0, 1.5),
-                x: number(star.x, 0.84, 0, 1),
-                y: number(star.y, 0.18, 0, 1)
-            }
-        };
-    }
-
     function migrateProjectPayload(payload) {
         const source = payload && typeof payload === "object" ? payload : {};
         const style = {
             ...(source.style || {}),
             backgroundFill: normalizeBackgroundFill(source.style?.backgroundFill),
             colorSwap: normalizeColorSwap(source.style?.colorSwap),
-            effects: normalizeVisualEffects(source.style?.effects),
+            entrance: normalizeEntrance(source.style?.entrance),
             wordAnimation: {
                 mode: source.style?.wordAnimation?.mode || "progress",
                 intensity: clamp(Number(source.style?.wordAnimation?.intensity ?? 0.7), 0, 1),
@@ -364,6 +490,16 @@
             lyrics: typeof source.lyrics === "string" ? source.lyrics : "",
             plainLyrics: typeof source.plainLyrics === "string" ? source.plainLyrics : "",
             query: typeof source.query === "string" ? source.query : "",
+            lyricRows: reconcileLyricRows(Array.isArray(source.lyricRows) ? source.lyricRows : lrcToRows(source.lyrics)),
+            seed: Number.isFinite(Number(source.seed)) ? Number(source.seed) >>> 0 : 1337,
+            fonts: Array.isArray(source.fonts) ? source.fonts.filter(font => font && typeof font === "object" && !Array.isArray(font)).map(font => ({
+                id: String(font.id || ""),
+                name: String(font.name || ""),
+                family: String(font.family || ""),
+                assetId: String(font.assetId || "")
+            })) : [],
+            beatEffects: normalizeBeatEffects(source.beatEffects),
+            exportRange: normalizeExportRange(source.exportRange),
             audio: defaultAudioSettings(source),
             metadata: defaultMetadata(source),
             background: defaultBackground(source),
@@ -394,10 +530,15 @@
         INLINE_WORD_TIMESTAMP_RE,
         META_TAG_RE,
         clamp,
+        normalizeEntrance,
+        normalizeBeatEffects,
+        normalizeExportRange,
+        createRowId,
+        reconcileLyricRows,
+        associateTranslations,
         normalizeBackgroundFill,
         normalizeColorSwap,
         normalizeTimingSettings,
-        normalizeVisualEffects,
         shouldSwapPalette,
         normalizeLRCText,
         parseTimeTag,
@@ -412,6 +553,7 @@
         splitRow,
         mergeRows,
         moveRow,
+        duplicateRow,
         defaultAudioSettings,
         defaultMetadata,
         defaultBackground,

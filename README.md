@@ -4,24 +4,32 @@
 
 Live demo: **https://oakvx.github.io/bratAnimator/**
 
-## Version 4.0
+## Version 5.0
+
+- Simple and advanced editor modes, with a persistent preference. New users start in simple mode; existing users retain the full editor.
+- Direct Brat canvas editing: drag text, resize with corner handles, stretch with side handles, and use center guides. A drag pauses playback and creates one undo operation; Escape cancels.
+- Project-wide or per-phrase font, color and size, plus per-phrase Brat position, stretch and entrance settings. Reset a phrase to inherit the project defaults.
+- Horizontal, vertical and elastic stretch entrances. The tilted elastic preset uses a 320 ms entrance, 15% deformation and random angles within 8 degrees. Advanced controls reach 800 ms, 30% and 15 degrees.
+- Random inclination belongs to each visual wrapped row and stays fixed after its entrance. Persisted seeds keep angles identical after seeking, reopening and exporting; reroll a phrase or the project explicitly.
+- Custom TTF, OTF, WOFF and WOFF2 fonts stored locally and included in portable projects. Missing fonts require reloading or explicit replacement before export.
+- Manual bilingual lyrics, plain-text/LRC translation association, unmatched-line assignment and independent translation size, font and color. Brat, Music and Cinematic reserve space beneath the original text.
+- Optional text pulses, background zoom and color transitions driven by estimated audio onsets or a manual 40-240 BPM grid. Effects start disabled and reuse the same beat events in preview and export.
+- Optional export clips with start/end controls and timeline markers. Clips preserve original animation/media timing, start the output at zero and apply audio fades at the clip boundaries.
+- Complete `.brat.zip` projects bundle the v5 manifest, uploaded audio, backgrounds and fonts for transfer and offline reopening. JSON export remains available for project metadata and references.
+- Italian UI, including controls, messages and tutorial; first-run language follows Italian browser preferences, while saved language choices take precedence.
 
 - Static app, no framework and no `package.json`.
 - Reworked editor layout with a unified charcoal/ivory visual system, responsive controls, preview toolbar, and transport controls.
-- Task-oriented menu: Text → Sync → Appearance → Export, with separate Project tools, closed advanced groups and an optional four-step guide.
-- Lyrics search, import and paste share the Text tab; the export review shows the actual output format and whether audio is included before rendering starts.
 - Live zoom controls, keyboard-first commands, and automatic WCAG contrast correction.
+- Text settings accessible from the header and preview, with 10–200% text size, live values, spacing/position controls, and a text-only reset. Smaller brat text preserves its fitted line breaks and shrinks proportionally in preview and export.
 - Solid, linear, and radial canvas fills with optional text/background palette exchange by line, word, or typewriter letter.
-- Adjustable motion blur, light shake, phrase impacts and slow sway, plus a rotating star that inverts the background beneath it. Effects share the preview/export renderer and persist in projects, snapshots and presets; existing projects start with effects off.
 - Uploaded images and videos can fill the background, the text, or both. Exchanging a gradient palette places the gradient inside the text.
-- Stable project schema `version: 4` with migration from older v2/v3 JSON.
+- Project schema `version: 5` with stable phrase identities, styles, translations, font references, random seed, beat effects and export range; migration from v2-v4 JSON and snapshots keeps the new effects disabled.
 - Local IndexedDB media storage for uploaded audio/video/background blobs; project JSON stores metadata and references, not binary blobs.
 - LRCLIB search, LRC import/paste, Enhanced LRC word timing, compact LRC editor, multi-select timing tools, undo/redo, and waveform/timeline marker dragging.
 - Shared word/character timeline for typewriter, word reveal and karaoke, with punctuation-aware text estimates, Unicode grapheme handling, explicit Enhanced LRC anchors, repeated timestamps and instrumental gaps.
 - Natural phrase durations no longer stretch to fill the interval before the next lyric. Punctuation creates pauses, repeated vowels add a separate sung hold, and completed text stays still until the next line or an explicit empty timestamp.
 - Estimated speed (0.5–2×) is stored with projects, snapshots and JSON; explicit LRC onsets and terminal word timestamps remain fixed. The timing report distinguishes the sung window from the estimated trailing pause.
-- Word rhythm uses Italian and English pronunciation estimates, including elisions, contractions, silent vowels and common exceptions. Choose Automatic, Italian or English in Sync; this setting is independent of the interface language and survives projects, snapshots and undo/redo. Other scripts retain generic estimates.
-- Estimated tempo adapts to up to eight nearby valid lines of the same vocal role, with global/default fallback when fewer than three samples are available. Explicit empty boundaries, stretched vowels and inconsistent anchors are excluded from calibration. Short phrases still finish naturally instead of filling their slots. Without audio or per-word timestamps, timing remains approximate.
 - Channel-independent audio energy analysis guides estimated word boundaries without replacing explicit timestamps. It is not speech recognition or forced alignment; review estimated timings before exporting.
 - Starting the timeline at zero trims the same leading interval from preview and exported audio. Timing analysis reports dense lines and inconsistent word timestamps in the editor.
 - Normalizing or shifting editable rows preserves Enhanced LRC tags, millisecond word precision, metadata offsets and timestamp-only gap markers. Rewriting lyric text discards stale word anchors for that row.
@@ -30,7 +38,19 @@ Live demo: **https://oakvx.github.io/bratAnimator/**
 - Fast MP4 is vendored through `vendor/mp4-muxer.mjs` pinned to `mp4-muxer@5.2.2` (MIT).
 - Fast MP4 remains video-only when supported. Audio export uses realtime MediaRecorder and can merge loaded local or direct CORS-enabled media audio with volume/fade controls.
 - YouTube is preview/reference only. The app does not download YouTube videos and does not extract audio from YouTube.
-- EN/RU/ZH UI strings, localized SEO pages, manifest, sitemap, service worker cache list, GitHub Pages workflow, core tests, and manual QA checklist are aligned for 4.0.
+- EN/IT/RU/ZH UI strings, localized SEO pages, manifest, sitemap, service worker assets, GitHub Pages workflow, core tests and a manual QA checklist.
+
+## Using the Editor
+
+Choose **simple** for loading lyrics/media, changing text size and presets, playback and export. Choose **advanced** to reveal phrase overrides, custom fonts, translations, stretch entrances, music effects and export intervals. The settings button keeps the 10-200% text size control within reach in either mode.
+
+In advanced text settings, choose **whole project** or **selected phrase** before changing font, color or size. **Use project settings** clears the selected phrase's overrides. In Brat mode, **edit text in preview** enables dragging and transform handles; the tilted elastic preset gives every visual row a repeatable random inclination without changing lyric timestamps.
+
+Enter a translation for the selected phrase or paste translated text/LRC into the bilingual controls. Plain text associates by order when the phrase counts match; LRC associates within 20 ms of each source timestamp. Assign unmatched translations manually. Translation stays horizontal beneath the original.
+
+Export a **complete portable project** to keep uploaded assets with the project. A JSON project stores references to local browser assets, so use the portable ZIP when moving to another browser or computer. A package containing unavailable assets must be repaired before it can be exported. Remote URLs remain subject to network access and CORS restrictions.
+
+Editing, audio analysis, font loading, package creation and rendering run in the browser; there is no processing backend. LRCLIB searches, remote media and YouTube previews still use their respective network services. Once the app shell is cached on localhost/HTTPS, portable projects with all assets included can reopen offline.
 
 ## Running Locally
 
@@ -51,15 +71,29 @@ node --check assets/js/media.js
 node --check assets/js/export.js
 node --check assets/js/i18n.js
 node --check assets/js/app.js
+node --check assets/js/motion.js
+node --check assets/js/project-assets.js
+node --check assets/js/editor-v5.js
+node --check assets/js/italian-ui.js
 node --check sw.js
 node --test
 ```
 
 Manual release checks live in [tests/manual-checklist.md](tests/manual-checklist.md).
 
-For the browser timing regression check, run `node tests/natural-timing-browser.mjs` with Chrome installed. It uses an isolated temporary profile and checks rendering, palette holds, project persistence and preview/export frame parity.
+Run the browser checks with Chrome installed (`CHROME_PATH` can select another Chrome executable). They use isolated temporary profiles and require no npm packages:
 
-Additional browser checks: run `node tests/menu-browser.mjs` for first-use navigation, keyboard focus, translations, project recovery, audio/silent exports and responsive screenshots. Run `node tests/export-format-browser.mjs` to verify actual image/video dimensions. These checks use isolated temporary Chrome profiles.
+```bash
+node tests/natural-timing-browser.mjs
+node tests/text-settings-browser.mjs
+node tests/export-format-browser.mjs
+node tests/motion-browser.mjs
+node tests/music-editor-browser.mjs
+node tests/project-assets-browser.mjs
+node tests/editor-v5-browser.mjs
+```
+
+These cover timing/pause regressions, proportional text sizing, export formats, real-canvas rotation/stretch bounds, bilingual Music/Cinematic spacing, phrase styles, font/package persistence, direct manipulation and responsive editor behavior. Browser export support depends on available codecs and MediaRecorder.
 
 ## Media And Rights
 
@@ -103,6 +137,8 @@ Fast MP4 export is the quickest path and stays video-only. If you enable loaded 
 ## Italiano
 
 Brat Animator crea lyric video brat-style da testi LRC direttamente nel browser. Puoi cercare su LRCLIB, incollare o importare LRC, rifinire il timing con audio/video locale, aggiungere background media, configurare animazioni parola-per-parola, salvare snapshot ed esportare MP4/WebM o PNG.
+
+La versione 5 aggiunge interfaccia italiana, modalita semplice/avanzata, impostazioni per frase, modifica diretta del testo nel canvas, font personali, traduzioni, stretch animato e inclinazioni casuali riproducibili per ogni riga visiva. Gli effetti musicali possono seguire i battiti stimati oppure BPM manuali. Puoi esportare un intervallo o un progetto completo `.brat.zip` con audio, sfondi e font caricati; elaborazione e salvataggio restano nel browser.
 
 L'export Fast MP4 e' il percorso piu veloce e resta video-only. Se abiliti l'audio caricato, l'app registra un export realtime e puo unire audio decodificato da un file locale o da un URL media diretto CORS-enabled che hai il permesso di usare. YouTube resta solo preview/reference e non viene scaricato o estratto.
 
