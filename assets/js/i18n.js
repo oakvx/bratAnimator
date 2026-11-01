@@ -1,5 +1,13 @@
 const BRAT_TRANSLATIONS = {
   en: {
+    lyricsProvider: "lyrics source",
+    lyricsImportHelp: "Paste or import a lyrics file. Original word start/end times are used when present; the editor shows LRC.",
+    lyricsFrom: "lyrics from",
+    nativeWordTiming: "words/segments with original start/end times",
+    noLyricsResults: "no lyrics results",
+    loadingLyrics: "loading lyrics",
+    lyricsImportError: "Lyrics import failed",
+
     settings: "settings",
     textSettings: "text settings",
     textSettingsHelp: "Adjust your lyrics in the preview. Changes are saved with the project and used in exports.",
@@ -32,15 +40,15 @@ const BRAT_TRANSLATIONS = {
     recoveryKeep: "keep",
     recoveryDiscard: "discard",
     panelTitle: "brat lyric video editor",
-    panelIntro: "Search a song on LRCLIB, paste or load LRC lyrics, use cleared audio/video for timing, and optionally merge extracted audio into the final export.",
+    panelIntro: "Search a song on LRCLIB or lrc.red, paste or import lyrics, use cleared audio/video for timing, and optionally merge extracted audio into the final export.",
     lyricsSearch: "lyrics search",
-    searchSongLabel: "search LRCLIB or paste YouTube link",
+    searchSongLabel: "search lyrics or paste YouTube link",
     searchPlaceholder: "artist - title or YouTube link",
     search: "search / load",
     clearResults: "clear results",
     lyricsTiming: "lyrics and timing",
     lrcText: "LRC lyrics",
-    dropLrc: "Drop a .lrc file here or click to load lyrics",
+    dropLrc: "Drop LRC, TTML, YAML, JSON, SRT, VTT or TXT here, or click to load",
     optionalAudio: "optional audio/video for timing analysis",
     dropAudio: "Drop an audio or video file here to extract audio",
     useAudioTiming: "use audio to improve timing",
@@ -101,6 +109,14 @@ const BRAT_TRANSLATIONS = {
     noVideo: "no video loaded"
   },
   it: {
+    lyricsProvider: "fonte del testo",
+    lyricsImportHelp: "Incolla o importa un file di testo. Se presenti, vengono usati inizio e fine originali delle parole; l’editor mostra LRC.",
+    lyricsFrom: "testo da",
+    nativeWordTiming: "parole/segmenti con inizio e fine originali",
+    noLyricsResults: "nessun testo trovato",
+    loadingLyrics: "caricamento testo",
+    lyricsImportError: "Importazione del testo non riuscita",
+
     settings: "impostazioni",
     textSettings: "impostazioni testo",
     textSettingsHelp: "Regola il testo nell’anteprima. Le modifiche vengono salvate nel progetto e applicate alle esportazioni.",
@@ -135,13 +151,13 @@ const BRAT_TRANSLATIONS = {
     panelTitle: "editor video di testi brat",
     panelIntro: "Cerca un brano su LRCLIB, incolla o carica il testo LRC e usa un file audio o video autorizzato per sincronizzarlo. Puoi includere l’audio estratto nel video finale.",
     lyricsSearch: "ricerca testo",
-    searchSongLabel: "cerca su LRCLIB o incolla un link YouTube",
+    searchSongLabel: "cerca un testo o incolla un link YouTube",
     searchPlaceholder: "artista - titolo o link YouTube",
     search: "cerca / carica",
     clearResults: "cancella risultati",
     lyricsTiming: "testo e sincronizzazione",
     lrcText: "testo LRC",
-    dropLrc: "Trascina qui un file .lrc o fai clic per caricare il testo",
+    dropLrc: "Trascina LRC, TTML, YAML, JSON, SRT, VTT o TXT qui, oppure fai clic per caricare",
     optionalAudio: "audio o video facoltativo per analizzare i tempi",
     dropAudio: "Trascina qui un file audio o video per estrarre l’audio",
     useAudioTiming: "usa l’audio per migliorare la sincronizzazione",
@@ -202,6 +218,14 @@ const BRAT_TRANSLATIONS = {
     noVideo: "nessun video caricato"
   },
   ru: {
+    lyricsProvider: "источник текста",
+    lyricsImportHelp: "Вставьте или импортируйте текст. Исходные времена начала и конца слов используются, если доступны; редактор показывает LRC.",
+    lyricsFrom: "текст из",
+    nativeWordTiming: "слов/сегментов с исходными началом и концом",
+    noLyricsResults: "текст не найден",
+    loadingLyrics: "загрузка текста",
+    lyricsImportError: "Ошибка импорта текста",
+
     settings: "настройки",
     textSettings: "настройки текста",
     textSettingsHelp: "Настройте текст песни в предпросмотре. Изменения сохраняются в проекте и применяются при экспорте.",
@@ -303,6 +327,14 @@ const BRAT_TRANSLATIONS = {
     noVideo: "видео не загружено"
   },
   zh: {
+    lyricsProvider: "歌词来源",
+    lyricsImportHelp: "粘贴或导入歌词文件。如果存在原始单词开始和结束时间，将直接使用；编辑器显示 LRC。",
+    lyricsFrom: "歌词来自",
+    nativeWordTiming: "个带原始起止时间的单词/片段",
+    noLyricsResults: "没有找到歌词",
+    loadingLyrics: "正在加载歌词",
+    lyricsImportError: "歌词导入失败",
+
     settings: "设置",
     textSettings: "文字设置",
     textSettingsHelp: "在预览中调整歌词。更改会保存在项目中，并应用于导出。",

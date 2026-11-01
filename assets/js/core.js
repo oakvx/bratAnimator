@@ -6,8 +6,8 @@
     root.BratCore = core;
 })(typeof globalThis !== "undefined" ? globalThis : window, function () {
     const PROJECT_VERSION = 5;
-    const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
-    const INLINE_WORD_TIMESTAMP_RE = /<(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)>/g;
+    const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
+    const INLINE_WORD_TIMESTAMP_RE = /<(\d+):(\d{2}(?:[.,]\d{1,3})?)>/g;
     const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
 
     function clamp(value, min, max) {
@@ -129,7 +129,7 @@
     function associateTranslations(primaryRows = [], translatedText = "") {
         const rows = reconcileLyricRows(primaryRows);
         const text = normalizeLRCText(translatedText);
-        const hasTimestamps = text.split("\n").some(line => /\[\d{1,2}:\d{2}(?:[.,]\d{1,3})?\]/.test(line));
+        const hasTimestamps = text.split("\n").some(line => /\[\d+:\d{2}(?:[.,]\d{1,3})?\]/.test(line));
         const unmatched = [];
         if (!hasTimestamps) {
             const translated = text.split("\n").map(line => line.trim()).filter(Boolean);
@@ -204,15 +204,17 @@
         return minutes * 60 + seconds;
     }
 
-    function secondsToTag(seconds) {
-        const safe = Math.round(Math.max(0, Number(seconds) || 0) * 100) / 100;
+    function secondsToTag(seconds, precision = 2) {
+        precision = precision === 3 ? 3 : 2;
+        const scale = 10 ** precision;
+        const safe = Math.round(Math.max(0, Number(seconds) || 0) * scale) / scale;
         const minutes = Math.floor(safe / 60);
         const secs = safe - minutes * 60;
-        return `[${String(minutes).padStart(2, "0")}:${secs.toFixed(2).padStart(5, "0")}]`;
+        return `[${String(minutes).padStart(2, "0")}:${secs.toFixed(precision).padStart(precision + 3, "0")}]`;
     }
 
     function tagToSeconds(tag) {
-        const match = String(tag || "").match(/^(?:\[)?(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)(?:\])?$/);
+        const match = String(tag || "").match(/^(?:\[)?(\d+):(\d{2}(?:[.,]\d{1,3})?)(?:\])?$/);
         return match ? parseTimeTag(match[1], match[2]) ?? 0 : 0;
     }
 
@@ -308,19 +310,40 @@
         if (!parsed.length) return [];
         const base = startFromZero ? parsed[0].timestamp : 0;
         const identities = Array.isArray(sourceRows) ? reconcileLyricRows(parsed.map(line => ({ time: line.timestamp, text: line.text })), sourceRows) : null;
-        return parsed.map((line, lineIndex) => ({
-            ...line,
-            ...(identities ? { sourceRowId: identities[lineIndex].id } : {}),
-            lineIndex,
-            sourceTimestamp: line.timestamp,
-            timestamp: Math.max(0, line.timestamp - base),
-            boundaryTimestamp: boundaries.filter(time => time > line.timestamp).reduce((earliest, time) => Math.min(earliest, time - base), Infinity),
-            wordEndTimestamp: Number.isFinite(line.wordEndTimestamp) ? Math.max(0, line.wordEndTimestamp - base) : undefined,
-            wordTimings: line.wordTimings.map(word => ({
-                ...word,
-                timestamp: Math.max(0, word.timestamp - base)
-            }))
-        }));
+        return parsed.map((line, lineIndex) => {
+            const row = identities?.[lineIndex];
+            const native = row?.timing;
+            // Native timings are valid only for the text they were imported
+            // with. Time edits shift the complete interval; text edits fall
+            // back to the normal LRC/estimated path.
+            const useNative = native && Number.isFinite(native.time)
+                && parseVocalRoleAndText(native.text).text === line.text;
+            if (useNative) {
+                const delta = line.timestamp - native.time;
+                line.lineEndTimestamp = Number.isFinite(native.end) ? Math.max(line.timestamp, native.end + delta) : undefined;
+                line.wordTimings = (native.words || []).filter(word => Number.isFinite(word.start) && typeof word.text === "string").map(word => ({
+                    text: word.text,
+                    timestamp: Math.max(0, word.start + delta),
+                    endTimestamp: Number.isFinite(word.end) ? Math.max(0, word.end + delta) : undefined
+                }));
+                line.wordEndTimestamp = line.wordTimings.at(-1)?.endTimestamp ?? line.lineEndTimestamp;
+            }
+            return {
+                ...line,
+                ...(identities ? { sourceRowId: identities[lineIndex].id } : {}),
+                lineIndex,
+                sourceTimestamp: line.timestamp,
+                timestamp: Math.max(0, line.timestamp - base),
+                boundaryTimestamp: boundaries.filter(time => time > line.timestamp).reduce((earliest, time) => Math.min(earliest, time - base), Infinity),
+                wordEndTimestamp: Number.isFinite(line.wordEndTimestamp) ? Math.max(0, line.wordEndTimestamp - base) : undefined,
+                lineEndTimestamp: Number.isFinite(line.lineEndTimestamp) ? Math.max(0, line.lineEndTimestamp - base) : undefined,
+                wordTimings: line.wordTimings.map(word => ({
+                    ...word,
+                    timestamp: Math.max(0, word.timestamp - base),
+                    ...(Number.isFinite(word.endTimestamp) ? { endTimestamp: Math.max(0, word.endTimestamp - base) } : {})
+                }))
+            };
+        });
     }
 
     function lrcToRows(lrcText) {
@@ -368,7 +391,7 @@
                         return `<${String(shiftedMinutes).padStart(2, "0")}:${shiftedSeconds}>`;
                     });
                 }
-                return `${secondsToTag(row.time)}${body ? ` ${body}` : ""}`;
+                return `${secondsToTag(row.time, row.timing ? 3 : 2)}${body ? ` ${body}` : ""}`;
             })
             .join("\n");
     }
@@ -448,7 +471,8 @@
             duration: Number(payload.metadata?.duration ?? selected.duration ?? 0) || 0,
             artworkUrl: payload.metadata?.artworkUrl || selected.artworkUrl || selected.coverArt || "",
             thumbnailUrl: payload.metadata?.thumbnailUrl || "",
-            source: payload.metadata?.source || (selected.id ? "lrclib" : "")
+            source: payload.metadata?.source || selected.source || (selected.id ? "lrclib" : ""),
+            sourceUrl: payload.metadata?.sourceUrl || selected.sourceUrl || ""
         };
     }
 
@@ -490,6 +514,7 @@
             lyrics: typeof source.lyrics === "string" ? source.lyrics : "",
             plainLyrics: typeof source.plainLyrics === "string" ? source.plainLyrics : "",
             query: typeof source.query === "string" ? source.query : "",
+            lyricsProvider: source.lyricsProvider === "lrc.red" ? "lrc.red" : "lrclib",
             lyricRows: reconcileLyricRows(Array.isArray(source.lyricRows) ? source.lyricRows : lrcToRows(source.lyrics)),
             seed: Number.isFinite(Number(source.seed)) ? Number(source.seed) >>> 0 : 1337,
             fonts: Array.isArray(source.fonts) ? source.fonts.filter(font => font && typeof font === "object" && !Array.isArray(font)).map(font => ({

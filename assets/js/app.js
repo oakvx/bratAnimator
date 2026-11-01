@@ -1,5 +1,5 @@
-const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
-        const INLINE_WORD_TIMESTAMP_RE = /<(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)>/g;
+const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
+        const INLINE_WORD_TIMESTAMP_RE = /<(\d+):(\d{2}(?:[.,]\d{1,3})?)>/g;
         const META_TAG_RE = /^\[(ar|ti|al|by|offset):([^\]]*)\]$/i;
 
         const INVIDIOUS_BASES = [
@@ -33,6 +33,11 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const searchSongBtn = document.getElementById("searchSongBtn");
         const clearResultsBtn = document.getElementById("clearResultsBtn");
         const searchStatus = document.getElementById("searchStatus");
+        const lyricsProviderSelect = document.getElementById("lyricsProviderSelect");
+        const lyricsImportStatus = document.getElementById("lyricsImportStatus");
+        const lyricsSources = window.BratLyricsSources.createClient();
+        let lyricsRequest = null;
+        let lyricsRequestVersion = 0;
         const lrclibResults = document.getElementById("lrclibResults");
         const youtubeResults = document.getElementById("youtubeResults");
         const youtubeStatus = document.getElementById("youtubeStatus");
@@ -2000,6 +2005,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function updateMeta() {
+            updateLyricsSourceCredit();
             const parsedPreview = parseLRC(
                 lyricsInput.value,
                 startFromZeroCheckbox.checked,
@@ -2019,6 +2025,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const analysis = document.getElementById("timingAnalysis");
             if (analysis) {
                 const wordCount = parsedPreview.reduce((sum, line) => sum + line.analysis.wordCount, 0);
+                const nativeWords = parsedPreview.reduce((sum, line) => sum + line.timedWords.filter(word => word.explicitEnd).length, 0);
                 const enhanced = parsedPreview.filter(line => line.analysis.timingSource === "enhanced").length;
                 const guided = parsedPreview.filter(line => line.analysis.timingSource === "audio").length;
                 const vocalDuration = parsedPreview.reduce((sum, line) => sum + (line.analysis.vocalDuration || 0), 0);
@@ -2026,7 +2033,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 const warnings = parsedPreview.flatMap((line, index) => line.analysis.warnings.map(warning => `Line ${index + 1}: ${warning}`));
                 analysis.hidden = !lineCount;
                 document.getElementById("timingReport").hidden = !lineCount;
-                analysis.textContent = `${wordCount} words · ${vocalDuration.toFixed(2)}s ${translateUi("timingSung", "sung")} · ${pauseDuration.toFixed(2)}s ${translateUi("timingPause", "estimated pause")}. ${enhanced} lines with word timestamps · ${guided} audio-guided estimates.${warnings.length ? ` ${warnings.length} timing warnings — see details below.` : ""}`;
+                analysis.textContent = `${wordCount} words · ${vocalDuration.toFixed(2)}s ${translateUi("timingSung", "sung")} · ${pauseDuration.toFixed(2)}s ${translateUi("timingPause", "estimated pause")}. ${nativeWords} ${translateUi("nativeWordTiming", "words with original start/end times")} · ${enhanced} lines with word timestamps · ${guided} audio-guided estimates.${warnings.length ? ` ${warnings.length} timing warnings — see details below.` : ""}`;
                 analysis.title = warnings.join("\n");
                 const details = document.getElementById("timingWarnings");
                 details.hidden = !warnings.length;
@@ -2067,6 +2074,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function clearSearchResults() {
+            cancelLyricsRequest();
             lrclibResults.innerHTML = "";
             youtubeResults.innerHTML = "";
             searchStatus.textContent = "results cleared";
@@ -2106,6 +2114,31 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 .replaceAll(">", "&gt;");
         }
 
+        function updateLyricsSourceCredit() {
+            const provider = window.BratLyricsSources.providers[state.metadata?.source];
+            for (const id of ["lyricsSourceCredit", "searchSourceCredit", "stageSourceCredit"]) {
+                const node = document.getElementById(id);
+                if (!node) continue;
+                node.replaceChildren();
+                node.hidden = !provider;
+                if (provider) {
+                    const link = document.createElement("a");
+                    link.className = "text-link";
+                    // Only trusted provider URLs are used for attribution.
+                    link.href = state.metadata?.sourceUrl?.startsWith(provider.url + "/") ? state.metadata.sourceUrl : provider.url;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = `${translateUi("lyricsFrom", "lyrics from")} ${provider.label}`;
+                    node.appendChild(link);
+                }
+            }
+        }
+
+        function cancelLyricsRequest() {
+            lyricsRequestVersion++;
+            lyricsRequest?.abort();
+        }
+
         function setMetadataFromLrclibItem(item = {}) {
             state.selectedSong = item;
             state.metadata = {
@@ -2115,33 +2148,24 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 duration: Number(item.duration || state.metadata?.duration || 0) || 0,
                 artworkUrl: item.artworkUrl || item.coverArt || item.albumArt || state.metadata?.artworkUrl || "",
                 thumbnailUrl: state.metadata?.thumbnailUrl || "",
-                source: "lrclib"
+                source: item.source || "lrclib",
+                sourceUrl: item.sourceUrl || ""
             };
         }
 
-        async function searchLRCLIB(query) {
-            const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
-            const res = await fetch(url);
-
-            if (!res.ok) {
-                throw new Error(`LRCLIB HTTP error ${res.status}`);
-            }
-
-            return res.json();
-        }
-
-        function renderLRCLIBResults(items) {
+        function renderLRCLIBResults(items, provider) {
+            const source = window.BratLyricsSources.providers[provider];
             if (!items.length) {
                 lrclibResults.innerHTML = `
           <div class="result-card">
-            <div class="result-sub">no LRCLIB results</div>
+            <div class="result-sub">${escapeHtml(translateUi("noLyricsResults", "no lyrics results"))} · ${source.label}</div>
           </div>
         `;
                 return;
             }
 
             lrclibResults.innerHTML = items.map((item, index) => {
-                const synced = item.syncedLyrics ? "synced" : "plain text only";
+                const synced = provider === "lrc.red" ? "TTML / YAML" : item.hasWordSync ? "word synced" : item.syncedLyrics ? "synced" : "plain text only";
                 const artist = escapeHtml(item.artistName || "unknown artist");
                 const track = escapeHtml(item.trackName || "unknown title");
                 const album = escapeHtml(item.albumName || "album n/a");
@@ -2151,6 +2175,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
           <div class="result-card">
             <div class="result-title">${track}</div>
             <div class="result-sub">${artist}</div>
+            <p class="mini-copy"><a class="text-link" href="${source.url}" target="_blank" rel="noopener noreferrer">${source.label}</a></p>
             <div class="badge-row">
               <span class="badge">${synced}</span>
               <span class="badge">${duration}</span>
@@ -2165,19 +2190,22 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }).join("");
 
             document.querySelectorAll(".use-lrc-btn").forEach((btn) => {
-                btn.addEventListener("click", () => {
+                btn.addEventListener("click", async () => {
                     const index = Number(btn.dataset.lrcIndex);
                     const item = items[index];
-                    setMetadataFromLrclibItem(item);
-
-                    const bestLyrics = item.syncedLyrics || item.plainLyrics || "";
-                    lyricsInput.value = bestLyrics;
-                    rebuildTimelineFromCurrentInputs();
-                    updateMeta();
-                    renderLrcRows();
-                    updateBackgroundStatus();
-                    saveProjectSettings();
-                    searchStatus.textContent = `loaded: ${(item.artistName || "")} - ${(item.trackName || "")}`.trim();
+                    cancelLyricsRequest();
+                    const version = lyricsRequestVersion;
+                    lyricsRequest = new AbortController();
+                    btn.disabled = true;
+                    searchStatus.textContent = `${translateUi("loadingLyrics", "loading lyrics")} · ${source.label}`;
+                    try {
+                        const result = await lyricsSources.load(item, { signal: lyricsRequest.signal });
+                        if (version !== lyricsRequestVersion) return;
+                        applyImportedLyrics(result, result.item);
+                        searchStatus.textContent = `loaded: ${(result.item.artistName || "")} - ${(result.item.trackName || "")} · ${source.label}`.trim();
+                    } catch (error) {
+                        if (version === lyricsRequestVersion && error.name !== "AbortError") searchStatus.textContent = error.message;
+                    } finally { btn.disabled = false; }
                 });
             });
 
@@ -2185,8 +2213,6 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 btn.addEventListener("click", async () => {
                     const index = Number(btn.dataset.ytIndex);
                     const item = items[index];
-                    setMetadataFromLrclibItem(item);
-                    saveProjectSettings();
                     await runYouTubeSearchForItem(item);
                 });
             });
@@ -2431,19 +2457,24 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 return;
             }
 
+            cancelLyricsRequest();
             if (loadYouTubeLinkFromSearch(query)) return;
-
-            searchStatus.textContent = `LRCLIB search: ${query}`;
+            const version = lyricsRequestVersion;
+            lyricsRequest = new AbortController();
+            const provider = window.BratLyricsSources.normalizeProvider(lyricsProviderSelect?.value);
+            const source = window.BratLyricsSources.providers[provider];
+            searchStatus.textContent = `${source.label} search: ${query}`;
             lrclibResults.innerHTML = "";
             youtubeResults.innerHTML = "";
             youtubeStatus.textContent = "no video loaded";
 
             try {
-                const items = await searchLRCLIB(query);
-                searchStatus.textContent = `${items.length} LRCLIB results`;
-                renderLRCLIBResults(items);
+                const items = await lyricsSources.search(query, provider, { signal: lyricsRequest.signal });
+                if (version !== lyricsRequestVersion) return;
+                searchStatus.textContent = `${items.length} ${source.label} results`;
+                renderLRCLIBResults(items, provider);
             } catch (error) {
-                searchStatus.textContent = error.message || "LRCLIB search error";
+                if (version === lyricsRequestVersion && error.name !== "AbortError") searchStatus.textContent = error.message || "Lyrics search error";
             }
         }
 
@@ -2696,11 +2727,12 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
 
         function secondsToTag(seconds) {
-            return BratCore.secondsToTag(seconds);
+            const precision = Math.abs(seconds * 100 - Math.round(seconds * 100)) > 0.000001 ? 3 : 2;
+            return BratCore.secondsToTag(seconds, precision);
         }
 
         function tagToSeconds(tag) {
-            const match = String(tag || "").match(/^(?:\[)?(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)(?:\])?$/);
+            const match = String(tag || "").match(/^(?:\[)?(\d+):(\d{2}(?:[.,]\d{1,3})?)(?:\])?$/);
             if (!match) return 0;
             return parseTimeTag(match[1], match[2]) || 0;
         }
@@ -3921,6 +3953,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 lyrics: lyricsInput.value,
                 plainLyrics: plainLyricsInput?.value || "",
                 query: searchQueryInput.value,
+                lyricsProvider: lyricsProviderSelect?.value || "lrclib",
                 useAudioTiming: useAudioTimingCheckbox.checked,
                 timing: state.timing,
                 startFromZero: startFromZeroCheckbox.checked,
@@ -4058,6 +4091,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function restoreProjectSettings(payload, options = {}) {
             if (!payload || typeof payload !== "object") return false;
+            cancelLyricsRequest();
             payload = migrateProjectPayload(payload);
 
             state.lyricRows = payload.lyricRows || [];
@@ -4069,6 +4103,7 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (typeof payload.lyrics === "string") lyricsInput.value = payload.lyrics;
             if (plainLyricsInput && typeof payload.plainLyrics === "string") plainLyricsInput.value = payload.plainLyrics;
             if (typeof payload.query === "string") searchQueryInput.value = payload.query;
+            if (lyricsProviderSelect) lyricsProviderSelect.value = window.BratLyricsSources.normalizeProvider(payload.lyricsProvider);
             if (typeof payload.useAudioTiming === "boolean") useAudioTimingCheckbox.checked = payload.useAudioTiming;
             if (typeof payload.startFromZero === "boolean") startFromZeroCheckbox.checked = payload.startFromZero;
             writeTimingControls(payload.timing);
@@ -4155,16 +4190,36 @@ const LINE_TIMESTAMP_RE = /\[(\d{1,2}):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             renderTimeline();
         }
 
-        async function loadLrcFile(file) {
-            if (!file) return;
-            const text = await file.text();
-            lyricsInput.value = text;
+        function applyImportedLyrics(result, item = null) {
+            stopPlayback(false);
+            lyricsInput.value = result.lyrics;
+            state.lyricRows = result.rows ? BratCore.reconcileLyricRows(result.rows) : [];
+            state.selectedSong = null;
+            state.metadata = { trackName: "", artistName: "", albumName: "", duration: 0, source: "", sourceUrl: "", ...result.metadata };
+            if (item) setMetadataFromLrclibItem(item);
+            if (lyricsImportStatus) lyricsImportStatus.textContent = `${result.format.toUpperCase()} · ${result.nativeWordCount} ${translateUi("nativeWordTiming", "words with original start/end times")}`;
             rebuildTimelineFromCurrentInputs();
             updateMeta();
             updateExportEstimate();
             renderLrcRows();
             renderTimeline();
+            updateBackgroundStatus();
             saveProjectSettings();
+        }
+
+        async function loadLrcFile(file) {
+            if (!file) return;
+            cancelLyricsRequest();
+            const version = lyricsRequestVersion;
+            try {
+                if (file.size > window.BratLyrics.MAX_SIZE) throw new Error("Lyrics file is too large (maximum 2 MB).");
+                const text = await file.text();
+                if (version !== lyricsRequestVersion) return;
+                const result = window.BratLyrics.parse(text, file.name);
+                applyImportedLyrics(result);
+            } catch (error) {
+                if (version === lyricsRequestVersion && lyricsImportStatus) lyricsImportStatus.textContent = `${translateUi("lyricsImportError", "Lyrics import failed")}: ${error.message}`;
+            }
         }
 
         async function processAudioFile(file) {
@@ -4695,6 +4750,11 @@ async function updateExportEstimate() {
 
         clearResultsBtn.addEventListener("click", clearSearchResults);
         searchSongBtn.addEventListener("click", runSongSearch);
+        lyricsProviderSelect?.addEventListener("change", () => {
+            clearSearchResults();
+            searchStatus.textContent = translateUi("noSearch", "no search yet");
+            saveProjectSettings();
+        });
 
         searchQueryInput.addEventListener("input", saveProjectSettings);
         searchQueryInput.addEventListener("paste", () => {
@@ -4728,12 +4788,21 @@ async function updateExportEstimate() {
         });
 
         lyricsInput.addEventListener("input", () => {
+            cancelLyricsRequest();
             rebuildTimelineFromCurrentInputs();
             updateMeta();
             updateExportEstimate();
             renderLrcRows();
             renderTimeline();
             saveProjectSettings();
+        });
+        lyricsInput.addEventListener("paste", event => {
+            const text = event.clipboardData?.getData("text/plain") || "";
+            if (["lrc", "plain"].includes(window.BratLyrics.detectFormat(text))) return;
+            event.preventDefault();
+            cancelLyricsRequest();
+            try { applyImportedLyrics(window.BratLyrics.parse(text)); }
+            catch (error) { lyricsImportStatus.textContent = `${translateUi("lyricsImportError", "Lyrics import failed")}: ${error.message}`; }
         });
 
         useAudioTimingCheckbox.addEventListener("change", () => {
@@ -5075,7 +5144,7 @@ async function updateExportEstimate() {
             if (openPicker) {
                 const picker = document.createElement("input");
                 picker.type = "file";
-                picker.accept = ".lrc,text/plain";
+                picker.accept = window.BratLyrics.ACCEPT;
                 picker.addEventListener("change", () => loadLrcFile(picker.files?.[0]));
                 picker.click();
                 return;
@@ -5172,7 +5241,7 @@ async function updateExportEstimate() {
         },
         {
             title: 'find lyrics',
-            body: 'Search by artist and title. Results from LRCLIB can fill the project without leaving the browser.',
+            body: 'Search by artist and title. Choose LRCLIB or lrc.red to load lyrics and their available word timing.',
             tab: 'lyrics',
             target: '#searchQueryInput',
             tip: 'You can also skip search and paste your own LRC in the Timing tab.'
