@@ -164,19 +164,29 @@
     function scheduleWords(line, tokens, limit, explicitEnd, audio, warnings, secondsPerUnit, speed) {
         const words = tokens.filter(token => !token.isSpace);
         const anchors = new Map([[0, line.timestamp]]);
+        const nativeSegments = [];
+        const seenWords = new Set();
         let searchCursor = 0;
         let previous = line.timestamp;
         for (const marker of line.wordTimings || []) {
-            const markerText = String(marker.text || "").replace(/^(?:\[(?:bg|side|rom|lead|main|background|backing|adlib|romanized|translation|trans)\]|\((?:bg|side|rom|lead|main|background|backing|adlib|romanized|translation|trans)\))\s*/i, "");
+            const markerText = String(marker.text || "").replace(/^(?:\[(?:bg|side|rom|lead|main|background|backing|adlib|romanized|translation|trans)\]|\((?:bg|side|rom|lead|main|background|backing|adlib|romanized|translation|trans)\))\s*/i, "").replace(/\s+/gu, " ").trim();
             const position = line.text.indexOf(markerText, searchCursor);
             if (position < 0 || !markerText) { warnings.push("Unmatched word timestamp"); continue; }
             const point = Array.from(line.text.slice(0, position)).length;
             const wordIndex = words.findIndex(word => word.endChar >= point);
             if (wordIndex < 0) continue;
             if (!Number.isFinite(marker.timestamp)) { warnings.push("Invalid word timestamp"); continue; }
-            const start = clamp(marker.timestamp, previous, limit);
+            const isNative = Number.isFinite(marker.endTimestamp);
+            const start = clamp(marker.timestamp, isNative ? line.timestamp : previous, limit);
             if (start !== marker.timestamp) warnings.push("Word timestamp outside its line or out of order");
-            anchors.set(wordIndex, start);
+            // Several native syllables can belong to one displayed word. Its
+            // onset is the first syllable, never the final one.
+            if (!isNative || !seenWords.has(wordIndex)) anchors.set(wordIndex, start);
+            seenWords.add(wordIndex);
+            if (isNative && marker.endTimestamp >= marker.timestamp) nativeSegments.push({
+                startChar: point, endChar: point + Array.from(markerText).length - 1,
+                start: marker.timestamp, end: marker.endTimestamp
+            });
             previous = start;
             searchCursor = position + markerText.length;
         }
@@ -184,6 +194,27 @@
             warnings.push("Terminal timestamp before its last word");
             explicitEnd = previous;
         }
+        // TTML often leaves wrapping parentheses/punctuation outside the timed
+        // span. Attach only those characters to the same source interval.
+        const sourceChars = Array.from(line.text);
+        for (const word of words) {
+            const segments = nativeSegments.filter(segment => segment.startChar >= word.startChar && segment.endChar <= word.endChar);
+            if (!segments.length) continue;
+            const first = segments[0], last = segments.at(-1);
+            if (/^\p{Punctuation}+$/u.test(sourceChars.slice(word.startChar, first.startChar).join(""))) first.startChar = word.startChar;
+            if (/^\p{Punctuation}+$/u.test(sourceChars.slice(last.endChar + 1, word.endChar + 1).join(""))) last.endChar = word.endChar;
+        }
+        // A known word end also bounds any following word whose timing is
+        // missing. Estimates must begin after that interval, not inside it.
+        words.forEach((word, index) => {
+            const segments = nativeSegments.filter(segment => segment.startChar >= word.startChar && segment.endChar <= word.endChar);
+            let cursor = word.startChar;
+            for (const segment of segments) {
+                if (segment.startChar !== cursor) break;
+                cursor = segment.endChar + 1;
+            }
+            if (segments.length && cursor === word.endChar + 1 && !anchors.has(index + 1)) anchors.set(index + 1, Math.max(...segments.map(segment => segment.end)));
+        });
         anchors.set(words.length, Number.isFinite(explicitEnd) ? explicitEnd : limit);
         const ordered = [...anchors].sort((a, b) => a[0] - b[0]);
         const scheduled = new Array(words.length);
@@ -223,6 +254,23 @@
             last.sustainDuration = last.end - last.revealEnd;
             last.pauseDuration = 0;
         }
+        scheduled.forEach((word, index) => {
+            const segments = nativeSegments.filter(segment => segment.startChar >= word.startChar && segment.endChar <= word.endChar);
+            let cursor = word.startChar;
+            for (const segment of segments) {
+                if (segment.startChar !== cursor) break;
+                cursor = segment.endChar + 1;
+            }
+            if (!segments.length || cursor !== word.endChar + 1) return;
+            // Bypass rhythm, punctuation, speed and audio guidance completely
+            // when the source supplies the complete word interval.
+            const end = Math.max(...segments.map(segment => segment.end));
+            scheduled[index] = {
+                ...word, start: segments[0].start, end,
+                revealEnd: end, explicitStart: true, explicitEnd: true,
+                sustainDuration: 0, pauseDuration: 0, nativeSegments: segments
+            };
+        });
         return scheduled;
     }
 
@@ -252,7 +300,9 @@
             const tokens = tokenized[lineIndex];
             const words = tokens.filter(token => !token.isSpace);
             const warnings = [];
-            const nextTimestamp = Math.min(nextStarts[lineIndex], line.boundaryTimestamp ?? Infinity);
+            const sourceEnd = line.lineEndTimestamp ?? Math.max(-Infinity, ...(line.wordTimings || []).map(marker => marker.endTimestamp ?? -Infinity));
+            // Explicit source intervals may overlap another singer/line.
+            const nextTimestamp = Number.isFinite(sourceEnd) ? sourceEnd : Math.min(nextStarts[lineIndex], line.boundaryTimestamp ?? Infinity);
             const offset = (line.sourceTimestamp ?? line.timestamp) - line.timestamp;
             const originalDuration = Number.isFinite(options?.mediaDuration) ? options.mediaDuration : audio?.duration;
             let mediaEnd = Number.isFinite(originalDuration) ? originalDuration - offset : Infinity;
@@ -274,7 +324,7 @@
             const limit = Number.isFinite(nextTimestamp) ? nextTimestamp : mediaEnd;
             if (limit - line.timestamp < words.length * 0.045) warnings.push("Dense line: very little time per word");
             const timedWords = scheduleWords(line, tokens, limit, explicitEnd, audio, warnings, secondsPerUnit, speed);
-            const vocalEnd = timedWords.at(-1)?.end ?? line.timestamp;
+            const vocalEnd = Math.max(line.timestamp, ...timedWords.map(word => word.end));
             const slotEnd = Number.isFinite(nextTimestamp) ? nextTimestamp
                 : Number.isFinite(mediaEnd) ? mediaEnd : vocalEnd + 0.8;
             const chars = [];
@@ -282,8 +332,11 @@
                 const letters = graphemes(word.text);
                 const revealDuration = word.revealEnd - word.start;
                 letters.forEach((letter, index) => {
-                    const timestamp = word.start + revealDuration * index / Math.max(1, letters.length);
-                    chars.push({ ...letter, startChar: word.startChar + letter.startChar, endChar: word.startChar + letter.endChar, timestamp, duration: revealDuration / Math.max(1, letters.length), lineIndex, wordIndex: word.wordIndex });
+                    const startChar = word.startChar + letter.startChar;
+                    const segment = word.nativeSegments?.find(segment => startChar >= segment.startChar && startChar <= segment.endChar);
+                    const duration = segment ? (segment.end - segment.start) / Math.max(1, segment.endChar - segment.startChar + 1) : revealDuration / Math.max(1, letters.length);
+                    const timestamp = segment ? segment.start + duration * (startChar - segment.startChar) : word.start + revealDuration * index / Math.max(1, letters.length);
+                    chars.push({ ...letter, startChar, endChar: word.startChar + letter.endChar, timestamp, duration, lineIndex, wordIndex: word.wordIndex });
                 });
             }
             const chunks = phraseChunks(line.text, words);

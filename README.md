@@ -1,6 +1,6 @@
 # Brat Animator
 
-**Brat Animator** is a static browser-based tool for creating square brat-style lyric videos from synchronized **LRC lyrics**. It runs locally in the browser, keeps project data in browser storage, and exports MP4/WebM or PNG without a backend.
+**Brat Animator** is a static browser-based tool for creating brat-style lyric videos from synchronized **LRC, TTML, Lyricsfile YAML/JSON, SRT and WebVTT lyrics**. It runs locally in the browser, keeps project data in browser storage, and exports MP4/WebM or PNG without a backend.
 
 Live demo: **https://oakvx.github.io/bratAnimator/**
 
@@ -26,7 +26,7 @@ Live demo: **https://oakvx.github.io/bratAnimator/**
 - Uploaded images and videos can fill the background, the text, or both. Exchanging a gradient palette places the gradient inside the text.
 - Project schema `version: 5` with stable phrase identities, styles, translations, font references, random seed, beat effects and export range; migration from v2-v4 JSON and snapshots keeps the new effects disabled.
 - Local IndexedDB media storage for uploaded audio/video/background blobs; project JSON stores metadata and references, not binary blobs.
-- LRCLIB search, LRC import/paste, Enhanced LRC word timing, compact LRC editor, multi-select timing tools, undo/redo, and waveform/timeline marker dragging.
+- Switchable LRCLIB/lrc.red search, multi-format import/paste, native word start/end timing, Enhanced LRC, compact LRC editor, multi-select timing tools, undo/redo, and waveform/timeline marker dragging.
 - Shared word/character timeline for typewriter, word reveal and karaoke, with punctuation-aware text estimates, Unicode grapheme handling, explicit Enhanced LRC anchors, repeated timestamps and instrumental gaps.
 - Natural phrase durations no longer stretch to fill the interval before the next lyric. Punctuation creates pauses, repeated vowels add a separate sung hold, and completed text stays still until the next line or an explicit empty timestamp.
 - Estimated speed (0.5–2×) is stored with projects, snapshots and JSON; explicit LRC onsets and terminal word timestamps remain fixed. The timing report distinguishes the sung window from the estimated trailing pause.
@@ -50,7 +50,46 @@ Enter a translation for the selected phrase or paste translated text/LRC into th
 
 Export a **complete portable project** to keep uploaded assets with the project. A JSON project stores references to local browser assets, so use the portable ZIP when moving to another browser or computer. A package containing unavailable assets must be repaired before it can be exported. Remote URLs remain subject to network access and CORS restrictions.
 
-Editing, audio analysis, font loading, package creation and rendering run in the browser; there is no processing backend. LRCLIB searches, remote media and YouTube previews still use their respective network services. Once the app shell is cached on localhost/HTTPS, portable projects with all assets included can reopen offline.
+Editing, audio analysis, font loading, package creation and rendering run in the browser; there is no processing backend. LRCLIB/lrc.red searches, remote media and YouTube previews still use their respective network services. Once the app shell is cached on localhost/HTTPS, portable projects with all assets included can reopen offline.
+
+## Lyric Sources And Formats
+
+Choose **LRCLIB** or **lrc.red** above the song search. The selection is saved with
+the project. Search results and loaded lyrics link to their source. lrc.red track
+details are loaded on demand, followed by Lyricsfile YAML, TTML or LRC in that
+order. LRCLIB records prefer their `lyricsfile` field, with synced/plain fallbacks.
+Requests identify the client, run sequentially and respect `Retry-After` limits.
+Changing providers cancels pending lyric requests and clears old search results.
+API references: [LRCLIB](https://lrclib.net/docs), [lrc.red](https://lrc.red/api),
+and [Lyricsfile 1.0](https://github.com/tranxuanthang/lyricsfile/blob/main/SPECIFICATION.md).
+
+Drop a file in Timing, use the file picker, or paste structured lyrics directly
+into the lyrics editor. Supported imports:
+
+| Format | Timing used |
+| --- | --- |
+| LRC / Enhanced LRC | Line starts and available word starts/terminal markers |
+| TTML (`.ttml`, `.xml`) | Line, word and syllable intervals, including background vocals |
+| Lyricsfile 1.0 (`.lyricsfile.yaml`, `.yaml`, `.yml`, `.lyricsfile`, `.json`) | `start_ms` and optional `end_ms` for lines and words; `plain` fallback |
+| SRT / WebVTT | Cue starts/ends; WebVTT inline timestamps when present |
+| TXT | Plain text for the existing tap-to-sync workflow |
+
+The editor displays LRC, while project rows retain the original intervals.
+**Known word starts and ends bypass timing estimates, speed controls and audio
+guidance.** Silent gaps and overlapping lines stay intact. Missing intervals use
+the existing estimation path. Adjacent syllables form a displayed word, with
+their original segment intervals also used for character animation. Shifting a
+row moves its complete native timing; editing its text invalidates those anchors.
+Project JSON, autosave and `.brat.zip` preserve the intervals; copying only LRC
+cannot preserve every individual word end.
+
+TTML accepts clock, offset, frame and tick expressions, parent-relative subtitle
+timing and track-absolute Apple Music/lrc.red lyric timing. Sequential (`seq`)
+containers are rejected explicitly. TTML styling and source layout are not
+imported. Lyricsfile `offset_ms`, when supplied, is applied additively like an LRC
+offset. Invalid or oversized imports report an error and leave the project intact.
+YAML parsing is local, uses a safe schema and rejects unsupported versions/tags
+and duplicate keys. The import limit is 2 MB.
 
 ## Running Locally
 
@@ -66,6 +105,8 @@ Then open `http://localhost:4173/`.
 
 ```bash
 node --check assets/js/core.js
+node --check assets/js/lyrics.js
+node --check assets/js/lyrics-sources.js
 node --check assets/js/timing.js
 node --check assets/js/media.js
 node --check assets/js/export.js
@@ -89,6 +130,7 @@ node tests/text-settings-browser.mjs
 node tests/export-format-browser.mjs
 node tests/motion-browser.mjs
 node tests/music-editor-browser.mjs
+node tests/lyrics-browser.mjs
 node tests/project-assets-browser.mjs
 node tests/editor-v5-browser.mjs
 ```

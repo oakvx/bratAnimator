@@ -1,10 +1,13 @@
-const CACHE_NAME = "brat-animator-v5-editor-1";
+const CACHE_NAME = "brat-animator-v5-lyrics-2";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./assets/css/style.css",
   "./assets/css/editor-v5.css",
   "./assets/js/core.js",
+  "./vendor/js-yaml.min.js",
+  "./assets/js/lyrics.js",
+  "./assets/js/lyrics-sources.js",
   "./assets/js/timing.js",
   "./assets/js/media.js",
   "./assets/js/export.js",

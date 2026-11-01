@@ -240,6 +240,9 @@
         }
     </script>
     <script src="assets/js/core.js" defer></script>
+    <script src="vendor/js-yaml.min.js" defer></script>
+    <script src="assets/js/lyrics.js" defer></script>
+    <script src="assets/js/lyrics-sources.js" defer></script>
     <script src="assets/js/timing.js" defer></script>
     <script src="assets/js/media.js" defer></script>
     <script src="assets/js/export.js" defer></script>
@@ -290,7 +293,7 @@
             <div>
                 <h1 data-i18n="panelTitle">brat lyric video editor</h1>
                 <p data-i18n="panelIntro">
-                    Search a song on LRCLIB, paste or load LRC lyrics, use cleared audio/video for timing,
+                    Search a song on LRCLIB or lrc.red, paste or import lyrics, use cleared audio/video for timing,
                     and optionally merge extracted audio into the final export.
                 </p>
             </div>
@@ -321,7 +324,12 @@
 
         <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
             <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
-            <label class="label" for="searchQueryInput" data-i18n="searchSongLabel">search LRCLIB or paste YouTube link</label>
+            <label class="label" for="lyricsProviderSelect" data-i18n="lyricsProvider">lyrics source</label>
+            <select id="lyricsProviderSelect">
+                <option value="lrclib">LRCLIB</option>
+                <option value="lrc.red">lrc.red</option>
+            </select>
+            <label class="label" for="searchQueryInput" data-i18n="searchSongLabel">search lyrics or paste YouTube link</label>
             <input id="searchQueryInput" type="text" placeholder="artist - title or YouTube link" data-i18n-placeholder="searchPlaceholder" />
             <p class="mini-copy">Use artist/title for lyrics, or paste a YouTube link to load the video preview. Audio can come from an uploaded audio/video file or a permitted direct media URL.</p>
 
@@ -332,6 +340,7 @@
 
             <div id="searchStatus" class="meta muted" data-status-key="noSearch">no search yet</div>
             <div id="lrclibResults" class="results"></div>
+            <p id="searchSourceCredit" class="mini-copy" hidden></p>
         </div>
 
         <div id="section-timing" class="section editor-section" data-editor-tab="timing" role="tabpanel" aria-labelledby="tab-timing">
@@ -342,8 +351,11 @@
 [00:24.48] no lo digas con palabras
 [00:27.28] yo sé que en esa pausa también hay algo"></textarea>
             <div id="lrcDropZone" class="drop-zone" tabindex="0" role="button" data-i18n="dropLrc">
-                Drop a .lrc file here or click to load lyrics
+                Drop LRC, TTML, YAML, JSON, SRT, VTT or TXT here, or click to load
             </div>
+            <p class="mini-copy" data-i18n="lyricsImportHelp">Paste or import a lyrics file. Original word start/end times are used when present; the editor shows LRC.</p>
+            <p id="lyricsImportStatus" class="meta muted" role="status" aria-live="polite"></p>
+            <p id="lyricsSourceCredit" class="mini-copy" hidden></p>
 
             <div class="tool-strip" aria-label="LRC tools">
                 <button id="cleanLrcBtn">clean LRC</button>
@@ -918,6 +930,7 @@
                     <span id="stageDuration" class="transport-time">0:00</span>
                 </div>
                 <div class="hint"><span data-i18n="hint">export a frame or render the video</span><kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> seek</div>
+                <p id="stageSourceCredit" class="mini-copy" hidden></p>
             </div>
         </div>
     </main>
