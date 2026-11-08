@@ -195,6 +195,15 @@ try {
     await evaluate("document.getElementById('commandPaletteInput').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))");
     assert.equal(await evaluate("document.getElementById('commandPalette').classList.contains('hidden')"),true);
     await evaluate("document.getElementById('lyricsInput').value = '[00:01.00] smoke test lyric'; document.getElementById('lyricsInput').dispatchEvent(new Event('input', { bubbles: true }));");
+    // Phase 12: real DOM template controls drive the existing editor engine.
+    await evaluate("document.querySelector('[data-open-tab=design]').click();document.querySelector('[data-template=kinetic-reels]').click()");
+    assert.equal(await evaluate("document.getElementById('formatPresetSelect').value"),"vertical");
+    assert.equal(await evaluate("document.getElementById('lyricsDisplayModeSelect').value"),"kinetic");
+    assert.equal(await evaluate("document.getElementById('themePresetSelect').value"),"kinetic-blue");
+    assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
+    assert.equal(await evaluate("document.getElementById('previewCanvas').width===1080 && document.getElementById('previewCanvas').height===1920"),true);
+    await evaluate("document.querySelector('[data-template=brat-classic]').click()");
+    assert.equal(await evaluate("document.getElementById('formatPresetSelect').value"),"square");
     await until("document.getElementById('exportPreflight').dataset.state !== 'blocked'");
     assert.equal(await evaluate("document.getElementById('exportPreflightList').textContent.includes('1 timed lyric line recognized')"),true);
     await evaluate("document.getElementById('exportFpsSelect').value='60';document.getElementById('exportFpsSelect').dispatchEvent(new Event('change',{bubbles:true}))");
