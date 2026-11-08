@@ -137,3 +137,10 @@ body[data-ui-mode="simple"] #editCanvasBtn { display:none; }
     .editor-template-gallery {grid-template-columns:1fr;}
     .editor-template-gallery button {min-height:54px;}
 }
+
+
+/* Offset the sticky editor header and tab bar when opening text settings
+ * from the topbar or stage on touch-size screens. */
+@media (max-width: 980px) {
+    #textSettings { scroll-margin-top: calc(var(--topbar-height) + 118px); }
+}
