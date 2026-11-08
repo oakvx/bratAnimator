@@ -201,6 +201,72 @@
             });
         }
 
+        async function stats() {
+            const all = await readAll();
+            return {
+                saved: all.filter(item => item.kind !== "temporary").length,
+                temporary: all.filter(item => item.kind === "temporary").length,
+                capacity: PROJECT_LIMIT,
+                temporaryCapacity: TEMPORARY_LIMIT
+            };
+        }
+
+        async function renameProject(ownerId, projectId, title) {
+            const key = projectKey(ownerId, projectId);
+            const normalized = String(title || "").trim().slice(0, 120);
+            if (!normalized) throw errorWithCode("Project name cannot be empty.", "INVALID_TITLE");
+            const db = await openDatabase();
+            return new Promise((resolve, reject) => {
+                let tx, missing = false;
+                try {
+                    tx = db.transaction(PROJECT_STORE, "readwrite");
+                    const request = tx.objectStore(PROJECT_STORE).get(key);
+                    request.onsuccess = () => {
+                        if (!request.result) { missing = true; tx.abort(); return; }
+                        tx.objectStore(PROJECT_STORE).put({ ...request.result, title: normalized });
+                    };
+                } catch (error) { db.close(); reject(error); return; }
+                tx.oncomplete = () => { db.close(); resolve(true); };
+                tx.onerror = () => { db.close(); reject(tx.error || errorWithCode("Rename failed.", "STORAGE_WRITE_FAILED")); };
+                tx.onabort = () => { db.close(); reject(missing
+                    ? errorWithCode("Project not found.", "PROJECT_NOT_FOUND")
+                    : tx.error || errorWithCode("Rename aborted.", "STORAGE_WRITE_FAILED")); };
+            });
+        }
+
+        async function promoteTemporary(ownerId, title) {
+            const owner = ownerKey(ownerId);
+            const tmpKey = projectKey(owner, "temporary");
+            const projectId = "archive-" + (root.crypto?.randomUUID?.() || String(now()) + "-" + Math.random().toString(36).slice(2));
+            const key = projectKey(owner, projectId);
+            const db = await openDatabase();
+            return new Promise((resolve, reject) => {
+                let tx, failure = null;
+                try {
+                    tx = db.transaction(PROJECT_STORE, "readwrite");
+                    const store = tx.objectStore(PROJECT_STORE);
+                    const request = store.getAll();
+                    request.onsuccess = () => {
+                        const all = request.result || [];
+                        const source = all.find(item => item.key === tmpKey && item.kind === "temporary");
+                        if (!source) { failure = errorWithCode("Temporary project not found.", "PROJECT_NOT_FOUND"); tx.abort(); return; }
+                        if (all.filter(item => item.kind !== "temporary").length >= PROJECT_LIMIT) {
+                            failure = errorWithCode("Free a permanent project slot first.", "LIBRARY_FULL");
+                            tx.abort(); return;
+                        }
+                        store.put({
+                            ...source, key, projectId, kind: "saved", updatedAt: now(),
+                            title: String(title || source.title || "Untitled project").slice(0, 120)
+                        });
+                        store.delete(tmpKey);
+                    };
+                } catch (error) { db.close(); reject(error); return; }
+                tx.oncomplete = () => { db.close(); resolve(projectId); };
+                tx.onerror = () => { db.close(); reject(failure || tx.error || errorWithCode("Promotion failed.", "STORAGE_WRITE_FAILED")); };
+                tx.onabort = () => { db.close(); reject(failure || tx.error || errorWithCode("Promotion aborted.", "STORAGE_WRITE_FAILED")); };
+            });
+        }
+
         async function deleteOwner(ownerId) {
             const owner = ownerKey(ownerId);
             const db = await openDatabase();
@@ -247,6 +313,9 @@
             deleteOwner,
             activateProject,
             listProjects,
+            stats,
+            renameProject,
+            promoteTemporary,
             estimateStorage,
             getActive: ownerId => getProject(ownerId, "current"),
             saveActive: (payload, ownerId) => saveProject(payload, { ownerId, projectId: "current" }),
@@ -260,6 +329,8 @@
             throw errorWithCode("Autosave requires a workspace store.", "INVALID_CONFIG");
         }
         const ownerId = ownerKey(config.ownerId);
+        const projectId = String(config.projectId || "current");
+        const temporary = projectId === "temporary";
         const delay = Math.max(100, Number(config.delay) || 700);
         const notify = config.onStatus || function () {};
         const onError = config.onError || function () {};
@@ -292,7 +363,9 @@
                 if (generation !== currentGeneration) return false;
                 notify("saving");
                 try {
-                    await config.store.saveActive(snapshot, ownerId);
+                    await (temporary
+                        ? config.store.saveProject(snapshot, { ownerId, projectId, temporary: true })
+                        : config.store.saveActive(snapshot, ownerId));
                     if (generation === currentGeneration) notify(pending === null ? "saved" : "pending");
                     return true;
                 } catch (error) {
@@ -316,7 +389,7 @@
             // Deletion is part of the same queue: an immediate new edit cannot
             // race ahead of the clear and then be removed accidentally.
             const deletion = chain.catch(() => {}).then(async () => {
-                await config.store.clearActive(ownerId);
+                await (temporary ? config.store.deleteProject(ownerId, projectId) : config.store.clearActive(ownerId));
                 notify("cleared");
             });
             chain = deletion;
