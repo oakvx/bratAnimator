@@ -558,3 +558,64 @@ body.studio-dashboard-open::before { display:none; }
 @media(prefers-reduced-motion:reduce) {
   #studioDashboard *, #studioNav * { transition:none !important; }
 }
+
+/* Small Explorer collection actions; no extra modal library required. */
+#studioDashboard .studio-sound-collection-entry {
+  display:flex;
+  align-items:center;
+  gap:2px;
+  margin:2px 0;
+}
+#studioDashboard .studio-sound-collection-entry button:first-child {
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#studioDashboard .studio-sound-collection-entry button:not(:first-child) {
+  width:25px;
+  flex:0 0 25px;
+  padding:3px;
+  text-align:center;
+  font-size:12px;
+}
+#studioSoundConfirmDialog .studio-modal.window {
+  display:block;
+  padding:0;
+  width:min(100%,425px);
+  border:1px solid #fff;
+  background:#f7fbff;
+  box-shadow:0 13px 38px #0a375a60;
+}
+#studioSoundConfirmDialog .studio-modal .title-bar {
+  min-height:32px;
+  display:flex;
+  align-items:center;
+  padding:6px 12px;
+  color:#234d6e;
+  background:linear-gradient(#f6ffff,#c6e5f8 48%,#8fc3e4);
+}
+#studioSoundConfirmDialog .studio-modal .window-body {
+  padding:20px;
+}
+#studioSoundConfirmDialog .studio-classic-commandbar {
+  display:flex;
+  gap:10px;
+  margin:17px 0 0;
+  justify-content:flex-end;
+}
+#studioSoundConfirmDialog .studio-classic-commandbar button,
+#studioSoundCollectionDialog .studio-classic-commandbar button {
+  border-radius:3px;
+  border:1px solid #7a9bb9;
+  background:linear-gradient(#fff,#edf9ff 45%,#c7e2f5 48%,#e6f6ff);
+  min-height:28px;
+  padding:5px 13px;
+  color:#234760;
+  font:12px "Segoe UI",Tahoma,sans-serif;
+}
+@media (max-width:600px) {
+  #studioDashboard .studio-sound-collection-entry { display:inline-flex; }
+  #studioDashboard .studio-sound-collection-entry button:first-child { width:auto; }
+}
