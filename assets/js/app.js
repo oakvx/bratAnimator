@@ -1016,6 +1016,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             let lineIndex = state.timeline.findLastIndex(line => timeSec >= line.displayStart);
             if (state.style.lyricsMode === "brat" && visible?.line) lineIndex = visible.line.lineIndex;
             lineIndex = Math.max(0, lineIndex);
+            // Kinetic palette changes only at lyric-line boundaries, not on
+            // every word: frequent full-screen swaps can appear as flicker.
+            if (state.style.lyricsMode === "kinetic") return lineIndex;
             if (unit === "line") return lineIndex;
 
             let previousUnits = 0;
@@ -1998,7 +2001,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "alphabetic";
                 ctx.fillStyle = theme.text;
-                ctx.filter = "blur(" + (state.style.blur || 0) + "px)";
+                // Kinetic collage intentionally renders sharp, opaque glyphs.\n                // Canvas blur + crossfades previously produced flashing/ghosting.\n                ctx.filter = "none";\n                ctx.shadowBlur = 0;
                 for (const group of frame.groups) {
                     if (group.alpha <= 0) continue;
                     ctx.save();
