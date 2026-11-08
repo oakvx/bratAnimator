@@ -73,8 +73,8 @@
         $("studioNavIdentity").textContent = label;
         $("studioAvatar").textContent = user?.email?.slice(0, 1).toUpperCase() || "G";
         $("studioGreeting").textContent = user
-            ? "Bentornato. I tuoi progetti sono salvati su questo dispositivo, separati dagli altri account."
-            : "Crea, modifica ed esporta gratis anche senza account. Il tuo lavoro resta su questo dispositivo.";
+            ? (user.email || "Account collegato") + " · archivio locale"
+            : "Archivio locale · modalità ospite";
         $("studioAccountButton").textContent = user ? "Il mio account" : "Accedi / Registrati";
         $("studioAccountDescription").textContent = user
             ? "Accesso effettuato con " + (user.email || "account verificato") + ". I progetti non sono sincronizzati online."
@@ -394,11 +394,18 @@
         $("studioProjectsView").hidden = next !== "projects";
         $("studioSettingsView").hidden = next !== "settings";
         $("studioShareView").hidden = next !== "share";
-        $("studioFutureView").hidden = next !== "sounds";
-        if (next === "sounds") {
-            $("studioFutureIcon").textContent = "♫";
-            $("studioFutureTitle").textContent = "Sound Hub";
-            $("studioFutureText").textContent = "La libreria audio locale con raccolte e preferiti arriverà nella Fase 4.";
+        $("studioSoundsView").hidden = next !== "sounds";
+        $("studioFutureView").hidden = true;
+        $("studioTitle").textContent = ({
+            home: "Home",
+            projects: "Progetti",
+            sounds: "Sound Hub",
+            share: "BRATCODE",
+            settings: "Impostazioni",
+            editor: "Editor"
+        })[next] || "Brat Animator";
+        if (next !== "editor") {
+            window.dispatchEvent(new CustomEvent("brat:studio-view", { detail: { view: next } }));
         }
         if (next === "share") refreshCode().catch(error => notify(error.message, true));
 
