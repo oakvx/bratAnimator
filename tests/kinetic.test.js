@@ -50,11 +50,12 @@ test("composition is deterministic for random seeks and the export canvas", () =
     assert.notDeepEqual(a, kinetic.buildTimelineFrame(ctx, timeline, 5.62, 1080, 1920, style, 1235));
 });
 
-test("word windows are capped and preserve visual hierarchy", () => {
+test("a whole stanza fits in one composition, even beyond six words", () => {
     const ctx = canvasContext();
     const frame = kinetic.buildTimelineFrame(ctx, timeline, 10.9, 1080, 1080, style, 321);
     const nodes = frame.groups.at(-1).nodes;
-    assert.ok(nodes.length > 0 && nodes.length <= 6);
+    assert.equal(nodes.length, 11);
+    assert.equal(frame.sceneIndex, 0);
     assert.ok(new Set(nodes.map(node => Math.round(node.size))).size > 1);
     assert.equal(nodes.at(-1).text, "you're");
 });
