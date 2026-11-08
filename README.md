@@ -13,7 +13,7 @@
 | Layer | Implementation |
 | --- | --- |
 | Runtime | Browser-native ECMAScript (ES2022+); HTML5; CSS3 |
-| UI | Vanilla DOM; responsive Creator Studio; Frutiger Aero design; selectively scoped 7.css components |
+| UI | Vanilla DOM; Classic Desktop UI; Windows 7-style Explorer layout; scoped 7.css; no UI framework |
 | Rendering | Canvas 2D; deterministic frame compositor; timestamp-driven scene evaluation |
 | Media | Web Audio API; HTMLMediaElement; MediaRecorder; browser codec support |
 | Export | MP4/WebM pipelines; local video recording; PNG frame export; bundled mp4-muxer |
@@ -28,7 +28,7 @@
 
 The browser owns the application state and performs video rendering locally. Project snapshots reference media blobs in IndexedDB; the application does **not** upload audio or video as part of editing or exporting.
 
-    UI / Controller (index.html, studio-dashboard.js, app.js)
+    UI / Controller (index.html, studio-dashboard.js, sound-hub-ui.js, app.js)
           |
           +-- Timeline / lyrics (core.js, lyrics.js, timing.js)
           |
@@ -37,6 +37,8 @@ The browser owns the application state and performs video rendering locally. Pro
           +-- Render / export (Canvas 2D, export.js, media.js)
           |
           +-- Local storage (local-workspace.js, IndexedDB)
+          |
+          +-- Sound Hub (sound-hub.js, Web Crypto SHA-256, IndexedDB)
           |
           +-- Portable archives (project-assets.js, fflate)
           |
@@ -50,6 +52,7 @@ Key properties:
 - **Portable project format:** .brat.zip includes project metadata and available local assets. Plain JSON is metadata-only and is not a complete multimedia backup.
 - **Resilient editing:** debounced autosave, recovery state, legacy JSON migrations, and explicit error reporting. Browser storage can still be evicted.
 - **Client-only media export:** output quality and supported codecs depend on the browser and device.
+- **Local Sound Hub:** imported audio is SHA-256 deduplicated within a shared local media database; favorites, recents and playlists are metadata scoped to the local owner. The editor is modified only by explicit insertion.
 
 ## Input formats
 
@@ -69,6 +72,7 @@ Canvas layout and source timestamps are evaluated independently of dashboard eff
 
 - Primary database: bratAnimator.workspace.v1; object store: projects.
 - Media database: bratAnimator.media.v1; blobs referenced by asset IDs.
+- Sound Hub index: bratAnimator.soundhub.v1; tracks and collections metadata. File data remains in the existing shared media database.
 - Project IDs and owner IDs define logical workspace boundaries.
 - Shared browser-profile target capacity: **20 permanent projects + 1 recoverable temporary project**.
 - Storage limits are enforced by IndexedDB transactions and the browser's available quota.
@@ -98,6 +102,8 @@ Automated checks:
     node --test
     node --check assets/js/app.js
     node --check assets/js/kinetic.js
+    node --check assets/js/sound-hub.js
+    node --check assets/js/sound-hub-ui.js
 
 Optional Chrome browser audit:
 
@@ -108,7 +114,7 @@ CI runs Node.js unit tests, syntax verification, and available Chrome smoke chec
 ## Repository structure
 
     assets/js/                 Core editor, media, timeline, storage, auth, UI
-    assets/css/                Editor, Creator Studio and Aero-specific styling
+    assets/css/                Editor and Windows 7-style application shell
     vendor/                    Bundled external JS dependencies
     tests/                     Node unit tests and browser automation
     docs/                      Architecture notes and rollout instructions

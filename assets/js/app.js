@@ -4451,7 +4451,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
         }
 
-        async function processAudioFile(file) {
+        async function processAudioFile(file, options = {}) {
             if (!file) {
                 state.audioBuffer = null;
                 state.audioAnalysis = null;
@@ -4478,7 +4478,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             try {
                 const audioBuffer = await decodeUploadedAudio(file);
                 const audioAnalysis = analyzeAudioEnergy(audioBuffer);
-                const assetId = await storeMediaBlob(file, file.name, mediaKind);
+                // Sound Hub and recovery reuse the already persisted media ID:
+                // do not create a duplicate blob each time a project reopens.
+                const assetId = options.assetId || await storeMediaBlob(file, file.name, mediaKind);
 
                 state.audioBuffer = audioBuffer;
                 state.audioAnalysis = audioAnalysis;
@@ -4500,16 +4502,25 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 updateExportEstimate();
                 saveProjectSettings();
             } catch (error) {
-                state.audioBuffer = null;
-                state.audioAnalysis = null;
-                state.audioFileName = "";
-                updateAudioStatus(mediaDecodeFailureMessage(mediaKind), true);
-                syncExportAudioOption();
-                rebuildTimelineFromCurrentInputs();
-                updateMeta();
-                updateExportEstimate();
-                drawWaveform();
+                if (options.preserveOnError) {
+                    // Failure to decode a Sound Hub candidate must not erase
+                    // the previously loaded audio or change the lyric timing.
+                    updateAudioStatus(mediaDecodeFailureMessage(mediaKind), true);
+                } else {
+                    state.audioBuffer = null;
+                    state.audioAnalysis = null;
+                    state.audioFileName = "";
+                    updateAudioStatus(mediaDecodeFailureMessage(mediaKind), true);
+                    syncExportAudioOption();
+                    rebuildTimelineFromCurrentInputs();
+                    updateMeta();
+                    updateExportEstimate();
+                    drawWaveform();
+                }
+                if (options.raiseOnError) throw error;
+                return false;
             }
+            return true;
         }
 
         async function processAudioUrl(urlValue) {
@@ -4568,7 +4579,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const record = await loadMediaBlob(audio.assetId);
             if (!record?.blob) return false;
             const file = new File([record.blob], record.name || audio.name || "restored media", { type: record.blob.type || (record.kind === "video" ? "video/mp4" : "audio/mpeg") });
-            await processAudioFile(file);
+            await processAudioFile(file, { assetId: audio.assetId, preserveOnError: true, raiseOnError: true });
             updateAudioStatus(`${file.name} restored from this browser`);
             return true;
         }
@@ -5624,6 +5635,25 @@ async function updateExportEstimate() {
                 announceWorkspaceStatus("ready");
                 renderPreviewAt(0);
                 return true;
+            },
+            async useSoundHubAudio(assetId) {
+                await this.whenReady();
+                if (!assetId || !String(assetId).startsWith("sound-")) {
+                    throw new Error("Riferimento audio Sound Hub non valido.");
+                }
+                await this.flush();
+                const saved = await loadMediaBlob(assetId);
+                if (!saved?.blob) throw new Error("Il file audio locale non è disponibile. Importalo di nuovo.");
+                const file = new File(
+                    [saved.blob], saved.name || "Sound Hub audio",
+                    { type: saved.blob.type || "audio/mpeg" }
+                );
+                this.pause();
+                await processAudioFile(file, {
+                    assetId, preserveOnError: true, raiseOnError: true
+                });
+                await this.flush();
+                return { assetId, name: file.name };
             },
             pause() {
                 if (state.isPlaying) stopPlayback(false);
