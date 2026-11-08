@@ -392,12 +392,12 @@
                     <h3>Condividi progetto</h3>
                     <p>Genera un codice valido per 24 ore e riutilizzabile più volte. Solo gli account registrati possono generare un codice. L'importazione è disponibile anche agli ospiti.</p>
                     <p id="studioShareState" role="status">Per generare un BRATCODE occorre configurare Supabase e accedere.</p>
-                    <div class="studio-settings-actions"><button id="studioCodeCreate" class="studio-accent-button" type="button">Genera BRATCODE</button><button id="studioCodeCopy" type="button" hidden>Copia codice</button><button id="studioCodeRevoke" type="button" hidden>Revoca codice</button></div>
+                    <div class="studio-settings-actions"><button id="studioCodeCreate" class="studio-accent-button" type="button">Genera BRATCODE</button><button id="studioCodeCopy" type="button" hidden>Copia codice</button><button id="studioCodeCopyLink" type="button" hidden>Copia link</button><button id="studioCodeRevoke" type="button" hidden>Revoca codice</button></div>
                     <p class="studio-muted">Il codice carica temporaneamente sul servizio i testi e la struttura del progetto, ma non audio, video, immagini, font binari o dati di accesso.</p>
                 </div>
                 <div class="studio-settings-card"><h3>Importa BRATCODE</h3><p>Chiunque abbia un codice attivo può importare una copia indipendente nel proprio browser.</p>
                     <label for="studioCodeInput">Codice di condivisione</label>
-                    <input id="studioCodeInput" type="text" placeholder="Inserisci BRATCODE" autocomplete="off" maxlength="40" spellcheck="false" />
+                    <input id="studioCodeInput" type="text" placeholder="Codice o link BRATCODE" autocomplete="off" maxlength="1024" spellcheck="false" />
                     <button id="studioCodeImport" class="studio-accent-button" type="button">Importa progetto</button>
                     <p id="studioCodeMessage" role="status"></p>
                 </div>
