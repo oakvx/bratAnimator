@@ -10,7 +10,7 @@
     const MAX_BYTES = 180000;
     const SAFE_FIELDS = [
         "version", "lyricRows", "seed", "fonts", "beatEffects", "exportRange",
-        "lyrics", "plainLyrics", "query", "lyricsProvider", "useAudioTiming",
+        "lyrics", "plainLyrics", "lyricsProvider", "useAudioTiming",
         "timing", "startFromZero", "exportSize", "exportFps",
         "includeAudioInExport", "audio", "metadata", "background",
         "formatPreset", "theme", "animationMode", "style", "language"
@@ -22,13 +22,35 @@
         return Buffer.byteLength(json, "utf8");
     }
 
+    // BRATCODE intentionally transports project configuration, not transferable
+    // media bytes, browser-local asset identifiers, URLs, or credential fields.
+    // Clean nested structures as well: top-level field filtering is insufficient
+    // because lyric rows/style settings can contain extra user-controlled keys.
+    const PRIVATE_KEY = /^(?:url|uri|src|href|assetid|blob|bytes|binary|dataurl|base64|file|filedata|filecontent|filename|filepath|path|media|mediaassets|mediablobs|assets|token|accesstoken|refreshtoken|apikey|key|clientsecret|password|credentials|auth|authorization|headers|cookie|session|secret)$/i;
+    const MEDIA_URL = /^(?:blob:|data:|https?:\/\/|file:)/i;
+    function cleanNested(value, depth = 0) {
+        if (depth > 24) throw new Error("BRATCODE: struttura progetto troppo profonda.");
+        if (value === null || typeof value === "number" || typeof value === "boolean") return value;
+        if (typeof value === "string") return MEDIA_URL.test(value.trim()) ? "" : value;
+        if (Array.isArray(value)) return value.map(item => cleanNested(item, depth + 1))
+            .filter(item => item !== undefined);
+        if (!value || typeof value !== "object") return undefined;
+        const safe = {};
+        for (const [name, child] of Object.entries(value)) {
+            if (PRIVATE_KEY.test(name) || name === "__proto__" || name === "constructor" || name === "prototype") continue;
+            const sanitized = cleanNested(child, depth + 1);
+            if (sanitized !== undefined) safe[name] = sanitized;
+        }
+        return safe;
+    }
+
     function sanitizePayload(payload) {
         if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
             throw new Error("Il progetto da condividere non è valido.");
         }
         const cleaned = Object.create(null);
         for (const field of SAFE_FIELDS) {
-            if (Object.hasOwn(payload, field)) cleaned[field] = payload[field];
+            if (Object.hasOwn(payload, field)) cleaned[field] = cleanNested(payload[field]);
         }
         // Media-related project references cannot be reused across devices.
         const originalAudio = cleaned.audio && typeof cleaned.audio === "object" ? cleaned.audio : {};
