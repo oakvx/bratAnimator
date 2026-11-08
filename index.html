@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="assets/css/editor-v5.css" />
     <link rel="stylesheet" href="assets/css/studio-dashboard.css" />
     <script>
+        window.BratStudioShellEnabled = true;
         try {
             window.BratWasReturningUser = localStorage.getItem("bratAnimator.workspace.hasSaved.v1") === "1" || ["v5", "v4", "v3", "v2"].some(version => localStorage.getItem(`bratAnimator.project.${version}`));
         } catch (_) { window.BratWasReturningUser = false; }
