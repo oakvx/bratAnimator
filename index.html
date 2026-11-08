@@ -258,6 +258,7 @@
     <script src="assets/js/i18n.js" defer></script>
     <script src="assets/js/motion.js" defer></script>
     <script src="assets/js/kinetic.js" defer></script>
+    <script src="assets/js/lyrics-case.js" defer></script>
     <script src="vendor/fflate.min.js" defer></script>
     <script src="assets/js/project-assets.js" defer></script>
     <script src="assets/js/local-workspace.js" defer></script>
@@ -702,6 +703,7 @@
             <p id="lyricsSourceCredit" class="mini-copy" hidden></p>
 
             <div class="tool-strip" aria-label="LRC tools">
+                <button id="lowercaseLyricsBtn" type="button" title="Convert all lyrics to lowercase without changing timestamps">lowercase lyrics</button>
                 <button id="cleanLrcBtn">clean LRC</button>
                 <button id="normalizeLrcBtn">normalize timestamps</button>
                 <button id="shiftBackBtn">shift -0.50s</button>
@@ -899,22 +901,14 @@
 
             <fieldset id="kineticSettings" class="v5-block kinetic-settings" aria-describedby="kineticHelp" hidden>
                 <legend>kinetic collage</legend>
-                <p id="kineticHelp" class="mini-copy">Words change size and position to follow the music. Optimized for short-form lyric videos.</p>
+                <p id="kineticHelp" class="mini-copy">One complete stanza per canvas. Separate stanzas with a blank line in LRC; the next stanza starts on a clean canvas. Words appear instantly at their timestamps, without fade, flashing or scaling.</p>
                 <div class="kinetic-setting-grid">
-                    <label for="kineticWordsInput">words on screen
-                        <output id="kineticWordsValue" for="kineticWordsInput">6</output>
-                        <input id="kineticWordsInput" type="range" min="2" max="9" step="1" value="6" />
-                    </label>
                     <label for="kineticVariationInput">size contrast
                         <output id="kineticVariationValue" for="kineticVariationInput">72%</output>
                         <input id="kineticVariationInput" type="range" min="0" max="100" step="1" value="72" />
                     </label>
-                    <label for="kineticMotionInput">transition speed
-                        <output id="kineticMotionValue" for="kineticMotionInput">55%</output>
-                        <input id="kineticMotionInput" type="range" min="0" max="100" step="1" value="55" />
-                    </label>
                 </div>
-                <p class="mini-copy">Use the blue collage preset for a blue/cream palette that alternates at each lyric line. Word timing comes from LRC or imported enhanced timestamps.</p>
+                <p class="mini-copy">The blue/cream preset keeps a stable background throughout kinetic playback, including fast rap. Timing comes from LRC or enhanced word timestamps.</p>
             </fieldset>
 
             <div class="row color-row">

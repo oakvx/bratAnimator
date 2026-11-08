@@ -204,12 +204,17 @@ try {
     await until("!document.getElementById('commandPalette').classList.contains('hidden')");
     await evaluate("document.getElementById('commandPaletteInput').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))");
     assert.equal(await evaluate("document.getElementById('commandPalette').classList.contains('hidden')"),true);
-    await evaluate("document.getElementById('lyricsInput').value = '[00:01.00] smoke test lyric'; document.getElementById('lyricsInput').dispatchEvent(new Event('input', { bubbles: true }));");
+    // Lyric lowercase action is a real editor operation, not a CSS text-transform.
+    await evaluate("document.getElementById('lyricsInput').value = '[00:01.00] SMOKE Test LYRIC'; document.getElementById('lyricsInput').dispatchEvent(new Event('input', { bubbles: true })); document.getElementById('lowercaseLyricsBtn').click()");
+    assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
+    assert.equal(await evaluate("Boolean(window.BratLyricsCase && window.BratLyricsCase.lowercaseLyrics)"),true);
     // Phase 12: real DOM template controls drive the existing editor engine.
     await evaluate("document.querySelector('[data-open-tab=design]').click();document.querySelector('[data-template=kinetic-reels]').click()");
     assert.equal(await evaluate("document.getElementById('formatPresetSelect').value"),"vertical");
     assert.equal(await evaluate("document.getElementById('lyricsDisplayModeSelect').value"),"kinetic");
     assert.equal(await evaluate("document.getElementById('themePresetSelect').value"),"kinetic-blue");
+    const verseReset = await evaluate("(function(){ const rows = window.BratTiming.buildTimeline(window.BratCore.parseLRC('[00:01.00] OLD WORDS\\n\\n[00:03.00] NEW WORDS')); const ctx = document.createElement('canvas').getContext('2d'); return [2.4,3.01].map(time => window.BratKinetic.buildTimelineFrame(ctx, rows, time, 1080, 1920, { kineticWords: 2 }, 1).groups[0].nodes.map(node=>node.text)); })()");
+    assert.deepEqual(verseReset,[["OLD","WORDS"],["NEW"]]);
     assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
     assert.equal(await evaluate("document.getElementById('previewCanvas').width===1080 && document.getElementById('previewCanvas').height===1920"),true);
     await evaluate("document.querySelector('[data-template=brat-classic]').click()");

@@ -28,7 +28,7 @@ test("all local stylesheet/script entrypoint assets exist and are available offl
 test("offline asset list never contains credential files or TikTok server sources", () => {
     const sw = read("sw.js");
     assert.doesNotMatch(sw,/SERVICE_ROLE_KEY|TIKTOK_CLIENT_SECRET|supabase\/functions\//);
-    assert.match(sw,/brat-animator-v18-public-legal-pages/);
+    assert.match(sw,/const CACHE_NAME = "brat-animator-v\d+-[a-z0-9-]+";/, "PWA cache must remain explicitly versioned");
 });
 
 test("public Supabase config uses a publishable key and TikTok remains opt-in", () => {

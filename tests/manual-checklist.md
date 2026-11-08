@@ -137,6 +137,16 @@ Le seguenti verifiche **non** sono sostituite dai test automatici e richiedono a
 - [ ] Con provider non disponibile controllare che i token server siano rimossi e il messaggio **non** dichiari falsamente «revocato da TikTok».
 - [ ] Abilitare `assets/js/tiktok-config.js` solo dopo test completi; non promettere post automatici o musica TikTok.
 
+### Lyrics minuscole e Kinetic senza lampeggiamenti
+
+- [ ] Incollare LRC misto maiuscolo/minuscolo con tag `[ar:...]`, `[00:...]` e `<00:...>`; usare **lowercase lyrics** e verificare che cambino soltanto i testi delle parole.
+- [ ] Eseguire Annulla/Ripeti e ricaricare il progetto; verificare che testo e timing nativo delle parole sopravvivano all'autosave.
+- [ ] Separare due strofe con una riga vuota LRC e riprodurre il passaggio: nessuna parola della prima strofa deve rimanere nella seconda.
+- [ ] Verificare una strofa rap lunga (oltre 20 parole): una sola composizione, geometria ferma, entrata secca senza dissolvenza.
+- [ ] Provare una pausa strumentale e un LRC importato privo di righe vuote: il video non deve conservare parole fuori dall'intervallo attivo.
+- [ ] Verificare tema Kinetic anche con color swap precedentemente attivo: nessun flash a schermo intero; provare 30 e 60 fps e formati 1:1/9:16.
+- [ ] Controllare Safari iOS e Chrome reali, oltre alla CI Chrome headless: nessun test headless equivale a certificazione clinica della fotosensibilità.
+
 ### Nuovi template
 
 - [ ] Attivare Brat Classic, Kinetic Reels, Cinematic e Music Scroll nell'editor.

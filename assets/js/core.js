@@ -268,6 +268,9 @@
         const text = normalizeLRCText(lrcText);
         const parsed = [];
         const boundaries = [];
+        let stanzaIndex = 0;
+        let stanzaStarted = false;
+        let pendingStanzaBreak = false;
         let offsetMs = 0;
         for (const line of text.split("\n")) {
             const match = line.trim().match(/^\[offset:([^\]]*)\]$/i);
@@ -276,7 +279,16 @@
 
         for (const rawLine of text.split("\n")) {
             const line = rawLine.trim();
-            if (!line) continue;
+            // Blank lines (or named section headers) start a new kinetic canvas.
+            // They are delimiters, not extra lyric lines or lost timestamps.
+            if (!line) {
+                if (stanzaStarted) pendingStanzaBreak = true;
+                continue;
+            }
+            if (/^\[(?:verse|chorus|pre[- ]?chorus|hook|bridge|intro|outro|refrain|interlude|part)(?:[\s\d:-].*)?\]$/iu.test(line)) {
+                if (stanzaStarted) pendingStanzaBreak = true;
+                continue;
+            }
             const metaMatch = line.match(META_TAG_RE);
             if (metaMatch) {
                 continue;
@@ -294,12 +306,22 @@
                 const rawTimestamp = parseTimeTag(match[1], match[2]);
                 if (rawTimestamp == null) continue;
                 const timestamp = Math.max(0, rawTimestamp + offsetMs / 1000);
-                if (!vocal.text) { boundaries.push(timestamp); continue; }
+                if (!vocal.text) {
+                    boundaries.push(timestamp);
+                    if (stanzaStarted) pendingStanzaBreak = true;
+                    continue;
+                }
+                if (pendingStanzaBreak) {
+                    stanzaIndex += 1;
+                    pendingStanzaBreak = false;
+                }
+                stanzaStarted = true;
                 const repeatOffset = rawTimestamp - (firstTimestamp ?? rawTimestamp);
                 parsed.push({
                     timestamp,
                     text: vocal.text,
                     role: vocal.role,
+                    stanzaIndex,
                     wordTimings: enhanced.wordTimings.map(word => ({ ...word, timestamp: Math.max(0, word.timestamp + repeatOffset) })),
                     wordEndTimestamp: Number.isFinite(enhanced.wordEndTimestamp) ? enhanced.wordEndTimestamp + repeatOffset : undefined
                 });
