@@ -1860,15 +1860,12 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 ctx.fillStyle = theme.text;
                 ctx.filter = "blur(" + (state.style.blur || 0) + "px)";
                 for (const group of frame.groups) {
-                    if (group.alpha <= 0) continue;
                     ctx.save();
-                    ctx.globalAlpha = group.alpha;
                     ctx.translate(0, group.translateY);
                     for (const word of group.nodes) {
-                        // Older words remain stationary; each new word alone fades
-                        // and grows into its precomputed, collision-free location.
+                        // Word appears fully opaque at its timestamp.
+                        // Only its entrance scale/position is animated.
                         ctx.save();
-                        ctx.globalAlpha *= word.alpha ?? 1;
                         ctx.translate(word.x, word.y + (word.offsetY || 0));
                         ctx.scale(word.scale || 1, word.scale || 1);
                         ctx.font = "400 " + word.size + "px " + (state.style.fontFamily || "Arial, Helvetica, sans-serif");

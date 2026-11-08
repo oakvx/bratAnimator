@@ -70,14 +70,16 @@ test("existing words do not change position as new words appear", () => {
     assert.equal(early[0].y, late[0].y);
 });
 
-test("new words fade and scale in individually; older words become fully visible", () => {
+test("new words are fully opaque at their timestamp, with scale-only entrance", () => {
     const frame = nodesAt(3.02);
     assert.equal(frame.length, 4);
-    assert.equal(frame[0].alpha, 1);
     assert.equal(frame[0].scale, 1);
-    assert.ok(frame[3].alpha > 0 && frame[3].alpha < 1);
     assert.ok(frame[3].scale < 1);
     assert.ok(frame[3].offsetY > 0);
+    assert.ok(frame.every(node => !Object.hasOwn(node, "alpha")));
+    const atTimestamp = nodesAt(3);
+    assert.equal(atTimestamp[3].text, "say");
+    assert.ok(!Object.hasOwn(atTimestamp[3], "alpha"));
 });
 
 test("layout is deterministic for seeking and seeded random placement", () => {

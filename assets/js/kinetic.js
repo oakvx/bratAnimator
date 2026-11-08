@@ -197,7 +197,7 @@
             const ease = 1 - Math.pow(1 - progress, 3);
             visible.push({
                 ...allNodes[index],
-                alpha: progress,
+                // Full opacity from the very first frame: no fade-in.
                 scale: 0.87 + ease * 0.13,
                 offsetY: (1 - ease) * Math.min(width, height) * 0.014
             });
