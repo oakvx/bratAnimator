@@ -189,3 +189,31 @@ test("a failed autosave remains recoverable and can be retried", async () => {
     assert.equal(states.at(-1), "saved");
     assert.equal(autosave.isDirty(), false);
 });
+
+
+test("activating an archived project swaps active data without consuming extra slots", async () => {
+    const store = Workspace.createStore({ indexedDB: fakeIndexedDB() });
+    await store.saveActive({ lyrics: "current lyrics" }, "user:demo");
+    await store.saveProject({ lyrics: "archived lyrics" }, { ownerId: "user:demo", projectId: "archive-1", title: "Archived" });
+    for (let i = 0; i < 18; i++) {
+        await store.saveProject({ lyrics: "other " + i }, { ownerId: "guest", projectId: "other-" + i });
+    }
+    assert.equal((await store.listProjects("user:demo")).length, 2);
+    await store.activateProject("user:demo", "archive-1");
+    assert.equal((await store.getActive("user:demo")).payload.lyrics, "archived lyrics");
+    assert.equal((await store.getProject("user:demo", "archive-1")).payload.lyrics, "current lyrics");
+    await assert.rejects(store.saveProject({ lyrics: "over limit" }, { ownerId: "guest", projectId: "extra" }), { code: "LIBRARY_FULL" });
+    await assert.rejects(store.activateProject("user:demo", "does-not-exist"), { code: "PROJECT_NOT_FOUND" });
+});
+
+test("logging out with deletion removes only this account's local records", async () => {
+    const store = Workspace.createStore({ indexedDB: fakeIndexedDB() });
+    await store.saveActive({ lyrics: "guest data" }, "guest");
+    await store.saveActive({ lyrics: "member data" }, "user:a");
+    await store.saveProject({ lyrics: "member archive" }, { ownerId: "user:a", projectId: "archive-1" });
+    await store.saveActive({ lyrics: "other user" }, "user:b");
+    assert.equal(await store.deleteOwner("user:a"), 2);
+    assert.equal((await store.listProjects("user:a")).length, 0);
+    assert.equal((await store.getActive("guest")).payload.lyrics, "guest data");
+    assert.equal((await store.getActive("user:b")).payload.lyrics, "other user");
+});
