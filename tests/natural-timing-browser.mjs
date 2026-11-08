@@ -85,6 +85,7 @@ try {
         if (ready) break;
         await new Promise(resolve => setTimeout(resolve, 100));
     }
+    await evaluate(() => window.BratStudio.show('editor'));
     await evaluate(() => {
         window.auditAssert = (condition, detail) => { if (!condition) throw new Error(detail); };
         window.auditSetLyrics = (text, mode = 'typewriter') => {
@@ -215,15 +216,17 @@ try {
         state.audioAnalysis = null;
         return result;
     }));
-    await test('speed persists in JSON, autosave, snapshots and legacy restore', () => evaluate(() => {
+    await test('speed persists in JSON, autosave, snapshots and legacy restore', () => evaluate(async () => {
         auditSetLyrics('[00:00.00] Ciao\n[00:10.00] Torno');
         timingSpeedInput.value = '1.55';
         timingSpeedInput.dispatchEvent(new Event('input', { bubbles: true }));
         const payload = JSON.parse(JSON.stringify(buildProjectPayload()));
         auditAssert(payload.version === 5 && payload.timing.speed === 1.55, 'JSON missing speed');
         saveProjectSettings();
-        const saved = JSON.parse(localStorage.getItem('bratAnimator.project.v5'));
-        auditAssert(saved.timing.speed === 1.55, 'autosave missing speed');
+        await window.BratEditorWorkspace.flush();
+        const record = await window.BratEditorWorkspace.store.getActive(window.BratEditorWorkspace.owner());
+        const saved = record?.payload;
+        auditAssert(saved?.timing?.speed === 1.55, 'IndexedDB autosave missing speed');
         snapshotNameInput.value = 'natural timing audit';
         saveSnapshot();
         const snapshot = loadSnapshots()[0].payload;

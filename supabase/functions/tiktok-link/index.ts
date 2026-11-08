@@ -20,10 +20,13 @@ const PROFILE="https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_
 
 function configured() {
   try {
-    const callback=new URL(redirectUri),app=new URL(appUrl);
-    return !!(supabaseUrl&&serviceKey&&clientKey&&clientSecret&&appOrigin&&
-      callback.protocol==="https:"&&!callback.search&&!callback.hash&&
-      app.protocol==="https:"&&app.origin===appOrigin);
+    const base=new URL(supabaseUrl),callback=new URL(redirectUri),app=new URL(appUrl);
+    return !!(serviceKey&&clientKey&&clientSecret&&appOrigin&&
+      base.protocol==="https:"&&!base.search&&!base.hash&&
+      callback.protocol==="https:"&&callback.origin===base.origin&&
+      callback.pathname==="/functions/v1/tiktok-link"&&
+      !callback.search&&!callback.hash&&app.protocol==="https:"&&
+      app.origin===appOrigin&&!app.search&&!app.hash);
   } catch (_) {return false;}
 }
 function cors(req:Request):Record<string,string>{
@@ -108,15 +111,38 @@ async function freshAccess(link:Link):Promise<Link> {
   return {...link,...patch};
 }
 
+// Bound request bodies even if Transfer-Encoding is chunked or Content-Length
+// is absent. Only tiny JSON actions are accepted: never arbitrary uploads.
+async function readAction(req:Request):Promise<string>{
+  if((req.headers.get("content-type")||"").split(";")[0].trim().toLowerCase()!=="application/json")
+    throw Error("Content type unsupported");
+  const reader=req.body?.getReader();
+  if(!reader)throw Error("Missing request body");
+  const decoder=new TextDecoder("utf-8",{fatal:true});
+  let data="",length=0;
+  try{
+    for(;;){
+      const {done,value}=await reader.read();
+      if(done)break;
+      length+=value.byteLength;
+      if(length>1024)throw Error("Oversized request body");
+      data+=decoder.decode(value,{stream:true});
+    }
+    data+=decoder.decode();
+    const obj=JSON.parse(data);
+    if(!obj||typeof obj!=="object"||Array.isArray(obj)||typeof obj.action!=="string")
+      throw Error("Invalid action");
+    return obj.action;
+  }finally{reader.releaseLock()}
+}
+
 async function handlePost(req:Request){
   if(req.headers.get("origin")!==appOrigin)return reply(req,{error:"Origin non autorizzata."},403);
   const userId=await authenticatedUser(req);
   if(!userId)return reply(req,{error:"Accedi prima a Brat Animator."},401);
   let action="";
-  try{
-    if(Number(req.headers.get("content-length")||"0")>1024)throw Error();
-    action=String((await req.json()).action||"");
-  }catch(_){return reply(req,{error:"Richiesta non valida."},400)}
+  try{action=await readAction(req);}
+  catch(_){return reply(req,{error:"Richiesta non valida."},400)}
   if(action==="status"){
     const link=await getLink(userId);
     return reply(req,link?{connected:true,profile:{
@@ -142,13 +168,21 @@ async function handlePost(req:Request){
   }
   if(action==="disconnect"){
     const link=await getLink(userId);
-    if(!link)return reply(req,{connected:false});
-    const fresh=await freshAccess(link);
-    await tiktokForm(REVOKE,{client_key:clientKey,client_secret:clientSecret,
-      token:fresh.access_token});
+    if(!link)return reply(req,{connected:false,revokedAtProvider:true});
+    let revokedAtProvider=false;
+    try{
+      const fresh=await freshAccess(link);
+      await tiktokForm(REVOKE,{client_key:clientKey,client_secret:clientSecret,
+        token:fresh.access_token});
+      revokedAtProvider=true;
+    }catch(_){
+      // An expired credential, offline provider or rejected revocation must
+      // not trap personal tokens in our database. Report actual revocation
+      // status; do not falsely claim TikTok revoked the grant.
+    }
     const {error}=await db.from("tiktok_connections").delete().eq("user_id",userId);
     if(error)throw error;
-    return reply(req,{connected:false});
+    return reply(req,{connected:false,revokedAtProvider});
   }
   return reply(req,{error:"Azione sconosciuta."},400);
 }

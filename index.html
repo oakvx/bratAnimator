@@ -278,6 +278,7 @@
     <script src="assets/js/sound-hub-ui.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
     <script src="assets/js/export-preflight.js" defer></script>
+    <script src="assets/js/editor-templates.js" defer></script>
 </head>
 
 <body>
@@ -392,12 +393,12 @@
                     <h3>Condividi progetto</h3>
                     <p>Genera un codice valido per 24 ore e riutilizzabile più volte. Solo gli account registrati possono generare un codice. L'importazione è disponibile anche agli ospiti.</p>
                     <p id="studioShareState" role="status">Per generare un BRATCODE occorre configurare Supabase e accedere.</p>
-                    <div class="studio-settings-actions"><button id="studioCodeCreate" class="studio-accent-button" type="button">Genera BRATCODE</button><button id="studioCodeCopy" type="button" hidden>Copia codice</button><button id="studioCodeRevoke" type="button" hidden>Revoca codice</button></div>
+                    <div class="studio-settings-actions"><button id="studioCodeCreate" class="studio-accent-button" type="button">Genera BRATCODE</button><button id="studioCodeCopy" type="button" hidden>Copia codice</button><button id="studioCodeCopyLink" type="button" hidden>Copia link</button><button id="studioCodeRevoke" type="button" hidden>Revoca codice</button></div>
                     <p class="studio-muted">Il codice carica temporaneamente sul servizio i testi e la struttura del progetto, ma non audio, video, immagini, font binari o dati di accesso.</p>
                 </div>
                 <div class="studio-settings-card"><h3>Importa BRATCODE</h3><p>Chiunque abbia un codice attivo può importare una copia indipendente nel proprio browser.</p>
                     <label for="studioCodeInput">Codice di condivisione</label>
-                    <input id="studioCodeInput" type="text" placeholder="Inserisci BRATCODE" autocomplete="off" maxlength="40" spellcheck="false" />
+                    <input id="studioCodeInput" type="text" placeholder="Codice o link BRATCODE" autocomplete="off" maxlength="1024" spellcheck="false" />
                     <button id="studioCodeImport" class="studio-accent-button" type="button">Importa progetto</button>
                     <p id="studioCodeMessage" role="status"></p>
                 </div>
@@ -546,12 +547,13 @@
                 <button type="button" data-auth-mode="login" class="is-active" role="tab" aria-controls="studioAuthPane" aria-selected="true">Accedi</button>
                 <button type="button" data-auth-mode="register" role="tab" aria-controls="studioAuthPane" aria-selected="false">Registrati</button>
                 <button type="button" data-auth-mode="otp" role="tab" aria-controls="studioAuthPane" aria-selected="false">Codice email</button>
+                <button type="button" data-auth-mode="reset" role="tab" aria-controls="studioAuthPane" aria-selected="false">Password</button>
               </menu>
               <div id="studioAuthPane" role="tabpanel" aria-label="Dati di accesso">
             <form id="studioAuthForm" novalidate>
                 <label for="studioAuthEmail">Email</label>
                 <input id="studioAuthEmail" type="email" autocomplete="email" required placeholder="nome@esempio.it" />
-                <div id="studioAuthPasswordWrap"><label for="studioAuthPassword">Password</label><input id="studioAuthPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Inserisci la password" /></div>
+                <div id="studioAuthPasswordWrap"><label id="studioAuthPasswordLabel" for="studioAuthPassword">Password</label><input id="studioAuthPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Inserisci la password" /></div>
                 <div id="studioAuthCodeWrap" hidden><label for="studioAuthCode">Codice ricevuto via email</label><input id="studioAuthCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Codice OTP" /></div>
                 <p id="studioAuthMessage" class="studio-auth-message" role="status"></p>
                 <button id="studioAuthSubmit" class="studio-accent-button studio-auth-submit" type="submit">Accedi</button>
@@ -799,6 +801,19 @@
 
         <div id="section-design" class="section editor-section" data-editor-tab="design" role="tabpanel" aria-labelledby="tab-design">
             <div class="section-title">style and animation</div>
+            <section class="editor-template-section" aria-labelledby="editorTemplateHeading">
+                <div class="editor-template-heading">
+                    <h3 id="editorTemplateHeading">Quick templates</h3>
+                    <p>Use a prepared look and format without replacing your lyrics or imported media.</p>
+                </div>
+                <div id="editorTemplateGallery" class="editor-template-gallery">
+                    <button type="button" data-template="brat-classic"><strong>Brat Classic</strong><span>Square · green · typewriter</span></button>
+                    <button type="button" data-template="kinetic-reels"><strong>Kinetic Reels</strong><span>9:16 · kinetic collage</span></button>
+                    <button type="button" data-template="cinematic"><strong>Cinematic</strong><span>16:9 · cinematic scroll</span></button>
+                    <button type="button" data-template="music-vertical"><strong>Music Scroll</strong><span>9:16 · synchronized lyrics</span></button>
+                </div>
+                <p id="editorTemplateStatus" class="mini-copy" role="status" aria-live="polite">Choose a template to apply its style and export format.</p>
+            </section>
             <fieldset id="textSettings" class="text-settings" aria-describedby="textSettingsHelp">
                 <legend data-i18n="textSettings">text settings</legend>
                 <p id="textSettingsHelp" class="mini-copy" data-i18n="textSettingsHelp">Adjust your lyrics in the preview. Changes are saved with the project and used in exports.</p>

@@ -48,6 +48,7 @@ try {
     await cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await cdp('Page.navigate', { url: origin });
     await poll(() => document.readyState === 'complete' && !!window.BratEditor, 'v5 editor ready');
+    await evaluate(() => window.BratStudio.show('editor'));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
         const select = document.getElementById('editorModeSelect'); select.value = 'advanced'; select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -182,6 +183,7 @@ try {
         await evaluate(() => { const button = document.querySelector('[data-lang="it"]'); auditAssert(button, 'Italian language button missing'); button.click(); auditAssert(document.documentElement.lang === 'it', 'Italian language not applied'); auditAssert(document.getElementById('tiltedElasticBtn').textContent === 'preset inclinato elastico', 'v5 strings not localized'); saveProjectSettings(); });
         await evaluate(() => { window.auditReloadMarker = true; });
         await cdp('Page.reload', { ignoreCache: true }); await poll(() => !window.auditReloadMarker && document.readyState === 'complete' && !!window.BratEditor, 'reload');
+        await evaluate(() => window.BratStudio.show('editor'));
         return evaluate(() => { const result = { language: document.documentElement.lang, mode: document.body.dataset.uiMode, savedLanguage: localStorage.getItem('bratAnimator.language'), savedMode: localStorage.getItem('bratAnimator.editorMode') }; auditAssert(result.language === 'it' && result.mode === 'advanced', `preferences lost on reload: ${JSON.stringify(result)}`); return result; });
     });
     for (const [label, width, height, mobile] of [['desktop', 1440, 1000, false], ['mobile', 390, 844, true], ['narrow', 320, 844, true]]) {

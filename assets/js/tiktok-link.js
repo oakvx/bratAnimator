@@ -165,9 +165,11 @@
             $("studioTikTokDisconnect").disabled=true;
             setStatus("Scollegamento TikTok…");
             try {
-                await request("disconnect");
+                const result=await request("disconnect");
                 profileDetails(null);
-                setStatus("TikTok scollegato e autorizzazione revocata.");
+                setStatus(result.revokedAtProvider === true
+                    ? "TikTok scollegato e autorizzazione revocata presso TikTok."
+                    : "Collegamento locale eliminato. Verifica e revoca eventuali autorizzazioni ancora attive dalle impostazioni privacy di TikTok.");
             } catch (error) {
                 setStatus(error.message + " Il collegamento è stato conservato.",true);
             } finally {

@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - feature/phase-1-local-foundation
+      - main
 
 permissions:
   contents: read
@@ -28,6 +28,7 @@ jobs:
           node --check assets/js/win7-shell.js
           node --check assets/js/win7-start-menu.js
           node --check assets/js/export-preflight.js
+          node --check assets/js/editor-templates.js
           node --check assets/js/tiktok-link.js
           node --check assets/js/tiktok-config.js
           node --check assets/js/bratcode.js
@@ -39,14 +40,38 @@ jobs:
           node --check sw.js
       - name: Run JavaScript unit tests
         run: node --test
-      - name: Windows 7 dashboard browser smoke (if Chrome is available)
+  browser-regression:
+    name: Browser regression / ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - studio-dashboard
+          - editor-v5
+          - export-format
+          - lyrics
+          - motion
+          - music-editor
+          - natural-timing
+          - project-assets
+          - text-settings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Find browser (required for regression)
         run: |
           CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
-          if [ -n "$CHROME_PATH" ]; then
-            CHROME_PATH="$CHROME_PATH" node tests/studio-dashboard-browser.mjs
-          else
-            echo "Chrome/Chromium not installed; manual browser QA remains required."
+          if [ -z "$CHROME_PATH" ]; then
+            echo "::error::Chrome/Chromium unavailable, browser regression cannot be skipped"
+            exit 1
           fi
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+      - name: Run real browser regression
+        run: node "tests/${{ matrix.suite }}-browser.mjs"
 
   tiktok-edge-check:
     name: Type-check TikTok Edge Function

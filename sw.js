@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v14-export-preflight";
+const CACHE_NAME = "brat-animator-v15-phases-8-12";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -35,6 +35,7 @@ const APP_ASSETS = [
   "./assets/js/sound-hub-ui.js",
   "./assets/js/dashboard-audio.js",
   "./assets/js/export-preflight.js",
+  "./assets/js/editor-templates.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
   "./favicon.svg",
