@@ -16,6 +16,7 @@
     let initialSessionHandled = false;
     let pendingProjectAction = null;
     let activeCode = null;
+    let recoveryPending = false;
 
     function notify(message, isError = false) {
         const node = $("studioNotice");
@@ -46,25 +47,32 @@
     function setMode(mode) {
         authMode = mode;
         sentCode = false;
+        const updatingPassword = mode === "new-password";
+        const requestingReset = mode === "reset";
+        $("studioAuthEmail").disabled = updatingPassword;
+        if (updatingPassword && auth.user()?.email) $("studioAuthEmail").value = auth.user().email;
         $("studioAuthCodeWrap").hidden = true;
         $("studioAuthCode").value = "";
-        $("studioAuthPasswordWrap").hidden = mode === "otp";
-        $("studioAuthPassword").autocomplete = mode === "register" ? "new-password" : "current-password";
-        $("studioAuthSubmit").textContent = mode === "register" ? "Crea account" : mode === "otp" ? "Invia codice" : "Accedi";
+        $("studioAuthPasswordWrap").hidden = mode === "otp" || requestingReset;
+        $("studioAuthPasswordLabel").textContent = updatingPassword ? "Nuova password" : "Password";
+        $("studioAuthPassword").autocomplete = (mode === "register" || updatingPassword) ? "new-password" : "current-password";
+        $("studioAuthSubmit").textContent = updatingPassword ? "Salva nuova password" :
+            requestingReset ? "Invia link di recupero" :
+            mode === "register" ? "Crea account" : mode === "otp" ? "Invia codice" : "Accedi";
+        $("studioAuthTitle").textContent = updatingPassword ? "Scegli una nuova password" : "Accedi a Brat Animator";
         document.querySelectorAll("[data-auth-mode]").forEach(button => {
-            const selected = button.dataset.authMode === mode;
+            const selected = button.dataset.authMode === (updatingPassword ? "reset" : mode);
             button.classList.toggle("is-active", selected);
-            // 7.css styles native ARIA tabs using aria-selected, not .is-active.
             button.setAttribute("aria-selected", String(selected));
         });
-        authMessage("");
+        authMessage(updatingPassword ? "Inserisci una nuova password di almeno 8 caratteri." : "");
     }
 
-    function showAuth() {
+    function showAuth(mode = "login") {
         $("studioAuthDialog").hidden = false;
         $("studioAuthSetup").hidden = auth.configured();
-        setMode("login");
-        $("studioAuthEmail").focus();
+        setMode(typeof mode === "string" ? mode : "login");
+        (authMode === "new-password" ? $("studioAuthPassword") : $("studioAuthEmail")).focus();
     }
 
     function closeAuth() { $("studioAuthDialog").hidden = true; }
@@ -459,20 +467,29 @@
         const email = $("studioAuthEmail").value.trim();
         const password = $("studioAuthPassword").value;
         const code = $("studioAuthCode").value.trim();
-        if (!email || !$("studioAuthEmail").checkValidity()) {
+        if (authMode !== "new-password" && (!email || !$("studioAuthEmail").checkValidity())) {
             authMessage("Inserisci un indirizzo email valido.", true); return;
         }
         if (!auth.configured()) {
             authMessage("Il servizio account non è ancora configurato. Puoi continuare come ospite.", true); return;
         }
-        if (authMode !== "otp" && password.length < 8) {
+        if (!["otp", "reset"].includes(authMode) && password.length < 8) {
             authMessage("La password deve contenere almeno 8 caratteri.", true); return;
         }
         busy = true;
         $("studioAuthSubmit").disabled = true;
         authMessage("Operazione in corso…");
         try {
-            if (authMode === "register") {
+            if (authMode === "new-password") {
+                if (!recoveryPending) throw new Error("Apri il link di recupero ricevuto via email.");
+                await auth.updatePassword(password);
+                recoveryPending = false;
+                closeAuth();
+                notify("Password aggiornata. La sessione rimane attiva sul dispositivo.");
+            } else if (authMode === "reset") {
+                await auth.requestPasswordReset(email);
+                authMessage("Se l'indirizzo è registrato, riceverai un link per cambiare password.");
+            } else if (authMode === "register") {
                 const data = await auth.signUp(email, password);
                 authMessage(data?.session ? "Registrazione completata." : "Controlla la tua email per confermare la registrazione.");
             } else if (authMode === "login") {
@@ -562,7 +579,7 @@
             } else if (!user && !isFirst) {
                 viewSwitch("home");
             }
-            if (user) closeAuth();
+            if (user && !recoveryPending) closeAuth();
         }).catch(error => notify("Impossibile cambiare libreria: " + error.message, true));
     }
 
@@ -614,6 +631,10 @@
     $("studioTransferGuest").addEventListener("click", transferGuest);
     $("studioAuthGoogle").addEventListener("click", googleLogin);
     $("studioAuthForm").addEventListener("submit", submitAuth);
+    window.addEventListener("brat:auth-recovery", () => {
+        recoveryPending = true;
+        showAuth("new-password");
+    });
     document.querySelectorAll("[data-auth-mode]").forEach(button =>
         button.addEventListener("click", () => setMode(button.dataset.authMode)));
     document.addEventListener("keydown", event => {
