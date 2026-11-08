@@ -165,6 +165,30 @@
             });
         }
 
+        async function deleteOwner(ownerId) {
+            const owner = ownerKey(ownerId);
+            const db = await openDatabase();
+            return new Promise((resolve, reject) => {
+                let tx;
+                let removed = 0;
+                try {
+                    tx = db.transaction(PROJECT_STORE, "readwrite");
+                    const store = tx.objectStore(PROJECT_STORE);
+                    const request = store.getAll();
+                    request.onsuccess = () => {
+                        for (const record of request.result || []) {
+                            if (record.ownerId !== owner) continue;
+                            store.delete(record.key);
+                            removed++;
+                        }
+                    };
+                } catch (error) { db.close(); reject(error); return; }
+                tx.oncomplete = () => { db.close(); resolve(removed); };
+                tx.onerror = () => { db.close(); reject(tx.error || errorWithCode("Could not delete owner projects.", "STORAGE_WRITE_FAILED")); };
+                tx.onabort = () => { db.close(); reject(tx.error || errorWithCode("Owner project deletion aborted.", "STORAGE_WRITE_FAILED")); };
+            });
+        }
+
         async function listProjects(ownerId) {
             const owner = ownerKey(ownerId);
             const records = await readAll();
@@ -184,6 +208,7 @@
             getProject,
             saveProject,
             deleteProject,
+            deleteOwner,
             listProjects,
             estimateStorage,
             getActive: ownerId => getProject(ownerId, "current"),
