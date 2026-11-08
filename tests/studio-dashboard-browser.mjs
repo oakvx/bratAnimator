@@ -84,6 +84,18 @@ try {
     await send("Page.navigate",{url:origin+"/"});
     await until("Boolean(window.BratStudio && window.BratEditorWorkspace && document.body.classList.contains('studio-dashboard-open'))");
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display !== 'none'"),true);
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('.studio-hero')).backgroundImage.includes('gradient')"),true);
+    assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),true);
+    await evaluate("document.getElementById('studioSoundToggle').click()");
+    assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),false);
+    assert.equal(await evaluate("document.getElementById('studioSettingsSound').getAttribute('aria-pressed')"),"false");
+    await evaluate("document.getElementById('studioSoundToggle').click()");
+    assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),true);
+    await evaluate("document.querySelector('[data-studio-view=share]').click()");
+    await until("!document.getElementById('studioShareView').hidden");
+    assert.equal(await evaluate("document.getElementById('studioCodeCreate').disabled"),true);
+    assert.equal(await evaluate("document.getElementById('studioCodeImport').disabled"),false);
+    await evaluate("document.querySelector('[data-studio-view=home]').click()");
     assert.equal(await evaluate("document.getElementById('permissionNotice').classList.contains('hidden')"),true);
     assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),true);
     await evaluate("document.getElementById('studioAccountButton').click()");
@@ -101,6 +113,22 @@ try {
     await evaluate("document.querySelector('[data-studio-view=\"projects\"]').click()");
     await until("!document.getElementById('studioProjectsView').hidden");
     await until("document.getElementById('studioProjectList').querySelectorAll('.studio-project-card').length > 0");
+    // Fill 20 permanent slots, verify the 21st is a separate recoverable draft.
+    await evaluate("(async()=>{for(let i=0;i<19;i++) await window.BratEditorWorkspace.store.saveProject({version:5,lyrics:'[00:01.00] archive '+i},{ownerId:'guest',projectId:'archive-browser-'+i,title:'Archive '+i});})()");
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.stats().then(s=>s.saved)"),20);
+    await evaluate("document.getElementById('studioProjectsNew').click()");
+    await until("window.BratEditorWorkspace.projectId()==='temporary'");
+    await until("window.BratEditorWorkspace.store.getProject('guest','temporary').then(p=>!!p)");
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.getActive('guest').then(p=>p.payload.lyrics.includes('smoke test lyric'))"),true);
+    await evaluate("document.getElementById('lyricsInput').value='[00:01.00] temporary test lyric'; document.getElementById('lyricsInput').dispatchEvent(new Event('input',{bubbles:true}));");
+    await until("window.BratEditorWorkspace.store.getProject('guest','temporary').then(p=>p?.payload.lyrics.includes('temporary test lyric'))");
+    await evaluate("window.BratEditorWorkspace.store.deleteProject('guest','archive-browser-0')");
+    await evaluate("window.BratEditorWorkspace.promoteTemporary()");
+    assert.equal(await evaluate("window.BratEditorWorkspace.projectId()"),"current");
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.getActive('guest').then(p=>p?.payload.lyrics.includes('temporary test lyric'))"),true);
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.stats().then(s=>s.temporary)"),0);
+    // Project records and backups must remain browser-local throughout.
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.stats().then(s=>s.saved)"),20);
 
     assert.equal(await evaluate("document.body.classList.contains('studio-dashboard-open')"),true);
     await evaluate("document.querySelector('[data-studio-view=\"editor\"]').click()");
