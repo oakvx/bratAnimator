@@ -17,7 +17,8 @@ test("Frutiger Aero theme is opt-in to dashboard and leaves editor canvas untouc
 
 test("7.css is scoped to session dialog instead of injecting global element styles", () => {
     const html = file("index.html");
-    assert.match(html, /7\.scoped\.css/);
+    assert.match(html, /assets\/css\/win7-app\.css/);
+    assert.match(file("assets/css/win7-app.css"), /@import url\("https:\/\/unpkg\.com\/7\.css@0\.21\.1\/dist\/7\.scoped\.css"\)/);
     assert.match(html, /id="studioLogoutDialog" class="studio-modal-backdrop win7"/);
     assert.match(html, /class="studio-modal window active"/);
     assert.match(html, /class="title-bar"/);
