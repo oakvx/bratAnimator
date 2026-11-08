@@ -95,6 +95,14 @@ visibility: the accessible dialog role is on the overlay, **not** on the
 inner `.window`. 7.css hides `.window[role=dialog]` unless activated through
 the URL `:target`; that rule is incompatible with our event-driven dialogs.
 
+## Windows 7 Start menu (Phase 6)
+
+The taskbar Start orb now opens a functional, searchable Windows 7-inspired launcher. The panel uses the bundled 7.css glass window surface; the two-column Explorer launcher layout is isolated in `assets/css/studio-win7.css` and the behavior in `assets/js/win7-start-menu.js`.
+
+Search matches local labels and aliases without network requests or reading project data. Launcher commands reuse the existing project, editor, Sound Hub, BRATCODE, settings and account workflows. Escape dismisses the menu, arrow keys select a result, and Enter activates it. You can reopen a minimized Brat Animator window from Start, while «Chiudi finestra» only closes the **simulated** application window and does not remove browser data.
+
+See [Phase 6 implementation and QA notes](docs/phase-6-win7-start-menu.md). Offline/PWA support is included.
+
 ## Authentication and backend
 
 The editor is fully usable as a guest. Supabase Auth is optional for account-based workspaces and future server-backed sharing.
@@ -121,6 +129,7 @@ Automated checks:
     node --check assets/js/sound-hub.js
     node --check assets/js/sound-hub-ui.js
     node --check assets/js/win7-shell.js
+    node --check assets/js/win7-start-menu.js
     node --check assets/js/tiktok-link.js
 
 Optional Chrome browser audit:

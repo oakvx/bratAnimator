@@ -105,6 +105,27 @@ try {
     assert.equal(await evaluate("document.getElementById('studioDesktop').hidden"),false);
     await evaluate("document.getElementById('studioDesktopLauncher').click()");
     assert.equal(await evaluate("document.body.classList.contains('studio-window-closed')"),false);
+    // Windows 7 Start menu is an actual usable launcher, not a decorative orb.
+    await evaluate("document.getElementById('studioStartButton').click()");
+    await until("!document.getElementById('studioStartMenu').hidden");
+    assert.equal(await evaluate("document.getElementById('studioStartButton').getAttribute('aria-expanded')"), "true");
+    assert.equal(await evaluate("document.activeElement.id"), "studioStartSearch");
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('studioStartMenu')).display !== 'none'"), true);
+    await evaluate("document.getElementById('studioStartSearch').value='MÚSICA';document.getElementById('studioStartSearch').dispatchEvent(new Event('input',{bubbles:true}))");
+    assert.equal(await evaluate("document.querySelector('#studioStartResults [data-start-view=sounds]').hidden"), false);
+    assert.equal(await evaluate("document.querySelector('#studioStartResults [data-start-view=projects]').hidden"), true);
+    await evaluate("document.querySelector('#studioStartResults [data-start-view=sounds]').click()");
+    await until("!document.getElementById('studioSoundsView').hidden");
+    assert.equal(await evaluate("document.getElementById('studioStartMenu').hidden"), true);
+    await evaluate("window.BratStudio.show('home');document.getElementById('studioWindowMinimize').click();document.getElementById('studioStartButton').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-minimized')"), true);
+    assert.equal(await evaluate("document.getElementById('studioStartMenu').hidden"), false);
+    await evaluate("document.querySelector('#studioStartResults [data-start-view=projects]').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-minimized')"), false);
+    await until("!document.getElementById('studioProjectsView').hidden");
+    await evaluate("document.getElementById('studioStartButton').click();document.getElementById('studioStartSearch').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+    assert.equal(await evaluate("document.getElementById('studioStartMenu').hidden"), true);
+    await evaluate("window.BratStudio.show('home')");
     // Login and sign-up dialog must open from the account entry, even when
     // Supabase is unconfigured. No false authenticated session is shown.
     await evaluate("document.getElementById('studioNavAccount').click()");

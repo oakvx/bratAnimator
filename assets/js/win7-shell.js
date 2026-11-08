@@ -56,7 +56,7 @@
         maximize.addEventListener("click", toggleMaximize);
         $("studioWindowClose").addEventListener("click", close);
         $("studioTaskbarApp").addEventListener("click", taskbarAction);
-        $("studioStartButton").addEventListener("click", restore);
+        // Start button is now owned by win7-start-menu.js; the taskbar icon still restores the window.
         $("studioDesktopLauncher").addEventListener("click", restore);
         document.querySelectorAll("[data-click-target]").forEach(button => {
             button.addEventListener("click", () => {
