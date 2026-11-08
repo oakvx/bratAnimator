@@ -108,10 +108,24 @@ try {
     // Login and sign-up dialog must open from the account entry, even when
     // Supabase is unconfigured. No false authenticated session is shown.
     await evaluate("document.getElementById('studioNavAccount').click()");
-    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
+    await until("!document.getElementById('studioAuthDialog').hidden");
+    // Regression for the real screenshot: 7.css normally hides native
+    // .window[role=dialog] unless it matches :target. These dialogs are
+    // controlled by JavaScript, so role=dialog belongs to their wrappers.
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').getAttribute('role')"),"dialog");
+    assert.equal(await evaluate("document.querySelector('#studioAuthDialog .window').hasAttribute('role')"),false);
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('#studioAuthDialog .window')).visibility"),"visible");
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('#studioAuthDialog .window')).opacity"),"1");
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('studioAuthDialog')).backdropFilter"),"none");
+    assert.equal(await evaluate("getComputedStyle(document.getElementById('studioMainWindow')).backdropFilter"),"none");
+    assert.equal(await evaluate("(() => { const d=document.querySelector('#studioAuthDialog .window');const r=d.getBoundingClientRect();return r.width >= 280 && r.height >= 180 && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight+1; })()"),true);
+    assert.equal(await evaluate("(() => { const r=document.querySelector('#studioAuthDialog .window').getBoundingClientRect(); const top=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); return Boolean(top?.closest('#studioAuthDialog')); })()"),true);
+    assert.equal(await evaluate("document.styleSheets.length > 2 && [...document.styleSheets].some(s => s.href?.endsWith('/vendor/7css/7.scoped.css'))"),true);
     assert.equal(await evaluate("document.getElementById('studioAuthClose').getAttribute('aria-label')"),"Close");
     await evaluate("document.querySelector('[data-auth-mode=register]').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthSubmit').textContent"),"Crea account");
+    assert.equal(await evaluate("document.querySelector('[data-auth-mode=register]').getAttribute('aria-selected')"),"true");
+    assert.equal(await evaluate("document.querySelector('[data-auth-mode=login]').getAttribute('aria-selected')"),"false");
     await evaluate("document.getElementById('studioAuthClose').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
     await evaluate("window.BratStudio.show('settings')");
@@ -218,7 +232,7 @@ try {
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display !== 'none'"),true);
     const relevantErrors=errors.filter(error=>!error.includes("ResizeObserver loop"));
     assert.deepEqual(relevantErrors,[], "Unexpected browser JS exceptions");
-    console.log("Classic Desktop browser smoke: projects, Sound Hub import/use, guest auth, editor and mobile return — PASS");
+    console.log("Windows 7 UI browser smoke: visible login, native tabs, Sound Hub and editor — PASS");
 } finally {
     ws?.close();
     browser.kill();

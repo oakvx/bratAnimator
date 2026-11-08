@@ -1,0 +1,555 @@
+/* Brat Animator — Windows 7 application shell
+ * Depends on the COMPLETE official 7.css v0.21.0 shipped at
+ * vendor/7css/7.scoped.css (MIT). That library owns window frames,
+ * title controls, buttons, text inputs, selects, tabs and focus states.
+ *
+ * This file owns APPLICATION LAYOUT ONLY. It replaces three layered,
+ * conflicting theme files. No CSS blur is applied to readable content.
+ */
+:root {
+  --brat-taskbar-height: 46px;
+  --brat-sidebar-width: 184px;
+  --brat-win7-text: #243a4c;
+  --brat-win7-muted: #64798a;
+  --brat-win7-border: #bccbd8;
+  --brat-win7-selection: #d7ecff;
+}
+body.studio-active {
+  background: linear-gradient(160deg,#0c77be 0%,#5bb5e5 40%,#b3e2ea 65%,#579851 100%);
+}
+body.studio-dashboard-open {
+  background-color:#167fc3;
+  background-image:
+    radial-gradient(ellipse 66% 48% at 71% 18%,rgba(255,255,255,.42),transparent 70%),
+    radial-gradient(ellipse 92% 40% at 10% 110%,rgba(75,172,87,.69),transparent 74%),
+    linear-gradient(145deg,#1371b4,#5bb6e4 60%,#c4eaf0 100%);
+  background-attachment:fixed;
+}
+/* The editor stays mounted but is visually independent from the dashboard. */
+body.studio-dashboard-open .topbar,
+body.studio-dashboard-open .panel,
+body.studio-dashboard-open .page-shell { display:none !important; }
+body.studio-editor-open #studioDashboard { display:none !important; }
+body.studio-editor-open .topbar,
+body.studio-editor-open .panel {left:0;}
+body.studio-editor-open .page-shell {margin-left:var(--panel-width,340px);}
+body.studio-editor-open.panel-closed .page-shell {margin-left:0;}
+body.studio-editor-open .studio-taskbar {display:none;}
+#studioDashboard {
+  display:none;
+  min-height:100dvh;
+  color:var(--brat-win7-text);
+  padding-bottom:var(--brat-taskbar-height);
+  font:13px/1.45 "Segoe UI",Tahoma,Arial,sans-serif;
+}
+body.studio-dashboard-open #studioDashboard {display:block;}
+#studioDashboard *, .studio-modal-backdrop * {box-sizing:border-box;}
+#studioDashboard [hidden],.studio-modal-backdrop[hidden],
+#studioDashboard .studio-view[hidden] {display:none !important;}
+#studioDashboard .studio-dashboard-inner {
+  width:min(100%,1360px);
+  padding:22px clamp(12px,2.4vw,34px) 40px;
+  margin:0 auto;
+}
+/* 7.css renders the window and its glass frame. No page-wide backdrop blur. */
+#studioDashboard #studioMainWindow.window.glass.active {
+  display:block;
+  width:100%;
+  min-height:min(780px,calc(100dvh - 94px));
+  border-radius:7px;
+  filter:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:0 18px 43px rgba(14,49,78,.46),0 3px 9px rgba(10,35,75,.28);
+}
+#studioDashboard #studioMainWindow > .title-bar {
+  display:flex;
+  justify-content:space-between;
+  min-height:33px;
+  align-items:center;
+}
+#studioDashboard .studio-title-icon {
+  width:18px;
+  height:18px;
+  vertical-align:middle;
+  border-radius:2px;
+  margin-right:5px;
+}
+#studioDashboard #studioMainWindow > .window-body {
+  padding:0;
+  margin:0;
+  background:#fff;
+  color:var(--brat-win7-text);
+}
+#studioDashboard .studio-classic-body-grid {
+  display:grid;
+  grid-template-columns:var(--brat-sidebar-width) minmax(0,1fr);
+  min-height:590px;
+}
+#studioDashboard .studio-main-content {min-width:0; background:#fff; padding:0;}
+/* Classic Explorer navigation: native window; flat file-tree entries. */
+#studioDashboard #studioNav {
+  position:relative;
+  z-index:1;
+  inset:auto;
+  width:auto;
+  padding:16px 10px;
+  margin:0;
+  background:linear-gradient(180deg,#f5f9fe 0%,#e9f2fa 62%,#deebf8);
+  border-right:1px solid #b9d2e5;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  font:12px "Segoe UI",Tahoma,sans-serif;
+}
+#studioDashboard .studio-nav-brand {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:47px;
+  padding:0 6px 11px;
+  border-bottom:1px solid #d5e3f0;
+  color:#274962;
+  font-size:12px;
+  font-weight:600;
+}
+#studioDashboard .studio-original-logo {
+  width:35px;height:35px;border-radius:4px;
+  box-shadow:0 1px 3px #50768e58;
+}
+#studioDashboard .studio-brand-sub,#studioDashboard .studio-mark {display:none;}
+#studioDashboard .studio-nav-links {display:flex;flex-direction:column;gap:2px; flex:1;}
+#studioDashboard .studio-nav-bottom {display:grid;gap:4px;margin-top:auto;}
+#studioDashboard .studio-nav-link,
+#studioDashboard .studio-nav-account {
+  width:100%;min-height:35px;
+  display:flex;align-items:center;gap:9px;
+  text-align:left;
+  padding:7px 8px;
+  font:12px "Segoe UI",Tahoma,sans-serif;
+  background:transparent;border:1px solid transparent;
+  border-radius:2px;box-shadow:none;color:#2c536e;text-shadow:none;
+}
+#studioDashboard .studio-nav-link span {font-size:17px;min-width:19px;text-align:center;}
+#studioDashboard .studio-nav-link:hover,
+#studioDashboard .studio-nav-account:hover {
+  border-color:#b1d4ea;background:#e9f5ff;color:#163e5f;
+}
+#studioDashboard .studio-nav-link.is-active,
+#studioDashboard .studio-nav-link[aria-current="page"] {
+  background:linear-gradient(#eff9ff,#c9e7fc);
+  border:1px solid #92c5e8;color:#23557c;
+}
+#studioDashboard .studio-nav-account {border-color:#c8daea;background:#fff;min-width:0;}
+#studioDashboard .studio-nav-account > span:last-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#studioDashboard .studio-avatar {
+  background:#d3edb6;color:#355928;border:1px solid #b0cc93;
+  flex:0 0 25px;width:25px;height:25px;
+  display:grid;place-items:center;border-radius:50%;font-weight:700;
+}
+/* Toolbar / breadcrumb region. No marketing title or oversized hero. */
+#studioDashboard .studio-dashboard-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:13px 17px 12px;
+  margin:0;
+  border-bottom:1px solid #c6d4df;
+  background:linear-gradient(#fff,#eef6fd);
+}
+#studioDashboard .studio-dashboard-head h1 {
+  font:600 18px/1.2 "Segoe UI",Tahoma,sans-serif;
+  color:#2a4e66;margin:0 0 3px;
+}
+#studioDashboard .studio-dashboard-head p {
+  font-size:11px;color:#6e8594;margin:0;
+}
+#studioDashboard .studio-head-actions {display:flex;gap:7px;align-items:center;}
+#studioDashboard .studio-head-actions button {min-height:28px;white-space:nowrap;}
+#studioDashboard .studio-notice {
+  margin:11px 16px 0;
+  padding:10px;
+  background:#fffddd;border:1px solid #d9bd77;
+  border-radius:2px;color:#66532a;
+}
+#studioDashboard .studio-notice[data-error="true"] {background:#fff1ef;border-color:#d6a29c;color:#8b3b34;}
+#studioDashboard .studio-view {padding:15px 17px 23px;min-height:390px;}
+#studioDashboard .studio-section-heading {
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;margin:0 0 13px;
+}
+#studioDashboard h2 {font:600 16px/1.25 "Segoe UI",Tahoma,sans-serif;color:#365e79;margin:0 0 9px;}
+#studioDashboard h3 {font:600 13px/1.3 "Segoe UI",Tahoma,sans-serif;color:#315777;margin:0 0 8px;}
+#studioDashboard .studio-section-heading p {color:var(--brat-win7-muted);font-size:12px;margin:4px 0;}
+#studioDashboard .studio-eyebrow {display:none;}
+#studioDashboard .studio-muted {color:var(--brat-win7-muted);font-size:11px;margin:0 0 12px;}
+#studioDashboard .studio-classic-commandbar {
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:linear-gradient(#fff,#e9f4fc);
+  border-bottom:1px solid #c0d5e6;
+  margin:-15px -17px 15px;
+  padding:8px 10px;
+}
+#studioDashboard .studio-classic-commandbar button {min-height:28px;}
+/* Explorer's file presentation. Button chrome is from 7.css unless
+ * the control is deliberately styled as a selectable file row. */
+#studioDashboard .studio-classic-home {
+  display:grid;grid-template-columns:minmax(0,1fr) 175px;
+  align-items:stretch;gap:13px;
+}
+#studioDashboard .studio-classic-directory,
+#studioDashboard .studio-classic-shortcuts,
+#studioDashboard .studio-settings-card,
+#studioDashboard .studio-panel-card {
+  border:1px solid var(--brat-win7-border);background:#fff;
+  padding:14px;margin:0;min-width:0;
+}
+#studioDashboard .studio-classic-directory {min-height:250px;}
+#studioDashboard .studio-classic-directory h2,
+#studioDashboard .studio-classic-shortcuts h2 {
+  font-size:12px;margin:-14px -14px 12px;
+  padding:8px 11px;
+  border-bottom:1px solid #d8e4ec;
+  background:#f2f7fc;
+}
+#studioDashboard .studio-classic-shortcuts {background:#f4f8fc;}
+#studioDashboard .studio-classic-shortcuts button {
+  display:flex;align-items:center;gap:9px;
+  width:100%;margin-bottom:5px;padding:7px 6px;
+  border:1px solid transparent;
+  background:transparent;box-shadow:none;text-align:left;
+  color:#356487;
+}
+#studioDashboard .studio-classic-shortcuts button:hover {background:#e3f0fc;border-color:#bfd8ee;}
+#studioDashboard .studio-classic-shortcuts button span {font-size:18px;width:21px;text-align:center;}
+#studioDashboard .studio-project-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(225px,1fr));
+  gap:7px;
+}
+#studioDashboard .studio-project-card {
+  display:flex;flex-direction:row;align-items:center;
+  gap:10px;text-align:left;padding:8px;
+  min-width:0;min-height:82px;
+  border:1px solid transparent;border-radius:2px;
+  background:#fff;box-shadow:none;color:#294b63;
+}
+#studioDashboard .studio-project-card:hover,
+#studioDashboard .studio-project-card:focus-visible {
+  background:var(--brat-win7-selection);
+  border:1px solid #b4d9f1;
+}
+#studioDashboard .studio-project-art {
+  width:79px;min-width:79px;height:58px;
+  position:relative;display:grid;place-items:center;
+  background:#a8df47;color:#1d2919;
+  border:1px solid #a4bb83;
+  overflow:hidden;padding:5px;
+}
+#studioDashboard .studio-project-art span {
+  display:block;max-width:100%;
+  font:700 16px Arial,sans-serif;
+  white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
+}
+#studioDashboard .studio-project-art small {position:absolute;right:4px;bottom:3px;font-size:8px;}
+#studioDashboard .studio-project-info {display:flex;flex:1;flex-direction:column;min-width:0;gap:3px;}
+#studioDashboard .studio-project-info strong {font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#studioDashboard .studio-project-info small {font-size:10px;color:#7890a2;}
+#studioDashboard .studio-empty {
+  grid-column:1/-1;
+  background:#f7fbff;border:1px dashed #c2d9e9;
+  padding:23px;color:#57748a;
+}
+#studioDashboard .studio-empty strong {display:block;font-size:13px;margin-bottom:4px;color:#2b526d;}
+#studioDashboard .studio-empty span {font-size:11px;}
+#studioDashboard .studio-panels {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;}
+#studioDashboard .studio-panel-card {min-height:160px;}
+#studioDashboard .studio-panel-icon {font-size:24px;color:#3870a1;}
+#studioDashboard .studio-panel-card p,
+#studioDashboard .studio-settings-card p {font-size:12px;color:#5b7286;line-height:1.5;margin:3px 0 10px;}
+#studioDashboard .studio-settings-card {margin:0 0 11px;max-width:none;}
+#studioDashboard .studio-settings-actions,
+#studioDashboard .studio-library-tools {
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0;
+}
+#studioDashboard input[type="search"], #studioDashboard input[type="text"] {
+  min-height:28px;
+  max-width:100%;
+}
+#studioDashboard .studio-library-search {display:flex;flex:1;min-width:140px;max-width:360px;}
+#studioDashboard .studio-library-search input {width:100%;}
+#studioDashboard .studio-backup-reminder {
+  padding:11px;background:#fff9df;border:1px solid #e3cb82;margin-bottom:12px;
+}
+#studioDashboard .studio-storage-usage {font-family:Consolas,monospace;}
+#studioDashboard .studio-future {padding:20px;border:1px solid #c5d6e3;background:#f8fbfe;}
+/* Sound Hub is an Explorer-like split view, not an alternate theme. */
+#studioDashboard .studio-sound-browser {
+  display:grid;grid-template-columns:165px minmax(0,1fr);
+  border:1px solid #becedb;min-height:435px;background:#fff;
+}
+#studioDashboard .studio-sound-tree {
+  background:linear-gradient(#f4f9ff,#e4f1fb);
+  border-right:1px solid #c3d8e7;
+  padding:11px 7px;
+}
+#studioDashboard .studio-sound-tree h2 {font-size:12px;margin:0 5px 9px;}
+#studioDashboard .studio-sound-tree button,
+#studioDashboard .studio-sound-collections button {
+  display:block;width:100%;text-align:left;
+  padding:6px 8px;min-height:30px;
+  border:1px solid transparent;background:transparent;box-shadow:none;color:#375b75;
+}
+#studioDashboard .studio-sound-tree button.is-selected {
+  background:#d6ecff;border-color:#a1cce9;
+}
+#studioDashboard .studio-sound-tree button:hover {background:#e6f4ff;border-color:#c0dbed;}
+#studioDashboard .studio-sound-tree-section {margin:13px 5px 6px;font-size:11px;color:#6f8393;}
+#studioDashboard .studio-sound-collection-entry {display:flex;align-items:center;gap:2px;margin-bottom:3px;}
+#studioDashboard .studio-sound-collection-entry button:first-child {flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#studioDashboard .studio-sound-collection-entry button:not(:first-child) {flex:0 0 26px;width:26px;padding:3px;text-align:center;}
+#studioDashboard .studio-sound-content {min-width:0;display:flex;flex-direction:column;}
+#studioDashboard .studio-sound-searchbar {
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  padding:8px 10px;border-bottom:1px solid #d3e2ee;background:#f7fbff;
+}
+#studioDashboard .studio-sound-searchbar input {flex:1;min-width:120px;}
+#studioDashboard .studio-sound-stats {margin-left:auto;color:#677e90;font-size:11px;}
+#studioDashboard .studio-sound-list {min-height:230px;flex:1;}
+#studioDashboard .studio-sound-row {
+  display:grid;grid-template-columns:32px minmax(80px,1fr) auto;
+  gap:9px;align-items:center;
+  border-bottom:1px solid #e5edf4;padding:8px 9px;
+}
+#studioDashboard .studio-sound-row:hover {background:#eff7ff;}
+#studioDashboard .studio-sound-disc {
+  width:28px;height:28px;border-radius:50%;
+  background:radial-gradient(circle at center,#a5c7d8 0 3px,#204567 4px 6px,#31617e 7px,#123957 8px,#335f7d 10px,#14364c 12px);
+}
+#studioDashboard .studio-sound-row-main {min-width:0;display:grid;gap:4px;}
+#studioDashboard .studio-sound-row-main strong {font-size:12px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;}
+#studioDashboard .studio-sound-row-main small {font-size:10px;color:#7591a2;}
+#studioDashboard .studio-sound-row-actions {display:flex;align-items:center;flex-wrap:wrap;gap:5px;}
+#studioDashboard .studio-sound-row-actions button,#studioDashboard .studio-sound-row-actions select {min-height:26px;}
+#studioDashboard .studio-sound-row-actions select {max-width:120px;}
+#studioDashboard .studio-sound-row-actions .is-favorite {color:#b33c50;}
+#studioDashboard .studio-sound-notice {padding:9px;border-bottom:1px solid #d4e1e9;background:#eef8ff;color:#3c6786;font-size:12px;}
+#studioDashboard .studio-sound-notice[data-error="true"] {background:#fff1ef;color:#9b463c;}
+#studioDashboard .studio-sound-blank {padding:40px;text-align:center;color:#6b8192;}
+#studioDashboard .studio-sound-blank strong {display:block;margin-bottom:6px;}
+#studioDashboard .studio-sound-playerbar {
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px;
+  padding:9px;background:#edf5fc;border-top:1px solid #bbd2e3;
+}
+#studioDashboard .studio-sound-now {flex:0 0 180px;display:flex;gap:6px;align-items:center;color:#375a75;font-size:11px;min-width:0;}
+#studioDashboard .studio-sound-now span:last-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#studioDashboard .studio-sound-playerbar audio {flex:1;min-width:165px;height:32px;}
+#studioDashboard .studio-sound-help {font-size:11px;color:#697f90;padding:8px 10px;margin:0;}
+#studioDashboard .studio-tiktok-profile {display:flex;gap:10px;align-items:center;margin:9px 0;}
+#studioDashboard .studio-tiktok-profile[hidden] {display:none;}
+#studioDashboard .studio-tiktok-profile img {border-radius:50%;object-fit:cover;}
+/* Native Windows 7 modal windows. Their dialog role lives on the OUTER
+ * backdrop: 7.css otherwise hides .window[role=dialog] until :target.
+ * This removes the invisible-login/blurred-screen bug. */
+.studio-modal-backdrop.win7 {
+  position:fixed;inset:0;z-index:1200;
+  display:flex;justify-content:center;align-items:center;
+  padding:12px;
+  background:rgba(12,39,62,.35);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  filter:none;
+}
+.studio-modal-backdrop.win7[hidden] {display:none !important;}
+.studio-modal-backdrop.win7 > .studio-modal.window.active {
+  position:relative;display:block;
+  visibility:visible;opacity:1;
+  top:auto;left:auto;
+  transform:none;
+  animation:none;
+  transition:none;
+  width:min(94vw,465px);
+  max-height:94dvh;overflow:hidden;
+  margin:auto;
+  z-index:1;
+  font:12px/1.45 "Segoe UI",Tahoma,sans-serif;
+  color:#263a4b;
+}
+.studio-modal-backdrop.win7 > .studio-modal.window.active > .title-bar {
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:29px;
+}
+.studio-modal-backdrop.win7 .window-body {
+  padding:17px 19px 19px;
+  overflow:auto;
+  max-height:calc(94dvh - 38px);
+  background:#fff;
+}
+.studio-modal-backdrop.win7 h2 {
+  margin:0 0 8px;font:600 18px/1.25 "Segoe UI",Tahoma,sans-serif;color:#234863;
+}
+.studio-modal-backdrop.win7 p {font-size:12px;color:#5b7080;margin:0 0 11px;line-height:1.45;}
+.studio-modal-backdrop.win7 label {font-size:12px;display:block;margin:8px 0 4px;}
+.studio-modal-backdrop.win7 input[type="email"],
+.studio-modal-backdrop.win7 input[type="password"],
+.studio-modal-backdrop.win7 input[type="text"] {
+  width:100%;min-height:27px;font:13px "Segoe UI",Tahoma,sans-serif;
+}
+.studio-modal-backdrop.win7 .studio-settings-actions,
+.studio-modal-backdrop.win7 .studio-classic-commandbar {
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;
+  flex-wrap:wrap;margin-top:13px;
+}
+.studio-modal-backdrop.win7 .studio-auth-tab-layout {margin:13px 0 4px;}
+.studio-modal-backdrop.win7 .studio-auth-tabs {
+  margin:0;display:flex;gap:0;padding:0;
+}
+.studio-modal-backdrop.win7 .studio-auth-tabs button[role="tab"] {flex:1;font-size:12px;}
+.studio-modal-backdrop.win7 #studioAuthPane {
+  padding:12px 13px 14px;
+  background:#fff;
+  border:1px solid #c5d1dd;
+  margin-top:-1px;
+}
+.studio-modal-backdrop.win7 .studio-auth-setup {
+  border:1px solid #e2c47f;
+  background:#fff8e6;color:#745a25;
+  font-size:11px;padding:9px;margin:10px 0;
+}
+.studio-modal-backdrop.win7 .studio-auth-setup[hidden] {display:none;}
+.studio-modal-backdrop.win7 .studio-auth-submit,
+.studio-modal-backdrop.win7 .studio-google-button,
+.studio-modal-backdrop.win7 .studio-guest-button,
+.studio-modal-backdrop.win7 .studio-delete-button {
+  width:100%;min-height:29px;margin-top:8px;
+}
+.studio-modal-backdrop.win7 .studio-auth-divider {
+  display:flex;gap:10px;align-items:center;justify-content:center;
+  margin:11px 0 4px;font-size:11px;color:#738799;
+}
+.studio-modal-backdrop.win7 .studio-auth-divider::before,
+.studio-modal-backdrop.win7 .studio-auth-divider::after {
+  content:"";height:1px;background:#d0dbe5;flex:1;
+}
+.studio-modal-backdrop.win7 .studio-auth-message {min-height:15px;color:#547184;}
+.studio-modal-backdrop.win7 .studio-auth-message.is-error {color:#ac3939;}
+.studio-modal-backdrop.win7 button:disabled {opacity:.56;}
+.studio-modal-backdrop.win7 .studio-delete-button {color:#923a31;}
+/* Exact 7.css caption controls: no pseudo-icons or handmade gradients. */
+#studioDashboard .title-bar-controls button,
+.studio-modal-backdrop.win7 .title-bar-controls button {
+  cursor:pointer;
+  flex-shrink:0;
+}
+/* Windows 7-inspired taskbar / reopenable desktop. */
+.studio-desktop {position:fixed;inset:0 0 var(--brat-taskbar-height);padding:24px 23px;z-index:2;}
+.studio-desktop[hidden] {display:none !important;}
+.studio-desktop-shortcut {
+  display:grid;justify-items:center;gap:6px;width:101px;
+  padding:10px 4px;
+  background:transparent;border:1px solid transparent;color:#fff;
+  font:12px "Segoe UI",Tahoma,sans-serif;text-shadow:0 1px 3px #123f65;
+}
+.studio-desktop-shortcut:hover {border-color:#d5efffab;background:#ffffff27;}
+.studio-desktop-shortcut img {border-radius:5px;}
+.studio-taskbar {
+  display:none;position:fixed;bottom:0;left:0;right:0;
+  z-index:1100;height:var(--brat-taskbar-height);
+  padding:4px 12px;align-items:center;gap:7px;
+  border-top:1px solid #c6ecff;
+  background:linear-gradient(#d7f1ffed 0%,#a6d6f0eb 42%,#5a9bc7f0 49%,#87b9d5f0 100%);
+  box-shadow:inset 0 1px #fff,0 -2px 10px #124c7775;
+}
+body.studio-dashboard-open .studio-taskbar {display:flex;}
+.studio-taskbar button {cursor:pointer;display:grid;place-items:center;}
+.studio-taskbar .studio-start-orb {
+  background:radial-gradient(circle at 34% 18%,#f0ffce,#8bcd4c 54%,#27834b 80%);
+  border:1px solid #defff8;box-shadow:0 1px 4px #2e5e8b;
+  border-radius:50%;width:36px;height:36px;padding:4px;
+}
+.studio-taskbar .studio-taskbar-app {
+  border:1px solid #9ccde6;
+  background:linear-gradient(#edfaff,#b3daf0 45%,#79b6df 49%,#bedef0);
+  min-width:51px;height:37px;padding:5px 12px;
+}
+.studio-taskbar-app[aria-pressed="false"] {background:transparent;border-color:transparent;}
+.studio-taskbar-spacer {flex:1;}
+.studio-taskbar-clock {font:11px "Segoe UI",Tahoma,sans-serif;color:#184569;text-shadow:0 1px #fff;padding:0 9px;}
+body.studio-window-minimized #studioMainWindow,
+body.studio-window-closed #studioMainWindow {display:none !important;}
+body.studio-window-minimized #studioDashboard,
+body.studio-window-closed #studioDashboard {pointer-events:none;}
+body.studio-window-minimized .studio-taskbar,
+body.studio-window-closed .studio-taskbar {pointer-events:auto;}
+body.studio-window-maximized #studioDashboard .studio-dashboard-inner {width:100%;max-width:none;padding:0;}
+body.studio-window-maximized #studioMainWindow {min-height:calc(100dvh - var(--brat-taskbar-height));border-radius:0;}
+body.studio-window-maximized #studioDashboard .studio-classic-body-grid {min-height:calc(100dvh - 84px);}
+/* Editor back control needs to remain independent from Win7 theme. */
+.studio-editor-back {display:none;}
+@media(max-width:980px) {
+  #studioDashboard .studio-dashboard-inner {padding:8px 8px 70px;}
+  #studioDashboard .studio-classic-body-grid {grid-template-columns:1fr;}
+  #studioDashboard #studioNav {
+    position:fixed;inset:auto 0 var(--brat-taskbar-height);
+    z-index:1060;width:100%;height:55px;min-height:55px;
+    padding:4px 7px;
+    flex-direction:row;justify-content:center;
+    background:linear-gradient(#f3fbff,#c2e4f5);
+    border:1px solid #a8cde3;
+  }
+  #studioDashboard .studio-nav-brand,#studioDashboard .studio-nav-bottom {display:none;}
+  #studioDashboard .studio-nav-links {
+    display:flex;flex-direction:row;justify-content:space-around;
+    gap:1px;flex:1;
+  }
+  #studioDashboard .studio-nav-link {
+    flex:1;min-width:0;
+    flex-direction:column;justify-content:center;gap:2px;
+    text-align:center;font-size:10px;padding:3px 2px;
+  }
+  #studioDashboard .studio-nav-link span {font-size:16px;}
+  #studioDashboard .studio-main-content {padding-bottom:55px;}
+  #studioDashboard .studio-classic-home {grid-template-columns:1fr;}
+  #studioDashboard .studio-classic-shortcuts {display:none;}
+  body.studio-editor-open .topbar {padding-left:70px;}
+  body.studio-editor-open .panel {left:auto;}
+  body.studio-editor-open .page-shell {margin-left:0;}
+  body.studio-editor-open .studio-editor-back {
+    display:inline-flex;align-items:center;
+    position:absolute;left:8px;top:50%;
+    transform:translateY(-50%);z-index:3;
+    min-height:31px;padding:4px 7px;
+    background:#e6f4ff;border:1px solid #83b7d2;
+    border-radius:3px;color:#184e76;font-size:11px;
+  }
+}
+@media(max-width:580px) {
+  :root {--brat-taskbar-height:43px;}
+  #studioDashboard .studio-dashboard-inner {padding:4px 3px 60px;}
+  #studioDashboard .studio-dashboard-head {padding:10px;gap:9px;}
+  #studioDashboard .studio-dashboard-head h1 {font-size:16px;}
+  #studioDashboard .studio-view {padding:10px 11px;}
+  #studioDashboard .studio-classic-commandbar {margin:-10px -11px 12px;}
+  #studioDashboard .studio-project-grid {grid-template-columns:1fr;}
+  #studioDashboard .studio-sound-browser {grid-template-columns:1fr;}
+  #studioDashboard .studio-sound-tree {
+    display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+    border-right:0;border-bottom:1px solid #c2d8e6;
+  }
+  #studioDashboard .studio-sound-tree h2 {width:100%;}
+  #studioDashboard .studio-sound-tree button,
+  #studioDashboard .studio-sound-collections button {width:auto;}
+  #studioDashboard .studio-sound-collections {display:contents;}
+  #studioDashboard .studio-sound-row {grid-template-columns:30px minmax(0,1fr);}
+  #studioDashboard .studio-sound-row-actions {grid-column:1/-1;}
+  #studioDashboard .studio-sound-now {flex:1;}
+  #studioDashboard .studio-head-actions button {font-size:11px;}
+  .studio-taskbar {padding:2px 7px;}
+  .studio-modal-backdrop.win7 {padding:7px;}
+  .studio-modal-backdrop.win7 > .studio-modal.window.active {max-height:97dvh;width:100%;}
+}
+@media(prefers-reduced-motion:reduce) {
+  #studioDashboard *, .studio-modal-backdrop * {animation:none !important;transition:none !important;}
+}

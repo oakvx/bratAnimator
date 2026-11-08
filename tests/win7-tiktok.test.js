@@ -15,9 +15,12 @@ test("the authentic brat logo is used throughout the Windows 7 shell", () => {
     assert.match(svg,/<text[^>]*>brat<\/text>/);
 });
 test("7.css is actually imported and owns native caption buttons", () => {
-    const css=read("assets/css/win7-app.css");
-    assert.match(css,/^@import url\("https:\/\/unpkg\.com\/7\.css@0\.21\.1\/dist\/7\.scoped\.css"\);/m);
+    const vendor=read("vendor/7css/7.scoped.css");
+    const css=read("assets/css/studio-win7.css");
+    assert.match(vendor,/7\.css v0\.21\.0/);
+    assert.ok(vendor.length > 60000);
     assert.match(css,/\.title-bar-controls button/);
+    assert.doesNotMatch(css,/@import url\("https:\/\/unpkg\.com/);
     const html=read("index.html");
     assert.match(html,/class="studio-classic-window window glass active"/);
     assert.match(html,/class="title-bar-controls"/);

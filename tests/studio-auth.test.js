@@ -24,7 +24,8 @@ test("dashboard renders concrete navigation and all three auth options", () => {
     }
     assert.match(html, /assets\/js\/auth-client\.js/);
     assert.match(html, /assets\/js\/studio-dashboard\.js/);
-    assert.match(html, /assets\/css\/studio-dashboard\.css/);
+    assert.match(html, /assets\/css\/studio-win7\.css/);
+    assert.match(html, /vendor\/7css\/7\.scoped\.css/);
 });
 
 test("auth bootstrap is never configured with service-role credentials", () => {
