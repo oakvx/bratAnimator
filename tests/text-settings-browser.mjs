@@ -80,6 +80,7 @@ try {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.ok(ready, 'app did not load');
+    await evaluate(() => window.BratStudio.show('editor'));
     await evaluate(() => {
         window.auditAssert = (condition, detail) => { if (!condition) throw new Error(detail); };
         window.auditInput = (id, value) => { const input = document.getElementById(id); input.value = String(value); input.dispatchEvent(new Event('input', { bubbles: true })); };
