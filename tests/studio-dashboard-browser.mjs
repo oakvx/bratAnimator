@@ -130,7 +130,9 @@ try {
     // Project records and backups must remain browser-local throughout.
     assert.equal(await evaluate("window.BratEditorWorkspace.store.stats().then(s=>s.saved)"),20);
 
-    assert.equal(await evaluate("document.body.classList.contains('studio-dashboard-open')"),true);
+    assert.equal(await evaluate("document.body.classList.contains('studio-editor-open')"),true);
+    await evaluate("document.querySelector('[data-studio-view=\"projects\"]').click()");
+    await until("document.body.classList.contains('studio-dashboard-open')");
     await evaluate("document.querySelector('[data-studio-view=\"editor\"]').click()");
     await until("document.body.classList.contains('studio-editor-open')");
     await send("Emulation.setDeviceMetricsOverride",{width:390,height:844,deviceScaleFactor:1,mobile:true});
