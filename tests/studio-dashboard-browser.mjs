@@ -130,6 +130,40 @@ try {
     // Project records and backups must remain browser-local throughout.
     assert.equal(await evaluate("window.BratEditorWorkspace.store.stats().then(s=>s.saved)"),20);
 
+    // Phase 4: real audio import into IndexedDB, playlists, explicit editor use.
+    await evaluate("window.BratStudio.show('sounds')");
+    await until("!document.getElementById('studioSoundsView').hidden && window.BratSoundHubUI");
+    assert.equal(await evaluate("window.BratEditorWorkspace.snapshot().audio.assetId || ''"),"");
+    await evaluate(`(() => {
+      const sampleRate=8000, frames=4000, bytes=44+frames*2;
+      const buffer=new ArrayBuffer(bytes), view=new DataView(buffer);
+      function write(offset,value){for(let i=0;i<value.length;i++)view.setUint8(offset+i,value.charCodeAt(i));}
+      write(0,'RIFF');view.setUint32(4,bytes-8,true);
+      write(8,'WAVE');write(12,'fmt ');view.setUint32(16,16,true);
+      view.setUint16(20,1,true);view.setUint16(22,1,true);
+      view.setUint32(24,sampleRate,true);view.setUint32(28,sampleRate*2,true);
+      view.setUint16(32,2,true);view.setUint16(34,16,true);
+      write(36,'data');view.setUint32(40,frames*2,true);
+      for(let i=0;i<frames;i++)view.setInt16(44+i*2,Math.sin(i/17)*5000,true);
+      const file=new File([buffer],'nostalgia.wav',{type:'audio/wav'});
+      const dt=new DataTransfer();dt.items.add(file);
+      const input=document.getElementById('studioSoundFileInput');
+      input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}));
+      return true;
+    })()`);
+    await until("document.getElementById('studioSoundList').querySelectorAll('.studio-sound-row').length === 1", 11000);
+    assert.equal(await evaluate("window.BratEditorWorkspace.snapshot().audio.assetId || ''"),"");
+    await evaluate("document.getElementById('studioSoundNewCollection').click()");
+    assert.equal(await evaluate("document.getElementById('studioSoundCollectionDialog').hidden"),false);
+    await evaluate("document.getElementById('studioSoundCollectionName').value='Retro';document.getElementById('studioSoundCollectionForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));");
+    await until("document.querySelectorAll('#studioSoundCollections .studio-sound-collection-entry').length === 1");
+    await evaluate("document.querySelector('#studioSoundList .studio-accent-button').click()");
+    await until("window.BratEditorWorkspace.snapshot().audio.assetId?.startsWith('sound-')", 16000);
+    await until("document.body.classList.contains('studio-editor-open')");
+    assert.equal(await evaluate("window.BratEditorWorkspace.snapshot().audio.name"),"nostalgia.wav");
+    assert.equal(await evaluate("window.BratSoundHub.createLibrary().listTracks('guest').then(t=>t.length)"),1);
+    // Editor media was attached by explicit action, without duplicating its ID.
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.getActive('guest').then(p=>!!p?.payload?.audio?.assetId)"),true);
     assert.equal(await evaluate("document.body.classList.contains('studio-editor-open')"),true);
     await evaluate("document.querySelector('[data-studio-view=\"projects\"]').click()");
     await until("document.body.classList.contains('studio-dashboard-open')");
@@ -143,7 +177,7 @@ try {
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display !== 'none'"),true);
     const relevantErrors=errors.filter(error=>!error.includes("ResizeObserver loop"));
     assert.deepEqual(relevantErrors,[], "Unexpected browser JS exceptions");
-    console.log("Creator Studio browser smoke: dashboard, guest auth, editor, navigation, mobile return — PASS");
+    console.log("Classic Desktop browser smoke: projects, Sound Hub import/use, guest auth, editor and mobile return — PASS");
 } finally {
     ws?.close();
     browser.kill();
