@@ -87,6 +87,43 @@ try {
     assert.equal(await evaluate("getComputedStyle(document.querySelector('.studio-classic-window')).display !== 'none'"),true);
     assert.equal(await evaluate("Boolean(document.querySelector('#studioDashboard.win7 .window .title-bar .title-bar-text'))"),true);
     assert.equal(await evaluate("document.body.innerText.includes('BRAT WORKSPACE / 2000')"),false);
+    // True 7.css shell: caption controls are functional, not decoration.
+    assert.equal(await evaluate("document.querySelector('#studioMainWindow .title-bar-controls button[aria-label=Minimize]') !== null"),true);
+    assert.equal(await evaluate("document.querySelector('#studioNav .studio-original-logo').getAttribute('src')"),"favicon.svg");
+    await evaluate("document.getElementById('studioWindowMinimize').click()");
+    assert.equal(await evaluate("window.BratWin7ShellInstance.state().minimized"),true);
+    assert.equal(await evaluate("document.getElementById('studioDesktop').hidden"),false);
+    await evaluate("document.getElementById('studioTaskbarApp').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-minimized')"),false);
+    await evaluate("document.getElementById('studioWindowMaximize').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-maximized')"),true);
+    assert.equal(await evaluate("document.getElementById('studioWindowMaximize').getAttribute('aria-label')"),"Restore");
+    await evaluate("document.getElementById('studioWindowMaximize').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-maximized')"),false);
+    await evaluate("document.getElementById('studioWindowClose').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-closed')"),true);
+    assert.equal(await evaluate("document.getElementById('studioDesktop').hidden"),false);
+    await evaluate("document.getElementById('studioDesktopLauncher').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-closed')"),false);
+    // Login and sign-up dialog must open from the account entry, even when
+    // Supabase is unconfigured. No false authenticated session is shown.
+    await evaluate("document.getElementById('studioNavAccount').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
+    assert.equal(await evaluate("document.getElementById('studioAuthClose').getAttribute('aria-label')"),"Close");
+    await evaluate("document.querySelector('[data-auth-mode=register]').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthSubmit').textContent"),"Crea account");
+    await evaluate("document.getElementById('studioAuthClose').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
+    await evaluate("window.BratStudio.show('settings')");
+    await until("!document.getElementById('studioSettingsView').hidden");
+    // For guests the TikTok action remains an entry to the real sign-in UI;
+    // only a logged-in user with unconfigured OAuth gets a disabled button.
+    assert.equal(await evaluate("document.getElementById('studioTikTokConnect').disabled"),false);
+    assert.equal(await evaluate("/accedi/i.test(document.getElementById('studioTikTokStatus').textContent)"),true);
+    await evaluate("document.getElementById('studioTikTokConnect').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
+    await evaluate("document.getElementById('studioAuthGuest').click()");
+    await evaluate("window.BratStudio.show('home')");
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),true);
     await evaluate("document.getElementById('studioSoundToggle').click()");
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),false);
@@ -99,7 +136,9 @@ try {
     assert.equal(await evaluate("document.getElementById('studioCodeImport').disabled"),false);
     await evaluate("document.querySelector('[data-studio-view=home]').click()");
     assert.equal(await evaluate("document.getElementById('permissionNotice').classList.contains('hidden')"),true);
-    assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),true);
+    // The setup note may remain populated after closing the dialog; the
+    // dialog itself must remain closed until the user explicitly opens it.
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
     await evaluate("document.getElementById('studioAccountButton').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
     assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),false);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v10-classic-desktop-sound-hub";
+const CACHE_NAME = "brat-animator-v11-windows7-tiktok-phase5";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const APP_ASSETS = [
 "./assets/css/studio-dashboard.css",
   "./assets/css/aero-theme.css",
   "./assets/css/classic-desktop.css",
+  "./assets/css/win7-app.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -29,6 +30,9 @@ const APP_ASSETS = [
   "./assets/js/backup-reminders.js",
 "./assets/js/sound-hub.js",
   "./assets/js/studio-dashboard.js",
+  "./assets/js/win7-shell.js",
+  "./assets/js/tiktok-config.js",
+  "./assets/js/tiktok-link.js",
   "./assets/js/sound-hub-ui.js",
   "./assets/js/dashboard-audio.js",
   "./vendor/mp4-muxer.mjs",

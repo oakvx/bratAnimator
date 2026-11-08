@@ -25,6 +25,9 @@ jobs:
           node --check assets/js/studio-dashboard.js
           node --check assets/js/sound-hub.js
           node --check assets/js/sound-hub-ui.js
+          node --check assets/js/win7-shell.js
+          node --check assets/js/tiktok-link.js
+          node --check assets/js/tiktok-config.js
           node --check assets/js/bratcode.js
           node --check assets/js/backup-reminders.js
           node --check assets/js/dashboard-audio.js
@@ -42,3 +45,14 @@ jobs:
           else
             echo "Chrome/Chromium not installed; manual browser QA remains required."
           fi
+
+  tiktok-edge-check:
+    name: Type-check TikTok Edge Function
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate Supabase Edge Function TypeScript
+        run: deno check supabase/functions/tiktok-link/index.ts

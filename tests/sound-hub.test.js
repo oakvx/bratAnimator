@@ -176,7 +176,8 @@ test("Sound Hub UI is visible, uses explicit insertion and retains historic edit
     assert.match(js,/useSoundHubAudio/);
     assert.match(js,/Sostituire l'audio/);
     assert.match(dashboard,/studioSoundsView"\)\.hidden = next !== "sounds"/);
-    assert.match(html,/7\.scoped\.css/);
-    assert.match(html,/class="studio-classic-window window active"/);
+    assert.match(html,/assets\/css\/win7-app\.css/);
+    assert.match(fromRoot("assets/css/win7-app.css"),/@import url\("https:\/\/unpkg\.com\/7\.css@0\.21\.1\/dist\/7\.scoped\.css"\)/);
+    assert.match(html,/class="studio-classic-window window glass active"/);
     assert.doesNotMatch(html,/BRAT WORKSPACE \/ 2000|CREATOR STUDIO|YOUR NEXT EDIT STARTS HERE/);
 });

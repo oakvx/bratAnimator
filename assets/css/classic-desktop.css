@@ -105,7 +105,7 @@ body.studio-dashboard-open::before { display:none; }
   border-bottom:1px solid #bed4e7;
   background:linear-gradient(#fefefe 0%,#edf6fb 47%,#d8edf9 100%);
 }
-#studioDashboard button,
+#studioDashboard .studio-view button,
 #studioDashboard .studio-account-button,
 #studioDashboard .studio-outline-button,
 #studioDashboard button.studio-accent-button,
@@ -123,19 +123,19 @@ body.studio-dashboard-open::before { display:none; }
   padding:5px 12px;
   transition:background .12s,border-color .12s;
 }
-#studioDashboard button:hover,
+#studioDashboard .studio-view button:hover,
 #studioDashboard button.studio-accent-button:hover {
   background:linear-gradient(#fff 0%,#f7ffff 45%,#b7e6fc 48%,#d4efff);
   border-color:#458ebd;
   color:#16466c;
 }
-#studioDashboard button:active,
+#studioDashboard .studio-view button:active,
 #studioDashboard button.studio-accent-button:active {
   background:linear-gradient(#b8d3e6,#dfedf6);
   box-shadow:inset 0 2px 4px #567b9b52;
   transform:translateY(1px);
 }
-#studioDashboard button:focus-visible, #studioNav button:focus-visible {
+#studioDashboard .studio-view button:focus-visible, #studioNav button:focus-visible {
   outline:2px solid #276da4;
   outline-offset:2px;
 }

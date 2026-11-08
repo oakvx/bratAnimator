@@ -69,7 +69,7 @@
 
     function profile() {
         const user = auth.user();
-        const label = user?.email || "Modalità ospite";
+        const label = user?.email || "Accedi / Registrati";
         $("studioNavIdentity").textContent = label;
         $("studioAvatar").textContent = user?.email?.slice(0, 1).toUpperCase() || "G";
         $("studioGreeting").textContent = user

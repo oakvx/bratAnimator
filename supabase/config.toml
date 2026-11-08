@@ -1,0 +1,4 @@
+# TikTok callback is public GET and protected with a single-use CSRF state.
+# POST actions are authenticated explicitly using Supabase Auth getUser(jwt).
+[functions.tiktok-link]
+verify_jwt = false
