@@ -91,7 +91,7 @@ try {
     assert.equal(await evaluate("document.querySelector('#studioMainWindow .title-bar-controls button[aria-label=Minimize]') !== null"),true);
     assert.equal(await evaluate("document.querySelector('#studioNav .studio-original-logo').getAttribute('src')"),"favicon.svg");
     await evaluate("document.getElementById('studioWindowMinimize').click()");
-    assert.equal(await evaluate("window.BratWin7Shell.init().state().minimized"),true);
+    assert.equal(await evaluate("window.BratWin7ShellInstance.state().minimized"),true);
     assert.equal(await evaluate("document.getElementById('studioDesktop').hidden"),false);
     await evaluate("document.getElementById('studioTaskbarApp').click()");
     assert.equal(await evaluate("document.body.classList.contains('studio-window-minimized')"),false);
