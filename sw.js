@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v18-public-legal-pages";
+const CACHE_NAME = "brat-animator-v19-stanza-kinetic-lowercase";
 const APP_ASSETS = [
   "./",
   "./index.html",
