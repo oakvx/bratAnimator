@@ -172,6 +172,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const waveformCanvas = document.getElementById("waveformCanvas");
         const timelineCanvas = document.getElementById("timelineCanvas");
         const cleanLrcBtn = document.getElementById("cleanLrcBtn");
+        const lowercaseLyricsBtn = document.getElementById("lowercaseLyricsBtn");
         const normalizeLrcBtn = document.getElementById("normalizeLrcBtn");
         const shiftBackBtn = document.getElementById("shiftBackBtn");
         const shiftForwardBtn = document.getElementById("shiftForwardBtn");
@@ -5027,6 +5028,20 @@ async function updateExportEstimate() {
             const nextUrl = audioUrlInput.value.trim();
             state.audio = { ...state.audio, source: "url", url: nextUrl, mediaKind: inferAudioMediaKind(nextUrl, state.audio?.name || "") };
             saveProjectSettings();
+        });
+
+        lowercaseLyricsBtn?.addEventListener("click", () => {
+            const helper = window.BratLyricsCase;
+            if (!helper || !lyricsInput.value) return;
+            const converted = helper.lowercaseLyrics(lyricsInput.value);
+            if (converted === lyricsInput.value) return;
+            commitProjectChange("lowercase lyrics", () => {
+                lyricsInput.value = converted;
+                // Imported native word timing must remain valid after editing case.
+                state.lyricRows = helper.lowercaseLyricRows(state.lyricRows);
+            });
+            lyricsInput.dispatchEvent(new Event("input", { bubbles: true }));
+            if (lyricsImportStatus) lyricsImportStatus.textContent = "lyrics converted to lowercase";
         });
 
         lyricsInput.addEventListener("input", () => {
