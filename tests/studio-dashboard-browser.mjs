@@ -213,6 +213,8 @@ try {
     assert.equal(await evaluate("document.getElementById('formatPresetSelect').value"),"vertical");
     assert.equal(await evaluate("document.getElementById('lyricsDisplayModeSelect').value"),"kinetic");
     assert.equal(await evaluate("document.getElementById('themePresetSelect').value"),"kinetic-blue");
+    const verseReset = await evaluate("(function(){ const rows = window.BratTiming.buildTimeline(window.BratCore.parseLRC('[00:01.00] OLD WORDS\\n\\n[00:03.00] NEW WORDS')); const ctx = document.createElement('canvas').getContext('2d'); return [2.4,3.01].map(time => window.BratKinetic.buildTimelineFrame(ctx, rows, time, 1080, 1920, { kineticWords: 2 }, 1).groups[0].nodes.map(node=>node.text)); })()");
+    assert.deepEqual(verseReset,[["OLD","WORDS"],["NEW"]]);
     assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
     assert.equal(await evaluate("document.getElementById('previewCanvas').width===1080 && document.getElementById('previewCanvas').height===1920"),true);
     await evaluate("document.querySelector('[data-template=brat-classic]').click()");
