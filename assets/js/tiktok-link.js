@@ -190,6 +190,9 @@
         function handleReturn() {
             const hash=root.location.hash;
             if (!hash.startsWith("#tiktok=")) return;
+            // The OAuth redirect lands on the app root; open Settings to show
+            // the result instead of hiding the status in a different page.
+            root.BratStudio?.show?.("settings");
             const state=hash.slice("#tiktok=".length);
             root.history.replaceState(null,"",root.location.pathname+root.location.search);
             if(state==="denied")setStatus("Autorizzazione TikTok annullata.");
