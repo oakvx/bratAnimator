@@ -165,6 +165,42 @@
             });
         }
 
+        async function activateProject(ownerId, projectId) {
+            const owner = ownerKey(ownerId);
+            const sourceKey = projectKey(owner, projectId);
+            const activeKey = projectKey(owner, "current");
+            if (sourceKey === activeKey) return true;
+            const db = await openDatabase();
+            return new Promise((resolve, reject) => {
+                let tx;
+                let missing = false;
+                try {
+                    tx = db.transaction(PROJECT_STORE, "readwrite");
+                    const store = tx.objectStore(PROJECT_STORE);
+                    const sourceRequest = store.get(sourceKey);
+                    sourceRequest.onsuccess = () => {
+                        const source = sourceRequest.result;
+                        if (!source) { missing = true; tx.abort(); return; }
+                        const activeRequest = store.get(activeKey);
+                        activeRequest.onsuccess = () => {
+                            const active = activeRequest.result;
+                            store.put({ ...source, key: activeKey, projectId: "current", kind: "saved", updatedAt: now() });
+                            if (active && (active.payload?.lyrics?.trim() || active.payload?.audio?.assetId || active.payload?.background?.assetId)) {
+                                store.put({ ...active, key: sourceKey, projectId, kind: "saved", updatedAt: now() });
+                            } else {
+                                store.delete(sourceKey);
+                            }
+                        };
+                    };
+                } catch (error) { db.close(); reject(error); return; }
+                tx.oncomplete = () => { db.close(); resolve(true); };
+                tx.onerror = () => { db.close(); reject(tx.error || errorWithCode("Could not switch project.", "STORAGE_WRITE_FAILED")); };
+                tx.onabort = () => { db.close(); reject(missing
+                    ? errorWithCode("Project not found.", "PROJECT_NOT_FOUND")
+                    : tx.error || errorWithCode("Project switch aborted.", "STORAGE_WRITE_FAILED")); };
+            });
+        }
+
         async function deleteOwner(ownerId) {
             const owner = ownerKey(ownerId);
             const db = await openDatabase();
@@ -209,6 +245,7 @@
             saveProject,
             deleteProject,
             deleteOwner,
+            activateProject,
             listProjects,
             estimateStorage,
             getActive: ownerId => getProject(ownerId, "current"),
