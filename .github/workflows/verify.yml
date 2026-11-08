@@ -45,3 +45,14 @@ jobs:
           else
             echo "Chrome/Chromium not installed; manual browser QA remains required."
           fi
+
+  tiktok-edge-check:
+    name: Type-check TikTok Edge Function
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate Supabase Edge Function TypeScript
+        run: deno check supabase/functions/tiktok-link/index.ts
