@@ -20,10 +20,13 @@ const PROFILE="https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_
 
 function configured() {
   try {
-    const callback=new URL(redirectUri),app=new URL(appUrl);
-    return !!(supabaseUrl&&serviceKey&&clientKey&&clientSecret&&appOrigin&&
-      callback.protocol==="https:"&&!callback.search&&!callback.hash&&
-      app.protocol==="https:"&&app.origin===appOrigin);
+    const base=new URL(supabaseUrl),callback=new URL(redirectUri),app=new URL(appUrl);
+    return !!(serviceKey&&clientKey&&clientSecret&&appOrigin&&
+      base.protocol==="https:"&&!base.search&&!base.hash&&
+      callback.protocol==="https:"&&callback.origin===base.origin&&
+      callback.pathname==="/functions/v1/tiktok-link"&&
+      !callback.search&&!callback.hash&&app.protocol==="https:"&&
+      app.origin===appOrigin&&!app.search&&!app.hash);
   } catch (_) {return false;}
 }
 function cors(req:Request):Record<string,string>{
