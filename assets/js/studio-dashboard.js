@@ -40,7 +40,7 @@
     function labelFromPayload(payload, fallback = "Progetto senza titolo") {
         const lyrics = String(payload?.lyrics || "");
         const line = lyrics.split(/\r?\n/).map(text => text.replace(/^\[[^\]]+\]\s*/, "").trim()).find(Boolean);
-        return String(payload?.metadata?.trackName || line || fallback).slice(0, 62);
+        return String(fallback && fallback !== "Untitled project" ? fallback : payload?.metadata?.trackName || line || fallback).slice(0, 62);
     }
 
     function setMode(mode) {
@@ -83,7 +83,7 @@
         $("studioSettingsLogout").hidden = !user;
     }
 
-    function makeProjectCard(record, payload, parent) {
+    function makeProjectCard(record, payload, parent, showTools = true) {
         const card = document.createElement("button");
         card.type = "button";
         card.className = "studio-project-card";
@@ -138,7 +138,7 @@
             tag.textContent = "TEMPORANEO · recupero locale";
             art.prepend(tag);
         }
-        entry.append(tools);
+        if (showTools) entry.append(tools);
         parent.append(entry);
     }
 
@@ -169,6 +169,7 @@
             const ordered = records.sort((a, b) => (a.kind === "temporary" ? -1 : 0) - (b.kind === "temporary" ? -1 : 0) || b.updatedAt - a.updatedAt);
             const totals = await editor.store.stats();
             $("studioProjectCount").textContent = totals.saved + "/20 progetti salvati globalmente · " + totals.temporary + "/1 temporaneo · " + records.length + " qui";
+            const search = ($("studioProjectSearch")?.value || "").trim().toLowerCase();
             if (!ordered.length) {
                 target.append(makeEmpty("Crea il tuo primo progetto nell'editor."));
                 recent.append(makeEmpty("Inizia con un nuovo lyric video."));
@@ -177,10 +178,11 @@
                     row, project: await editor.store.getProject(editor.owner(), row.projectId)
                 })));
                 for (const { row, project } of entries) {
+                    if (search && !labelFromPayload(project?.payload, row.title).toLowerCase().includes(search)) continue;
                     makeProjectCard(row, project?.payload, target);
                 }
                 for (const { row, project } of entries.slice(0, 3)) {
-                    makeProjectCard(row, project?.payload, recent);
+                    makeProjectCard(row, project?.payload, recent, false);
                 }
             }
             const usage = await editor.store.estimateStorage();
@@ -391,15 +393,43 @@
         $("studioHomeView").hidden = next !== "home";
         $("studioProjectsView").hidden = next !== "projects";
         $("studioSettingsView").hidden = next !== "settings";
-        $("studioFutureView").hidden = !(next === "sounds" || next === "share");
-        if (next === "sounds" || next === "share") {
-            $("studioFutureIcon").textContent = next === "sounds" ? "♫" : "↗";
-            $("studioFutureTitle").textContent = next === "sounds" ? "Sound Hub" : "BRATCODE";
-            $("studioFutureText").textContent = next === "sounds"
-                ? "La libreria audio locale con raccolte e preferiti arriverà nella Fase 4."
-                : "La condivisione temporanea dei progetti tramite codice arriverà nella Fase 3.";
+        $("studioShareView").hidden = next !== "share";
+        $("studioFutureView").hidden = next !== "sounds";
+        if (next === "sounds") {
+            $("studioFutureIcon").textContent = "♫";
+            $("studioFutureTitle").textContent = "Sound Hub";
+            $("studioFutureText").textContent = "La libreria audio locale con raccolte e preferiti arriverà nella Fase 4.";
         }
-        document.querySelectorAll("[data-studio-view]").forEach(button => {
+        if (next === "share") refreshCode().catch(error => notify(error.message, true));
+        $("studioProjectSearch")?.addEventListener("input", () => renderProjects().catch(error => notify(error.message, true)));
+    $("studioProjectDialogClose").addEventListener("click", closeProjectDialog);
+    $("studioProjectDialogCancel").addEventListener("click", closeProjectDialog);
+    $("studioProjectDialogConfirm").addEventListener("click", confirmProjectDialog);
+    $("studioProjectRenameInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") { event.preventDefault(); confirmProjectDialog(); }
+    });
+    $("studioBackupActive").addEventListener("click", exportBackup);
+    $("studioBackupNow").addEventListener("click", exportBackup);
+    $("studioImportBundle").addEventListener("click", importBundle);
+    $("studioBackupDismiss").addEventListener("click", () => {
+        window.BratBackupReminders?.dismiss(editor.owner(), editor.projectId?.());
+        updateBackupReminder();
+    });
+    $("studioCodeCreate").addEventListener("click", createCode);
+    $("studioCodeCopy").addEventListener("click", copyCode);
+    $("studioCodeRevoke").addEventListener("click", revokeCode);
+    $("studioCodeImport").addEventListener("click", importCode);
+    window.addEventListener("brat:backup-exported", () => {
+        notify("Backup completo esportato. Conserva il file .brat.zip al sicuro.");
+        updateBackupReminder();
+    });
+    window.addEventListener("brat:project-imported", () => {
+        notify("Progetto .brat.zip importato.");
+        viewSwitch("editor");
+    });
+    window.addEventListener("brat:backup-reminder-state", updateBackupReminder);
+
+    document.querySelectorAll("[data-studio-view]").forEach(button => {
             const active = button.dataset.studioView === next;
             button.classList.toggle("is-active", active);
             if (active) button.setAttribute("aria-current", "page");
@@ -539,6 +569,7 @@
             currentUserId = nextId;
             profile();
             await renderProjects();
+            if (view === "share") refreshCode().catch(() => {});
             const isFirst = !initialSessionHandled;
             initialSessionHandled = true;
             if (user && (isFirst || view !== "editor")) {
@@ -575,6 +606,7 @@
         if (event.key !== "Escape") return;
         if (!$("studioAuthDialog").hidden) closeAuth();
         if (!$("studioLogoutDialog").hidden) closeLogout();
+        if (!$("studioProjectDialog").hidden) closeProjectDialog();
     });
 
     // Mobile editor has no persistent sidebar; provide a one-click return.
