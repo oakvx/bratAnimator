@@ -53,6 +53,8 @@ try {
         if (await evaluate(() => Boolean(window.BratEditor && typeof drawMusicSyncedScene === "function"))) break;
         await new Promise(resolve => setTimeout(resolve, 100));
     }
+    // This regression covers the editor, not the Windows 7 dashboard.
+    await evaluate(() => window.BratStudio.show('editor'));
     const imports = await evaluate(async () => {
         const check = (value, message) => { if (!value) throw new Error(message); };
         const close = (actual, expected, message) => check(Math.abs(actual - expected) < 1e-8, `${message}: ${actual} != ${expected}`);
