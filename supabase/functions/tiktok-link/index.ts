@@ -168,13 +168,21 @@ async function handlePost(req:Request){
   }
   if(action==="disconnect"){
     const link=await getLink(userId);
-    if(!link)return reply(req,{connected:false});
-    const fresh=await freshAccess(link);
-    await tiktokForm(REVOKE,{client_key:clientKey,client_secret:clientSecret,
-      token:fresh.access_token});
+    if(!link)return reply(req,{connected:false,revokedAtProvider:true});
+    let revokedAtProvider=false;
+    try{
+      const fresh=await freshAccess(link);
+      await tiktokForm(REVOKE,{client_key:clientKey,client_secret:clientSecret,
+        token:fresh.access_token});
+      revokedAtProvider=true;
+    }catch(_){
+      // An expired credential, offline provider or rejected revocation must
+      // not trap personal tokens in our database. Report actual revocation
+      // status; do not falsely claim TikTok revoked the grant.
+    }
     const {error}=await db.from("tiktok_connections").delete().eq("user_id",userId);
     if(error)throw error;
-    return reply(req,{connected:false});
+    return reply(req,{connected:false,revokedAtProvider});
   }
   return reply(req,{error:"Azione sconosciuta."},400);
 }
