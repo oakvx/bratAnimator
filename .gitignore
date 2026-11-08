@@ -1,0 +1,7 @@
+# Local credentials and Supabase CLI state must never be published to Pages.
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+node_modules/

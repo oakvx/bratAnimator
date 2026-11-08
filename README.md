@@ -19,7 +19,7 @@
 | Export | MP4/WebM pipelines; local video recording; PNG frame export; bundled mp4-muxer |
 | Persistence | IndexedDB (project snapshots and binary media); localStorage (light preferences/fallback) |
 | Project interchange | Versioned JSON snapshots; portable .brat.zip archives via bundled fflate |
-| Authentication | Optional Supabase Auth: email/password, email OTP, Google OAuth |
+| Authentication | Optional Supabase Auth: email/password, email OTP, Google OAuth, TikTok Login Kit |
 | External OAuth | Optional TikTok Login Kit for Web: Supabase Edge Function (Deno/TypeScript), OAuth 2.0, server-side token vault |
 | Delivery | GitHub Pages; static assets; service worker / Progressive Web App |
 | Tests | Node.js native test runner; browser smoke tests using Chrome DevTools Protocol |
@@ -121,11 +121,11 @@ Never place a Supabase secret/service_role key or OAuth client secret in browser
 
 **BRATCODE** is designed as an optional short-lived, server-backed exchange of project structure, **not** a cloud synchronization mechanism. Media binaries and credentials must never be included. Back-end deployment and access-control configuration are required before public code generation can operate.
 
-The optional **TikTok account-link flow** is implemented but remains disabled until official Login Kit authorization, Supabase Edge Function deployment, and provider configuration are completed. Music favorites and publishing are not part of this phase. See docs/phase-5-windows7-tiktok-link.md.
+The optional **TikTok sign-in and account-link flows** use an Edge Function, private identity mapping, single-use OAuth state and a browser-bound login proof. They remain disabled until Supabase and TikTok Login Kit are configured. See [Supabase and TikTok setup](docs/supabase-tiktok-setup.md) for project creation, migrations, secrets, deployment and end-to-end verification. Music favorites and publishing are outside this integration.
 
 ## Development
 
-Prerequisites: a modern browser; Node.js 22+ for tests.
+Prerequisites: a modern browser; Node.js 22.13+ for tests.
 
 Serve the repository root using a static HTTP server (for example Python http.server or a local VS Code static-server extension) and open the root index.html. Do not use file:// for production-equivalent testing because browser storage, service workers, and media APIs require a secure or valid local origin.
 

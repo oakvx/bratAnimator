@@ -30,8 +30,8 @@
         if (!configured()) throw new Error("TikTok non è ancora configurato.");
         return config().url + "/functions/v1/tiktok-link";
     }
-    async function request(action) {
-        if (!["start", "status", "disconnect"].includes(action))
+    async function request(action, details = {}) {
+        if (!["start", "complete", "status", "disconnect"].includes(action))
             throw new Error("Azione TikTok non supportata.");
         const auth = root.BratAuth;
         if (!auth?.user()) throw new Error("Accedi prima a Brat Animator.");
@@ -43,7 +43,7 @@
                 "Authorization":"Bearer " + token,
                 "apikey": config().publishableKey
             },
-            body:JSON.stringify({action}),
+            body:JSON.stringify({...details,action}),
             credentials:"omit",
             cache:"no-store",
             redirect:"error"
@@ -65,6 +65,7 @@
         let lastUser=null;
         let requestNumber=0;
         let confirmation=false;
+        const proofKey="brat.tiktok.link.v1";
 
         function setStatus(message, error=false) {
             const node=$("studioTikTokStatus");
@@ -137,13 +138,23 @@
             $("studioTikTokConnect").disabled=true;
             setStatus("Apertura autorizzazione TikTok…");
             try {
-                const data=await request("start");
+                const verifier=[...root.crypto.getRandomValues(new Uint8Array(32))]
+                    .map(n=>n.toString(16).padStart(2,"0")).join("");
+                const pending={verifier,state:"",createdAt:Date.now()};
+                root.sessionStorage.setItem(proofKey,JSON.stringify(pending));
+                const hash=await root.crypto.subtle.digest("SHA-256",new TextEncoder().encode(verifier));
+                const challenge=[...new Uint8Array(hash)].map(n=>n.toString(16).padStart(2,"0")).join("");
+                const data=await request("start",{challenge});
                 const url=new URL(data.url);
-                if(url.origin!=="https://www.tiktok.com"||url.pathname!=="/v2/auth/authorize/") {
+                pending.state=url.searchParams.get("state")||"";
+                if(url.origin!=="https://www.tiktok.com"||url.pathname!=="/v2/auth/authorize/"||
+                    !/^[A-Za-z0-9_-]{43}$/.test(pending.state)) {
                     throw new Error("Indirizzo di autorizzazione non valido.");
                 }
+                root.sessionStorage.setItem(proofKey,JSON.stringify(pending));
                 root.location.assign(url.toString());
             } catch (error) {
+                try {root.sessionStorage.removeItem(proofKey);} catch (_) {}
                 setStatus(error.message,true);
                 busy=false;
                 $("studioTikTokConnect").disabled=false;
@@ -185,15 +196,19 @@
             if(event.detail?.view==="settings")refresh().catch(()=>{});
         });
         root.addEventListener("hashchange",()=> {
-            if(root.location.hash.startsWith("#tiktok="))handleReturn();
+            if(root.location.hash.startsWith("#tiktok="))handleReturn().catch(error=>setStatus(error.message,true));
         });
-        function handleReturn() {
+        async function handleReturn() {
             const hash=root.location.hash;
-            if (!hash.startsWith("#tiktok=")) return;
+            if (!hash.startsWith("#tiktok=")) return false;
             // The OAuth redirect lands on the app root; open Settings to show
             // the result instead of hiding the status in a different page.
             root.BratStudio?.show?.("settings");
-            const state=hash.slice("#tiktok=".length);
+            // Ignore in-flight status checks from initialization/view changes:
+            // they must not overwrite an authorization failure or cancellation.
+            requestNumber++;
+            const query=new URLSearchParams(hash.slice(1));
+            const state=query.get("tiktok");
             root.history.replaceState(null,"",root.location.pathname+root.location.search);
             if(state==="denied")setStatus("Autorizzazione TikTok annullata.");
             else if(state==="failed")setStatus("Il collegamento TikTok non è riuscito. Riprova.",true);
@@ -201,10 +216,28 @@
                 setStatus("TikTok autorizzato. Verifica profilo…");
                 refresh().catch(()=>{});
             }
+            else if(state==="pending") {
+                let pending;
+                try {pending=JSON.parse(root.sessionStorage.getItem(proofKey)||"null");}
+                finally {root.sessionStorage.removeItem(proofKey);}
+                const ticket=query.get("ticket")||"";
+                if(!pending||pending.state!==query.get("state")||
+                    !/^[a-f0-9]{64}$/.test(pending.verifier)||!/^[A-Za-z0-9_-]{43}$/.test(ticket)||
+                    Date.now()-pending.createdAt>480000||Date.now()<pending.createdAt)
+                    throw new Error("Collegamento scaduto o avviato in un altro browser. Riprova.");
+                await auth.initialize();
+                await request("complete",{state:pending.state,verifier:pending.verifier,ticket});
+                await refresh();
+            }
+            if(state==="denied"||state==="failed") {
+                try {root.sessionStorage.removeItem(proofKey);} catch (_) {}
+            }
+            return true;
         }
         accessState();
-        handleReturn();
-        auth.initialize().then(()=>refresh()).catch(()=>accessState());
+        auth.initialize().then(async()=> {
+            if(!await handleReturn())await refresh();
+        }).catch(error=>setStatus(error.message,true));
         root.BratTikTokUI=Object.freeze({refresh,connect});
     }
     return Object.freeze({configured,request,mount});

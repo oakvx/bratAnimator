@@ -38,7 +38,7 @@ Status: feature branch; deployment requires review, browser QA and (for remote B
 1. Add the public URL and publishable key in assets/js/supabase-config.js.
 2. Configure the Supabase authentication providers if users should create codes.
 3. In the Supabase SQL editor execute:
-   supabase/migrations/20261108_bratcode_light.sql
+   supabase/migrations/20261108000100_bratcode_light.sql
 4. Confirm the four RPCs are exposed through the public schema:
    bratcode_create, bratcode_active, bratcode_revoke, bratcode_import.
 5. Test generation as an authenticated account, anonymous import on another

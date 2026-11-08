@@ -421,6 +421,7 @@ body.studio-dashboard-open #studioDashboard {display:block;}
 .studio-modal-backdrop.win7 .studio-auth-setup[hidden] {display:none;}
 .studio-modal-backdrop.win7 .studio-auth-submit,
 .studio-modal-backdrop.win7 .studio-google-button,
+.studio-modal-backdrop.win7 .studio-tiktok-button,
 .studio-modal-backdrop.win7 .studio-guest-button,
 .studio-modal-backdrop.win7 .studio-delete-button {
   width:100%;min-height:29px;margin-top:8px;
