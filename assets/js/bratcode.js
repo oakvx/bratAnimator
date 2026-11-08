@@ -40,6 +40,14 @@
             fadeOut: Number(originalAudio.fadeOut) || 0
         };
         cleaned.background = { kind: "none" };
+        const originalMetadata = cleaned.metadata && typeof cleaned.metadata === "object" ? cleaned.metadata : {};
+        cleaned.metadata = {
+            trackName: String(originalMetadata.trackName || "").slice(0, 180),
+            artistName: String(originalMetadata.artistName || "").slice(0, 180),
+            albumName: String(originalMetadata.albumName || "").slice(0, 180),
+            duration: Number(originalMetadata.duration) || 0,
+            source: String(originalMetadata.source || "").slice(0, 80)
+        };
         cleaned.fonts = Array.isArray(cleaned.fonts) ?
             cleaned.fonts.slice(0, 30).map(font => ({
                 family: String(font?.family || "").slice(0, 100),
