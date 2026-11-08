@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v8-creator-studio-auth";
+const CACHE_NAME = "brat-animator-v8-creator-studio-auth-2";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -56,11 +56,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // HTML navigations and public auth configuration must not remain stuck
+  // behind old cache-first responses after the site has been updated.
+  const freshFirst = event.request.mode === "navigate"
+    || requestUrl.pathname.endsWith("/assets/js/supabase-config.js");
+  if (freshFirst) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)));
+        }
+        return response;
+      }).catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === "navigate") {
+          return caches.match(new URL("./index.html", self.registration.scope).href);
+        }
+        return Response.error();
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((cached) => cached || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)));
+        }
         return response;
       }))
   );
