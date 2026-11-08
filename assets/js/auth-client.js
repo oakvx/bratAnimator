@@ -65,9 +65,12 @@
                 client = sdk.createClient(url, publishableKey, {
                     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
                 });
-                client.auth.onAuthStateChange((_event, session) => {
+                client.auth.onAuthStateChange((event, session) => {
                     // Do not await Supabase API calls from inside this callback.
                     notify(session?.user || null);
+                    if (event === "PASSWORD_RECOVERY") {
+                        root.dispatchEvent?.(new CustomEvent("brat:auth-recovery"));
+                    }
                 });
             }
             const { data, error } = await client.auth.getSession();
@@ -132,6 +135,12 @@
             })),
         verifyCode: async (email, token) =>
             result((await requireClient()).auth.verifyOtp({ email, token, type: "email" })),
+        requestPasswordReset: async email =>
+            result((await requireClient()).auth.resetPasswordForEmail(email, {
+                redirectTo: redirectUrl()
+            })),
+        updatePassword: async password =>
+            result((await requireClient()).auth.updateUser({ password })),
         signInWithGoogle: async () =>
             result((await requireClient()).auth.signInWithOAuth({
                 provider: "google", options: { redirectTo: redirectUrl() }

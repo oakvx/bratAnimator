@@ -111,6 +111,18 @@ Keyboard shortcuts are restricted to the active editor rather than firing behind
 
 See [Phase 7 behavior and QA](docs/phase-7-export-preflight.md).
 
+## Fasi 8–12 — release hardening and editor templates
+
+The consolidated release implements the following improvements:
+
+- **Phase 8 / QA:** all nine Chrome browser suites are required in the GitHub Actions matrix, with unit tests, syntax checks, TypeScript validation, offline precache integrity and real IndexedDB assertions. Fixed preview resolution refresh, localization restoration and mobile settings navigation.
+- **Phase 9 / Auth:** complete optional password-recovery UI and Supabase Auth client flow; actual authentication still requires a configured Supabase project, SMTP and Google provider.
+- **Phase 10 / BRATCODE:** shareable, origin-bound links that prefill the import field but require an explicit import action. Database RPCs and their migrations are provided; server rollout and gateway rate limiting remain administrative actions.
+- **Phase 11 / TikTok:** hardened callback configuration and bounded JSON requests; unlink removes server-side stored tokens even when provider revocation fails and reports provider status accurately. The TikTok Developer App approval, OAuth credentials and function deployment are still required before enabling this optional feature.
+- **Phase 12 / Editor:** four actual one-click templates — Brat Classic, Kinetic Reels, Cinematic and Music Scroll — through a separate pure control adapter. Existing lyrics and media are preserved.
+
+For rollout and operator-only tasks consult [phases 8–12 acceptance and deployment plan](docs/phases-8-to-12-rollout.md) and [Supabase setup and verification](supabase/README.md). **Do not claim live external authentication or TikTok linking before performing provider-side end-to-end tests.**
+
 ## Authentication and backend
 
 The editor is fully usable as a guest. Supabase Auth is optional for account-based workspaces and future server-backed sharing.
@@ -139,13 +151,16 @@ Automated checks:
     node --check assets/js/win7-shell.js
     node --check assets/js/win7-start-menu.js
     node --check assets/js/export-preflight.js
+    node --check assets/js/editor-templates.js
     node --check assets/js/tiktok-link.js
 
 Optional Chrome browser audit:
 
     CHROME_PATH=/usr/bin/google-chrome node tests/studio-dashboard-browser.mjs
+    CHROME_PATH=/usr/bin/google-chrome node tests/editor-v5-browser.mjs
+    CHROME_PATH=/usr/bin/google-chrome node tests/export-format-browser.mjs
 
-CI runs Node.js unit tests, syntax verification, and available Chrome smoke checks. A green test suite does not substitute for manual checks of browser media codecs, mobile touch, and authenticated redirect flows.
+CI **requires** all nine Chrome regression suites, in addition to Node.js unit/syntax checks and Deno Edge Function typing. A green test suite does not replace manual Safari iOS/Firefox media compatibility and real provider OAuth tests.
 
 ## Repository structure
 

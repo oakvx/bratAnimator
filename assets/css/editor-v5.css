@@ -107,3 +107,40 @@ body[data-ui-mode="simple"] #editCanvasBtn { display:none; }
 .export-preflight-note { margin:8px 0 0; font-size:11px; opacity:.78; line-height:1.5; }
 .export-preflight [hidden] { display:none !important; }
 @media(max-width:560px) { .export-preflight { padding:10px; } }
+
+
+/* Phase 12: actionable, mobile-friendly template gallery. */
+.editor-template-section {
+    margin: 13px 0 17px;
+    padding: 13px;
+    border: 1px solid #a8bdc9;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--card-bg, #e9f1f7) 88%, transparent);
+}
+.editor-template-heading h3 {margin:0;font-size:14px;}
+.editor-template-heading p {margin:5px 0 11px;font-size:12px;line-height:1.45;}
+.editor-template-gallery {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+.editor-template-gallery button {
+    display:flex;flex-direction:column;align-items:start;gap:5px;
+    min-height:66px;text-align:left;white-space:normal;
+    padding:10px 12px;border-radius:6px;
+    border:1px solid #8eaebf;background:linear-gradient(#fff,#e0eef7);
+    color:#19445f;box-shadow:0 1px 2px #284b6226;
+}
+.editor-template-gallery button strong {font-size:12px;}
+.editor-template-gallery button span {font-size:11px;line-height:1.35;}
+.editor-template-gallery button:hover,.editor-template-gallery button:focus-visible {
+    border-color:#4d91be;outline:2px solid #9bd0ed;outline-offset:1px;
+}
+.editor-template-section #editorTemplateStatus {margin:10px 0 0;}
+@media (max-width:520px) {
+    .editor-template-gallery {grid-template-columns:1fr;}
+    .editor-template-gallery button {min-height:54px;}
+}
+
+
+/* Offset the sticky editor header and tab bar when opening text settings
+ * from the topbar or stage on touch-size screens. */
+@media (max-width: 980px) {
+    #textSettings { scroll-margin-top: calc(var(--topbar-height) + 118px); }
+}

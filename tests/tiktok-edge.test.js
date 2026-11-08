@@ -26,7 +26,7 @@ function server(overrides = {}) {
     };
     let handler;
     const context = {
-        URL, URLSearchParams, Request, Response, TextEncoder, Uint8Array, AbortSignal,
+        URL, URLSearchParams, Request, Response, TextEncoder, TextDecoder, Uint8Array, AbortSignal,
         crypto: webcrypto, btoa, createClient: () => db,
         Deno: { env: { get: name => env[name] }, serve: fn => { handler = fn; } },
         fetch: async () => { throw Error("unexpected external request"); },

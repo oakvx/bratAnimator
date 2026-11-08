@@ -80,6 +80,7 @@ try {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.ok(ready, 'app did not load');
+    await evaluate(() => window.BratStudio.show('editor'));
     await evaluate(() => {
         window.auditAssert = (condition, detail) => { if (!condition) throw new Error(detail); };
         window.auditInput = (id, value) => { const input = document.getElementById(id); input.value = String(value); input.dispatchEvent(new Event('input', { bubbles: true })); };
@@ -119,15 +120,16 @@ try {
         }
         return ['header', 'stage'];
     }));
-    await test('10% updates preview, output, autosave and project restore', () => evaluate(() => {
+    await test('10% updates preview, output, autosave and project restore', () => evaluate(async () => {
         const baseline = auditHash(previewCanvas);
         auditInput('fontScaleInput', 10);
         const smaller = auditHash(previewCanvas);
         auditAssert(baseline !== smaller, 'slider did not repaint preview');
         auditAssert(state.style.fontScale === 0.1 && fontScaleValue.textContent === '10%', 'state/output not updated');
         const payload = JSON.parse(JSON.stringify(buildProjectPayload()));
-        const saved = JSON.parse(localStorage.getItem('bratAnimator.project.v5'));
-        auditAssert(payload.style.fontScale === 0.1 && saved.style.fontScale === 0.1, '10% not persisted');
+        await window.BratEditorWorkspace.flush();
+        const saved = (await window.BratEditorWorkspace.store.getActive(window.BratEditorWorkspace.owner()))?.payload;
+        auditAssert(payload.style.fontScale === 0.1 && saved?.style?.fontScale === 0.1, '10% not persisted to IndexedDB');
         auditInput('fontScaleInput', 100);
         restoreProjectSettings(payload);
         auditAssert(state.style.fontScale === 0.1 && fontScaleInput.value === '10' && fontScaleValue.textContent === '10%', 'restored scale/output mismatch');
@@ -158,7 +160,7 @@ try {
         auditAssert(fontScaleInput.value === '195' && !textSizeIncreaseBtn.disabled, 'decrease step is not five');
         return { minimum: fontScaleInput.min, maximum: fontScaleInput.max, step: 5 };
     }));
-    await test('reset restores text defaults and outputs while preserving colors and animation', () => evaluate(() => {
+    await test('reset restores text defaults and outputs while preserving colors and animation', () => evaluate(async () => {
         writeStyleControls({ ...state.style, fontFamily: 'Georgia, serif', fontScale: 0.1, blur: 0.2, verticalPosition: 0.2, stretch: 1.2, letterSpacing: 8, lineSpacing: 1.2, bgColor: '#123456', textColor: '#fedcba', wordAnimation: { mode: 'shake', intensity: 0.35, color: '#abcdef' } }, 'jitter');
         const before = { bgColor: state.style.bgColor, textColor: state.style.textColor, mode: state.animationMode, wordAnimation: { ...state.style.wordAnimation } };
         resetTextSettingsBtn.click();
@@ -169,7 +171,9 @@ try {
         auditAssert(JSON.stringify(after) === JSON.stringify(before), 'reset changed unrelated style');
         const outputs = ['fontScaleValue', 'blurValue', 'verticalPositionValue', 'stretchValue', 'letterSpacingValue', 'lineSpacingValue'].map(id => document.getElementById(id).textContent);
         auditAssert(JSON.stringify(outputs) === JSON.stringify(['100%', '1.05px', '0%', '94%', '0px', '92%']), JSON.stringify(outputs));
-        auditAssert(JSON.parse(localStorage.getItem('bratAnimator.project.v5')).style.fontScale === 1, 'reset not saved');
+        await window.BratEditorWorkspace.flush();
+        const saved = (await window.BratEditorWorkspace.store.getActive(window.BratEditorWorkspace.owner()))?.payload;
+        auditAssert(saved?.style?.fontScale === 1, 'reset not saved to IndexedDB');
         return { actual, outputs };
     }));
     await test('long lyrics shrink proportionally and return to stable 100%', () => evaluate(() => {
@@ -269,7 +273,16 @@ try {
         for (const [language, expected] of Object.entries(locales)) {
             await test(`${label} ${language} localized settings fit viewport`, () => evaluate(async (language, expected, viewportWidth) => {
                 document.querySelector(`[data-lang="${language}"]`).click();
-                document.getElementById('textSettingsBtn').click();
+                // On 320px screens the topbar intentionally hides its
+                // settings control; the stage retains a visible equivalent.
+                const visibleSettingsTrigger = innerWidth <= 360 ? 'stageTextSettingsBtn' : 'textSettingsBtn';
+                if (visibleSettingsTrigger === 'stageTextSettingsBtn') {
+                    const stageButton = document.getElementById(visibleSettingsTrigger);
+                    stageButton.scrollIntoView({ behavior: 'instant', block: 'center' });
+                    const stageRect = stageButton.getBoundingClientRect();
+                    auditAssert(stageRect.width > 0 && stageRect.top >= 0 && stageRect.bottom <= innerHeight, 'mobile stage settings button cannot be reached');
+                }
+                document.getElementById(visibleSettingsTrigger).click();
                 window.dispatchEvent(new Event('resize'));
                 await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
                 auditAssert(document.getElementById('textSettingsBtn').textContent === expected.settings, 'header translation missing');
@@ -281,11 +294,16 @@ try {
                 auditAssert(resetTextSettingsBtn.textContent === expected.resetTextSettings, 'reset translation missing');
                 auditAssert(document.querySelector('.text-size-presets').getAttribute('aria-label') === expected.textSize, 'preset aria-label untranslated');
                 for (const id of fontScaleInput.getAttribute('aria-describedby').split(/\s+/)) auditAssert(Boolean(document.getElementById(id)?.textContent), `missing description ${id}`);
-                const trigger = document.getElementById('textSettingsBtn');
+                const trigger = document.getElementById(visibleSettingsTrigger);
                 const rect = trigger.getBoundingClientRect();
                 const legend = document.querySelector('#textSettings legend').getBoundingClientRect();
                 const header = document.querySelector('.topbar').getBoundingClientRect();
-                auditAssert(rect.width > 0 && rect.left >= -1 && rect.right <= innerWidth + 1 && rect.top >= -1 && rect.bottom <= innerHeight + 1, `clipped settings trigger: ${JSON.stringify(rect.toJSON())}`);
+                // The stage trigger scrolls out of view when it opens text
+                // settings far below the preview. That is expected behavior:
+                // don't require both distant elements to remain in the viewport.
+                auditAssert(rect.width > 0 && rect.left >= -1 && rect.right <= innerWidth + 1 &&
+                    (visibleSettingsTrigger !== 'textSettingsBtn' || (rect.top >= -1 && rect.bottom <= innerHeight + 1)),
+                    `clipped settings trigger: ${JSON.stringify(rect.toJSON())}`);
                 auditAssert(legend.top >= header.bottom - 1 && legend.bottom <= innerHeight, `settings legend behind header: ${JSON.stringify({ legend: legend.toJSON(), header: header.toJSON() })}`);
                 auditAssert(trigger.scrollWidth <= trigger.clientWidth + 1, 'settings trigger text clipped');
                 auditAssert(innerWidth <= viewportWidth + 1 && document.documentElement.scrollWidth <= viewportWidth + 1, JSON.stringify({ requestedWidth: viewportWidth, width: innerWidth, scrollWidth: document.documentElement.scrollWidth }));

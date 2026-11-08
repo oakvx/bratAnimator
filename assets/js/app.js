@@ -4337,7 +4337,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (payload.style && typeof payload.style === "object") state.style = { ...state.style, ...payload.style };
             writeStyleControls(state.style, state.animationMode);
             setTheme(payload.theme || "green");
-            state.language = window.BratI18n?.applyLanguage?.(payload.language || window.BratI18n?.getSavedLanguage?.() || "en") || "en";
+            // The interface language is a browser preference. A saved/imported
+            // project must not silently reset a user's explicit selection.
+            state.language = window.BratI18n?.applyLanguage?.(window.BratI18n?.getSavedLanguage?.() || payload.language || "en") || "en";
             rebuildTimelineFromCurrentInputs();
             renderLrcRows();
             applyFormatPreset();
@@ -5154,6 +5156,7 @@ async function updateExportEstimate() {
         });
 
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
+        exportSizeSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
         [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, document.getElementById("kineticWordsInput"), document.getElementById("kineticVariationInput"), document.getElementById("kineticMotionInput"), beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
@@ -6032,7 +6035,7 @@ async function updateExportEstimate() {
         panel.classList.remove('hidden');
         syncPanelState();
         openEditorTab('design');
-        document.getElementById('textSettings')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+        document.getElementById('textSettings')?.scrollIntoView({ block: 'start', behavior: 'instant' });
         fontScaleInput?.focus({ preventScroll: true });
     }
 
@@ -6113,7 +6116,10 @@ async function updateExportEstimate() {
         button.addEventListener('click', () => {
             if (!formatPresetSelect) return;
             formatPresetSelect.value = button.dataset.presetQuick || 'square';
-            applyFormatPreset();
+            // Dispatch the same public control event used by the format menu.
+            // This refreshes preview dimensions, stage label, export estimate
+            // and autosave together without maintaining a second UI path.
+            formatPresetSelect.dispatchEvent(new Event('change', { bubbles: true }));
             updateSidebarStatus();
         });
     });

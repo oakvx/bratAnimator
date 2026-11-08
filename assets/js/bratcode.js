@@ -118,6 +118,27 @@
         return normalizeCode(input).match(/.{1,8}/g).join("-");
     }
 
+    function shareLink(input, location = root.location) {
+        const code = normalizeCode(input);
+        if (!location?.origin || !location?.pathname || !/^https?:$/.test(new URL(location.origin).protocol)) {
+            throw new Error("Condivisione tramite link disponibile solo su HTTP(S).");
+        }
+        const url = new URL(location.pathname, location.origin);
+        // Share links contain only a temporary opaque identifier, never media.
+        url.hash = "bratcode=" + code;
+        return url.toString();
+    }
+
+    function codeFromInput(input, location = root.location) {
+        const value = String(input || "").trim();
+        if (!/^https?:\/\//i.test(value)) return normalizeCode(value);
+        let url;
+        try { url = new URL(value); } catch (_) { throw new Error("Link BRATCODE non valido."); }
+        if (!location?.origin || url.origin !== location.origin || url.pathname !== location.pathname ||
+            !url.hash.startsWith("#bratcode=")) throw new Error("Link BRATCODE non valido per questa applicazione.");
+        return normalizeCode(decodeURIComponent(url.hash.slice("#bratcode=".length)));
+    }
+
     function backend() {
         if (!root.BratAuth?.configured()) throw new Error("BRATCODE richiede Supabase configurato dal proprietario del progetto.");
         return root.BratAuth;
@@ -147,14 +168,14 @@
 
     async function importCode(code) {
         const auth = backend();
-        const snapshot = await auth.rpc("bratcode_import", { p_code: normalizeCode(code) });
+        const snapshot = await auth.rpc("bratcode_import", { p_code: codeFromInput(code) });
         if (!snapshot) throw new Error("BRATCODE inesistente, scaduto o revocato.");
         return parseSnapshot(snapshot);
     }
 
     return Object.freeze({
         MAX_BYTES, sanitizePayload, makeSnapshot, parseSnapshot,
-        normalizeCode, prettyCode, getActive, create, revoke,
+        normalizeCode, prettyCode, shareLink, codeFromInput, getActive, create, revoke,
         importCode
     });
 });
