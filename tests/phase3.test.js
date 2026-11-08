@@ -154,3 +154,12 @@ test("Creator Studio registers potentially destructive controls once, outside na
     assert.equal(script.slice(start, end).includes("studioProjectDialogConfirm"), false,
         "View transitions must not register handlers");
 });
+
+
+test("expired BRATCODE cleanup requires a privileged role", () => {
+    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108_bratcode_light.sql"), "utf8");
+    assert.match(sql, /CREATE OR REPLACE FUNCTION public\.bratcode_cleanup\(\)/);
+    assert.match(sql, /REVOKE ALL ON FUNCTION public\.bratcode_cleanup\(\) FROM PUBLIC, anon, authenticated/);
+    assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.bratcode_cleanup\(\) TO service_role/);
+    assert.match(sql, /expires_at < now\(\) - interval '7 days'/);
+});
