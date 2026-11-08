@@ -198,8 +198,10 @@ try {
     await until("document.getElementById('exportPreflight').dataset.state !== 'blocked'");
     assert.equal(await evaluate("document.getElementById('exportPreflightList').textContent.includes('1 timed lyric line recognized')"),true);
     await evaluate("document.getElementById('exportFpsSelect').value='60';document.getElementById('exportFpsSelect').dispatchEvent(new Event('change',{bubbles:true}))");
-    await until("document.getElementById('exportPreflight').dataset.state === 'warning'");
-    assert.equal(await evaluate("document.getElementById('exportPreflightList').textContent.includes('60 fps')"),true);
+    // State can already be "warning" because the default audio option is
+    // selected but no file is loaded. Wait for the 60-fps row itself.
+    await until("document.getElementById('exportPreflightList').textContent.includes('60 fps')");
+    assert.equal(await evaluate("document.getElementById('exportPreflight').dataset.state"),"warning");
     await evaluate("document.getElementById('exportFpsSelect').value='30';document.getElementById('exportFpsSelect').dispatchEvent(new Event('change',{bubbles:true}))");
     await until("window.BratEditorWorkspace.store.getActive('guest').then(record => record?.payload?.lyrics?.includes('smoke test lyric'))", 9000);
     await evaluate("document.querySelector('[data-studio-view=\"projects\"]').click()");
