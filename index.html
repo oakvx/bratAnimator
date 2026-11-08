@@ -546,12 +546,13 @@
                 <button type="button" data-auth-mode="login" class="is-active" role="tab" aria-controls="studioAuthPane" aria-selected="true">Accedi</button>
                 <button type="button" data-auth-mode="register" role="tab" aria-controls="studioAuthPane" aria-selected="false">Registrati</button>
                 <button type="button" data-auth-mode="otp" role="tab" aria-controls="studioAuthPane" aria-selected="false">Codice email</button>
+                <button type="button" data-auth-mode="reset" role="tab" aria-controls="studioAuthPane" aria-selected="false">Password</button>
               </menu>
               <div id="studioAuthPane" role="tabpanel" aria-label="Dati di accesso">
             <form id="studioAuthForm" novalidate>
                 <label for="studioAuthEmail">Email</label>
                 <input id="studioAuthEmail" type="email" autocomplete="email" required placeholder="nome@esempio.it" />
-                <div id="studioAuthPasswordWrap"><label for="studioAuthPassword">Password</label><input id="studioAuthPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Inserisci la password" /></div>
+                <div id="studioAuthPasswordWrap"><label id="studioAuthPasswordLabel" for="studioAuthPassword">Password</label><input id="studioAuthPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Inserisci la password" /></div>
                 <div id="studioAuthCodeWrap" hidden><label for="studioAuthCode">Codice ricevuto via email</label><input id="studioAuthCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Codice OTP" /></div>
                 <p id="studioAuthMessage" class="studio-auth-message" role="status"></p>
                 <button id="studioAuthSubmit" class="studio-accent-button studio-auth-submit" type="submit">Accedi</button>
