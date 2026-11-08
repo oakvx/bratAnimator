@@ -619,3 +619,47 @@ body.studio-dashboard-open::before { display:none; }
   #studioDashboard .studio-sound-collection-entry { display:inline-flex; }
   #studioDashboard .studio-sound-collection-entry button:first-child { width:auto; }
 }
+
+/* Authentication and project-management dialogs use the same 7.css chrome. */
+#studioAuthDialog .studio-modal.window.active,
+#studioProjectDialog .studio-modal.window.active {
+  display:block;
+  position:relative;
+  padding:0;
+  border:1px solid #fff;
+  border-radius:9px;
+  background:#f9fcff;
+  box-shadow:0 14px 49px #163f6080,inset 0 1px #fff;
+  overflow:auto;
+}
+#studioAuthDialog .studio-modal .title-bar,
+#studioProjectDialog .studio-modal .title-bar {
+  min-height:33px;
+  display:flex;
+  align-items:center;
+  padding:6px 13px;
+  color:#244d70;
+  font:600 12px "Segoe UI",Tahoma,sans-serif;
+  background:linear-gradient(#fff,#dbeffb 45%,#a1d1ed 50%,#d5eefc);
+}
+#studioAuthDialog .studio-modal .window-body,
+#studioProjectDialog .studio-modal .window-body {
+  padding:23px;
+  margin:0;
+  font:13px "Segoe UI",Tahoma,sans-serif;
+  color:#29455b;
+}
+#studioAuthDialog .studio-modal-close,
+#studioProjectDialog .studio-modal-close {
+  top:3px;
+  right:6px;
+  z-index:2;
+}
+#studioAuthDialog .studio-auth-tabs {
+  background:#e4f0fa;
+  border-radius:3px;
+}
+#studioAuthDialog .studio-auth-tabs button.is-active {
+  border-radius:2px;
+  box-shadow:inset 0 1px #fff;
+}
