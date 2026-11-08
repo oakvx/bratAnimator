@@ -428,7 +428,7 @@
     renderPreviewAt = function (time) { originalPreview(time); syncOverlay(); };
     window.addEventListener('resize', syncOverlay);
     new ResizeObserver(syncOverlay).observe(previewCanvas);
-    function setEditorMode(value) { const mode = value === 'advanced' ? 'advanced' : 'simple'; document.body.dataset.uiMode = mode; $('editorModeSelect').value = mode; localStorage.setItem('bratAnimator.editorMode', mode); if (mode === 'simple' && document.querySelector('.editor-tab.active:is([data-open-tab="canvas"],[data-open-tab="project"])')) document.querySelector('[data-open-tab="lyrics"]').click(); }
+    function setEditorMode(value) { const mode = value === 'advanced' ? 'advanced' : 'simple'; document.body.dataset.uiMode = mode; $('editorModeSelect').value = mode; localStorage.setItem('bratAnimator.editorMode', mode); }
     const hasExisting = window.BratWasReturningUser === true;
     setEditorMode(localStorage.getItem('bratAnimator.editorMode') || (hasExisting ? 'advanced' : 'simple'));
     $('editorModeSelect').addEventListener('change', () => setEditorMode($('editorModeSelect').value));
