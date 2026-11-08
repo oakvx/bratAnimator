@@ -23,9 +23,10 @@
     <link rel="stylesheet" href="assets/css/editor-v5.css" />
     <link rel="stylesheet" href="assets/css/studio-dashboard.css" />
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
-    <link rel="stylesheet" href="https://unpkg.com/7.css@0.21.1/dist/7.scoped.css" />
+    <!-- 7.css is imported by win7-app.css after application styles. -->
     <link rel="stylesheet" href="assets/css/aero-theme.css" />
     <link rel="stylesheet" href="assets/css/classic-desktop.css" />
+    <link rel="stylesheet" href="assets/css/win7-app.css" />
     <script>
         window.BratStudioShellEnabled = true;
         try {
@@ -277,8 +278,21 @@
     <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
 
     <!-- Phase 2 app shell. Existing editor DOM stays mounted for fast navigation. -->
+    <section id="studioDashboard" class="studio-dashboard win7" aria-labelledby="studioTitle">
+        <div class="studio-dashboard-inner">
+            <div id="studioMainWindow" class="studio-classic-window window glass active" role="region" aria-label="Brat Animator">
+                <div class="title-bar">
+                    <div class="title-bar-text"><img src="favicon.svg" class="studio-title-icon" width="18" height="18" alt=""> Brat Animator</div>
+                    <div class="title-bar-controls">
+                        <button id="studioWindowMinimize" type="button" aria-label="Minimize" title="Riduci a icona"></button>
+                        <button id="studioWindowMaximize" type="button" aria-label="Maximize" title="Ingrandisci"></button>
+                        <button id="studioWindowClose" type="button" aria-label="Close" title="Chiudi finestra"></button>
+                    </div>
+                </div>
+                <div class="window-body">
+                  <div class="studio-classic-body-grid">
     <aside id="studioNav" class="studio-nav win7" aria-label="Navigazione Brat Animator">
-        <div class="studio-nav-brand"><span class="studio-mark">b.</span><span>brat animator</span></div>
+        <div class="studio-nav-brand"><img class="studio-original-logo" src="favicon.svg" alt="" width="38" height="38" decoding="async"><span>brat animator</span></div>
         <div class="studio-nav-links">
             <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page"><span aria-hidden="true">⌂</span> Home</button>
             <button type="button" data-studio-view="editor" class="studio-nav-link"><span aria-hidden="true">✎</span> Editor</button>
@@ -288,15 +302,11 @@
         </div>
         <div class="studio-nav-bottom">
             <button type="button" data-studio-view="settings" class="studio-nav-link"><span aria-hidden="true">⚙</span> Impostazioni</button>
-            <button id="studioNavAccount" type="button" class="studio-nav-account"><span id="studioAvatar" class="studio-avatar">G</span><span id="studioNavIdentity">Modalità ospite</span></button>
+            <button id="studioNavAccount" type="button" class="studio-nav-account"><span id="studioAvatar" class="studio-avatar">G</span><span id="studioNavIdentity">Accedi / Registrati</span></button>
         </div>
     </aside>
 
-    <section id="studioDashboard" class="studio-dashboard win7" aria-labelledby="studioTitle">
-        <div class="studio-dashboard-inner">
-            <div class="studio-classic-window window active">
-                <div class="title-bar"><div class="title-bar-text">Brat Animator</div></div>
-                <div class="window-body">
+                  <main class="studio-main-content" id="studioMainContent">
             <header class="studio-dashboard-head">
                 <div><h1 id="studioTitle">Home</h1><p id="studioGreeting">I progetti sono salvati su questo dispositivo.</p></div>
                 <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
@@ -397,10 +407,29 @@
             </div>
 
             <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><h2 id="studioFutureTitle">Informazioni</h2><p id="studioFutureText"></p><span id="studioFutureIcon" hidden>♫</span><button type="button" data-studio-view="home">Indietro</button></div></div>
+                  </main>
+                  </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <section id="studioDesktop" class="studio-desktop" aria-label="Desktop" hidden>
+        <button id="studioDesktopLauncher" type="button" class="studio-desktop-shortcut">
+          <img src="favicon.svg" alt="" width="65" height="65">
+          <span>Brat Animator</span>
+        </button>
+    </section>
+    <div id="studioTaskbar" class="studio-taskbar" aria-label="Barra delle applicazioni">
+      <button id="studioStartButton" class="studio-start-orb" type="button" aria-label="Apri Brat Animator" title="Apri Brat Animator">
+        <img src="favicon.svg" alt="" width="27" height="27">
+      </button>
+      <button id="studioTaskbarApp" class="studio-taskbar-app" type="button" aria-label="Mostra Brat Animator" title="Brat Animator">
+        <img src="favicon.svg" alt="" width="27" height="27">
+      </button>
+      <span class="studio-taskbar-spacer"></span>
+      <span id="studioTaskbarClock" class="studio-taskbar-clock" aria-label="Ora locale"></span>
+    </div>
 
     <div id="studioSoundCollectionDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioSoundCollectionTitle">
