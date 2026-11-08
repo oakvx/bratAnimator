@@ -41,4 +41,6 @@
     <xhtml:link rel="alternate" hreflang="zh-CN" href="https://oakvx.github.io/bratAnimator/zh/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://oakvx.github.io/bratAnimator/" />
   </url>
+  <url><loc>https://oakvx.github.io/bratAnimator/terms.html</loc><lastmod>2026-11-08</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://oakvx.github.io/bratAnimator/privacy.html</loc><lastmod>2026-11-08</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>

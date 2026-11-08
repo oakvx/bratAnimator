@@ -477,6 +477,10 @@ body.studio-dashboard-open .studio-taskbar {display:flex;}
 }
 .studio-taskbar-app[aria-pressed="false"] {background:transparent;border-color:transparent;}
 .studio-taskbar-spacer {flex:1;}
+.studio-legal-links {display:flex;gap:12px;align-items:center;margin-right:12px;font:11px/1.2 "Segoe UI",Tahoma,sans-serif;white-space:nowrap;}
+.studio-legal-links a {color:#173d59;text-decoration:underline;text-underline-offset:2px;}
+.studio-legal-links a:focus-visible {outline:2px solid #173d59;outline-offset:3px;}
+@media(max-width:480px){.studio-legal-links{gap:7px;margin-right:3px;font-size:10px}.studio-taskbar-clock{display:none}}
 .studio-taskbar-clock {font:11px "Segoe UI",Tahoma,sans-serif;color:#184569;text-shadow:0 1px #fff;padding:0 9px;}
 body.studio-window-minimized #studioMainWindow,
 body.studio-window-closed #studioMainWindow {display:none !important;}

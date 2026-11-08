@@ -1,7 +1,10 @@
-const CACHE_NAME = "brat-animator-v17-configured-supabase";
+const CACHE_NAME = "brat-animator-v18-public-legal-pages";
 const APP_ASSETS = [
   "./",
   "./index.html",
+  "./terms.html",
+  "./privacy.html",
+  "./assets/css/legal.css",
   "./assets/css/style.css",
   "./assets/css/editor-v5.css",
   "./vendor/7css/7.scoped.css",
