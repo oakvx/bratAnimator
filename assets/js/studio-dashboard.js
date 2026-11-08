@@ -52,7 +52,10 @@
         $("studioAuthPassword").autocomplete = mode === "register" ? "new-password" : "current-password";
         $("studioAuthSubmit").textContent = mode === "register" ? "Crea account" : mode === "otp" ? "Invia codice" : "Accedi";
         document.querySelectorAll("[data-auth-mode]").forEach(button => {
-            button.classList.toggle("is-active", button.dataset.authMode === mode);
+            const selected = button.dataset.authMode === mode;
+            button.classList.toggle("is-active", selected);
+            // 7.css styles native ARIA tabs using aria-selected, not .is-active.
+            button.setAttribute("aria-selected", String(selected));
         });
         authMessage("");
     }
