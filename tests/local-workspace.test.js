@@ -146,10 +146,15 @@ test("autosave debounces edits and writes the newest snapshot", async () => {
 
 test("discard invalidates an in-flight save before deleting the project", async () => {
     let finishWrite;
+    let markStarted;
+    const started = new Promise(resolve => { markStarted = resolve; });
     const actions = [];
     const autosave = Workspace.createAutosave({
         store: {
-            saveActive: () => new Promise(resolve => { finishWrite = () => { actions.push("write"); resolve(); }; }),
+            saveActive: () => new Promise(resolve => {
+                finishWrite = () => { actions.push("write"); resolve(); };
+                markStarted();
+            }),
             clearActive: async () => { actions.push("delete"); }
         },
         setTimeout: () => 1,
@@ -157,7 +162,7 @@ test("discard invalidates an in-flight save before deleting the project", async 
     });
     autosave.schedule({ lyrics: "a" });
     const writing = autosave.flush();
-    await Promise.resolve();
+    await started;
     const clearing = autosave.discard();
     finishWrite();
     await Promise.all([writing, clearing]);
