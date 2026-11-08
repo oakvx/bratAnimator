@@ -194,6 +194,7 @@
             editor.pause();
             renderProjects().catch(error => notify(error.message, true));
         } else {
+            window.BratEnterEditor?.();
             // Recompute canvas placement after returning from a hidden view.
             window.dispatchEvent(new Event("resize"));
         }
@@ -371,7 +372,8 @@
     document.querySelector(".topbar")?.prepend(backButton);
 
     document.body.classList.add("studio-active");
-    viewSwitch("home");
+    // Preserve existing portable project links: they must open the editor.
+    viewSwitch(window.location.hash.startsWith("#project=") ? "editor" : "home");
     profile();
     auth.listen(queueAuthChange);
     auth.initialize().then(result => {
