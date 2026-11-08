@@ -1,4 +1,7 @@
+project_id = "brat-animator"
+
 # TikTok callback is public GET and protected with a single-use CSRF state.
-# POST actions are authenticated explicitly using Supabase Auth getUser(jwt).
+# Link/status/disconnect POSTs require Supabase Auth getUser(jwt).
+# Guest login uses a one-time browser proof, private state and rate limiting.
 [functions.tiktok-link]
 verify_jwt = false

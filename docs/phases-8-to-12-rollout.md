@@ -32,7 +32,7 @@ Non pubblicare una secret/service-role key nel codice o nella configurazione pub
 
 ## Fase 10 — BRATCODE Light
 
-- Codice server preesistente nelle RPC PostgreSQL `bratcode_create`, `bratcode_active`, `bratcode_revoke`, `bratcode_import` e `bratcode_cleanup` (migrazione `20261108_bratcode_light.sql`).
+- Codice server preesistente nelle RPC PostgreSQL `bratcode_create`, `bratcode_active`, `bratcode_revoke`, `bratcode_import` e `bratcode_cleanup` (migrazione `20261108000100_bratcode_light.sql`).
 - Nuovo **Copia link**: URL con identificatore opaco temporaneo nel fragment `#bratcode=...`, vincolato all'origine e al percorso dell'app.
 - Apertura link: precompilazione del codice e **conferma esplicita** all'importazione; nessun download o sostituzione automatica. Rimozione del fragment dalla barra dell'indirizzo dopo la lettura.
 - Il formato trasporta **solo** struttura e testo del progetto; file media, token e riferimenti browser-local vengono eliminati dal payload.
@@ -59,7 +59,7 @@ Il client e la funzione Deno erano già predisposti. Hardening aggiunto:
 
 1. Ottenere una TikTok Developer App e l'autorizzazione a **Login Kit for Web** con scope minimo `user.info.basic`.
 2. Creare e verificare un progetto Supabase, le migrazioni SQL e i relativi permessi.
-3. Distribuire `supabase/functions/tiktok-link/index.ts` con `verify_jwt=false`: il callback GET usa lo **state CSRF monouso**, mentre ogni POST valida comunque il JWT Supabase.
+3. Distribuire `supabase/functions/tiktok-link/index.ts` con `verify_jwt=false`: il callback GET usa lo **state CSRF monouso**. Le azioni di collegamento, stato e revoca richiedono il JWT Supabase; l'accesso TikTok da ospite usa la prova del browser e un ticket monouso. Vedi la [guida aggiornata Supabase e TikTok](supabase-tiktok-setup.md).
 4. Configurare **esclusivamente nel runtime server** `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REDIRECT_URI`, `BRAT_APP_ORIGIN`, `BRAT_APP_URL`, oltre alle credenziali server Supabase gestite dal provider.
 5. Testare reale login, callback, stato collegato, refresh, scollegamento e revoca dall'app TikTok.
 6. Solo dopo l'E2E impostare `enabled: true` in `assets/js/tiktok-config.js`.

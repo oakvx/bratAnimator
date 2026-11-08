@@ -3,6 +3,28 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const auth = require("../assets/js/auth-client.js");
+const vm = require("node:vm");
+
+function configuredAuth(completeSignIn = async () => null, key = "sb_publishable_test_public_key") {
+    const calls = [];
+    const user = { id: "tiktok-user", user_metadata: { display_name: "Creator" } };
+    let changed;
+    const client = { auth: {
+        onAuthStateChange(fn) { changed = fn; },
+        getSession: async () => ({ data: { session: null } }),
+        verifyOtp: async options => { calls.push(options); changed("SIGNED_IN", { user }); return { data: { session: { user } } }; },
+        signOut: async options => { calls.push(options); changed("SIGNED_OUT", null); return { data: {} }; }
+    } };
+    const root = {
+        module: { exports: {} }, URL, atob,
+        BratSupabaseConfig: { url: "https://project.supabase.co", publishableKey: key },
+        BratTikTokLogin: { completeSignIn },
+        supabase: { createClient: (url, key, options) => { calls.push(options); return client; } }
+    };
+    root.globalThis = root;
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../assets/js/auth-client.js"), "utf8"), root);
+    return { api: root.module.exports, calls, client };
+}
 
 test("auth integration stays disabled until public Supabase config is provided", async () => {
     assert.equal(auth.configured(), false);
@@ -38,4 +60,30 @@ test("auth bootstrap is never configured with service-role credentials", () => {
     assert.ok(authCode.includes("signInWithOtp"));
     assert.ok(authCode.includes("verifyOtp"));
     assert.ok(authCode.includes("signInWithOAuth"));
+});
+
+test("TikTok callback creates a persistent Supabase session and logout restores guest ownership", async () => {
+    const { api, calls } = configuredAuth(async () => "one-use-proof");
+    const result = await api.initialize();
+    assert.equal(result.user.id, "tiktok-user");
+    assert.equal(api.ownerId(), "user:tiktok-user");
+    assert.equal(calls[0].auth.flowType, "pkce");
+    assert.equal(calls[0].auth.persistSession, true);
+    assert.equal(calls[1].token_hash, "one-use-proof");
+    assert.equal(calls[1].type, "email");
+    await api.signOut();
+    assert.equal(api.ownerId(), "guest");
+});
+
+test("failed TikTok verification cannot produce an authenticated workspace", async () => {
+    const { api, client } = configuredAuth(async () => "expired-proof");
+    client.auth.verifyOtp = async () => ({ error: Error("Token expired") });
+    await assert.rejects(api.initialize(), /expired/);
+    assert.equal(api.ownerId(), "guest");
+});
+
+test("browser configuration rejects secret and service-role keys", () => {
+    assert.equal(configuredAuth(undefined, "sb_secret_never_put_this_in_a_browser").api.configured(), false);
+    const payload = Buffer.from(JSON.stringify({ role: "service_role" })).toString("base64url");
+    assert.equal(configuredAuth(undefined, "eyJhbGciOiJIUzI1NiJ9." + payload + ".signature").api.configured(), false);
 });

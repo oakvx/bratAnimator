@@ -7,7 +7,7 @@
     if (root && root.document) root.BratAuth = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
     "use strict";
-    const SDK_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    const SDK_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm";
     let client = null;
     let currentUser = null;
     let initPromise = null;
@@ -24,6 +24,11 @@
         const { url, publishableKey } = config();
         try {
             const parsed = new URL(url);
+            if (publishableKey.startsWith("sb_secret_")) return false;
+            if (publishableKey.includes(".")) {
+                const payload = publishableKey.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+                if (JSON.parse(root.atob(payload)).role !== "anon") return false;
+            }
             return parsed.protocol === "https:" && Boolean(parsed.hostname) && publishableKey.length > 15;
         } catch (_) { return false; }
     }
@@ -45,23 +50,8 @@
     function loadSdk() {
         if (root.supabase && typeof root.supabase.createClient === "function") return Promise.resolve(root.supabase);
         if (!root.document) return Promise.reject(new Error("Authentication requires a browser."));
-        return new Promise((resolve, reject) => {
-            const existing = root.document.querySelector('script[data-brat-supabase-sdk]');
-            if (existing) {
-                existing.addEventListener("load", () => resolve(root.supabase), { once: true });
-                existing.addEventListener("error", () => reject(new Error("Cannot load Supabase SDK.")), { once: true });
-                return;
-            }
-            const element = root.document.createElement("script");
-            element.src = SDK_URL;
-            element.async = true;
-            element.dataset.bratSupabaseSdk = "1";
-            element.onload = () => {
-                if (root.supabase?.createClient) resolve(root.supabase);
-                else reject(new Error("Supabase SDK loaded without a client factory."));
-            };
-            element.onerror = () => reject(new Error("Cannot load Supabase SDK. Check your connection."));
-            root.document.head.append(element);
+        return import(SDK_URL).catch(() => {
+            throw new Error("Impossibile caricare Supabase. Controlla la connessione e riprova.");
         });
     }
 
@@ -71,19 +61,28 @@
         initPromise = (async () => {
             const sdk = await loadSdk();
             const { url, publishableKey } = config();
-            client = sdk.createClient(url, publishableKey, {
-                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-            });
-            client.auth.onAuthStateChange((event, session) => {
-                // Do not await Supabase API calls from inside this callback.
-                notify(session?.user || null);
-                if (event === "PASSWORD_RECOVERY") {
-                    root.dispatchEvent?.(new CustomEvent("brat:auth-recovery"));
-                }
-            });
+            if (!client) {
+                client = sdk.createClient(url, publishableKey, {
+                    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
+                });
+                client.auth.onAuthStateChange((event, session) => {
+                    // Do not await Supabase API calls from inside this callback.
+                    notify(session?.user || null);
+                    if (event === "PASSWORD_RECOVERY") {
+                        root.dispatchEvent?.(new CustomEvent("brat:auth-recovery"));
+                    }
+                });
+            }
             const { data, error } = await client.auth.getSession();
             if (error) throw error;
             notify(data?.session?.user || null);
+            const tokenHash = await root.BratTikTokLogin?.completeSignIn();
+            if (tokenHash) {
+                const verified = await client.auth.verifyOtp({ token_hash: tokenHash, type: "email" });
+                if (verified.error) throw verified.error;
+                if (!verified.data?.session?.user) throw new Error("Sessione TikTok non disponibile. Riprova.");
+                notify(verified.data.session.user);
+            }
             return { configured: true, user: currentUser };
         })().catch(error => {
             initPromise = null;
@@ -146,6 +145,11 @@
             result((await requireClient()).auth.signInWithOAuth({
                 provider: "google", options: { redirectTo: redirectUrl() }
             })),
+        signInWithTikTok: async () => {
+            await requireClient();
+            if (!root.BratTikTokLogin) throw new Error("Login TikTok non disponibile.");
+            return root.BratTikTokLogin.signIn();
+        },
         signOut: async () => result((await requireClient()).auth.signOut({ scope: "local" })),
         rpc: async (name, params) => {
             const allowed = ["bratcode_create", "bratcode_active", "bratcode_revoke", "bratcode_import"];

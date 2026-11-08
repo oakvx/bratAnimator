@@ -20,8 +20,9 @@ Non usare `SUPABASE_SERVICE_ROLE_KEY` nel browser, in `assets/js/supabase-config
 
 Le migrazioni versionate sono:
 
-- `supabase/migrations/20261108_bratcode_light.sql`
-- `supabase/migrations/20261108_tiktok_link.sql`
+- `supabase/migrations/20261108000100_bratcode_light.sql`
+- `supabase/migrations/20261108000200_tiktok_link.sql`
+- `supabase/migrations/20261108000300_tiktok_login.sql`
 
 Distribuiscile con le modalità approvate per il progetto Supabase (SQL Editor / migrazioni CLI), **dopo un backup del database e una verifica dello schema**. Quindi esegui il controllo read-only:
 
@@ -39,7 +40,7 @@ Le RPC BRATCODE rimangono configurate per importazione anonima con codici monous
 - Registra la TikTok Developer App e richiedi Login Kit for Web, scope `user.info.basic`.
 - Configura nel pannello TikTok il redirect URI **esatto**:
   `https://PROJECT_REF.supabase.co/functions/v1/tiktok-link`
-- Distribuisci la funzione `supabase/functions/tiktok-link/index.ts` con il nome `tiktok-link`. In `supabase/config.toml` la verifica JWT della piattaforma è disattivata per il callback OAuth GET, che usa state CSRF monouso; il codice della funzione **verifica sempre esplicitamente l'utente** nelle richieste POST.
+- Distribuisci la funzione `supabase/functions/tiktok-link/index.ts` con il nome `tiktok-link`. In `supabase/config.toml` la verifica JWT della piattaforma è disattivata per il callback OAuth GET, che usa state CSRF monouso. Le azioni di collegamento, stato e scollegamento verificano esplicitamente il JWT; il login da ospite e il riscatto della sessione richiedono le prove browser e il ticket monouso descritti nella [guida Supabase e TikTok](../docs/supabase-tiktok-setup.md).
 - Configura come **secret di runtime server**, non come file nel repository:
 
 | Variabile | Descrizione |

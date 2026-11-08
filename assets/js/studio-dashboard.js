@@ -71,6 +71,8 @@
     function showAuth(mode = "login") {
         $("studioAuthDialog").hidden = false;
         $("studioAuthSetup").hidden = auth.configured();
+        $("studioAuthTikTokSetup").hidden = Boolean(window.BratTikTokLogin?.configured());
+        $("studioAuthTikTok").disabled = !window.BratTikTokLogin?.configured();
         setMode(typeof mode === "string" ? mode : "login");
         (authMode === "new-password" ? $("studioAuthPassword") : $("studioAuthEmail")).focus();
     }
@@ -80,15 +82,16 @@
 
     function profile() {
         const user = auth.user();
-        const label = user?.email || "Accedi / Registrati";
+        const label = (user?.app_metadata?.tiktok_open_id
+            ? user.user_metadata?.display_name || "Account TikTok" : user?.email) || "Accedi / Registrati";
         $("studioNavIdentity").textContent = label;
-        $("studioAvatar").textContent = user?.email?.slice(0, 1).toUpperCase() || "G";
+        $("studioAvatar").textContent = user ? label.slice(0, 1).toUpperCase() : "G";
         $("studioGreeting").textContent = user
-            ? (user.email || "Account collegato") + " · archivio locale"
+            ? label + " · archivio locale"
             : "Archivio locale · modalità ospite";
         $("studioAccountButton").textContent = user ? "Il mio account" : "Accedi / Registrati";
         $("studioAccountDescription").textContent = user
-            ? "Accesso effettuato con " + (user.email || "account verificato") + ". I progetti non sono sincronizzati online."
+            ? "Accesso effettuato con " + label + ". I progetti non sono sincronizzati online."
             : "Stai utilizzando Brat Animator come ospite. Non è necessario un account per creare o esportare video.";
         $("studioSettingsLogin").hidden = Boolean(user);
         $("studioSettingsLogout").hidden = !user;
@@ -536,6 +539,19 @@
         finally { busy = false; }
     }
 
+    async function tiktokLogin() {
+        if (busy) return;
+        busy = true;
+        $("studioAuthTikTok").disabled = true;
+        authMessage("Apertura accesso TikTok…");
+        try { await auth.signInWithTikTok(); }
+        catch (error) { authMessage(error.message || "Accesso TikTok non riuscito.", true); }
+        finally {
+            busy = false;
+            $("studioAuthTikTok").disabled = !window.BratTikTokLogin?.configured();
+        }
+    }
+
     async function transferGuest() {
         if (busy || !auth.user() || !editor.store) return;
         busy = true;
@@ -643,6 +659,7 @@
     $("studioLogoutDelete").addEventListener("click", () => doLogout(true));
     $("studioTransferGuest").addEventListener("click", transferGuest);
     $("studioAuthGoogle").addEventListener("click", googleLogin);
+    $("studioAuthTikTok").addEventListener("click", tiktokLogin);
     $("studioAuthForm").addEventListener("submit", submitAuth);
     window.addEventListener("brat:auth-recovery", () => {
         recoveryPending = true;

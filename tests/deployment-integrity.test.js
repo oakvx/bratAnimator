@@ -27,7 +27,7 @@ test("all local stylesheet/script entrypoint assets exist and are available offl
 test("offline asset list never contains credential files or TikTok server sources", () => {
     const sw = read("sw.js");
     assert.doesNotMatch(sw,/SERVICE_ROLE_KEY|TIKTOK_CLIENT_SECRET|supabase\/functions\//);
-    assert.match(sw,/brat-animator-v15-phases-8-12/);
+    assert.match(sw,/brat-animator-v16-supabase-tiktok-login/);
 });
 
 test("public Supabase config is fail closed until an operator sets it", () => {

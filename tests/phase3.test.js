@@ -82,7 +82,7 @@ test("native 7.css layout and sounds are restricted to the dashboard", () => {
 });
 
 test("BRATCODE SQL uses owner authentication, expiry and anonymous import access", () => {
-    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108_bratcode_light.sql"), "utf8");
+    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108000100_bratcode_light.sql"), "utf8");
     assert.match(sql, /auth\.uid\(\)/);
     assert.match(sql, /interval '24 hours'/);
     assert.match(sql, /gen_random_uuid/);
@@ -135,10 +135,10 @@ test("BRATCODE rejects overly nested payloads without uploading", () => {
 
 
 test("BRATCODE SQL validates nested payloads at the RPC trust boundary", () => {
-    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108_bratcode_light.sql"), "utf8");
+    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108000100_bratcode_light.sql"), "utf8");
     assert.equal((sql.match(/CREATE OR REPLACE FUNCTION public\.bratcode_create\(/g) || []).length, 1);
     assert.equal((sql.match(/CREATE OR REPLACE FUNCTION public\.bratcode_import\(/g) || []).length, 1);
-    assert.match(sql, /AS \$\$\nDECLARE/);
+    assert.match(sql, /AS \$\$\r?\nDECLARE/);
     assert.match(sql, /CREATE OR REPLACE FUNCTION public\.bratcode_safe_json/);
     assert.match(sql, /OR NOT public\.bratcode_safe_json\(p_snapshot\)/);
     assert.match(sql, /REVOKE ALL ON FUNCTION public\.bratcode_safe_json\(jsonb, integer\) FROM PUBLIC/);
@@ -157,7 +157,7 @@ test("Creator Studio registers potentially destructive controls once, outside na
 
 
 test("expired BRATCODE cleanup requires a privileged role", () => {
-    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108_bratcode_light.sql"), "utf8");
+    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108000100_bratcode_light.sql"), "utf8");
     assert.match(sql, /CREATE OR REPLACE FUNCTION public\.bratcode_cleanup\(\)/);
     assert.match(sql, /REVOKE ALL ON FUNCTION public\.bratcode_cleanup\(\) FROM PUBLIC, anon, authenticated/);
     assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.bratcode_cleanup\(\) TO service_role/);

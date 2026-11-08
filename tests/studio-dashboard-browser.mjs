@@ -143,6 +143,9 @@ try {
     assert.equal(await evaluate("(() => { const r=document.querySelector('#studioAuthDialog .window').getBoundingClientRect(); const top=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2); return Boolean(top?.closest('#studioAuthDialog')); })()"),true);
     assert.equal(await evaluate("document.styleSheets.length > 2 && [...document.styleSheets].some(s => s.href?.endsWith('/vendor/7css/7.scoped.css'))"),true);
     assert.equal(await evaluate("document.getElementById('studioAuthClose').getAttribute('aria-label')"),"Close");
+    assert.equal(await evaluate("document.getElementById('studioAuthTikTok').textContent"), "Continua con TikTok");
+    assert.equal(await evaluate("document.getElementById('studioAuthTikTok').disabled"), true);
+    assert.equal(await evaluate("document.getElementById('studioAuthTikTokSetup').hidden"), false);
     await evaluate("document.querySelector('[data-auth-mode=register]').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthSubmit').textContent"),"Crea account");
     assert.equal(await evaluate("document.querySelector('[data-auth-mode=register]').getAttribute('aria-selected')"),"true");

@@ -1,7 +1,7 @@
 // Brat Animator / TikTok Login Kit (Phase 5).
 // Deploy with verify_jwt=false: GET callback requires one-time CSRF state;
 // POST actions explicitly verify a Supabase JWT. Secrets never reach GitHub Pages.
-import { createClient } from "npm:@supabase/supabase-js@2.58.0";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 
 const env=(name:string)=>Deno.env.get(name)||"";
 const supabaseUrl=env("SUPABASE_URL");
@@ -40,9 +40,9 @@ function reply(req:Request,result:unknown,status=200){
     "Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",
     "X-Content-Type-Options":"nosniff"}});
 }
-function redirectToApp(state:"connected"|"failed"|"denied") {
+function redirectToApp(result:"connected"|"pending"|"failed"|"denied",state="",ticket="") {
   const target=new URL(appUrl);
-  target.hash="tiktok="+state;
+  target.hash=new URLSearchParams({tiktok:result,...(state?{state}:{}),...(ticket?{ticket}:{})}).toString();
   return new Response(null,{status:302,headers:{"Location":target.toString(),
     "Cache-Control":"no-store","Referrer-Policy":"no-referrer"}});
 }
@@ -50,6 +50,18 @@ function randomState(){
   const bytes=crypto.getRandomValues(new Uint8Array(32));
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function redirectLogin(result:"success"|"failed"|"denied",state:string,ticket="") {
+  const target=new URL(appUrl);
+  target.hash=new URLSearchParams({tiktok_login:result,state,...(ticket?{ticket}:{})}).toString();
+  return new Response(null,{status:302,headers:{"Location":target.toString(),
+    "Cache-Control":"no-store","Referrer-Policy":"no-referrer"}});
+}
+function authorizationUrl(state:string) {
+  const url=new URL("https://www.tiktok.com/v2/auth/authorize/");
+  url.search=new URLSearchParams({client_key:clientKey,scope:"user.info.basic",
+    response_type:"code",redirect_uri:redirectUri,state}).toString();
+  return url.toString();
 }
 async function digest(state:string){
   const hash=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(state));
@@ -113,7 +125,7 @@ async function freshAccess(link:Link):Promise<Link> {
 
 // Bound request bodies even if Transfer-Encoding is chunked or Content-Length
 // is absent. Only tiny JSON actions are accepted: never arbitrary uploads.
-async function readAction(req:Request):Promise<string>{
+async function readBody(req:Request):Promise<Record<string,unknown>>{
   if((req.headers.get("content-type")||"").split(";")[0].trim().toLowerCase()!=="application/json")
     throw Error("Content type unsupported");
   const reader=req.body?.getReader();
@@ -132,17 +144,46 @@ async function readAction(req:Request):Promise<string>{
     const obj=JSON.parse(data);
     if(!obj||typeof obj!=="object"||Array.isArray(obj)||typeof obj.action!=="string")
       throw Error("Invalid action");
-    return obj.action;
+    return obj;
   }finally{reader.releaseLock()}
 }
 
 async function handlePost(req:Request){
   if(req.headers.get("origin")!==appOrigin)return reply(req,{error:"Origin non autorizzata."},403);
+  let body:Record<string,unknown>;
+  try{body=await readBody(req);}
+  catch(_){return reply(req,{error:"Richiesta non valida."},400)}
+  const action=body.action;
+  if(action==="login"){
+    if(typeof body.challenge!=="string"||!/^[a-f0-9]{64}$/.test(body.challenge))
+      return reply(req,{error:"Richiesta di accesso non valida."},400);
+    const state=randomState();
+    // Supabase's gateway supplies x-forwarded-for. Never persist the raw IP.
+    const requester=(req.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
+    const {data,error}=await db.rpc("tiktok_start_login",{p_state_hash:await digest(state),
+      p_challenge:body.challenge,p_requester_hash:await digest(clientSecret+":"+requester)});
+    if(error)throw error;
+    if(!data)return reply(req,{error:"Troppi tentativi. Riprova tra dieci minuti."},429);
+    return reply(req,{url:authorizationUrl(state)});
+  }
+  if(action==="redeem"){
+    if(typeof body.state!=="string"||!/^[A-Za-z0-9_-]{43}$/.test(body.state)||
+      typeof body.ticket!=="string"||!/^[A-Za-z0-9_-]{43}$/.test(body.ticket)||
+      typeof body.verifier!=="string"||!/^[a-f0-9]{64}$/.test(body.verifier))
+      return reply(req,{error:"Sessione di accesso non valida."},400);
+    const {data:userId,error}=await db.rpc("tiktok_redeem_login",{
+      p_state_hash:await digest(body.state),p_challenge:await digest(body.verifier),p_ticket_hash:await digest(body.ticket)});
+    if(error)throw error;
+    if(!userId)return reply(req,{error:"Sessione scaduta o già utilizzata. Riprova."},403);
+    const account=await db.auth.admin.getUserById(userId);
+    if(account.error||!account.data.user?.email)throw Error("Login account unavailable");
+    const link=await db.auth.admin.generateLink({type:"magiclink",email:account.data.user.email});
+    if(link.error||link.data.user?.id!==userId||!link.data.properties?.hashed_token)
+      throw Error("Session generation failed");
+    return reply(req,{token_hash:link.data.properties.hashed_token});
+  }
   const userId=await authenticatedUser(req);
   if(!userId)return reply(req,{error:"Accedi prima a Brat Animator."},401);
-  let action="";
-  try{action=await readAction(req);}
-  catch(_){return reply(req,{error:"Richiesta non valida."},400)}
   if(action==="status"){
     const link=await getLink(userId);
     return reply(req,link?{connected:true,profile:{
@@ -150,21 +191,27 @@ async function handlePost(req:Request){
     },scopes:link.scopes}:{connected:false});
   }
   if(action==="start"){
+    if(typeof body.challenge!=="string"||!/^[a-f0-9]{64}$/.test(body.challenge))
+      return reply(req,{error:"Richiesta di collegamento non valida."},400);
     const {count,error:countError}=await db.from("tiktok_link_states")
       .select("state_hash",{count:"exact",head:true})
       .eq("user_id",userId).gt("created_at",new Date(Date.now()-600000).toISOString());
     if(countError)throw countError;
     if((count||0)>=5)return reply(req,{error:"Troppi tentativi. Riprova più tardi."},429);
     const state=randomState(),state_hash=await digest(state);
-    const {error}=await db.from("tiktok_link_states").insert({state_hash,user_id:userId});
+    const {error}=await db.from("tiktok_link_states").insert({state_hash,user_id:userId,challenge:body.challenge});
     if(error)throw error;
-    const url=new URL("https://www.tiktok.com/v2/auth/authorize/");
-    url.searchParams.set("client_key",clientKey);
-    url.searchParams.set("scope","user.info.basic");
-    url.searchParams.set("response_type","code");
-    url.searchParams.set("redirect_uri",redirectUri);
-    url.searchParams.set("state",state);
-    return reply(req,{url:url.toString()});
+    return reply(req,{url:authorizationUrl(state)});
+  }
+  if(action==="complete"){
+    if(typeof body.state!=="string"||!/^[A-Za-z0-9_-]{43}$/.test(body.state)||
+      typeof body.ticket!=="string"||!/^[A-Za-z0-9_-]{43}$/.test(body.ticket)||
+      typeof body.verifier!=="string"||!/^[a-f0-9]{64}$/.test(body.verifier))
+      return reply(req,{error:"Collegamento non valido."},400);
+    const {data,error}=await db.rpc("tiktok_complete_link",{p_state_hash:await digest(body.state),
+      p_challenge:await digest(body.verifier),p_ticket_hash:await digest(body.ticket),p_user_id:userId});
+    if(error)throw error;
+    return data?reply(req,{connected:true}):reply(req,{error:"Collegamento scaduto o avviato in un altro browser."},403);
   }
   if(action==="disconnect"){
     const link=await getLink(userId);
@@ -187,16 +234,55 @@ async function handlePost(req:Request){
   return reply(req,{error:"Azione sconosciuta."},400);
 }
 
+async function loginUser(account:{open_id:string;display_name:string;avatar_url:string}):Promise<string>{
+  const identity=await db.from("tiktok_identities").select("user_id").eq("open_id",account.open_id).maybeSingle();
+  if(identity.error)throw identity.error;
+  if(identity.data)return identity.data.user_id;
+  // An explicitly linked TikTok account may sign in to its existing owner.
+  // Never match accounts by a client-supplied email or display name.
+  const connection=await db.from("tiktok_connections").select("user_id").eq("open_id",account.open_id).maybeSingle();
+  if(connection.error)throw connection.error;
+  let userId=connection.data?.user_id;
+  if(!userId){
+    const email="tiktok-"+await digest(clientKey+":"+account.open_id)+"@identity.brat.invalid";
+    const created=await db.auth.admin.createUser({email,email_confirm:true,
+      app_metadata:{tiktok_open_id:account.open_id},
+      user_metadata:{display_name:account.display_name,avatar_url:account.avatar_url}});
+    if(created.error||!created.data.user){
+      const recovered=await db.rpc("tiktok_find_created_user",{p_open_id:account.open_id});
+      if(recovered.error||!recovered.data)throw Error("Unable to create TikTok account");
+      userId=recovered.data;
+    }else userId=created.data.user.id;
+  }
+  const saved=await db.from("tiktok_identities").insert({open_id:account.open_id,user_id:userId});
+  if(saved.error){
+    const existing=await db.from("tiktok_identities").select("user_id").eq("open_id",account.open_id).maybeSingle();
+    if(existing.error||!existing.data)throw saved.error;
+    return existing.data.user_id;
+  }
+  return userId;
+}
+
 async function handleCallback(req:Request){
   const query=new URL(req.url).searchParams;
   const state=query.get("state")||"";
   if(!/^[A-Za-z0-9_-]{43}$/.test(state))
     return new Response("OAuth state mancante.",{status:400});
-  const {data:userId,error}=await db.rpc("tiktok_claim_link_state",{p_state_hash:await digest(state)});
-  if(error||!userId)return new Response("Sessione OAuth scaduta o già utilizzata.",{status:403});
-  if(query.has("error"))return redirectToApp("denied");
+  const stateHash=await digest(state);
+  const login=await db.rpc("tiktok_claim_login_state",{p_state_hash:stateHash});
+  if(login.error)throw login.error;
+  let userId:string|null=null;
+  if(!login.data){
+    const link=await db.rpc("tiktok_claim_link_state",{p_state_hash:stateHash});
+    if(link.error||!link.data)return new Response("Sessione OAuth scaduta o già utilizzata.",{status:403});
+    userId=link.data;
+  }
+  const finish=(result:"connected"|"failed"|"denied",ticket="")=>login.data
+    ?redirectLogin(result==="connected"?"success":result,state,ticket)
+    :redirectToApp(result==="connected"?"pending":result,state,ticket);
+  if(query.has("error"))return finish("denied");
   const code=query.get("code")||"";
-  if(!code||code.length>2048)return redirectToApp("failed");
+  if(!code||code.length>2048)return finish("failed");
   try{
     const tokens=await tiktokForm(TOKEN,{client_key:clientKey,
       client_secret:clientSecret,code,grant_type:"authorization_code",redirect_uri:redirectUri});
@@ -206,19 +292,35 @@ async function handleCallback(req:Request){
     if(!access||!refresh||!openId)throw Error("Invalid OAuth token response");
     const account=await profile(access);
     if(account.open_id!==openId)throw Error("Open ID mismatch");
-    const {error:saveError}=await db.from("tiktok_connections").upsert({
+    if(login.data)userId=await loginUser(account);
+    else {
+      const identity=await db.from("tiktok_identities").select("user_id").eq("open_id",openId).maybeSingle();
+      if(identity.error||(identity.data&&identity.data.user_id!==userId))throw Error("TikTok account already assigned");
+    }
+    const connection={
       user_id:userId,open_id:openId,display_name:account.display_name,
       avatar_url:account.avatar_url,scopes:String(tokens.scope||"user.info.basic"),
       access_token:access,refresh_token:refresh,
       access_expires_at:new Date(Date.now()+seconds(tokens.expires_in,7200)*1000).toISOString(),
       refresh_expires_at:new Date(Date.now()+seconds(tokens.refresh_expires_in,15552000)*1000).toISOString(),
       updated_at:new Date().toISOString()
-    },{onConflict:"user_id"});
-    if(saveError)throw saveError;
-    return redirectToApp("connected");
+    };
+    const ticket=randomState();
+    if(login.data){
+      const {error:saveError}=await db.from("tiktok_connections").upsert(connection,{onConflict:"user_id"});
+      if(saveError)throw saveError;
+      const ready=await db.from("tiktok_login_states").update({user_id:userId,ticket_hash:await digest(ticket)})
+        .eq("state_hash",stateHash).gt("expires_at",new Date().toISOString()).select("state_hash").single();
+      if(ready.error)throw ready.error;
+    }else{
+      const staged=await db.from("tiktok_link_states").update({connection,ticket_hash:await digest(ticket)})
+        .eq("state_hash",stateHash).gt("expires_at",new Date().toISOString()).select("state_hash").single();
+      if(staged.error)throw staged.error;
+    }
+    return finish("connected",ticket);
   }catch(_){
     // Do not log codes, tokens or provider response details.
-    return redirectToApp("failed");
+    return finish("failed");
   }
 }
 Deno.serve(async req=>{

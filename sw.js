@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v15-phases-8-12";
+const CACHE_NAME = "brat-animator-v16-supabase-tiktok-login";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -31,6 +31,7 @@ const APP_ASSETS = [
   "./assets/js/win7-shell.js",
   "./assets/js/win7-start-menu.js",
   "./assets/js/tiktok-config.js",
+  "./assets/js/tiktok-login.js",
   "./assets/js/tiktok-link.js",
   "./assets/js/sound-hub-ui.js",
   "./assets/js/dashboard-audio.js",
@@ -71,7 +72,8 @@ self.addEventListener("fetch", (event) => {
   // HTML navigations and public auth configuration must not remain stuck
   // behind old cache-first responses after the site has been updated.
   const freshFirst = event.request.mode === "navigate"
-    || requestUrl.pathname.endsWith("/assets/js/supabase-config.js");
+    || requestUrl.pathname.endsWith("/assets/js/supabase-config.js")
+    || requestUrl.pathname.endsWith("/assets/js/tiktok-config.js");
   if (freshFirst) {
     event.respondWith(
       fetch(event.request).then((response) => {

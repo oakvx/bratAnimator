@@ -30,6 +30,7 @@ jobs:
           node --check assets/js/export-preflight.js
           node --check assets/js/editor-templates.js
           node --check assets/js/tiktok-link.js
+          node --check assets/js/tiktok-login.js
           node --check assets/js/tiktok-config.js
           node --check assets/js/bratcode.js
           node --check assets/js/backup-reminders.js
@@ -83,3 +84,5 @@ jobs:
           deno-version: v2.x
       - name: Validate Supabase Edge Function TypeScript
         run: deno check supabase/functions/tiktok-link/index.ts
+      - name: Verify TikTok SQL migrations and authorization
+        run: deno run --no-lock --allow-read --allow-env --allow-sys tests/tiktok-database.mjs

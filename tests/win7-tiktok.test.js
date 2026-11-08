@@ -74,7 +74,7 @@ test("TikTok secrets are restricted to the Edge Function, never GitHub Pages", (
     assert.doesNotMatch(backend,/console\.(?:log|error|debug)/);
 });
 test("TikTok tables prohibit public token access and use one-time OAuth state", () => {
-    const sql=read("supabase/migrations/20261108_tiktok_link.sql");
+    const sql=read("supabase/migrations/20261108000200_tiktok_link.sql");
     assert.match(sql,/ALTER TABLE public\.tiktok_connections ENABLE ROW LEVEL SECURITY/);
     assert.match(sql,/ALTER TABLE public\.tiktok_link_states ENABLE ROW LEVEL SECURITY/);
     assert.match(sql,/REVOKE ALL ON TABLE public\.tiktok_connections FROM PUBLIC, anon, authenticated/);
