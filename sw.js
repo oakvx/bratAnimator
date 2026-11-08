@@ -21,6 +21,7 @@ const APP_ASSETS = [
 "./assets/js/app.js",
   "./assets/js/motion.js",
   "./assets/js/kinetic.js",
+  "./assets/js/lyrics-case.js",
   "./assets/js/project-assets.js",
   "./assets/js/editor-v5.js",
   "./assets/js/italian-ui.js",
