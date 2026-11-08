@@ -184,6 +184,23 @@
             };
         });
     }
+    // The full verse layout is measured once, not again on every video frame.
+    // Cache is bounded and scoped to each CanvasRenderingContext2D.
+    const geometryCache = new WeakMap();
+    function cachedScene(ctx, words, width, height, options, sceneSeed) {
+        let cache = geometryCache.get(ctx);
+        if (!cache) {
+            cache = new Map();
+            geometryCache.set(ctx, cache);
+        }
+        const key = JSON.stringify([sceneSeed, width, height, options,
+            words.map(word => [word.text, word.start, word.end])]);
+        if (cache.has(key)) return cache.get(key);
+        const layout = measureScene(ctx, words, width, height, options, sceneSeed);
+        if (cache.size >= 12) cache.delete(cache.keys().next().value);
+        cache.set(key, layout);
+        return layout;
+    }
     function buildFrame(ctx, line, time, width, height, style, seed = 1337) {
         if (!ctx || width <= 0 || height <= 0 || !line) return { groups: [], activeIndex: -1 };
         const options = normalize(style);
@@ -200,7 +217,7 @@
         const sceneSeed = String(seed) + ":" +
             (line.sourceRowId || line.lineIndex || line.displayStart || line.text || "") +
             ":stanza";
-        const layout = measureScene(ctx, words, width, height, options, sceneSeed);
+        const layout = cachedScene(ctx, words, width, height, options, sceneSeed);
         // Instant, opaque reveal at each word's timestamp. No fade, scale pulse,
         // opacity transition or repeated whole-frame flash for rapid lyrics.
         const revealed = layout.filter(node => time >= node.start);
