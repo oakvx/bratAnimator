@@ -503,3 +503,46 @@ body.studio-dashboard-open::before {
   .studio-library-tools button { flex:1; }
   .studio-project-actions button { flex:1; }
 }
+
+/* Scoped 7.css component: close-session dialog in a Windows 7 glass window. */
+#studioLogoutDialog.win7 .studio-modal.window.active {
+  display:block;
+  position:relative;
+  width:min(100%,460px);
+  padding:0;
+  max-height:min(90dvh,790px);
+  overflow:auto;
+  background:linear-gradient(135deg,rgba(246,255,255,.98),rgba(203,239,253,.98));
+  border:1px solid #fff;
+  border-radius:13px;
+  box-shadow:0 20px 60px #1755788a,inset 0 2px #fff;
+}
+#studioLogoutDialog.win7 .studio-modal.window .title-bar {
+  min-height:37px;
+  padding:4px 15px;
+  background:linear-gradient(180deg,#fff9,rgba(177,224,250,.86) 44%,rgba(99,181,224,.78));
+  color:#15527d;
+}
+#studioLogoutDialog.win7 .studio-modal.window .title-bar-text {
+  color:#15527d;
+  font:700 13px/1.2 "Segoe UI",sans-serif;
+  text-shadow:0 1px #fff;
+}
+#studioLogoutDialog.win7 .studio-modal.window .window-body {
+  padding:25px;
+  margin:0;
+  color:#1a6388;
+  font-family:var(--font-ui,system-ui);
+}
+#studioLogoutDialog.win7 .studio-modal-close {
+  position:absolute;
+  z-index:3;
+  top:4px;
+  right:5px;
+  padding:1px 8px;
+  min-height:29px;
+  min-width:34px;
+  color:#1a4b66;
+  border:1px solid #9dcbe2;
+  background:linear-gradient(#fff,#b5e9ff 48%,#7cc0e8 50%,#c6f5ff);
+}
