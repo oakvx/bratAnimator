@@ -6,6 +6,11 @@
     // Only editor-owned labels are translated. Song names, lyrics, custom preset
     // names, file names, editable values and the rendered video remain untouched.
     const phrases = {
+        "kinetic collage": "collage cinetico", "kinetic collage (stacked words)": "collage cinetico (parole sfalsate)",
+        "kinetic collage · blue / cream": "collage cinetico · blu / crema",
+        "words on screen": "parole sullo schermo", "size contrast": "contrasto dimensioni", "transition speed": "velocità transizione",
+        "Words change size and position to follow the music. Optimized for short-form lyric videos.": "Le parole cambiano dimensione e posizione seguendo la musica. Ottimizzato per lyric video brevi.",
+        "Use the blue collage preset for a blue/cream palette that alternates at each lyric line. Word timing comes from LRC or imported enhanced timestamps.": "Usa il preset collage blu per alternare blu e crema a ogni frase. La sincronizzazione usa i tempi LRC o i timestamp avanzati importati.",
         "skip to editor": "vai all’editor", "main menu": "menu principale", "Brat Animator editor": "editor Brat Animator",
         "editor commands": "comandi editor", "editor controls": "controlli editor", "editor sections": "sezioni editor",
         "theme controls": "controlli tema", "language selector": "selettore lingua", "project status": "stato progetto",

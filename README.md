@@ -4,6 +4,12 @@
 
 Live demo: **https://oakvx.github.io/bratAnimator/**
 
+## Kinetic collage (word composition)
+
+Select **Design → Lyrics display → Kinetic collage (stacked words)**, or apply **Style preset → Kinetic collage · blue / cream**. This mode arranges the currently sung and recently sung words as a moving cluster with deliberately varied type sizes, in the style of short-form lyric edits. It is not a CSS overlay: the same Canvas code is used for preview, PNG and MP4/WebM rendering.
+
+The visible words (2–9), size contrast and transition speed can be adjusted in a dedicated control group. The blue/cream preset uses a blue canvas with cream text and swaps the palette on each lyric line. Original LRC word timings are respected, and lines without native per-word timing use the existing timing estimator. Frame composition is seeded/deterministic, including after seeking, on reopening and during export. Existing Brat/Music/Cinematic modes remain available.
+
 ## Version 5.0
 
 - Simple and advanced editor modes, with a persistent preference. New users start in simple mode; existing users retain the full editor.

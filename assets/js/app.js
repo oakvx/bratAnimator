@@ -12,6 +12,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const BratTiming = window.BratTiming;
         const BratMedia = window.BratMedia || {};
         const BratExport = window.BratExport || {};
+        const BratKinetic = window.BratKinetic;
         const PROJECT_VERSION = BratCore.PROJECT_VERSION || 5;
 
         const previewCanvas = document.getElementById("previewCanvas");
@@ -302,6 +303,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 letterChunkSize: 2,
                 lineSpacing: 0.92,
                 lyricsMode: "brat",
+                kineticWords: 6,
+                kineticVariation: 72,
+                kineticMotion: 55,
                 musicAlign: "left",
                 musicWordHighlight: true,
                 musicActiveScale: 1.16,
@@ -1831,9 +1835,52 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (options.guides) drawSafeZones(ctx, width, height);
         }
 
+        // Kinetic collage is drawn through the same scene function as normal preview,
+        // PNG captures and MP4/WebM exports. No CSS text overlays are involved.
+        function drawKineticScene(ctx, width, height, timeSec, options = {}) {
+            const line = state.timeline.find(item => timeSec >= item.displayStart && timeSec < item.displayEnd);
+            const placeholder = !state.timeline.length
+                ? { text: "brat animator", displayStart: 0, vocalEnd: 2,
+                    timedWords: [{ text: "brat", start: 0, end: 1 }, { text: "animator", start: 0, end: 2 }] }
+                : null;
+            const theme = getFrameTheme(timeSec);
+            ctx.save();
+            ctx.clearRect(0, 0, width, height);
+            if (!options.textOnly) {
+                drawConfiguredBackground(ctx, width, height, theme);
+                if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
+            }
+            if (BratKinetic) {
+                const frame = state.timeline.length
+                    ? BratKinetic.buildTimelineFrame(ctx, state.timeline, timeSec, width, height, state.style, state.seed)
+                    : BratKinetic.buildFrame(ctx, placeholder, timeSec, width, height, state.style, state.seed);
+                ctx.textAlign = "center";
+                ctx.textBaseline = "alphabetic";
+                ctx.fillStyle = theme.text;
+                ctx.filter = "blur(" + (state.style.blur || 0) + "px)";
+                for (const group of frame.groups) {
+                    if (group.alpha <= 0) continue;
+                    ctx.save();
+                    ctx.globalAlpha = group.alpha;
+                    ctx.translate(0, group.translateY);
+                    for (const word of group.nodes) {
+                        ctx.font = "400 " + word.size + "px " + (state.style.fontFamily || "Arial, Helvetica, sans-serif");
+                        ctx.fillText(word.text, word.x, word.y);
+                    }
+                    ctx.restore();
+                }
+            }
+            ctx.restore();
+            if (options.guides) drawSafeZones(ctx, width, height);
+        }
+
         function drawSceneContent(ctx, width, height, timeSec, options = {}) {
             if (state.style.lyricsMode === "music" || state.style.lyricsMode === "beautiful") {
                 drawMusicSyncedScene(ctx, width, height, timeSec, options);
+                return;
+            }
+            if (state.style.lyricsMode === "kinetic") {
+                drawKineticScene(ctx, width, height, timeSec, options);
                 return;
             }
             const visible = getVisibleTextAt(timeSec);
@@ -3159,6 +3206,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 letterChunkSize: clamp(Math.round(Number(letterChunkSizeInput?.value) || state.style.letterChunkSize || 2), 1, 12),
                 lineSpacing: (Number(lineSpacingInput?.value) || 92) / 100,
                 lyricsMode: lyricsDisplayModeSelect?.value || state.style.lyricsMode || "brat",
+                kineticWords: clamp(Math.round(Number(document.getElementById("kineticWordsInput")?.value ?? state.style.kineticWords ?? 6)), 2, 9),
+                kineticVariation: clamp(Number(document.getElementById("kineticVariationInput")?.value ?? state.style.kineticVariation ?? 72), 0, 100),
+                kineticMotion: clamp(Number(document.getElementById("kineticMotionInput")?.value ?? state.style.kineticMotion ?? 55), 0, 100),
                 musicAlign: musicAlignSelect?.value || state.style.musicAlign || "left",
                 musicWordHighlight: Boolean(wordHighlightCheckbox?.checked),
                 musicActiveScale: (Number(musicActiveScaleInput?.value) || 116) / 100,
@@ -3177,6 +3227,13 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 beautifulEdgeFade: (Number(beautifulEdgeFadeInput?.value) || 70) / 100,
                 safeZones: Boolean(safeZonesCheckbox?.checked)
             };
+            const kineticPanel = document.getElementById("kineticSettings");
+            if (kineticPanel) kineticPanel.hidden = state.style.lyricsMode !== "kinetic";
+            for (const [inputId, outputId, suffix] of [["kineticWordsInput", "kineticWordsValue", ""], ["kineticVariationInput", "kineticVariationValue", "%"], ["kineticMotionInput", "kineticMotionValue", "%"]]) {
+                const input = document.getElementById(inputId);
+                const output = document.getElementById(outputId);
+                if (input && output) output.textContent = input.value + suffix;
+            }
             syncTextSettingsControls();
         }
 
@@ -3195,6 +3252,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (colorSwapUnitSelect) colorSwapUnitSelect.value = colorSwap.unit;
             if (colorSwapIntervalInput) colorSwapIntervalInput.value = colorSwap.interval;
             if (lyricsDisplayModeSelect) lyricsDisplayModeSelect.value = style.lyricsMode || "brat";
+            if (document.getElementById("kineticWordsInput")) document.getElementById("kineticWordsInput").value = style.kineticWords ?? 6;
+            if (document.getElementById("kineticVariationInput")) document.getElementById("kineticVariationInput").value = style.kineticVariation ?? 72;
+            if (document.getElementById("kineticMotionInput")) document.getElementById("kineticMotionInput").value = style.kineticMotion ?? 55;
             if (musicAlignSelect) musicAlignSelect.value = style.musicAlign || "left";
             if (wordHighlightCheckbox) wordHighlightCheckbox.checked = style.musicWordHighlight !== false;
             if (musicActiveScaleInput) musicActiveScaleInput.value = Math.round((style.musicActiveScale || 1.16) * 100);
@@ -3231,6 +3291,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 "white-label": { bgColor: "#f6f6f2", textColor: "#111111", fontScale: 0.96, blur: 0.15, verticalPosition: 0, stretch: 1, letterSpacing: 0, lineSpacing: 0.96, wordAnimation: { mode: "fade", intensity: 0.55, color: "#111111" } },
                 pink: { bgColor: "#ff8fcb", textColor: "#111111", fontScale: 1.04, blur: 0.55, verticalPosition: 0, stretch: 0.96, letterSpacing: 0, lineSpacing: 0.92, wordAnimation: { mode: "pop", intensity: 0.68, color: "#ffffff" } },
                 blue: { bgColor: "#6db7ff", textColor: "#06111f", fontScale: 1.02, blur: 0.45, verticalPosition: 0, stretch: 0.98, letterSpacing: 0, lineSpacing: 0.92, wordAnimation: { mode: "scale", intensity: 0.62, color: "#ffffff" } },
+                "kinetic-blue": { lyricsMode: "kinetic", bgColor: "#205392", textColor: "#f8f5ed", backgroundFill: { type: "solid", color2: "#205392", angle: 135 }, colorSwap: { enabled: true, unit: "line", interval: 1 }, fontFamily: "Arial, Helvetica, sans-serif", fontScale: 1, blur: 0, stretch: 1, letterSpacing: 0, kineticWords: 6, kineticVariation: 72, kineticMotion: 55 },
                 "beautiful-lyrics": { bgColor: "#07090d", textColor: "#f5f5f7", fontFamily: APPLE_LIKE_FONT_STACK, fontScale: 1.00, blur: 0.00, verticalPosition: 0, stretch: 1, letterSpacing: -2, lineSpacing: 1.00, lyricsMode: "beautiful", musicAlign: "center", musicActiveScale: 1.22, musicDimOpacity: 0.20, musicScrollPosition: 0.52, musicWordHighlight: true, wordAnimation: { mode: "progress", intensity: 0.86, color: "#ffffff" }, beautifulDynamicBg: true, beautifulSideVocals: true, beautifulMotion: 0.86, beautifulDepth: 0.96, beautifulGlow: 0.88, beautifulEdgeFade: 0.92 },
                 "beautiful-live": { bgColor: "#07090d", textColor: "#f5f5f7", fontFamily: APPLE_LIKE_FONT_STACK, fontScale: 1.00, blur: 0.00, verticalPosition: 0, stretch: 1, letterSpacing: -2, lineSpacing: 1.00, lyricsMode: "beautiful", musicAlign: "center", musicActiveScale: 1.22, musicDimOpacity: 0.20, musicScrollPosition: 0.52, musicWordHighlight: true, wordAnimation: { mode: "glow", intensity: 0.90, color: "#ffffff" }, beautifulDynamicBg: true, beautifulSideVocals: true, beautifulMotion: 0.86, beautifulDepth: 0.96, beautifulGlow: 0.88, beautifulEdgeFade: 0.92 }
             };
@@ -4915,7 +4976,7 @@ async function updateExportEstimate() {
 
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
-        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
+        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, document.getElementById("kineticWordsInput"), document.getElementById("kineticVariationInput"), document.getElementById("kineticMotionInput"), beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
                 if (themePresetSelect && [bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput].includes(control)) {
                     themePresetSelect.value = "custom";

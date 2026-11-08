@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v6-studio-1";
+const CACHE_NAME = "brat-animator-v6-studio-kinetic-2";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const APP_ASSETS = [
   "./assets/js/i18n.js",
   "./assets/js/app.js",
   "./assets/js/motion.js",
+  "./assets/js/kinetic.js",
   "./assets/js/project-assets.js",
   "./assets/js/editor-v5.js",
   "./assets/js/italian-ui.js",
