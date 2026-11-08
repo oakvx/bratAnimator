@@ -13,13 +13,14 @@
 | Layer | Implementation |
 | --- | --- |
 | Runtime | Browser-native ECMAScript (ES2022+); HTML5; CSS3 |
-| UI | Vanilla DOM; Classic Desktop UI; Windows 7-style Explorer layout; scoped 7.css; no UI framework |
+| UI | Vanilla DOM; 7.css v0.21.1; Windows 7 Aero window manager, native title controls, taskbar and Explorer layout |
 | Rendering | Canvas 2D; deterministic frame compositor; timestamp-driven scene evaluation |
 | Media | Web Audio API; HTMLMediaElement; MediaRecorder; browser codec support |
 | Export | MP4/WebM pipelines; local video recording; PNG frame export; bundled mp4-muxer |
 | Persistence | IndexedDB (project snapshots and binary media); localStorage (light preferences/fallback) |
 | Project interchange | Versioned JSON snapshots; portable .brat.zip archives via bundled fflate |
 | Authentication | Optional Supabase Auth: email/password, email OTP, Google OAuth |
+| External OAuth | Optional TikTok Login Kit for Web: Supabase Edge Function (Deno/TypeScript), OAuth 2.0, server-side token vault |
 | Delivery | GitHub Pages; static assets; service worker / Progressive Web App |
 | Tests | Node.js native test runner; browser smoke tests using Chrome DevTools Protocol |
 | Build | No application bundler, JavaScript framework, Node.js server, or required npm install |
@@ -43,6 +44,8 @@ The browser owns the application state and performs video rendering locally. Pro
           +-- Portable archives (project-assets.js, fflate)
           |
           +-- Optional identity (auth-client.js, Supabase Auth)
+          |
+          +-- Optional TikTok link (tiktok-link.js, Supabase Edge Function)
 
 Key properties:
 
@@ -89,7 +92,7 @@ Never place a Supabase secret/service_role key or OAuth client secret in browser
 
 **BRATCODE** is designed as an optional short-lived, server-backed exchange of project structure, **not** a cloud synchronization mechanism. Media binaries and credentials must never be included. Back-end deployment and access-control configuration are required before public code generation can operate.
 
-TikTok account linking, favorites access, and upload workflows remain separate planned integrations, subject to official API authorization.
+The optional **TikTok account-link flow** is implemented but remains disabled until official Login Kit authorization, Supabase Edge Function deployment, and provider configuration are completed. Music favorites and publishing are not part of this phase. See docs/phase-5-windows7-tiktok-link.md.
 
 ## Development
 
@@ -104,6 +107,8 @@ Automated checks:
     node --check assets/js/kinetic.js
     node --check assets/js/sound-hub.js
     node --check assets/js/sound-hub-ui.js
+    node --check assets/js/win7-shell.js
+    node --check assets/js/tiktok-link.js
 
 Optional Chrome browser audit:
 
