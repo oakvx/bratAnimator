@@ -1,0 +1,266 @@
+/* Brat Animator · native 7.css Win7 shell
+ * Official 7.css stylesheet (MIT), version pinned, scoped to .win7.
+ * https://github.com/khang-nd/7.css
+ * This file is intentionally loaded AFTER classic-desktop.css so the actual
+ * library caption controls are not replaced by generic gradient buttons.
+ */
+@import url("https://unpkg.com/7.css@0.21.1/dist/7.scoped.css");
+
+:root {
+  --brat-taskbar-height: 48px;
+  --brat-navigation-width: 192px;
+}
+body.studio-dashboard-open {
+  background-color:#0a6dba;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 75% 27%, rgba(250,255,255,.28), transparent 70%),
+    radial-gradient(ellipse 90% 45% at 17% 103%, rgba(100,215,125,.72), transparent 80%),
+    linear-gradient(158deg,transparent 48%,rgba(219,255,253,.24) 50%,transparent 53%),
+    linear-gradient(20deg,transparent 40%,rgba(180,255,255,.13) 42%,transparent 47%),
+    linear-gradient(135deg,#0575cb 0%,#4ca7eb 42%,#a7dbf4 69%,#4cab89 100%);
+  background-attachment:fixed;
+}
+body.studio-dashboard-open .studio-dashboard {
+  margin-left:0 !important;
+  padding-bottom:var(--brat-taskbar-height);
+}
+#studioDashboard .studio-dashboard-inner {
+  max-width:1380px;
+  padding:20px 26px calc(var(--brat-taskbar-height) + 25px);
+  transition:max-width .17s ease,padding .17s ease;
+}
+#studioDashboard #studioMainWindow.studio-classic-window.window.glass.active {
+  --w7-w-bg:rgba(126,200,244,.45);
+  --w7-w-bd:#f4fdff;
+  min-height: min(780px,calc(100dvh - var(--brat-taskbar-height) - 40px));
+  border:1px solid rgba(255,255,255,.94);
+  box-shadow:0 18px 55px rgba(1,32,67,.55),inset 0 1px rgba(255,255,255,.9);
+  background:rgba(184,226,255,.4);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+#studioDashboard #studioMainWindow > .title-bar {
+  min-height:36px;
+  box-sizing:border-box;
+  padding:0 6px 0 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(180deg,rgba(255,255,255,.80),rgba(204,237,255,.7) 49%,rgba(87,169,218,.61));
+  border-bottom:1px solid rgba(75,147,197,.5);
+}
+#studioDashboard .title-bar-text {
+  display:flex;align-items:center;gap:9px;
+  font:600 12px "Segoe UI",Tahoma,sans-serif;
+  color:#164770;
+  text-shadow:0 1px 1px rgba(255,255,255,.96);
+}
+#studioDashboard .studio-title-icon {
+  flex:0 0 18px;display:block;border-radius:2px;
+  box-shadow:0 1px 2px rgba(7,50,70,.23);
+}
+#studioDashboard .title-bar-controls,
+.studio-modal-backdrop.win7 .title-bar-controls {
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-end;
+  margin-left:auto;
+  gap:0;
+}
+/* Native 7.css owns the graphics/background sprites of these buttons.
+ * Exclude them from the general app button style and only set layout. */
+#studioDashboard .title-bar-controls button,
+.studio-modal-backdrop.win7 .title-bar-controls button {
+  padding:0 !important;
+  margin:0;
+  font-size:0 !important;
+  line-height:0;
+  border-radius:0;
+  min-height:20px;
+  height:20px;
+  min-width:28px;
+  cursor:pointer;
+}
+#studioDashboard .title-bar-controls button[aria-label="Close"],
+.studio-modal-backdrop.win7 .title-bar-controls button[aria-label="Close"] {
+  min-width:44px;
+}
+#studioDashboard .title-bar-controls button:focus-visible,
+.studio-modal-backdrop.win7 .title-bar-controls button:focus-visible {
+  outline:2px solid #123f73;
+  outline-offset:1px;
+}
+#studioDashboard .studio-classic-body-grid {
+  display:grid;
+  grid-template-columns:var(--brat-navigation-width) minmax(0,1fr);
+  width:100%;
+  min-height:670px;
+}
+#studioDashboard #studioNav.studio-nav.win7 {
+  position:relative !important;
+  inset:auto !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:100%;
+  box-sizing:border-box;
+  z-index:auto;
+  padding:16px 10px 15px;
+  box-shadow:inset -1px 0 rgba(255,255,255,.9);
+  background:linear-gradient(180deg,#f2f8fd 0%,#e1edf9 60%,#d4e8f7);
+  border:0;
+  border-right:1px solid #bfd1df;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+#studioDashboard .studio-main-content {
+  box-sizing:border-box;
+  min-width:0;
+  min-height:600px;
+  background:rgba(255,255,255,.96);
+}
+#studioNav .studio-nav-brand {
+  display:flex;
+  gap:9px;
+  align-items:center;
+  padding:1px 7px 14px;
+  color:#224b72;
+  font-size:14px;
+  border-bottom:1px solid #c0d7e7;
+}
+#studioNav .studio-original-logo { flex:0 0 38px;display:block;border-radius:5px;box-shadow:0 2px 3px #4279a75e; }
+#studioNav .studio-brand-sub,.studio-mark { display:none; }
+#studioNav .studio-nav-bottom { margin-top:auto; }
+#studioNav .studio-nav-account { width:100%; }
+#studioNav .studio-nav-link {
+  display:flex;align-items:center;gap:9px;
+  padding:7px 10px;
+  color:#2e5577;
+  text-shadow:none;
+  border:1px solid transparent;
+  border-radius:3px;
+  background:transparent;
+  box-shadow:none;
+  font-size:12px;
+}
+#studioNav .studio-nav-link.is-active,
+#studioNav .studio-nav-link[aria-current="page"] {
+  background:linear-gradient(#f4fbff,#d0e9fc 53%,#b6dcf7);
+  border:1px solid #93c6e6;
+  box-shadow:inset 0 1px #fff;
+}
+#studioNav .studio-nav-link:hover {
+  border:1px solid #b1d5ed;
+  background:#e5f4ff;
+}
+#studioDashboard .studio-dashboard-head { position:relative; }
+body.studio-editor-open .studio-dashboard {display:none;}
+body.studio-editor-open .topbar {left:0 !important;}
+body.studio-editor-open .panel {left:0 !important;}
+body.studio-editor-open .page-shell,
+body.studio-editor-open.panel-closed .page-shell {margin-left:var(--panel-width,340px) !important;}
+body.studio-editor-open.panel-closed .page-shell {margin-left:0 !important;}
+/* Real desktop/taskbar behavior: minimized/closed window is not interactive. */
+.studio-desktop {position:fixed;inset:0 0 var(--brat-taskbar-height);padding:24px 25px;z-index:2;}
+.studio-desktop[hidden] {display:none !important;}
+.studio-desktop-shortcut {
+  appearance:none;display:grid;justify-items:center;gap:7px;
+  width:98px;min-height:109px;
+  border:1px solid transparent;border-radius:3px;
+  background:transparent;color:white;cursor:pointer;
+  text-shadow:0 1px 3px #174668,0 0 3px #113b65;
+  font:12px "Segoe UI",Tahoma,sans-serif;
+}
+.studio-desktop-shortcut:hover {border:1px solid #e9f8ffae;background:#ffffff36;}
+.studio-desktop-shortcut img {filter:drop-shadow(0 4px 3px #15496a8e);border-radius:7px;}
+.studio-taskbar {position:fixed;bottom:0;left:0;right:0;height:var(--brat-taskbar-height);z-index:85;
+  display:none;align-items:center;gap:6px;padding:0 11px;
+  border-top:1px solid #b7def8;
+  box-shadow:inset 0 1px #ffffffa8,0 -3px 12px #20547b52;
+  background:linear-gradient(180deg,rgba(229,247,255,.94),rgba(123,188,220,.91) 38%,rgba(52,124,175,.92) 62%,rgba(100,174,211,.95));
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+body.studio-dashboard-open .studio-taskbar {display:flex;}
+.studio-taskbar button {border:1px solid transparent;cursor:pointer;background:transparent;display:grid;place-items:center;}
+.studio-start-orb {
+  flex:0 0 40px;width:40px;height:40px;border-radius:50% !important;
+  background:radial-gradient(circle at 35% 18%,#f0ffd6,#91da52 48%,#178c5b 72%,#23547b) !important;
+  border:1px solid #eafffe !important;
+  box-shadow:inset 0 2px 3px #fff8,0 1px 5px #224c7188 !important;
+}
+.studio-start-orb:hover {filter:brightness(1.09);}
+.studio-taskbar-app {
+  height:41px;width:60px;border:1px solid #ffffffa3 !important;border-radius:3px;
+  background:linear-gradient(#f5ffffb3,#92cee9c0 44%,#5598c1a9 49%,#bfe7f9a3) !important;
+  box-shadow:inset 0 1px #fff,0 1px 3px #1d5c8990 !important;
+}
+.studio-taskbar-app[aria-pressed="false"] {
+  border-color:transparent !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.studio-taskbar-app:hover {background:linear-gradient(#fff,#b0e2f9) !important;}
+.studio-taskbar img {display:block;border-radius:3px;}
+.studio-taskbar-spacer {flex:1;}
+.studio-taskbar-clock {font:11px "Segoe UI",Tahoma,sans-serif;color:#0a3553;
+  padding:7px 10px;border-left:1px solid #ffffffb5;text-shadow:0 1px #fff;}
+body.studio-window-minimized #studioMainWindow,
+body.studio-window-closed #studioMainWindow {display:none !important;}
+body.studio-window-minimized #studioDashboard,
+body.studio-window-closed #studioDashboard {pointer-events:none;}
+body.studio-window-minimized .studio-taskbar,
+body.studio-window-closed .studio-taskbar {pointer-events:auto;}
+body.studio-window-maximized #studioDashboard .studio-dashboard-inner {
+  max-width:none;padding:0 0 var(--brat-taskbar-height);
+}
+body.studio-window-maximized #studioMainWindow {
+  border-radius:0 !important;
+  min-height:calc(100dvh - var(--brat-taskbar-height)) !important;
+}
+body.studio-window-maximized #studioDashboard .studio-classic-body-grid { min-height:calc(100dvh - 88px); }
+/* Optional account detail; no account tokens appear in the DOM. */
+#studioDashboard .studio-tiktok-profile {display:flex;align-items:center;gap:11px;margin:7px 0;}
+#studioDashboard .studio-tiktok-profile[hidden]{display:none;}
+#studioDashboard .studio-tiktok-profile img {border-radius:50%;object-fit:cover;border:1px solid #adcadb;}
+/* The caption buttons inside dialogs must use 7.css rather than custom × glyphs. */
+.studio-modal-backdrop.win7 .studio-modal.window.active {overflow:hidden;}
+.studio-modal-backdrop.win7 .studio-modal.window .title-bar {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 5px 0 12px;min-height:32px;
+}
+.studio-modal-backdrop.win7 .studio-modal.window .title-bar-text {
+  font:600 12px "Segoe UI",Tahoma,sans-serif;color:#164870;text-shadow:0 1px white;
+}
+.studio-modal-backdrop.win7 .studio-modal.window .title-bar-controls {margin-left:auto;}
+.studio-modal-backdrop.win7 .studio-modal.window .window-body {padding:20px;}
+@media(max-width:980px){
+  #studioDashboard .studio-dashboard-inner {padding:9px 8px calc(var(--brat-taskbar-height) + 18px);}
+  #studioDashboard .studio-classic-body-grid {grid-template-columns:1fr;min-height:0;}
+  #studioDashboard #studioNav.studio-nav.win7 {
+    position:fixed !important;inset:auto 0 var(--brat-taskbar-height) !important;
+    width:100% !important;min-height:54px;height:56px !important;
+    padding:5px 7px;display:flex;flex-direction:row;
+    background:linear-gradient(#e8f7ff,#b8d9ef 46%,#8cbddd);
+    border:1px solid #e9fbff;box-shadow:0 -3px 7px #214e6c36;z-index:65;
+  }
+  #studioDashboard #studioNav .studio-nav-links {display:flex;flex-direction:row;justify-content:space-around;gap:0;flex:1;}
+  #studioDashboard #studioNav .studio-nav-link {min-height:40px;height:40px;flex:1;min-width:0;gap:2px;padding:3px;font-size:10px;flex-direction:column;}
+  #studioDashboard #studioNav .studio-nav-brand,#studioDashboard #studioNav .studio-nav-bottom {display:none;}
+  #studioDashboard .studio-dashboard-inner {max-width:none;}
+  #studioDashboard .studio-main-content {padding-bottom:55px;}
+  body.studio-editor-open .page-shell {margin-left:0 !important;}
+  body.studio-editor-open .panel {left:auto !important;}
+}
+@media(max-width:570px) {
+  :root {--brat-taskbar-height:43px;}
+  #studioDashboard .studio-dashboard-inner {padding:4px 3px calc(var(--brat-taskbar-height) + 16px);}
+  #studioDashboard #studioMainWindow > .title-bar {padding:0 2px 0 9px;}
+  #studioDashboard #studioMainWindow .title-bar-text {font-size:11px;}
+  #studioDashboard #studioNav.studio-nav.win7 {inset:auto 0 var(--brat-taskbar-height) !important;}
+  .studio-start-orb {width:34px;height:34px;flex-basis:34px;}
+  .studio-taskbar-app {height:38px;width:51px;}
+  .studio-taskbar-clock {font-size:10px;}
+}
+@media(prefers-reduced-motion:reduce){
+  #studioDashboard .studio-dashboard-inner {transition:none;}
+}
