@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="stylesheet" href="assets/css/editor-v5.css" />
     <link rel="stylesheet" href="assets/css/studio-dashboard.css" />
-    <!-- Scoped Windows 7 Aero styles: not applied to the video editor. -->
+    <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <link rel="stylesheet" href="https://unpkg.com/7.css@0.21.1/dist/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/aero-theme.css" />
     <script>
@@ -263,6 +263,8 @@
     <script src="assets/js/studio-shell.js" defer></script>
     <script src="assets/js/supabase-config.js" defer></script>
     <script src="assets/js/auth-client.js" defer></script>
+    <script src="assets/js/bratcode.js" defer></script>
+    <script src="assets/js/backup-reminders.js" defer></script>
     <script src="assets/js/studio-dashboard.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
 </head>
@@ -290,19 +292,19 @@
     <section id="studioDashboard" class="studio-dashboard" aria-labelledby="studioTitle">
         <div class="studio-dashboard-inner">
             <header class="studio-dashboard-head">
-                <div><span class="studio-eyebrow">BRAT ANIMATOR · CREATOR STUDIO</span><h1 id="studioTitle">Il tuo spazio creativo.</h1><p id="studioGreeting">Crea, modifica e pubblica i tuoi lyric video. Tutto il lavoro resta sul dispositivo.</p></div>
+                <div><span class="studio-eyebrow">BRAT ANIMATOR · CREATOR STUDIO</span><h1 id="studioTitle">Il tuo studio.</h1><p id="studioGreeting">Crea, modifica e pubblica i tuoi lyric video. Tutto il lavoro resta sul dispositivo.</p></div>
                 <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
             </header>
             <div id="studioNotice" class="studio-notice" role="status" hidden></div>
 
             <div id="studioHomeView" class="studio-view">
                 <div class="studio-hero">
-                    <div><span class="studio-eyebrow studio-hero-kicker">YOUR NEXT EDIT STARTS HERE</span><h2>make something<br /><em>unforgettable.</em></h2><p>Lyrics, motion, timing, video. Un unico editor, senza limiti all'esportazione.</p>
+                    <div><span class="studio-eyebrow studio-hero-kicker">BRAT WORKSPACE / 2000</span><h2>your lyrics.<br /><em>in motion.</em></h2><p>Componi il testo. Modella il movimento. Esporta il video direttamente dal browser.</p>
                         <div class="studio-hero-actions"><button id="studioNewProject" class="studio-accent-button" type="button">+ Nuovo progetto</button><button id="studioContinue" class="studio-outline-button" type="button">Apri editor</button></div>
                     </div>
                     <div class="studio-hero-art" aria-hidden="true"><span>brat.</span><small>CREATE / EDIT / EXPORT</small></div>
                 </div>
-                <div class="studio-section-heading"><div><span class="studio-eyebrow">WORKSPACE</span><h2>Riprendi il tuo lavoro</h2></div><button type="button" data-studio-view="projects">Tutti i progetti</button></div>
+                <div class="studio-section-heading"><div><span class="studio-eyebrow">WORKSPACE</span><h2>Progetti recenti</h2></div><button type="button" data-studio-view="projects">Tutti i progetti</button></div>
                 <div id="studioRecentProjects" class="studio-project-grid" aria-live="polite"></div>
                 <div class="studio-panels">
                     <div class="studio-panel-card"><div class="studio-panel-icon">♫</div><h3>Sound Hub</h3><p>La libreria audio locale e le raccolte personali arriveranno nella Fase 4.</p><span>In preparazione</span></div>
@@ -313,15 +315,37 @@
             <div id="studioProjectsView" class="studio-view" hidden>
                 <div class="studio-section-heading"><div><span class="studio-eyebrow">SAVED LOCALLY</span><h2>I tuoi progetti</h2><p id="studioProjectCount">Archivio locale del dispositivo</p></div><button id="studioProjectsNew" class="studio-accent-button" type="button">+ Nuovo</button></div>
                 <p class="studio-muted">Le librerie sono separate per account, ma usano lo stesso spazio del browser. Nessuna sincronizzazione cloud automatica.</p>
+                <div class="studio-library-tools">
+                  <label class="studio-library-search"><span class="sr-only">Cerca progetti</span><input id="studioProjectSearch" type="search" placeholder="Cerca nei tuoi progetti…" autocomplete="off"></label>
+                  <button id="studioImportBundle" type="button">Importa .brat.zip</button>
+                  <button id="studioBackupActive" type="button">Backup progetto aperto</button>
+                </div>
+                <p id="studioBackupReminder" class="studio-backup-reminder" role="status" hidden>Hai modificato questo progetto senza creare un backup recente. Esporta una copia .brat.zip per conservarlo anche fuori dal browser. <button id="studioBackupNow" type="button">Crea backup</button><button id="studioBackupDismiss" type="button">Più tardi</button></p>
                 <div id="studioProjectList" class="studio-project-grid"></div>
             </div>
 
+            <div id="studioShareView" class="studio-view" hidden>
+                <div class="studio-section-heading"><div><span class="studio-eyebrow">PROJECT SHARING</span><h2>BRATCODE</h2><p>Condividi una copia modificabile delle impostazioni del tuo progetto, senza file multimediali.</p></div></div>
+                <div class="studio-settings-card">
+                    <h3>Condividi progetto</h3>
+                    <p>Genera un codice valido per 24 ore e riutilizzabile più volte. Solo gli account registrati possono generare un codice. L'importazione è disponibile anche agli ospiti.</p>
+                    <p id="studioShareState" role="status">Per generare un BRATCODE occorre configurare Supabase e accedere.</p>
+                    <div class="studio-settings-actions"><button id="studioCodeCreate" class="studio-accent-button" type="button">Genera BRATCODE</button><button id="studioCodeCopy" type="button" hidden>Copia codice</button><button id="studioCodeRevoke" type="button" hidden>Revoca codice</button></div>
+                    <p class="studio-muted">Il codice carica temporaneamente sul servizio i testi e la struttura del progetto, ma non audio, video, immagini, font binari o dati di accesso.</p>
+                </div>
+                <div class="studio-settings-card"><h3>Importa BRATCODE</h3><p>Chiunque abbia un codice attivo può importare una copia indipendente nel proprio browser.</p>
+                    <label for="studioCodeInput">Codice di condivisione</label>
+                    <input id="studioCodeInput" type="text" placeholder="Inserisci BRATCODE" autocomplete="off" maxlength="40" spellcheck="false" />
+                    <button id="studioCodeImport" class="studio-accent-button" type="button">Importa progetto</button>
+                    <p id="studioCodeMessage" role="status"></p>
+                </div>
+            </div>
             <div id="studioSettingsView" class="studio-view" hidden>
                 <div class="studio-section-heading"><div><span class="studio-eyebrow">ACCOUNT & PRIVACY</span><h2>Impostazioni</h2></div></div>
                 <div class="studio-settings-card"><h3>Account</h3><p id="studioAccountDescription">Stai utilizzando Brat Animator come ospite.</p>
                     <div class="studio-settings-actions"><button id="studioSettingsLogin" class="studio-accent-button" type="button">Accedi / Registrati</button><button id="studioSettingsLogout" type="button" hidden>Esci dall'account</button></div>
                 </div>
-                <div class="studio-settings-card"><h3>Suoni dell’interfaccia</h3><p>Feedback sonoro morbido sui pulsanti della dashboard. Nessun effetto sull’editor, sul video o sull’esportazione. I suoni sono sintetizzati localmente.</p><button id="studioSettingsSound" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button></div>
+                <div class="studio-settings-card"><h3>Suoni dell’interfaccia</h3><p>Feedback sonoro morbido sui pulsanti della dashboard. Nessun effetto sull’editor, sul video o sull’esportazione. Tutti i suoni vengono sintetizzati localmente.</p><button id="studioSettingsSound" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button></div>
                 <div class="studio-settings-card"><h3>Archiviazione locale</h3><p>I progetti restano in questo browser. Se cancelli i dati del sito o cambi dispositivo, non saranno sincronizzati automaticamente.</p><p id="studioStorageUsage" class="studio-storage-usage">Spazio occupato: in verifica…</p></div>
                 <div id="studioGuestTransfer" class="studio-settings-card" hidden><h3>Progetto ospite</h3><p>Puoi copiare il progetto ospite in questo account. L'originale rimane disponibile come ospite.</p><button id="studioTransferGuest" type="button">Copia il progetto ospite</button></div>
                 <div class="studio-settings-card"><h3>TikTok</h3><p>Il collegamento facoltativo dell'account TikTok sarà disponibile nelle prossime fasi.</p></div>
@@ -330,6 +354,24 @@
             <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><span id="studioFutureIcon">♫</span><span class="studio-eyebrow">COMING NEXT</span><h2 id="studioFutureTitle">Prossimamente</h2><p id="studioFutureText">Questa funzionalità è in preparazione.</p><button type="button" data-studio-view="home">Torna alla Home</button></div></div>
         </div>
     </section>
+
+    <div id="studioProjectDialog" class="studio-modal-backdrop" hidden>
+        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
+            <button id="studioProjectDialogClose" type="button" class="studio-modal-close" aria-label="Annulla">×</button>
+            <span class="studio-eyebrow">LOCAL PROJECT MANAGER</span>
+            <h2 id="studioProjectDialogTitle">Gestisci progetto</h2>
+            <p id="studioProjectDialogDescription">Le operazioni modificano soltanto i file locali di questo browser.</p>
+            <div id="studioProjectRenameField">
+                <label for="studioProjectRenameInput">Nome del progetto</label>
+                <input id="studioProjectRenameInput" type="text" maxlength="120" required />
+            </div>
+            <p id="studioProjectDialogError" role="status" class="studio-auth-message"></p>
+            <div class="studio-settings-actions">
+                <button id="studioProjectDialogConfirm" type="button" class="studio-accent-button">Conferma</button>
+                <button id="studioProjectDialogCancel" type="button">Annulla</button>
+            </div>
+        </section>
+    </div>
 
     <div id="studioAuthDialog" class="studio-modal-backdrop" hidden>
         <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">

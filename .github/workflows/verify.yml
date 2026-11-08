@@ -23,6 +23,8 @@ jobs:
           node --check assets/js/auth-client.js
           node --check assets/js/supabase-config.js
           node --check assets/js/studio-dashboard.js
+          node --check assets/js/bratcode.js
+          node --check assets/js/backup-reminders.js
           node --check assets/js/dashboard-audio.js
           node --check assets/js/app.js
           node --check assets/js/editor-v5.js

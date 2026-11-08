@@ -1,0 +1,246 @@
+-- Brat Animator / BRATCODE Light v1
+-- Deploy in Supabase SQL editor. All project media remains local.
+-- This script is idempotent for schema objects, but replace functions on upgrade.
+CREATE TABLE IF NOT EXISTS public.bratcodes (
+    code text PRIMARY KEY CHECK (code ~ '^[0-9A-F]{32}$'),
+    owner_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    snapshot jsonb NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz NOT NULL,
+    revoked_at timestamptz
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS bratcodes_one_active_per_account
+    ON public.bratcodes (owner_id)
+    WHERE revoked_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS bratcodes_expiry
+    ON public.bratcodes (expires_at);
+
+ALTER TABLE public.bratcodes ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.bratcodes FROM PUBLIC, anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.bratcode_rate_limits (
+    principal_hash text PRIMARY KEY,
+    window_start timestamptz NOT NULL DEFAULT now(),
+    attempts integer NOT NULL DEFAULT 0
+);
+ALTER TABLE public.bratcode_rate_limits ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.bratcode_rate_limits FROM PUBLIC, anon, authenticated;
+
+-- Server-side deep validation is required even if the browser sanitized its
+-- input: direct RPC callers must not store nested media or credentials.
+CREATE OR REPLACE FUNCTION public.bratcode_safe_json(p_node jsonb, p_depth integer DEFAULT 0)
+RETURNS boolean LANGUAGE plpgsql IMMUTABLE SET search_path = ''
+AS $$
+DECLARE
+    v_key text;
+    v_value jsonb;
+    v_text text;
+BEGIN
+    IF p_depth > 28 THEN RETURN false; END IF;
+    IF pg_catalog.jsonb_typeof(p_node) = 'object' THEN
+        FOR v_key, v_value IN SELECT key, value FROM pg_catalog.jsonb_each(p_node) LOOP
+            IF pg_catalog.lower(v_key) ~ '^(blob|bytes|binary|dataurl|base64|file|filedata|filecontent|media|mediaassets|mediablobs|assets|token|accesstoken|refreshtoken|apikey|clientsecret|password|credentials|auth|authorization|headers|cookie|session|secret)$'
+            THEN RETURN false; END IF;
+            IF pg_catalog.lower(v_key) ~ '^(url|uri|src|href|assetid|sourceurl|filename|filepath|path|key)$'
+               AND coalesce(v_value #>> '{}', '') <> ''
+            THEN RETURN false; END IF;
+            IF NOT public.bratcode_safe_json(v_value, p_depth + 1) THEN RETURN false; END IF;
+        END LOOP;
+    ELSIF pg_catalog.jsonb_typeof(p_node) = 'array' THEN
+        FOR v_value IN SELECT value FROM pg_catalog.jsonb_array_elements(p_node) LOOP
+            IF NOT public.bratcode_safe_json(v_value, p_depth + 1) THEN RETURN false; END IF;
+        END LOOP;
+    ELSIF pg_catalog.jsonb_typeof(p_node) = 'string' THEN
+        v_text := pg_catalog.lower(p_node #>> '{}');
+        IF v_text ~ '^(data:|blob:|https?://|file:)' THEN RETURN false; END IF;
+    END IF;
+    RETURN true;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.bratcode_safe_json(jsonb, integer) FROM PUBLIC;
+
+-- Generate exactly one active code per authenticated user. Active codes are
+-- server-side random 128-bit tokens; clients cannot choose or enumerate them.
+CREATE OR REPLACE FUNCTION public.bratcode_create(p_snapshot jsonb)
+RETURNS TABLE (code text, expires_at timestamptz)
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_owner uuid := auth.uid();
+    v_code text;
+    v_expiry timestamptz;
+BEGIN
+    IF v_owner IS NULL THEN
+        RAISE EXCEPTION 'Account required' USING ERRCODE = '28000';
+    END IF;
+    IF p_snapshot IS NULL OR jsonb_typeof(p_snapshot) <> 'object'
+        OR octet_length(p_snapshot::text) > 180000
+        OR coalesce(p_snapshot->>'type', '') <> 'bratcode-light'
+        OR coalesce(p_snapshot->>'schemaVersion','') <> '1'
+        OR p_snapshot ?| ARRAY['binary','assets','mediaBlobs','credentials','tokens','auth']
+        OR jsonb_typeof(p_snapshot->'payload') <> 'object'
+        OR (p_snapshot->'payload') ?| ARRAY['binary','assets','mediaBlobs','credentials','tokens','auth']
+        OR coalesce(p_snapshot #>> '{payload,audio,assetId}', '') <> ''
+        OR coalesce(p_snapshot #>> '{payload,audio,url}', '') <> ''
+        OR coalesce(p_snapshot #>> '{payload,background,assetId}', '') <> ''
+        OR coalesce(p_snapshot #>> '{payload,background,url}', '') <> ''
+        OR NOT public.bratcode_safe_json(p_snapshot)
+    THEN
+        RAISE EXCEPTION 'Invalid or oversized BRATCODE Light snapshot';
+    END IF;
+    -- Owner-scoped advisory lock prevents concurrent requests bypassing the
+    -- single-active-code constraint; unique index remains final safeguard.
+    PERFORM pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_owner::text, 771));
+    UPDATE public.bratcodes b
+    SET revoked_at = now()
+    WHERE b.owner_id = v_owner AND b.revoked_at IS NULL AND b.expires_at <= now();
+
+    IF EXISTS (
+        SELECT 1 FROM public.bratcodes b
+        WHERE b.owner_id = v_owner AND b.revoked_at IS NULL AND b.expires_at > now()
+    ) THEN
+        RAISE EXCEPTION 'Only one active BRATCODE is allowed';
+    END IF;
+
+    v_code := upper(replace(pg_catalog.gen_random_uuid()::text, '-', ''));
+    v_expiry := now() + interval '24 hours';
+    INSERT INTO public.bratcodes (code,owner_id,snapshot,expires_at)
+    VALUES (v_code,v_owner,p_snapshot,v_expiry);
+    RETURN QUERY SELECT v_code,v_expiry;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.bratcode_active()
+RETURNS TABLE (code text, expires_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT b.code, b.expires_at
+    FROM public.bratcodes b
+    WHERE b.owner_id = auth.uid()
+      AND b.revoked_at IS NULL
+      AND b.expires_at > now()
+    ORDER BY b.created_at DESC LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.bratcode_revoke()
+RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_removed integer;
+BEGIN
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Account required' USING ERRCODE = '28000';
+    END IF;
+    UPDATE public.bratcodes b SET revoked_at = now()
+    WHERE b.owner_id = auth.uid() AND b.revoked_at IS NULL
+      AND b.expires_at > now();
+    GET DIAGNOSTICS v_removed = ROW_COUNT;
+    RETURN v_removed > 0;
+END;
+$$;
+
+-- Import is intentionally anonymous: any holder of a valid code can fetch
+-- an independent JSON project copy during its 24-hour lifetime.
+-- The 30/minute limiter is best-effort using gateway-supplied identity or
+-- forwarded IP; deploy gateway-level limiting for stronger production safety.
+CREATE OR REPLACE FUNCTION public.bratcode_import(p_code text)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+    v_code text;
+    v_headers jsonb;
+    v_identity text;
+    v_principal text;
+    v_attempts integer;
+    v_snapshot jsonb;
+BEGIN
+    v_headers := coalesce(
+        nullif(current_setting('request.headers', true), '')::jsonb,
+        '{}'::jsonb
+    );
+    v_identity := coalesce(
+        auth.uid()::text,
+        nullif(split_part(v_headers->>'x-forwarded-for', ',', 1), ''),
+        nullif(v_headers->>'cf-connecting-ip', ''),
+        'anonymous'
+    );
+    v_principal := md5('bratcode:' || v_identity);
+    INSERT INTO public.bratcode_rate_limits AS r (principal_hash,window_start,attempts)
+    VALUES (v_principal, now(), 1)
+    ON CONFLICT (principal_hash) DO UPDATE
+    SET attempts = CASE
+            WHEN r.window_start < now() - interval '1 minute' THEN 1
+            ELSE r.attempts + 1
+        END,
+        window_start = CASE
+            WHEN r.window_start < now() - interval '1 minute' THEN now()
+            ELSE r.window_start
+        END
+    RETURNING attempts INTO v_attempts;
+    IF v_attempts > 30 THEN
+        RAISE EXCEPTION 'Too many BRATCODE imports; retry later';
+    END IF;
+
+    v_code := upper(regexp_replace(coalesce(p_code,''), '[^0-9A-Fa-f]', '', 'g'));
+    IF length(v_code) <> 32 THEN RETURN NULL; END IF;
+
+    SELECT b.snapshot INTO v_snapshot
+    FROM public.bratcodes b
+    WHERE b.code = v_code
+      AND b.revoked_at IS NULL
+      AND b.expires_at > now();
+    RETURN v_snapshot;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.bratcode_create(jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.bratcode_active() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.bratcode_revoke() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.bratcode_import(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.bratcode_create(jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.bratcode_active() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.bratcode_revoke() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.bratcode_import(text) TO anon, authenticated;
+
+-- Maintenance entry point. Call from a trusted scheduled task (e.g. pg_cron)
+-- or the Supabase SQL editor. Never expose the service-role credential in JS.
+CREATE OR REPLACE FUNCTION public.bratcode_cleanup()
+RETURNS TABLE (codes_deleted integer, attempts_deleted integer)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+AS $$
+DECLARE
+    v_codes integer;
+    v_attempts integer;
+BEGIN
+    DELETE FROM public.bratcodes
+    WHERE expires_at < now() - interval '7 days';
+    GET DIAGNOSTICS v_codes = ROW_COUNT;
+
+    DELETE FROM public.bratcode_rate_limits
+    WHERE window_start < now() - interval '1 day';
+    GET DIAGNOSTICS v_attempts = ROW_COUNT;
+
+    RETURN QUERY SELECT v_codes, v_attempts;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.bratcode_cleanup() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.bratcode_cleanup() TO service_role;
+
+-- To enable automatic cleanup on a Supabase instance with pg_cron configured,
+-- schedule the trusted query below in the platform's SQL scheduler:
+--   SELECT public.bratcode_cleanup();
+-- A daily cadence is enough; validity always ends at 24 hours even without
+-- maintenance, because every import checks expires_at.
+
+-- Expiry is enforced in all RPCs. Physical cleanup is optional and can be
+-- scheduled using Supabase pg_cron or performed by a trusted administrator:
+-- DELETE FROM public.bratcodes WHERE expires_at < now() - interval '7 days';
+-- DELETE FROM public.bratcode_rate_limits WHERE window_start < now() - interval '1 day';

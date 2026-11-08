@@ -217,3 +217,53 @@ test("logging out with deletion removes only this account's local records", asyn
     assert.equal((await store.getActive("guest")).payload.lyrics, "guest data");
     assert.equal((await store.getActive("user:b")).payload.lyrics, "other user");
 });
+
+
+test("global workspace counts include the one temporary slot", async () => {
+    const store = Workspace.createStore({ indexedDB: fakeIndexedDB() });
+    assert.deepEqual(await store.stats(), { saved: 0, temporary: 0, capacity: 20, temporaryCapacity: 1 });
+    await store.saveActive({ lyrics: "permanent" }, "guest");
+    await store.saveProject({ lyrics: "draft" }, { ownerId: "guest", projectId: "temporary", temporary: true });
+    assert.deepEqual(await store.stats(), { saved: 1, temporary: 1, capacity: 20, temporaryCapacity: 1 });
+    await assert.rejects(store.saveProject({ lyrics: "other" }, { ownerId: "user:b", projectId: "temporary", temporary: true }), { code: "LIBRARY_FULL" });
+});
+
+test("rename preserves the title even when autosave overwrites project content", async () => {
+    const store = Workspace.createStore({ indexedDB: fakeIndexedDB() });
+    await store.saveActive({ lyrics: "x" }, "guest");
+    await store.renameProject("guest", "current", "My Local Music Video");
+    await store.saveActive({ lyrics: "after edit" }, "guest");
+    assert.equal((await store.getActive("guest")).title, "My Local Music Video");
+    await assert.rejects(store.renameProject("guest", "nothing", "test"), { code: "PROJECT_NOT_FOUND" });
+    await assert.rejects(store.renameProject("guest", "current", "  "), { code: "INVALID_TITLE" });
+});
+
+test("temporary project promotes atomically only when a saved slot exists", async () => {
+    const store = Workspace.createStore({ indexedDB: fakeIndexedDB() });
+    for (let i = 0; i < 19; i++) {
+        await store.saveProject({ lyrics: "existing " + i }, { ownerId: i % 2 ? "user:a" : "guest", projectId: "existing-" + i });
+    }
+    await store.saveProject({ lyrics: "draft" }, { ownerId: "guest", projectId: "temporary", temporary: true });
+    const promoted = await store.promoteTemporary("guest", "Great Edit");
+    assert.match(promoted, /^archive-/);
+    assert.equal((await store.getProject("guest", promoted)).title, "Great Edit");
+    assert.equal((await store.getProject("guest", "temporary")), null);
+    assert.deepEqual(await store.stats(), { saved: 20, temporary: 0, capacity: 20, temporaryCapacity: 1 });
+    await store.saveProject({ lyrics: "draft 2" }, { ownerId: "guest", projectId: "temporary", temporary: true });
+    await assert.rejects(store.promoteTemporary("guest", "no free slot"), { code: "LIBRARY_FULL" });
+    assert.equal((await store.getProject("guest", "temporary")).kind, "temporary");
+});
+
+test("autosave writes and discards the temporary slot without affecting the current project", async () => {
+    const store = Workspace.createStore({ indexedDB: fakeIndexedDB() });
+    await store.saveActive({ lyrics: "keep me" }, "guest");
+    const auto = Workspace.createAutosave({ store, projectId: "temporary", ownerId: "guest", setTimeout: () => 1, clearTimeout: () => {} });
+    auto.schedule({ lyrics: "temporary note" });
+    await auto.flush();
+    const temporary = await store.getProject("guest", "temporary");
+    assert.equal(temporary.payload.lyrics, "temporary note");
+    assert.equal(temporary.kind, "temporary");
+    await auto.discard();
+    assert.equal(await store.getProject("guest", "temporary"), null);
+    assert.equal((await store.getActive("guest")).payload.lyrics, "keep me");
+});

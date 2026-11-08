@@ -205,10 +205,33 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         // Phase 1: persist the active guest workspace in IndexedDB. Account switching
         // and multi-project library navigation are introduced in later phases.
         let workspaceOwner = "guest";
+        const ACTIVE_PREFIX = "bratAnimator.workspace.active.";
+        function lastProjectId(owner) {
+            try { return localStorage.getItem(ACTIVE_PREFIX + owner) === "temporary" ? "temporary" : "current"; }
+            catch (_) { return "current"; }
+        }
+        let workspaceProjectId = lastProjectId(workspaceOwner);
+        function setWorkspaceProjectId(projectId) {
+            workspaceProjectId = projectId === "temporary" ? "temporary" : "current";
+            try { localStorage.setItem(ACTIVE_PREFIX + workspaceOwner, workspaceProjectId); } catch (_) {}
+        }
+        function makeWorkspaceAutosave() {
+            return window.BratWorkspace.createAutosave({
+                store: workspaceStore,
+                ownerId: workspaceOwner,
+                projectId: workspaceProjectId,
+                delay: 700,
+                onStatus: announceWorkspaceStatus,
+                onError: (error, payload) => {
+                    console.warn("IndexedDB autosave failed", error);
+                    writeLegacyFallback(payload, error);
+                }
+            });
+        }
         let workspaceBootPromise = null;
         const isGuestOwner = () => workspaceOwner === "guest";
-        const getFallbackKey = () => isGuestOwner() ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + workspaceOwner;
-        const getFallbackTimeKey = () => isGuestOwner() ? WORKSPACE_FALLBACK_TIME_KEY : "bratAnimator.workspace.fallbackAt." + workspaceOwner;
+        const getFallbackKey = () => workspaceProjectId === "temporary" ? "bratAnimator.workspace.tempFallback." + workspaceOwner : isGuestOwner() ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + workspaceOwner;
+        const getFallbackTimeKey = () => workspaceProjectId === "temporary" ? "bratAnimator.workspace.tempFallbackAt." + workspaceOwner : isGuestOwner() ? WORKSPACE_FALLBACK_TIME_KEY : "bratAnimator.workspace.fallbackAt." + workspaceOwner;
         const WORKSPACE_LEGACY_KEYS = ["bratAnimator.project.v5", "bratAnimator.project.v4", "bratAnimator.project.v3", "bratAnimator.project.v2"];
         const WORKSPACE_FALLBACK_TIME_KEY = "bratAnimator.workspace.fallbackAt.v1";
         const WORKSPACE_HAS_SAVED_KEY = "bratAnimator.workspace.hasSaved.v1";
@@ -244,9 +267,12 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (status === "saved") {
                 try {
                     localStorage.setItem(WORKSPACE_HAS_SAVED_KEY, "1");
-                    if (isGuestOwner()) {
+                    window.dispatchEvent(new CustomEvent("brat:local-save", { detail: { ownerId: workspaceOwner, projectId: workspaceProjectId } }));
+                    if (isGuestOwner() && workspaceProjectId === "current") {
                         for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
                     } else {
+                        // A temporary save must never erase the guest's active
+                        // permanent-project recovery copy.
                         localStorage.removeItem(getFallbackKey());
                     }
                     localStorage.removeItem(getFallbackTimeKey());
@@ -277,7 +303,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             let existing = null;
             let readError = null;
             try {
-                existing = await workspaceStore.getActive(workspaceOwner);
+                existing = await workspaceStore.getProject(workspaceOwner, workspaceProjectId);
             } catch (error) {
                 readError = error;
                 console.warn("IndexedDB workspace could not be read; localStorage recovery remains available", error);
@@ -288,16 +314,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const fallbackIsNewer = Boolean(legacyProject && existing && fallbackAt > existing.updatedAt);
             const toRestore = fallbackIsNewer ? legacyProject : existing?.payload;
             const hadEarlyEdits = Boolean(workspaceEarlyDirty);
-            workspaceAutosave = window.BratWorkspace.createAutosave({
-                store: workspaceStore,
-                ownerId: workspaceOwner,
-                delay: 700,
-                onStatus: announceWorkspaceStatus,
-                onError: (error, payload) => {
-                    console.warn("IndexedDB autosave failed", error);
-                    writeLegacyFallback(payload, error);
-                }
-            });
+            workspaceAutosave = makeWorkspaceAutosave();
             workspaceReady = true;
 
             if (!sharedProject && !hadEarlyEdits && toRestore) {
@@ -318,7 +335,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (workspaceEarlyDirty) {
                 workspaceAutosave.schedule(workspaceEarlyDirty);
                 workspaceEarlyDirty = null;
-            } else if (!sharedProject && legacyProject && (!existing || fallbackIsNewer)) {
+            } else if (!sharedProject && legacyProject && workspaceProjectId === "current" && (!existing || fallbackIsNewer)) {
                 // A successful IndexedDB write removes the legacy copy; failures retain it.
                 workspaceAutosave.schedule(legacyProject);
             } else if (readError) {
@@ -4346,7 +4363,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             localStorage.removeItem(WORKSPACE_HAS_SAVED_KEY);
             localStorage.removeItem(getFallbackTimeKey());
             localStorage.removeItem(getFallbackKey());
-            if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+            if (isGuestOwner() && workspaceProjectId === "current") for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
             resetProjectView();
         }
 
@@ -5424,21 +5441,16 @@ async function updateExportEstimate() {
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
                 await this.flush();
                 // Fetch before switching to avoid hiding the current workspace if a read fails.
-                const record = await workspaceStore.getActive(owner);
+                const record = await workspaceStore.getProject(owner, lastProjectId(owner));
                 let fallback = null;
                 try {
-                    const raw = localStorage.getItem(owner === "guest" ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + owner);
+                    const raw = localStorage.getItem(lastProjectId(owner) === "temporary" ? "bratAnimator.workspace.tempFallback." + owner : owner === "guest" ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + owner);
                     if (raw) fallback = JSON.parse(raw);
                 } catch (_) {}
                 workspaceDiscardGeneration += 1;
                 workspaceOwner = owner;
-                workspaceAutosave = window.BratWorkspace.createAutosave({
-                    store: workspaceStore,
-                    ownerId: workspaceOwner,
-                    delay: 700,
-                    onStatus: announceWorkspaceStatus,
-                    onError: (error, payload) => writeLegacyFallback(payload, error)
-                });
+                setWorkspaceProjectId(lastProjectId(owner));
+                workspaceAutosave = makeWorkspaceAutosave();
                 workspaceResetting = true;
                 resetProjectView();
                 workspaceResetting = true;
@@ -5453,7 +5465,7 @@ async function updateExportEstimate() {
                 await (workspaceBootPromise || Promise.resolve());
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
                 await this.flush();
-                const record = await workspaceStore.getActive(workspaceOwner);
+                const record = await workspaceStore.getProject(workspaceOwner, workspaceProjectId);
                 workspaceResetting = true;
                 resetProjectView();
                 workspaceResetting = true;
@@ -5474,18 +5486,75 @@ async function updateExportEstimate() {
                 resetProjectView();
                 announceWorkspaceStatus("cleared");
             },
-            async createNew() {
+            projectId: () => workspaceProjectId,
+            snapshot: () => buildProjectPayload(),
+            async prepareReplace() {
                 await this.flush();
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                if (workspaceProjectId === "temporary") {
+                    const existingTmp = await workspaceStore.getProject(workspaceOwner, "temporary");
+                    if (existingTmp && (existingTmp.payload?.lyrics?.trim() || existingTmp.payload?.audio?.assetId)) {
+                        throw new Error("Esporta il progetto temporaneo o libera uno slot prima di sostituirlo.");
+                    }
+                    return { temporary: true };
+                }
                 const previous = await workspaceStore.getActive(workspaceOwner);
-                if (previous && (previous.payload?.lyrics?.trim() || previous.payload?.audio?.assetId || previous.payload?.background?.assetId)) {
+                if (!previous || !(previous.payload?.lyrics?.trim() || previous.payload?.audio?.assetId || previous.payload?.background?.assetId)) {
+                    return { temporary: false };
+                }
+                try {
                     const id = "archive-" + (window.crypto?.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2));
                     await workspaceStore.saveProject(previous.payload, {
-                        ownerId: workspaceOwner, projectId: id,
-                        title: buildProjectLabel(previous.payload)
+                        ownerId: workspaceOwner, projectId: id, title: buildProjectLabel(previous.payload)
                     });
+                    return { temporary: false };
+                } catch (error) {
+                    if (error.code !== "LIBRARY_FULL") throw error;
+                    const temp = await workspaceStore.getProject(workspaceOwner, "temporary");
+                    if (temp) throw new Error("La libreria è piena e hai già un progetto temporaneo. Esporta un backup e libera uno slot.");
+                    setWorkspaceProjectId("temporary");
+                    workspaceAutosave = makeWorkspaceAutosave();
+                    return { temporary: true };
+                }
+            },
+            async createNew() {
+                const mode = await this.prepareReplace();
+                if (mode.temporary) {
+                    workspaceResetting = true;
+                    resetProjectView();
+                    workspaceResetting = false;
+                    workspaceAutosave.schedule(buildProjectPayload());
+                    return { temporary: true };
                 }
                 await this.clearCurrent();
+                return { temporary: false };
+            },
+            async restoreImportedPayload(payload) {
+                if (!payload || typeof payload !== "object") throw new Error("Progetto importato non valido.");
+                const mode = await this.prepareReplace();
+                if (!mode.temporary) {
+                    await this.clearCurrent();
+                } else {
+                    workspaceResetting = true;
+                    resetProjectView();
+                }
+                workspaceResetting = true;
+                restoreProjectSettings(payload);
+                workspaceResetting = false;
+                saveProjectSettings();
+                await workspaceAutosave.flush();
+                return mode;
+            },
+            async promoteTemporary() {
+                await this.flush();
+                if (workspaceProjectId !== "temporary") throw new Error("Non stai modificando un progetto temporaneo.");
+                const tmp = await workspaceStore.getProject(workspaceOwner, "temporary");
+                if (!tmp) throw new Error("Nessun progetto temporaneo da salvare.");
+                const id = await workspaceStore.promoteTemporary(workspaceOwner, buildProjectLabel(tmp.payload));
+                await workspaceStore.activateProject(workspaceOwner, id);
+                setWorkspaceProjectId("current");
+                workspaceAutosave = makeWorkspaceAutosave();
+                await this.reloadActive();
                 return true;
             },
             async deleteOwnerProjects() {
@@ -5493,17 +5562,58 @@ async function updateExportEstimate() {
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
                 const removed = await workspaceStore.deleteOwner(workspaceOwner);
                 try {
+                    localStorage.removeItem("bratAnimator.workspace.tempFallback." + workspaceOwner);
+                    localStorage.removeItem("bratAnimator.workspace.tempFallbackAt." + workspaceOwner);
+                    localStorage.removeItem(ACTIVE_PREFIX + workspaceOwner);
+                } catch (_) {}
+                try {
                     localStorage.removeItem(getFallbackKey());
                     localStorage.removeItem(getFallbackTimeKey());
-                    if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+                    if (isGuestOwner() && workspaceProjectId === "current") for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
                 } catch (_) {}
                 return removed;
             },
+            async renameProject(projectId, title) {
+                await this.flush();
+                return workspaceStore.renameProject(workspaceOwner, projectId, title);
+            },
+            async deleteProject(projectId) {
+                await this.flush();
+                if (projectId === workspaceProjectId) {
+                    const wasTemporary = workspaceProjectId === "temporary";
+                    await this.clearCurrent();
+                    if (wasTemporary) {
+                        setWorkspaceProjectId("current");
+                        workspaceAutosave = makeWorkspaceAutosave();
+                        await this.reloadActive();
+                    }
+                    return;
+                }
+                await workspaceStore.deleteProject(workspaceOwner, projectId);
+            },
             async openProject(projectId) {
                 await this.flush();
-                if (projectId === "current") return true;
+                if (projectId === workspaceProjectId) return true;
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
-                await workspaceStore.activateProject(workspaceOwner, projectId);
+                if (projectId === "temporary") {
+                    const temp = await workspaceStore.getProject(workspaceOwner, "temporary");
+                    if (!temp) throw new Error("Non c'è un progetto temporaneo.");
+                    setWorkspaceProjectId("temporary");
+                    workspaceAutosave = makeWorkspaceAutosave();
+                    workspaceResetting = true;
+                    resetProjectView();
+                    workspaceResetting = true;
+                    restoreProjectSettings(temp.payload);
+                    workspaceResetting = false;
+                    renderPreviewAt(0);
+                    announceWorkspaceStatus("ready");
+                    return true;
+                }
+                if (workspaceProjectId === "temporary") {
+                    setWorkspaceProjectId("current");
+                    workspaceAutosave = makeWorkspaceAutosave();
+                }
+                if (projectId !== "current") await workspaceStore.activateProject(workspaceOwner, projectId);
                 const current = await workspaceStore.getActive(workspaceOwner);
                 if (!current) throw new Error("Il progetto non è stato recuperato.");
                 workspaceResetting = true;

@@ -14,6 +14,8 @@
     let authChanging = Promise.resolve();
     let currentUserId = null;
     let initialSessionHandled = false;
+    let pendingProjectAction = null;
+    let activeCode = null;
 
     function notify(message, isError = false) {
         const node = $("studioNotice");
@@ -38,7 +40,7 @@
     function labelFromPayload(payload, fallback = "Progetto senza titolo") {
         const lyrics = String(payload?.lyrics || "");
         const line = lyrics.split(/\r?\n/).map(text => text.replace(/^\[[^\]]+\]\s*/, "").trim()).find(Boolean);
-        return String(payload?.metadata?.trackName || line || fallback).slice(0, 62);
+        return String(fallback && fallback !== "Untitled project" ? fallback : payload?.metadata?.trackName || line || fallback).slice(0, 62);
     }
 
     function setMode(mode) {
@@ -81,7 +83,7 @@
         $("studioSettingsLogout").hidden = !user;
     }
 
-    function makeProjectCard(record, payload, parent) {
+    function makeProjectCard(record, payload, parent, showTools = true) {
         const card = document.createElement("button");
         card.type = "button";
         card.className = "studio-project-card";
@@ -109,7 +111,35 @@
         card.append(art, info);
         card.setAttribute("aria-label", "Apri " + titleText);
         card.addEventListener("click", () => openProject(record.projectId));
-        parent.append(card);
+        const entry = document.createElement("div");
+        entry.className = "studio-project-entry";
+        entry.append(card);
+        const tools = document.createElement("div");
+        tools.className = "studio-project-actions";
+        const rename = document.createElement("button");
+        rename.type = "button";
+        rename.textContent = "Rinomina";
+        rename.setAttribute("aria-label", "Rinomina " + titleText);
+        rename.addEventListener("click", () => openProjectDialog("rename", record, titleText));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Elimina";
+        remove.setAttribute("aria-label", "Elimina " + titleText);
+        remove.addEventListener("click", () => openProjectDialog("delete", record, titleText));
+        tools.append(rename, remove);
+        if (record.kind === "temporary") {
+            const promote = document.createElement("button");
+            promote.type = "button";
+            promote.textContent = "Salva in libreria";
+            promote.addEventListener("click", promoteTemporary);
+            tools.prepend(promote);
+            const tag = document.createElement("small");
+            tag.className = "studio-temporary-label";
+            tag.textContent = "TEMPORANEO · recupero locale";
+            art.prepend(tag);
+        }
+        if (showTools) entry.append(tools);
+        parent.append(entry);
     }
 
     function makeEmpty(message) {
@@ -136,8 +166,10 @@
         }
         try {
             const records = await editor.store.listProjects(editor.owner());
-            const ordered = records.filter(row => row.kind !== "temporary").sort((a, b) => b.updatedAt - a.updatedAt);
-            $("studioProjectCount").textContent = ordered.length + " progetto/i associati a questo profilo · limite globale 20 + 1 temporaneo";
+            const ordered = records.sort((a, b) => (a.kind === "temporary" ? -1 : 0) - (b.kind === "temporary" ? -1 : 0) || b.updatedAt - a.updatedAt);
+            const totals = await editor.store.stats();
+            $("studioProjectCount").textContent = totals.saved + "/20 progetti salvati globalmente · " + totals.temporary + "/1 temporaneo · " + records.length + " qui";
+            const search = ($("studioProjectSearch")?.value || "").trim().toLowerCase();
             if (!ordered.length) {
                 target.append(makeEmpty("Crea il tuo primo progetto nell'editor."));
                 recent.append(makeEmpty("Inizia con un nuovo lyric video."));
@@ -146,10 +178,11 @@
                     row, project: await editor.store.getProject(editor.owner(), row.projectId)
                 })));
                 for (const { row, project } of entries) {
+                    if (search && !labelFromPayload(project?.payload, row.title).toLowerCase().includes(search)) continue;
                     makeProjectCard(row, project?.payload, target);
                 }
                 for (const { row, project } of entries.slice(0, 3)) {
-                    makeProjectCard(row, project?.payload, recent);
+                    makeProjectCard(row, project?.payload, recent, false);
                 }
             }
             const usage = await editor.store.estimateStorage();
@@ -161,10 +194,194 @@
             const targetProject = user ? await editor.store.getActive(editor.owner()) : null;
             $("studioGuestTransfer").hidden = !(guestProject && !targetProject);
             $("studioContinue").textContent = ordered.length ? "Riprendi progetto" : "Apri editor";
+            updateBackupReminder();
         } catch (error) {
             target.append(makeEmpty("Impossibile leggere la libreria locale."));
             recent.append(makeEmpty("Apri l'editor per continuare."));
             notify("Errore nell'archivio locale: " + error.message, true);
+        }
+    }
+
+    function openProjectDialog(action, record, title) {
+        pendingProjectAction = { action, record, title };
+        $("studioProjectDialog").hidden = false;
+        $("studioProjectDialogError").textContent = "";
+        $("studioProjectDialogTitle").textContent = action === "rename" ? "Rinomina progetto" : "Elimina progetto";
+        $("studioProjectDialogDescription").textContent = action === "rename"
+            ? "Modifica il nome nella tua libreria locale senza cambiare il progetto."
+            : "Il progetto verrà eliminato da questo browser. Prima di continuare, verifica di avere un backup .brat.zip.";
+        $("studioProjectRenameField").hidden = action !== "rename";
+        $("studioProjectDialogConfirm").textContent = action === "rename" ? "Salva nome" : "Elimina definitivamente";
+        $("studioProjectDialogConfirm").classList.toggle("studio-delete-button", action === "delete");
+        $("studioProjectDialogConfirm").classList.toggle("studio-accent-button", action !== "delete");
+        $("studioProjectRenameInput").value = title;
+        (action === "rename" ? $("studioProjectRenameInput") : $("studioProjectDialogConfirm")).focus();
+    }
+
+    function closeProjectDialog() {
+        pendingProjectAction = null;
+        $("studioProjectDialog").hidden = true;
+    }
+
+    async function confirmProjectDialog() {
+        if (busy || !pendingProjectAction) return;
+        const { action, record } = pendingProjectAction;
+        busy = true;
+        $("studioProjectDialogConfirm").disabled = true;
+        try {
+            if (action === "rename") {
+                const title = $("studioProjectRenameInput").value.trim();
+                if (!title) throw new Error("Inserisci un nome per il progetto.");
+                await editor.renameProject(record.projectId, title);
+                notify("Progetto rinominato.");
+            } else {
+                await editor.deleteProject(record.projectId);
+                notify("Progetto eliminato dalla libreria locale.");
+            }
+            closeProjectDialog();
+            await renderProjects();
+        } catch (error) {
+            $("studioProjectDialogError").textContent = error.message;
+        } finally {
+            busy = false;
+            $("studioProjectDialogConfirm").disabled = false;
+        }
+    }
+
+    async function promoteTemporary() {
+        if (busy) return;
+        busy = true;
+        try {
+            if (editor.projectId() !== "temporary") {
+                await editor.openProject("temporary");
+            }
+            await editor.promoteTemporary();
+            notify("Progetto temporaneo salvato nella libreria.");
+            await renderProjects();
+        } catch (error) {
+            notify("Impossibile salvare il temporaneo: " + error.message + " Elimina prima un progetto o esporta un backup.", true);
+        } finally { busy = false; }
+    }
+
+    function updateBackupReminder() {
+        const reminder = window.BratBackupReminders;
+        const banner = $("studioBackupReminder");
+        if (!banner || !reminder) return;
+        const temporary = editor.projectId?.() === "temporary";
+        const due = reminder.shouldRemind(editor.owner(), editor.projectId?.());
+        banner.hidden = !(temporary || due);
+        if (!banner.hidden) {
+            banner.firstChild.textContent = temporary
+                ? "Questo progetto è temporaneo. Esporta una copia .brat.zip; per salvarlo in libreria libera prima uno slot. "
+                : "Hai modificato il progetto senza un backup recente. Esporta una copia .brat.zip per conservarlo fuori dal browser. ";
+        }
+    }
+
+    function exportBackup() {
+        const button = $("exportPackageBtn");
+        if (!button) {
+            notify("La funzione di backup completo non è disponibile.", true);
+            return;
+        }
+        button.click();
+        notify("Esportazione del backup avviata. Il browser salverà un file .brat.zip.");
+    }
+
+    function importBundle() {
+        const input = $("importPackageInput");
+        if (!input) return notify("Importazione .brat.zip non disponibile.", true);
+        input.addEventListener("change", () => viewSwitch("editor"), { once: true });
+        input.click();
+    }
+
+    function renderCodeState() {
+        const element = $("studioShareState");
+        const backendReady = Boolean(window.BratCode && auth.configured());
+        const user = auth.user();
+        $("studioCodeCreate").disabled = !backendReady || !user || Boolean(activeCode);
+        $("studioCodeCopy").hidden = !activeCode;
+        $("studioCodeRevoke").hidden = !activeCode;
+        if (!backendReady) {
+            element.textContent = "Condivisione cloud non configurata. L'editor e i backup locali rimangono disponibili.";
+        } else if (!user) {
+            element.textContent = "Accedi per generare un BRATCODE. Puoi comunque importare un codice come ospite.";
+        } else if (activeCode?.code) {
+            const expires = new Date(activeCode.expires_at);
+            element.textContent = "Codice attivo: " + window.BratCode.prettyCode(activeCode.code) +
+                " · Scadenza " + formatDate(expires);
+        } else {
+            element.textContent = "Nessun codice attivo. Il progetto JSON verrà archiviato temporaneamente sul server per 24 ore.";
+        }
+    }
+
+    async function refreshCode() {
+        activeCode = null;
+        renderCodeState();
+        if (!window.BratCode || !auth.configured() || !auth.user()) return;
+        try {
+            activeCode = await window.BratCode.getActive();
+            renderCodeState();
+        } catch (error) {
+            $("studioShareState").textContent = "BRATCODE non disponibile: " + error.message +
+                ". Verifica la migrazione SQL su Supabase.";
+        }
+    }
+
+    async function createCode() {
+        if (busy) return;
+        busy = true;
+        $("studioCodeCreate").disabled = true;
+        try {
+            await editor.flush();
+            const payload = editor.snapshot();
+            activeCode = await window.BratCode.create(payload);
+            renderCodeState();
+            $("studioCodeMessage").textContent = "Codice creato. Puoi copiarlo e condividerlo per 24 ore.";
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Impossibile creare BRATCODE: " + error.message;
+        } finally { busy = false; renderCodeState(); }
+    }
+
+    async function copyCode() {
+        if (!activeCode) return;
+        const code = window.BratCode.prettyCode(activeCode.code);
+        try {
+            await navigator.clipboard.writeText(code);
+            $("studioCodeMessage").textContent = "BRATCODE copiato negli appunti.";
+        } catch (_) {
+            $("studioCodeMessage").textContent = "Copia manualmente il codice visualizzato: " + code;
+        }
+    }
+
+    async function revokeCode() {
+        if (!activeCode || busy) return;
+        busy = true;
+        try {
+            await window.BratCode.revoke();
+            activeCode = null;
+            $("studioCodeMessage").textContent = "Codice revocato. Non è più utilizzabile.";
+            renderCodeState();
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Revoca non riuscita: " + error.message;
+        } finally { busy = false; }
+    }
+
+    async function importCode() {
+        if (busy) return;
+        busy = true;
+        $("studioCodeImport").disabled = true;
+        try {
+            if (!window.BratCode) throw new Error("BRATCODE non disponibile.");
+            const payload = await window.BratCode.importCode($("studioCodeInput").value);
+            const result = await editor.restoreImportedPayload(payload);
+            $("studioCodeMessage").textContent = "Progetto importato. Riassocia eventuali file audio, immagini e font mancanti.";
+            if (result.temporary) notify("Libreria piena: BRATCODE importato come progetto temporaneo con autosave.");
+            viewSwitch("editor");
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Importazione non riuscita: " + error.message;
+        } finally {
+            busy = false;
+            $("studioCodeImport").disabled = false;
         }
     }
 
@@ -176,15 +393,17 @@
         $("studioHomeView").hidden = next !== "home";
         $("studioProjectsView").hidden = next !== "projects";
         $("studioSettingsView").hidden = next !== "settings";
-        $("studioFutureView").hidden = !(next === "sounds" || next === "share");
-        if (next === "sounds" || next === "share") {
-            $("studioFutureIcon").textContent = next === "sounds" ? "♫" : "↗";
-            $("studioFutureTitle").textContent = next === "sounds" ? "Sound Hub" : "BRATCODE";
-            $("studioFutureText").textContent = next === "sounds"
-                ? "La libreria audio locale con raccolte e preferiti arriverà nella Fase 4."
-                : "La condivisione temporanea dei progetti tramite codice arriverà nella Fase 3.";
+        $("studioShareView").hidden = next !== "share";
+        $("studioFutureView").hidden = next !== "sounds";
+        if (next === "sounds") {
+            $("studioFutureIcon").textContent = "♫";
+            $("studioFutureTitle").textContent = "Sound Hub";
+            $("studioFutureText").textContent = "La libreria audio locale con raccolte e preferiti arriverà nella Fase 4.";
         }
-        document.querySelectorAll("[data-studio-view]").forEach(button => {
+        if (next === "share") refreshCode().catch(error => notify(error.message, true));
+
+
+    document.querySelectorAll("[data-studio-view]").forEach(button => {
             const active = button.dataset.studioView === next;
             button.classList.toggle("is-active", active);
             if (active) button.setAttribute("aria-current", "page");
@@ -216,7 +435,8 @@
         if (busy) return;
         busy = true;
         try {
-            await editor.createNew();
+            const result = await editor.createNew();
+            if (result?.temporary) notify("Libreria piena: stai lavorando nell'unico progetto temporaneo con autosave. Esporta un backup prima di chiudere il browser.");
             viewSwitch("editor");
         } catch (error) {
             notify("Non è possibile creare il progetto: " + error.message + " Puoi esportare o eliminare un vecchio progetto.", true);
@@ -323,6 +543,7 @@
             currentUserId = nextId;
             profile();
             await renderProjects();
+            if (view === "share") refreshCode().catch(() => {});
             const isFirst = !initialSessionHandled;
             initialSessionHandled = true;
             if (user && (isFirst || view !== "editor")) {
@@ -334,6 +555,36 @@
             if (user) closeAuth();
         }).catch(error => notify("Impossibile cambiare libreria: " + error.message, true));
     }
+
+    // Register dashboard controls exactly once. View transitions must never
+    // add duplicate listeners (especially destructive project actions).
+        $("studioProjectSearch")?.addEventListener("input", () => renderProjects().catch(error => notify(error.message, true)));
+    $("studioProjectDialogClose").addEventListener("click", closeProjectDialog);
+    $("studioProjectDialogCancel").addEventListener("click", closeProjectDialog);
+    $("studioProjectDialogConfirm").addEventListener("click", confirmProjectDialog);
+    $("studioProjectRenameInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") { event.preventDefault(); confirmProjectDialog(); }
+    });
+    $("studioBackupActive").addEventListener("click", exportBackup);
+    $("studioBackupNow").addEventListener("click", exportBackup);
+    $("studioImportBundle").addEventListener("click", importBundle);
+    $("studioBackupDismiss").addEventListener("click", () => {
+        window.BratBackupReminders?.dismiss(editor.owner(), editor.projectId?.());
+        updateBackupReminder();
+    });
+    $("studioCodeCreate").addEventListener("click", createCode);
+    $("studioCodeCopy").addEventListener("click", copyCode);
+    $("studioCodeRevoke").addEventListener("click", revokeCode);
+    $("studioCodeImport").addEventListener("click", importCode);
+    window.addEventListener("brat:backup-exported", () => {
+        notify("Backup completo esportato. Conserva il file .brat.zip al sicuro.");
+        updateBackupReminder();
+    });
+    window.addEventListener("brat:project-imported", () => {
+        notify("Progetto .brat.zip importato.");
+        viewSwitch("editor");
+    });
+    window.addEventListener("brat:backup-reminder-state", updateBackupReminder);
 
     document.querySelectorAll("[data-studio-view]").forEach(button =>
         button.addEventListener("click", () => viewSwitch(button.dataset.studioView)));
@@ -359,6 +610,7 @@
         if (event.key !== "Escape") return;
         if (!$("studioAuthDialog").hidden) closeAuth();
         if (!$("studioLogoutDialog").hidden) closeLogout();
+        if (!$("studioProjectDialog").hidden) closeProjectDialog();
     });
 
     // Mobile editor has no persistent sidebar; provide a one-click return.
