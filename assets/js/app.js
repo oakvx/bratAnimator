@@ -3353,9 +3353,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 letterChunkSize: clamp(Math.round(Number(letterChunkSizeInput?.value) || state.style.letterChunkSize || 2), 1, 12),
                 lineSpacing: (Number(lineSpacingInput?.value) || 92) / 100,
                 lyricsMode: lyricsDisplayModeSelect?.value || state.style.lyricsMode || "brat",
-                kineticWords: clamp(Math.round(Number(document.getElementById("kineticWordsInput")?.value ?? state.style.kineticWords ?? 6)), 2, 9),
                 kineticVariation: clamp(Number(document.getElementById("kineticVariationInput")?.value ?? state.style.kineticVariation ?? 72), 0, 100),
-                kineticMotion: clamp(Number(document.getElementById("kineticMotionInput")?.value ?? state.style.kineticMotion ?? 55), 0, 100),
                 musicAlign: musicAlignSelect?.value || state.style.musicAlign || "left",
                 musicWordHighlight: Boolean(wordHighlightCheckbox?.checked),
                 musicActiveScale: (Number(musicActiveScaleInput?.value) || 116) / 100,
@@ -3376,7 +3374,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             };
             const kineticPanel = document.getElementById("kineticSettings");
             if (kineticPanel) kineticPanel.hidden = state.style.lyricsMode !== "kinetic";
-            for (const [inputId, outputId, suffix] of [["kineticWordsInput", "kineticWordsValue", ""], ["kineticVariationInput", "kineticVariationValue", "%"], ["kineticMotionInput", "kineticMotionValue", "%"]]) {
+            for (const [inputId, outputId, suffix] of [["kineticVariationInput", "kineticVariationValue", "%"]]) {
                 const input = document.getElementById(inputId);
                 const output = document.getElementById(outputId);
                 if (input && output) output.textContent = input.value + suffix;
@@ -3399,9 +3397,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (colorSwapUnitSelect) colorSwapUnitSelect.value = colorSwap.unit;
             if (colorSwapIntervalInput) colorSwapIntervalInput.value = colorSwap.interval;
             if (lyricsDisplayModeSelect) lyricsDisplayModeSelect.value = style.lyricsMode || "brat";
-            if (document.getElementById("kineticWordsInput")) document.getElementById("kineticWordsInput").value = style.kineticWords ?? 6;
             if (document.getElementById("kineticVariationInput")) document.getElementById("kineticVariationInput").value = style.kineticVariation ?? 72;
-            if (document.getElementById("kineticMotionInput")) document.getElementById("kineticMotionInput").value = style.kineticMotion ?? 55;
             if (musicAlignSelect) musicAlignSelect.value = style.musicAlign || "left";
             if (wordHighlightCheckbox) wordHighlightCheckbox.checked = style.musicWordHighlight !== false;
             if (musicActiveScaleInput) musicActiveScaleInput.value = Math.round((style.musicActiveScale || 1.16) * 100);
@@ -5173,7 +5169,7 @@ async function updateExportEstimate() {
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
         exportSizeSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
-        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, document.getElementById("kineticWordsInput"), document.getElementById("kineticVariationInput"), document.getElementById("kineticMotionInput"), beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
+        [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, document.getElementById("kineticVariationInput"), beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
                 if (themePresetSelect && [bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput].includes(control)) {
                     themePresetSelect.value = "custom";
