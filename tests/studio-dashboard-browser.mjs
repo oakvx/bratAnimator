@@ -119,7 +119,7 @@ try {
     // For guests the TikTok action remains an entry to the real sign-in UI;
     // only a logged-in user with unconfigured OAuth gets a disabled button.
     assert.equal(await evaluate("document.getElementById('studioTikTokConnect').disabled"),false);
-    assert.equal(await evaluate("document.getElementById('studioTikTokStatus').textContent.includes('Accedi')"),true);
+    assert.equal(await evaluate("/accedi/i.test(document.getElementById('studioTikTokStatus').textContent)"),true);
     await evaluate("document.getElementById('studioTikTokConnect').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
     await evaluate("document.getElementById('studioAuthGuest').click()");
