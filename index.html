@@ -269,6 +269,8 @@
     <script src="assets/js/backup-reminders.js" defer></script>
     <script src="assets/js/sound-hub.js" defer></script>
     <script src="assets/js/studio-dashboard.js" defer></script>
+    <script src="assets/js/win7-shell.js" defer></script>
+    <script src="assets/js/tiktok-link.js" defer></script>
     <script src="assets/js/sound-hub-ui.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
 </head>
@@ -403,7 +405,19 @@
                 <div class="studio-settings-card"><h3>Suoni dell’interfaccia</h3><p>Feedback sonoro morbido sui pulsanti della dashboard. Nessun effetto sull’editor, sul video o sull’esportazione. Tutti i suoni vengono sintetizzati localmente.</p><button id="studioSettingsSound" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button></div>
                 <div class="studio-settings-card"><h3>Archiviazione locale</h3><p>I progetti restano in questo browser. Se cancelli i dati del sito o cambi dispositivo, non saranno sincronizzati automaticamente.</p><p id="studioStorageUsage" class="studio-storage-usage">Spazio occupato: in verifica…</p></div>
                 <div id="studioGuestTransfer" class="studio-settings-card" hidden><h3>Progetto ospite</h3><p>Puoi copiare il progetto ospite in questo account. L'originale rimane disponibile come ospite.</p><button id="studioTransferGuest" type="button">Copia il progetto ospite</button></div>
-                <div class="studio-settings-card"><h3>TikTok</h3><p>Il collegamento facoltativo dell'account TikTok sarà disponibile nelle prossime fasi.</p></div>
+                <div class="studio-settings-card" id="studioTikTokSettings">
+  <h3>TikTok</h3>
+  <p>Collega facoltativamente il tuo profilo TikTok. Non sostituisce il login Brat Animator.</p>
+  <div class="studio-tiktok-profile" id="studioTikTokProfile" hidden>
+    <img id="studioTikTokAvatar" alt="Avatar TikTok" width="38" height="38" hidden>
+    <strong id="studioTikTokName"></strong>
+  </div>
+  <p id="studioTikTokStatus" role="status">Verifica connessione…</p>
+  <div class="studio-settings-actions">
+    <button id="studioTikTokConnect" type="button">Collega TikTok</button>
+    <button id="studioTikTokDisconnect" type="button" hidden>Scollega TikTok</button>
+  </div>
+</div>
             </div>
 
             <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><h2 id="studioFutureTitle">Informazioni</h2><p id="studioFutureText"></p><span id="studioFutureIcon" hidden>♫</span><button type="button" data-studio-view="home">Indietro</button></div></div>
@@ -433,7 +447,7 @@
 
     <div id="studioSoundCollectionDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioSoundCollectionTitle">
-            <div class="title-bar"><div class="title-bar-text">Sound Hub</div></div>
+            <div class="title-bar"><div class="title-bar-text">Sound Hub</div><div class="title-bar-controls"><button type="button" aria-label="Close" title="Chiudi" data-click-target="studioSoundCollectionCancel"></button></div></div>
             <div class="window-body">
                 <h2 id="studioSoundCollectionTitle">Nuova raccolta</h2>
                 <form id="studioSoundCollectionForm">
@@ -450,7 +464,7 @@
 
     <div id="studioSoundConfirmDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioSoundConfirmTitle">
-            <div class="title-bar"><div class="title-bar-text">Brat Animator</div></div>
+            <div class="title-bar"><div class="title-bar-text">Brat Animator</div><div class="title-bar-controls"><button type="button" aria-label="Close" title="Annulla" data-click-target="studioSoundConfirmNo"></button></div></div>
             <div class="window-body">
                 <h2 id="studioSoundConfirmTitle">Conferma</h2>
                 <p id="studioSoundConfirmText"></p>
@@ -464,9 +478,9 @@
 
     <div id="studioProjectDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
-            <div class="title-bar"><div class="title-bar-text">Progetto</div></div>
+            <div class="title-bar"><div class="title-bar-text">Progetto</div><div class="title-bar-controls"><button id="studioProjectDialogClose" type="button" aria-label="Close" title="Chiudi"></button></div></div>
             <div class="window-body">
-            <button id="studioProjectDialogClose" type="button" class="studio-modal-close" aria-label="Annulla">×</button>
+            
 
             <h2 id="studioProjectDialogTitle">Gestisci progetto</h2>
             <p id="studioProjectDialogDescription">Le operazioni modificano soltanto i file locali di questo browser.</p>
@@ -485,9 +499,9 @@
 
     <div id="studioAuthDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
-            <div class="title-bar"><div class="title-bar-text">Accesso</div></div>
+            <div class="title-bar"><div class="title-bar-text">Accesso</div><div class="title-bar-controls"><button id="studioAuthClose" type="button" aria-label="Close" title="Chiudi"></button></div></div>
             <div class="window-body">
-            <button id="studioAuthClose" class="studio-modal-close" type="button" aria-label="Chiudi finestra">×</button>
+            
             
             <h2 id="studioAuthTitle">Accedi a Brat Animator</h2>
             <p>Accedi per avere una libreria locale associata al tuo account. Puoi continuare a usare l'editor gratuitamente anche senza registrarti.</p>
@@ -514,9 +528,9 @@
 
     <div id="studioLogoutDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioLogoutTitle">
-            <div class="title-bar"><div class="title-bar-text">Sessione</div></div>
+            <div class="title-bar"><div class="title-bar-text">Sessione</div><div class="title-bar-controls"><button id="studioLogoutCancelX" type="button" aria-label="Close" title="Annulla"></button></div></div>
             <div class="window-body">
-            <button id="studioLogoutCancelX" class="studio-modal-close" type="button" aria-label="Annulla">×</button>
+            
             <span class="studio-eyebrow">SESSIONE</span><h2 id="studioLogoutTitle">Vuoi uscire?</h2>
             <p>I tuoi progetti sono salvati in questo browser, non nel cloud. Scegli cosa fare della libreria locale dell'account.</p>
             <button id="studioLogoutKeep" class="studio-accent-button studio-auth-submit" type="button">Mantieni i progetti ed esci</button>
