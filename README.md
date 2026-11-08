@@ -67,7 +67,7 @@ Media: locally supplied audio, images, video backgrounds, and custom font files 
 
 Brat Animator implements multiple text-rendering modes, including Brat, Music, Cinematic, and **Kinetic Collage**.
 
-Kinetic Collage uses resolution-independent two-dimensional word packing: deterministic, compact typography with different font sizes, adjacency constraints and safe canvas margins. Words are progressively revealed without text opacity crossfades. The preview and media export use the same scene compositor.
+Kinetic Collage uses resolution-independent two-dimensional word packing: deterministic, compact typography with different font sizes, adjacency constraints and safe canvas margins. Every **stanza has its own stable, isolated canvas**; separate stanzas with blank LRC lines (or supported `[Verse]`/`[Chorus]` headings). New words appear **immediately** at their timestamps: no fade, scaling, or automatic full-screen palette swaps even for fast rap. The complete stanza is auto-fitted, not split after a fixed number of words. Preview and video exports use the same compositor and cached geometry.
 
 Canvas layout and source timestamps are evaluated independently of dashboard effects. Dashboard click sounds use synthesized Web Audio and are never mixed into exported video.
 
