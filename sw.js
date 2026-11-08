@@ -1,13 +1,11 @@
-const CACHE_NAME = "brat-animator-v11-windows7-tiktok-phase5";
+const CACHE_NAME = "brat-animator-v12-native-7css-login-fix";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./assets/css/style.css",
   "./assets/css/editor-v5.css",
-"./assets/css/studio-dashboard.css",
-  "./assets/css/aero-theme.css",
-  "./assets/css/classic-desktop.css",
-  "./assets/css/win7-app.css",
+  "./vendor/7css/7.scoped.css",
+  "./assets/css/studio-win7.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
