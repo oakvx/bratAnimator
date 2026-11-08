@@ -316,7 +316,6 @@
                 <div class="studio-library-tools">
                   <label class="studio-library-search"><span class="sr-only">Cerca progetti</span><input id="studioProjectSearch" type="search" placeholder="Cerca nei tuoi progetti…" autocomplete="off"></label>
                   <button id="studioImportBundle" type="button">Importa .brat.zip</button>
-                  <input id="studioBundleInput" type="file" accept=".zip,.brat" hidden>
                   <button id="studioBackupActive" type="button">Backup progetto aperto</button>
                 </div>
                 <p id="studioBackupReminder" class="studio-backup-reminder" role="status" hidden>Hai modificato questo progetto senza creare un backup recente. Esporta una copia .brat.zip per conservarlo anche fuori dal browser. <button id="studioBackupNow" type="button">Crea backup</button><button id="studioBackupDismiss" type="button">Più tardi</button></p>
@@ -353,6 +352,24 @@
             <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><span id="studioFutureIcon">♫</span><span class="studio-eyebrow">COMING NEXT</span><h2 id="studioFutureTitle">Prossimamente</h2><p id="studioFutureText">Questa funzionalità è in preparazione.</p><button type="button" data-studio-view="home">Torna alla Home</button></div></div>
         </div>
     </section>
+
+    <div id="studioProjectDialog" class="studio-modal-backdrop" hidden>
+        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
+            <button id="studioProjectDialogClose" type="button" class="studio-modal-close" aria-label="Annulla">×</button>
+            <span class="studio-eyebrow">LOCAL PROJECT MANAGER</span>
+            <h2 id="studioProjectDialogTitle">Gestisci progetto</h2>
+            <p id="studioProjectDialogDescription">Le operazioni modificano soltanto i file locali di questo browser.</p>
+            <div id="studioProjectRenameField">
+                <label for="studioProjectRenameInput">Nome del progetto</label>
+                <input id="studioProjectRenameInput" type="text" maxlength="120" required />
+            </div>
+            <p id="studioProjectDialogError" role="status" class="studio-auth-message"></p>
+            <div class="studio-settings-actions">
+                <button id="studioProjectDialogConfirm" type="button" class="studio-accent-button">Conferma</button>
+                <button id="studioProjectDialogCancel" type="button">Annulla</button>
+            </div>
+        </section>
+    </div>
 
     <div id="studioAuthDialog" class="studio-modal-backdrop" hidden>
         <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
