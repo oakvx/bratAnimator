@@ -211,17 +211,32 @@
             sceneIndex: 0
         };
     }
-    // Keep the latest words from previous lyric lines: short LRC lines still form
-    // a complete composition instead of returning to a one-word slide.
+    // A stanza is a stable, isolated scene. Blank LRC lines and named section
+    // headers produce stanzaIndex in the parser; long pauses are a fallback
+    // for providers that strip those separators when importing lyrics.
+    function startsNewStanza(previous, next) {
+        if (!previous || !next || !String(previous.text || "").trim()
+            || !String(next.text || "").trim()) return true;
+        if (Number.isInteger(previous.stanzaIndex) && Number.isInteger(next.stanzaIndex)
+            && previous.stanzaIndex !== next.stanzaIndex) return true;
+        const vocalEnd = finite(previous.vocalEnd, previous.displayEnd);
+        return Number.isFinite(vocalEnd) && next.displayStart - vocalEnd >= 3;
+    }
     function buildTimelineFrame(ctx, timeline, time, width, height, style, seed = 1337) {
         if (!Array.isArray(timeline)) return { groups: [], activeIndex: -1 };
-        const activeLine = timeline.find(line => time >= line.displayStart && time < line.displayEnd);
-        if (!activeLine || !String(activeLine.text || "").trim()) return { groups: [], activeIndex: -1 };
-        const stream = timeline
-            .filter(line => String(line.text || "").trim())
-            .flatMap(getWords)
+        // Prefer the newest line when two overlapping singers have active slots.
+        const activeIndex = timeline.findLastIndex(line =>
+            time >= line.displayStart && time < line.displayEnd);
+        if (activeIndex < 0 || !String(timeline[activeIndex].text || "").trim())
+            return { groups: [], activeIndex: -1 };
+        let first = activeIndex;
+        let last = activeIndex;
+        while (first > 0 && !startsNewStanza(timeline[first - 1], timeline[first])) first -= 1;
+        while (last < timeline.length - 1 && !startsNewStanza(timeline[last], timeline[last + 1])) last += 1;
+        const stream = timeline.slice(first, last + 1).flatMap(getWords)
             .sort((a, b) => a.start - b.start);
-        return buildFrame(ctx, { sourceRowId: "kinetic-stream", timedWords: stream },
+        const id = timeline[first].sourceRowId || timeline[first].displayStart || first;
+        return buildFrame(ctx, { sourceRowId: "kinetic-stanza:" + id, timedWords: stream },
             time, width, height, style, seed);
     }
     return { buildFrame, buildTimelineFrame, getWords, normalize, rowCounts };
