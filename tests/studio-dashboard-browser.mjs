@@ -116,8 +116,13 @@ try {
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
     await evaluate("window.BratStudio.show('settings')");
     await until("!document.getElementById('studioSettingsView').hidden");
-    assert.equal(await evaluate("document.getElementById('studioTikTokConnect').disabled"),true);
+    // For guests the TikTok action remains an entry to the real sign-in UI;
+    // only a logged-in user with unconfigured OAuth gets a disabled button.
+    assert.equal(await evaluate("document.getElementById('studioTikTokConnect').disabled"),false);
     assert.equal(await evaluate("document.getElementById('studioTikTokStatus').textContent.includes('Accedi')"),true);
+    await evaluate("document.getElementById('studioTikTokConnect').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
+    await evaluate("document.getElementById('studioAuthGuest').click()");
     await evaluate("window.BratStudio.show('home')");
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),true);
     await evaluate("document.getElementById('studioSoundToggle').click()");
