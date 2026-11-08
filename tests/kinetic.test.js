@@ -83,7 +83,7 @@ test("existing words keep exactly the same position when new words appear in a s
 test("word boxes form a non-overlapping compact cluster rather than uniform aligned rows", () => {
     const ctx = canvasContext();
     for (const [width,height] of [[710,400],[1080,1080],[1080,1920],[1920,1080]]) {
-        const frame = kinetic.buildTimelineFrame(ctx, timeline, 6.9, width, height, style, 42);
+        const frame = kinetic.buildTimelineFrame(ctx, timeline, 5.9, width, height, style, 42);
         const nodes = frame.groups[0].nodes;
         for (let i = 0; i < nodes.length; i++) {
             const a = nodes[i].bounds;
