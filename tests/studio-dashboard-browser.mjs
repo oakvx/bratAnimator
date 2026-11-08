@@ -232,7 +232,7 @@ try {
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display !== 'none'"),true);
     const relevantErrors=errors.filter(error=>!error.includes("ResizeObserver loop"));
     assert.deepEqual(relevantErrors,[], "Unexpected browser JS exceptions");
-    console.log("Classic Desktop browser smoke: projects, Sound Hub import/use, guest auth, editor and mobile return — PASS");
+    console.log("Windows 7 UI browser smoke: visible login, native tabs, Sound Hub and editor — PASS");
 } finally {
     ws?.close();
     browser.kill();
