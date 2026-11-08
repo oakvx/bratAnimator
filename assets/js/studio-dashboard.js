@@ -14,6 +14,8 @@
     let authChanging = Promise.resolve();
     let currentUserId = null;
     let initialSessionHandled = false;
+    let pendingProjectAction = null;
+    let activeCode = null;
 
     function notify(message, isError = false) {
         const node = $("studioNotice");
@@ -109,7 +111,35 @@
         card.append(art, info);
         card.setAttribute("aria-label", "Apri " + titleText);
         card.addEventListener("click", () => openProject(record.projectId));
-        parent.append(card);
+        const entry = document.createElement("div");
+        entry.className = "studio-project-entry";
+        entry.append(card);
+        const tools = document.createElement("div");
+        tools.className = "studio-project-actions";
+        const rename = document.createElement("button");
+        rename.type = "button";
+        rename.textContent = "Rinomina";
+        rename.setAttribute("aria-label", "Rinomina " + titleText);
+        rename.addEventListener("click", () => openProjectDialog("rename", record, titleText));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Elimina";
+        remove.setAttribute("aria-label", "Elimina " + titleText);
+        remove.addEventListener("click", () => openProjectDialog("delete", record, titleText));
+        tools.append(rename, remove);
+        if (record.kind === "temporary") {
+            const promote = document.createElement("button");
+            promote.type = "button";
+            promote.textContent = "Salva in libreria";
+            promote.addEventListener("click", promoteTemporary);
+            tools.prepend(promote);
+            const tag = document.createElement("small");
+            tag.className = "studio-temporary-label";
+            tag.textContent = "TEMPORANEO · recupero locale";
+            art.prepend(tag);
+        }
+        entry.append(tools);
+        parent.append(entry);
     }
 
     function makeEmpty(message) {
@@ -136,8 +166,9 @@
         }
         try {
             const records = await editor.store.listProjects(editor.owner());
-            const ordered = records.filter(row => row.kind !== "temporary").sort((a, b) => b.updatedAt - a.updatedAt);
-            $("studioProjectCount").textContent = ordered.length + " progetto/i associati a questo profilo · limite globale 20 + 1 temporaneo";
+            const ordered = records.sort((a, b) => (a.kind === "temporary" ? -1 : 0) - (b.kind === "temporary" ? -1 : 0) || b.updatedAt - a.updatedAt);
+            const totals = await editor.store.stats();
+            $("studioProjectCount").textContent = totals.saved + "/20 progetti salvati globalmente · " + totals.temporary + "/1 temporaneo · " + records.length + " qui";
             if (!ordered.length) {
                 target.append(makeEmpty("Crea il tuo primo progetto nell'editor."));
                 recent.append(makeEmpty("Inizia con un nuovo lyric video."));
@@ -161,6 +192,7 @@
             const targetProject = user ? await editor.store.getActive(editor.owner()) : null;
             $("studioGuestTransfer").hidden = !(guestProject && !targetProject);
             $("studioContinue").textContent = ordered.length ? "Riprendi progetto" : "Apri editor";
+            updateBackupReminder();
         } catch (error) {
             target.append(makeEmpty("Impossibile leggere la libreria locale."));
             recent.append(makeEmpty("Apri l'editor per continuare."));
@@ -216,7 +248,8 @@
         if (busy) return;
         busy = true;
         try {
-            await editor.createNew();
+            const result = await editor.createNew();
+            if (result?.temporary) notify("Libreria piena: stai lavorando nell'unico progetto temporaneo con autosave. Esporta un backup prima di chiudere il browser.");
             viewSwitch("editor");
         } catch (error) {
             notify("Non è possibile creare il progetto: " + error.message + " Puoi esportare o eliminare un vecchio progetto.", true);
