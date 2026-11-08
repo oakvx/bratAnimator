@@ -278,6 +278,7 @@
     <script src="assets/js/sound-hub-ui.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
     <script src="assets/js/export-preflight.js" defer></script>
+    <script src="assets/js/editor-templates.js" defer></script>
 </head>
 
 <body>
@@ -800,6 +801,19 @@
 
         <div id="section-design" class="section editor-section" data-editor-tab="design" role="tabpanel" aria-labelledby="tab-design">
             <div class="section-title">style and animation</div>
+            <section class="editor-template-section" aria-labelledby="editorTemplateHeading">
+                <div class="editor-template-heading">
+                    <h3 id="editorTemplateHeading">Quick templates</h3>
+                    <p>Use a prepared look and format without replacing your lyrics or imported media.</p>
+                </div>
+                <div id="editorTemplateGallery" class="editor-template-gallery">
+                    <button type="button" data-template="brat-classic"><strong>Brat Classic</strong><span>Square · green · typewriter</span></button>
+                    <button type="button" data-template="kinetic-reels"><strong>Kinetic Reels</strong><span>9:16 · kinetic collage</span></button>
+                    <button type="button" data-template="cinematic"><strong>Cinematic</strong><span>16:9 · cinematic scroll</span></button>
+                    <button type="button" data-template="music-vertical"><strong>Music Scroll</strong><span>9:16 · synchronized lyrics</span></button>
+                </div>
+                <p id="editorTemplateStatus" class="mini-copy" role="status" aria-live="polite">Choose a template to apply its style and export format.</p>
+            </section>
             <fieldset id="textSettings" class="text-settings" aria-describedby="textSettingsHelp">
                 <legend data-i18n="textSettings">text settings</legend>
                 <p id="textSettingsHelp" class="mini-copy" data-i18n="textSettingsHelp">Adjust your lyrics in the preview. Changes are saved with the project and used in exports.</p>
