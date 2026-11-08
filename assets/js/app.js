@@ -5154,6 +5154,7 @@ async function updateExportEstimate() {
         });
 
         formatPresetSelect?.addEventListener("change", applyFormatPreset);
+        exportSizeSelect?.addEventListener("change", applyFormatPreset);
         themePresetSelect?.addEventListener("change", () => applyStylePreset(themePresetSelect.value));
         [animationModeSelect, lyricsDisplayModeSelect, musicAlignSelect, wordHighlightCheckbox, musicActiveScaleInput, musicDimOpacityInput, musicScrollPositionInput, wordAnimationModeSelect, wordAnimationIntensityInput, wordAnimationColorInput, document.getElementById("kineticWordsInput"), document.getElementById("kineticVariationInput"), document.getElementById("kineticMotionInput"), beautifulDynamicBgCheckbox, beautifulSideVocalsCheckbox, beautifulMotionInput, beautifulDepthInput, beautifulGlowInput, beautifulEdgeFadeInput, bgColorInput, textColorInput, backgroundFillTypeSelect, gradientColorInput, gradientAngleInput, colorSwapEnabledCheckbox, colorSwapUnitSelect, colorSwapIntervalInput, fontFamilySelect, fontScaleInput, blurInput, verticalPositionInput, stretchInput, letterSpacingInput, letterChunkSizeInput, lineSpacingInput, safeZonesCheckbox].forEach((control) => {
             control?.addEventListener("input", () => {
@@ -6113,7 +6114,10 @@ async function updateExportEstimate() {
         button.addEventListener('click', () => {
             if (!formatPresetSelect) return;
             formatPresetSelect.value = button.dataset.presetQuick || 'square';
-            applyFormatPreset();
+            // Dispatch the same public control event used by the format menu.
+            // This refreshes preview dimensions, stage label, export estimate
+            // and autosave together without maintaining a second UI path.
+            formatPresetSelect.dispatchEvent(new Event('change', { bubbles: true }));
             updateSidebarStatus();
         });
     });
