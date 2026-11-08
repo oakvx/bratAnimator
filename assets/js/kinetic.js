@@ -219,7 +219,7 @@
         const activeLine = timeline.find(line => time >= line.displayStart && time < line.displayEnd);
         if (!activeLine || !String(activeLine.text || "").trim()) return { groups: [], activeIndex: -1 };
         const stream = timeline
-            .filter(line => line.displayStart <= activeLine.displayStart && String(line.text || "").trim())
+            .filter(line => String(line.text || "").trim())
             .flatMap(getWords)
             .sort((a, b) => a.start - b.start);
         return buildFrame(ctx, { sourceRowId: "kinetic-stream", timedWords: stream },
