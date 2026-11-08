@@ -324,7 +324,7 @@
             </div>
 
             <div id="studioProjectsView" class="studio-view" hidden>
-                <div class="studio-section-heading"><div><span class="studio-eyebrow">SAVED LOCALLY</span><h2>I tuoi progetti</h2><p id="studioProjectCount">Archivio locale del dispositivo</p></div><button id="studioProjectsNew" class="studio-accent-button" type="button">+ Nuovo</button></div>
+                <div class="studio-section-heading"><div><h2>I tuoi progetti</h2><p id="studioProjectCount">Archivio locale del dispositivo</p></div><button id="studioProjectsNew" class="studio-accent-button" type="button">+ Nuovo</button></div>
                 <p class="studio-muted">Le librerie sono separate per account, ma usano lo stesso spazio del browser. Nessuna sincronizzazione cloud automatica.</p>
                 <div class="studio-library-tools">
                   <label class="studio-library-search"><span class="sr-only">Cerca progetti</span><input id="studioProjectSearch" type="search" placeholder="Cerca nei tuoi progetti…" autocomplete="off"></label>
@@ -369,7 +369,7 @@
             </div>
 
             <div id="studioShareView" class="studio-view" hidden>
-                <div class="studio-section-heading"><div><span class="studio-eyebrow">PROJECT SHARING</span><h2>BRATCODE</h2><p>Condividi una copia modificabile delle impostazioni del tuo progetto, senza file multimediali.</p></div></div>
+                <div class="studio-section-heading"><div><h2>BRATCODE</h2><p>Condividi una copia modificabile delle impostazioni del tuo progetto, senza file multimediali.</p></div></div>
                 <div class="studio-settings-card">
                     <h3>Condividi progetto</h3>
                     <p>Genera un codice valido per 24 ore e riutilizzabile più volte. Solo gli account registrati possono generare un codice. L'importazione è disponibile anche agli ospiti.</p>
@@ -385,7 +385,7 @@
                 </div>
             </div>
             <div id="studioSettingsView" class="studio-view" hidden>
-                <div class="studio-section-heading"><div><span class="studio-eyebrow">ACCOUNT & PRIVACY</span><h2>Impostazioni</h2></div></div>
+                <div class="studio-section-heading"><div><h2>Impostazioni</h2></div></div>
                 <div class="studio-settings-card"><h3>Account</h3><p id="studioAccountDescription">Stai utilizzando Brat Animator come ospite.</p>
                     <div class="studio-settings-actions"><button id="studioSettingsLogin" class="studio-accent-button" type="button">Accedi / Registrati</button><button id="studioSettingsLogout" type="button" hidden>Esci dall'account</button></div>
                 </div>
@@ -418,6 +418,20 @@
         </section>
     </div>
 
+    <div id="studioSoundConfirmDialog" class="studio-modal-backdrop win7" hidden>
+        <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioSoundConfirmTitle">
+            <div class="title-bar"><div class="title-bar-text">Brat Animator</div></div>
+            <div class="window-body">
+                <h2 id="studioSoundConfirmTitle">Conferma</h2>
+                <p id="studioSoundConfirmText"></p>
+                <div class="studio-classic-commandbar">
+                    <button id="studioSoundConfirmYes" type="button">Conferma</button>
+                    <button id="studioSoundConfirmNo" type="button">Annulla</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <div id="studioProjectDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
             <button id="studioProjectDialogClose" type="button" class="studio-modal-close" aria-label="Annulla">×</button>
@@ -439,8 +453,8 @@
     <div id="studioAuthDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
             <button id="studioAuthClose" class="studio-modal-close" type="button" aria-label="Chiudi finestra">×</button>
-            <span class="studio-eyebrow">BRAT ANIMATOR ACCOUNT</span>
-            <h2 id="studioAuthTitle">Benvenuto nello studio.</h2>
+            
+            <h2 id="studioAuthTitle">Accedi a Brat Animator</h2>
             <p>Accedi per avere una libreria locale associata al tuo account. Puoi continuare a usare l'editor gratuitamente anche senza registrarti.</p>
             <div id="studioAuthSetup" class="studio-auth-setup" role="status" hidden>Autenticazione non ancora collegata. Un amministratore deve configurare Supabase; per ora puoi usare l'editor come ospite.</div>
             <div class="studio-auth-tabs" role="group" aria-label="Modalità di accesso">
