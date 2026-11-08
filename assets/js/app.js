@@ -6035,7 +6035,7 @@ async function updateExportEstimate() {
         panel.classList.remove('hidden');
         syncPanelState();
         openEditorTab('design');
-        document.getElementById('textSettings')?.scrollIntoView({ block: 'start', behavior: 'auto' });
+        document.getElementById('textSettings')?.scrollIntoView({ block: 'start', behavior: 'instant' });
         fontScaleInput?.focus({ preventScroll: true });
     }
 
