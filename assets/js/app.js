@@ -202,6 +202,124 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const MEDIA_STORE_NAME = "media";
         const UNDO_LIMIT = 60;
 
+        // Phase 1: persist the active guest workspace in IndexedDB. Account switching
+        // and multi-project library navigation are introduced in later phases.
+        const WORKSPACE_OWNER = "guest";
+        const WORKSPACE_LEGACY_KEYS = ["bratAnimator.project.v5", "bratAnimator.project.v4", "bratAnimator.project.v3", "bratAnimator.project.v2"];
+        const WORKSPACE_FALLBACK_TIME_KEY = "bratAnimator.workspace.fallbackAt.v1";
+        const WORKSPACE_HAS_SAVED_KEY = "bratAnimator.workspace.hasSaved.v1";
+        const workspaceStore = window.BratWorkspace?.createStore() || null;
+        let workspaceAutosave = null;
+        let workspaceReady = false;
+        let workspaceTouchedDuringBoot = false;
+        let workspaceEarlyDirty = null;
+        let workspaceDiscardGeneration = 0;
+        let workspaceResetting = false;
+
+        ["input", "pointerdown", "keydown"].forEach(type => {
+            document.addEventListener(type, () => {
+                if (!workspaceReady) workspaceTouchedDuringBoot = true;
+            }, { capture: true });
+        });
+
+        function announceWorkspaceStatus(status, error = null) {
+            const badge = document.getElementById("autosaveBadge");
+            if (!badge) return;
+            const labels = {
+                ready: "local workspace ready",
+                pending: "unsaved changes",
+                saving: "saving locally…",
+                saved: "saved locally",
+                cleared: "local save cleared",
+                fallback: "saved in browser fallback",
+                error: "save failed — export a backup"
+            };
+            badge.textContent = labels[status] || status;
+            badge.dataset.workspaceStatus = status;
+            badge.title = error?.message || "Projects stay on this device; signing in does not synchronize them.";
+            if (status === "saved") {
+                try {
+                    localStorage.setItem(WORKSPACE_HAS_SAVED_KEY, "1");
+                    for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+                    localStorage.removeItem(WORKSPACE_FALLBACK_TIME_KEY);
+                } catch (_) {}
+            }
+        }
+
+        function writeLegacyFallback(payload, error = null) {
+            try {
+                localStorage.setItem(WORKSPACE_LEGACY_KEYS[0], JSON.stringify(payload));
+                localStorage.setItem(WORKSPACE_FALLBACK_TIME_KEY, String(Date.now()));
+                announceWorkspaceStatus("fallback", error);
+                return true;
+            } catch (fallbackError) {
+                console.warn("local recovery fallback failed", fallbackError);
+                announceWorkspaceStatus("error", fallbackError);
+                return false;
+            }
+        }
+
+        async function initializeLocalWorkspace(sharedProject, legacyProject) {
+            if (!workspaceStore) {
+                workspaceReady = true;
+                announceWorkspaceStatus("fallback");
+                return;
+            }
+            const generation = workspaceDiscardGeneration;
+            let existing = null;
+            let readError = null;
+            try {
+                existing = await workspaceStore.getActive(WORKSPACE_OWNER);
+            } catch (error) {
+                readError = error;
+                console.warn("IndexedDB workspace could not be read; localStorage recovery remains available", error);
+            }
+            if (generation !== workspaceDiscardGeneration) return;
+
+            const fallbackAt = Number(localStorage.getItem(WORKSPACE_FALLBACK_TIME_KEY)) || 0;
+            const fallbackIsNewer = Boolean(legacyProject && existing && fallbackAt > existing.updatedAt);
+            const toRestore = fallbackIsNewer ? legacyProject : existing?.payload;
+            const hadEarlyEdits = Boolean(workspaceEarlyDirty);
+            workspaceAutosave = window.BratWorkspace.createAutosave({
+                store: workspaceStore,
+                ownerId: WORKSPACE_OWNER,
+                delay: 700,
+                onStatus: announceWorkspaceStatus,
+                onError: (error, payload) => {
+                    console.warn("IndexedDB autosave failed", error);
+                    writeLegacyFallback(payload, error);
+                }
+            });
+            workspaceReady = true;
+
+            if (!sharedProject && !hadEarlyEdits && toRestore) {
+                if (restoreProjectSettings(toRestore)) {
+                    showRecoveryBanner();
+                    syncEffectControlState();
+                    renderLrcRows();
+                    applyFormatPreset();
+                    applyPreviewZoom();
+                    syncExportAudioOption();
+                    updateBackgroundStatus();
+                    updateMeta();
+                    updateExportEstimate();
+                    renderTimeline();
+                    renderPreviewAt(0);
+                }
+            }
+            if (workspaceEarlyDirty) {
+                workspaceAutosave.schedule(workspaceEarlyDirty);
+                workspaceEarlyDirty = null;
+            } else if (!sharedProject && legacyProject && (!existing || fallbackIsNewer)) {
+                // A successful IndexedDB write removes the legacy copy; failures retain it.
+                workspaceAutosave.schedule(legacyProject);
+            } else if (readError) {
+                announceWorkspaceStatus("fallback", readError);
+            } else {
+                announceWorkspaceStatus("ready");
+            }
+        }
+
         const state = {
             lyricRows: [],
             seed: 1337,
@@ -4123,12 +4241,19 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function saveProjectSettings() {
+            if (workspaceResetting) return;
             try {
                 const payload = buildProjectPayload();
-                const raw = JSON.stringify(payload);
-                localStorage.setItem("bratAnimator.project.v5", raw);
+                if (!workspaceStore) {
+                    writeLegacyFallback(payload);
+                } else if (!workspaceReady) {
+                    if (workspaceTouchedDuringBoot) workspaceEarlyDirty = payload;
+                } else {
+                    workspaceAutosave?.schedule(payload);
+                }
             } catch (error) {
-                console.warn("autosave failed", error);
+                console.warn("autosave could not be scheduled", error);
+                announceWorkspaceStatus("error", error);
             }
         }
 
@@ -4197,6 +4322,18 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function clearSavedProject() {
+            workspaceDiscardGeneration += 1;
+            workspaceEarlyDirty = null;
+            workspaceResetting = true;
+            const discard = workspaceAutosave
+                ? workspaceAutosave.discard()
+                : workspaceStore?.clearActive(WORKSPACE_OWNER);
+            Promise.resolve(discard).catch(error => {
+                console.warn("could not clear IndexedDB autosave", error);
+                announceWorkspaceStatus("error", error);
+            });
+            localStorage.removeItem(WORKSPACE_HAS_SAVED_KEY);
+            localStorage.removeItem(WORKSPACE_FALLBACK_TIME_KEY);
             localStorage.removeItem("bratAnimator.project.v5");
             state.lyricRows = [];
             state.fonts = [];
@@ -4249,6 +4386,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             updateCompatibilityPanel();
             renderLrcRows();
             renderTimeline();
+            workspaceResetting = false;
         }
 
         function applyImportedLyrics(result, item = null) {
@@ -5258,6 +5396,17 @@ async function updateExportEstimate() {
         });
         registerServiceWorker();
         renderPreviewAt(0);
+        // Async hydration runs after the existing editor has initialized. The
+        // synchronous legacy restore above remains the safety net while migrating.
+        initializeLocalWorkspace(sharedProject, autosavedProject).catch(error => {
+            console.warn("workspace initialization failed", error);
+            workspaceReady = true;
+            announceWorkspaceStatus("error", error);
+        });
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") workspaceAutosave?.flush().catch(() => {});
+        });
+        window.addEventListener("pagehide", () => workspaceAutosave?.flush().catch(() => {}));
 /* --- Sidebar editor navigation upgrade --- */
 (function setupEditorSidebarUpgrade() {
     const tabs = Array.from(document.querySelectorAll('.editor-tab'));
@@ -5601,7 +5750,8 @@ async function updateExportEstimate() {
     saveProjectSettings = function patchedSaveProjectSettings() {
         originalSaveProjectSettings();
         updateSidebarStatus();
-        flashAutosaveBadge('autosaved');
+        // A queued write is not yet persisted. Success is reported by IndexedDB.
+        flashAutosaveBadge(workspaceStore ? 'unsaved changes' : 'saved in browser fallback');
     };
 
     tabs.forEach((tab) => {
