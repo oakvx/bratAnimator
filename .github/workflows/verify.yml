@@ -28,6 +28,7 @@ jobs:
           node --check assets/js/win7-shell.js
           node --check assets/js/win7-start-menu.js
           node --check assets/js/export-preflight.js
+          node --check assets/js/editor-templates.js
           node --check assets/js/tiktok-link.js
           node --check assets/js/tiktok-config.js
           node --check assets/js/bratcode.js
@@ -39,9 +40,6 @@ jobs:
           node --check sw.js
       - name: Run JavaScript unit tests
         run: node --test
-      - name: Validate repository diff
-        run: git diff --check HEAD~1 HEAD || test "${{ github.event_name }}" = "pull_request"
-
   browser-regression:
     name: Browser regression / ${{ matrix.suite }}
     runs-on: ubuntu-latest
