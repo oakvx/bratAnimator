@@ -20,6 +20,9 @@ jobs:
       - name: Syntax checks
         run: |
           node --check assets/js/local-workspace.js
+          node --check assets/js/auth-client.js
+          node --check assets/js/supabase-config.js
+          node --check assets/js/studio-dashboard.js
           node --check assets/js/app.js
           node --check assets/js/editor-v5.js
           node --check assets/js/project-assets.js
