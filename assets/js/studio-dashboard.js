@@ -200,6 +200,189 @@
         }
     }
 
+    function openProjectDialog(action, record, title) {
+        pendingProjectAction = { action, record, title };
+        $("studioProjectDialog").hidden = false;
+        $("studioProjectDialogError").textContent = "";
+        $("studioProjectDialogTitle").textContent = action === "rename" ? "Rinomina progetto" : "Elimina progetto";
+        $("studioProjectDialogDescription").textContent = action === "rename"
+            ? "Modifica il nome nella tua libreria locale senza cambiare il progetto."
+            : "Il progetto verrà eliminato da questo browser. Prima di continuare, verifica di avere un backup .brat.zip.";
+        $("studioProjectRenameField").hidden = action !== "rename";
+        $("studioProjectDialogConfirm").textContent = action === "rename" ? "Salva nome" : "Elimina definitivamente";
+        $("studioProjectDialogConfirm").classList.toggle("studio-delete-button", action === "delete");
+        $("studioProjectDialogConfirm").classList.toggle("studio-accent-button", action !== "delete");
+        $("studioProjectRenameInput").value = title;
+        (action === "rename" ? $("studioProjectRenameInput") : $("studioProjectDialogConfirm")).focus();
+    }
+
+    function closeProjectDialog() {
+        pendingProjectAction = null;
+        $("studioProjectDialog").hidden = true;
+    }
+
+    async function confirmProjectDialog() {
+        if (busy || !pendingProjectAction) return;
+        const { action, record } = pendingProjectAction;
+        busy = true;
+        $("studioProjectDialogConfirm").disabled = true;
+        try {
+            if (action === "rename") {
+                const title = $("studioProjectRenameInput").value.trim();
+                if (!title) throw new Error("Inserisci un nome per il progetto.");
+                await editor.renameProject(record.projectId, title);
+                notify("Progetto rinominato.");
+            } else {
+                await editor.deleteProject(record.projectId);
+                notify("Progetto eliminato dalla libreria locale.");
+            }
+            closeProjectDialog();
+            await renderProjects();
+        } catch (error) {
+            $("studioProjectDialogError").textContent = error.message;
+        } finally {
+            busy = false;
+            $("studioProjectDialogConfirm").disabled = false;
+        }
+    }
+
+    async function promoteTemporary() {
+        if (busy) return;
+        busy = true;
+        try {
+            if (editor.projectId() !== "temporary") {
+                await editor.openProject("temporary");
+            }
+            await editor.promoteTemporary();
+            notify("Progetto temporaneo salvato nella libreria.");
+            await renderProjects();
+        } catch (error) {
+            notify("Impossibile salvare il temporaneo: " + error.message + " Elimina prima un progetto o esporta un backup.", true);
+        } finally { busy = false; }
+    }
+
+    function updateBackupReminder() {
+        const reminder = window.BratBackupReminders;
+        const banner = $("studioBackupReminder");
+        if (!banner || !reminder) return;
+        const temporary = editor.projectId?.() === "temporary";
+        const due = reminder.shouldRemind(editor.owner(), editor.projectId?.());
+        banner.hidden = !(temporary || due);
+        if (!banner.hidden) {
+            banner.firstChild.textContent = temporary
+                ? "Questo progetto è temporaneo. Esporta una copia .brat.zip; per salvarlo in libreria libera prima uno slot. "
+                : "Hai modificato il progetto senza un backup recente. Esporta una copia .brat.zip per conservarlo fuori dal browser. ";
+        }
+    }
+
+    function exportBackup() {
+        const button = $("exportPackageBtn");
+        if (!button) {
+            notify("La funzione di backup completo non è disponibile.", true);
+            return;
+        }
+        button.click();
+        notify("Esportazione del backup avviata. Il browser salverà un file .brat.zip.");
+    }
+
+    function importBundle() {
+        const input = $("importPackageInput");
+        if (!input) return notify("Importazione .brat.zip non disponibile.", true);
+        input.addEventListener("change", () => viewSwitch("editor"), { once: true });
+        input.click();
+    }
+
+    function renderCodeState() {
+        const element = $("studioShareState");
+        const backendReady = Boolean(window.BratCode && auth.configured());
+        const user = auth.user();
+        $("studioCodeCreate").disabled = !backendReady || !user || Boolean(activeCode);
+        $("studioCodeCopy").hidden = !activeCode;
+        $("studioCodeRevoke").hidden = !activeCode;
+        if (!backendReady) {
+            element.textContent = "Condivisione cloud non configurata. L'editor e i backup locali rimangono disponibili.";
+        } else if (!user) {
+            element.textContent = "Accedi per generare un BRATCODE. Puoi comunque importare un codice come ospite.";
+        } else if (activeCode?.code) {
+            const expires = new Date(activeCode.expires_at);
+            element.textContent = "Codice attivo: " + window.BratCode.prettyCode(activeCode.code) +
+                " · Scadenza " + formatDate(expires);
+        } else {
+            element.textContent = "Nessun codice attivo. Il progetto JSON verrà archiviato temporaneamente sul server per 24 ore.";
+        }
+    }
+
+    async function refreshCode() {
+        activeCode = null;
+        renderCodeState();
+        if (!window.BratCode || !auth.configured() || !auth.user()) return;
+        try {
+            activeCode = await window.BratCode.getActive();
+            renderCodeState();
+        } catch (error) {
+            $("studioShareState").textContent = "BRATCODE non disponibile: " + error.message +
+                ". Verifica la migrazione SQL su Supabase.";
+        }
+    }
+
+    async function createCode() {
+        if (busy) return;
+        busy = true;
+        $("studioCodeCreate").disabled = true;
+        try {
+            await editor.flush();
+            const payload = editor.snapshot();
+            activeCode = await window.BratCode.create(payload);
+            renderCodeState();
+            $("studioCodeMessage").textContent = "Codice creato. Puoi copiarlo e condividerlo per 24 ore.";
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Impossibile creare BRATCODE: " + error.message;
+        } finally { busy = false; renderCodeState(); }
+    }
+
+    async function copyCode() {
+        if (!activeCode) return;
+        const code = window.BratCode.prettyCode(activeCode.code);
+        try {
+            await navigator.clipboard.writeText(code);
+            $("studioCodeMessage").textContent = "BRATCODE copiato negli appunti.";
+        } catch (_) {
+            $("studioCodeMessage").textContent = "Copia manualmente il codice visualizzato: " + code;
+        }
+    }
+
+    async function revokeCode() {
+        if (!activeCode || busy) return;
+        busy = true;
+        try {
+            await window.BratCode.revoke();
+            activeCode = null;
+            $("studioCodeMessage").textContent = "Codice revocato. Non è più utilizzabile.";
+            renderCodeState();
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Revoca non riuscita: " + error.message;
+        } finally { busy = false; }
+    }
+
+    async function importCode() {
+        if (busy) return;
+        busy = true;
+        $("studioCodeImport").disabled = true;
+        try {
+            if (!window.BratCode) throw new Error("BRATCODE non disponibile.");
+            const payload = await window.BratCode.importCode($("studioCodeInput").value);
+            const result = await editor.restoreImportedPayload(payload);
+            $("studioCodeMessage").textContent = "Progetto importato. Riassocia eventuali file audio, immagini e font mancanti.";
+            if (result.temporary) notify("Libreria piena: BRATCODE importato come progetto temporaneo con autosave.");
+            viewSwitch("editor");
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Importazione non riuscita: " + error.message;
+        } finally {
+            busy = false;
+            $("studioCodeImport").disabled = false;
+        }
+    }
+
     function viewSwitch(next) {
         view = next;
         const editorOpen = next === "editor";
