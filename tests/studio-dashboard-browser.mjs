@@ -87,6 +87,38 @@ try {
     assert.equal(await evaluate("getComputedStyle(document.querySelector('.studio-classic-window')).display !== 'none'"),true);
     assert.equal(await evaluate("Boolean(document.querySelector('#studioDashboard.win7 .window .title-bar .title-bar-text'))"),true);
     assert.equal(await evaluate("document.body.innerText.includes('BRAT WORKSPACE / 2000')"),false);
+    // True 7.css shell: caption controls are functional, not decoration.
+    assert.equal(await evaluate("document.querySelector('#studioMainWindow .title-bar-controls button[aria-label=Minimize]') !== null"),true);
+    assert.equal(await evaluate("document.querySelector('#studioNav .studio-original-logo').getAttribute('src')"),"favicon.svg");
+    await evaluate("document.getElementById('studioWindowMinimize').click()");
+    assert.equal(await evaluate("window.BratWin7Shell.init().state().minimized"),true);
+    assert.equal(await evaluate("document.getElementById('studioDesktop').hidden"),false);
+    await evaluate("document.getElementById('studioTaskbarApp').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-minimized')"),false);
+    await evaluate("document.getElementById('studioWindowMaximize').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-maximized')"),true);
+    assert.equal(await evaluate("document.getElementById('studioWindowMaximize').getAttribute('aria-label')"),"Restore");
+    await evaluate("document.getElementById('studioWindowMaximize').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-maximized')"),false);
+    await evaluate("document.getElementById('studioWindowClose').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-closed')"),true);
+    assert.equal(await evaluate("document.getElementById('studioDesktop').hidden"),false);
+    await evaluate("document.getElementById('studioDesktopLauncher').click()");
+    assert.equal(await evaluate("document.body.classList.contains('studio-window-closed')"),false);
+    // Login and sign-up dialog must open from the account entry, even when
+    // Supabase is unconfigured. No false authenticated session is shown.
+    await evaluate("document.getElementById('studioNavAccount').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
+    assert.equal(await evaluate("document.getElementById('studioAuthClose').getAttribute('aria-label')"),"Close");
+    await evaluate("document.querySelector('[data-auth-mode=register]').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthSubmit').textContent"),"Crea account");
+    await evaluate("document.getElementById('studioAuthClose').click()");
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
+    await evaluate("window.BratStudio.show('settings')");
+    await until("!document.getElementById('studioSettingsView').hidden");
+    assert.equal(await evaluate("document.getElementById('studioTikTokConnect').disabled"),true);
+    assert.equal(await evaluate("document.getElementById('studioTikTokStatus').textContent.includes('Accedi')"),true);
+    await evaluate("window.BratStudio.show('home')");
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),true);
     await evaluate("document.getElementById('studioSoundToggle').click()");
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),false);
