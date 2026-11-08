@@ -273,6 +273,7 @@
     <script src="assets/js/studio-dashboard.js" defer></script>
     <script src="assets/js/tiktok-config.js" defer></script>
     <script src="assets/js/win7-shell.js" defer></script>
+    <script src="assets/js/win7-start-menu.js" defer></script>
     <script src="assets/js/tiktok-link.js" defer></script>
     <script src="assets/js/sound-hub-ui.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
@@ -437,8 +438,38 @@
           <span>Brat Animator</span>
         </button>
     </section>
+    <!-- Phase 6: searchable Start menu, built on the actual 7.css glass window. -->
+    <nav id="studioStartMenu" class="studio-start-menu window glass active win7" aria-label="Menu Start" hidden>
+      <div class="window-body studio-start-surface">
+        <div class="studio-start-main">
+          <div class="studio-start-heading"><img src="favicon.svg" alt="" width="23" height="23"> Brat Animator</div>
+          <div id="studioStartResults" class="studio-start-results" role="group" aria-label="Programmi">
+            <button type="button" data-start-action="new" data-start-keywords="nuovo progetto crea video crea nuovo" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">＋</span><span><strong>Nuovo progetto</strong><small>Crea un video</small></span></button>
+            <button type="button" data-start-view="editor" data-start-keywords="editor montaggio timeline modifica testo lyrics" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">✎</span><span><strong>Editor</strong><small>Apri l'area di lavoro</small></span></button>
+            <button type="button" data-start-view="projects" data-start-keywords="progetti archivio file documenti cartella ricerca backup" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">▦</span><span><strong>Progetti</strong><small>Archivio locale</small></span></button>
+            <button type="button" data-start-view="sounds" data-start-keywords="sound hub musica audio raccolte playlist suoni" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">♫</span><span><strong>Sound Hub</strong><small>Audio e raccolte</small></span></button>
+            <button type="button" data-start-view="share" data-start-keywords="bratcode condivisione importa codice condividi" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">↗</span><span><strong>BRATCODE</strong><small>Condividi un progetto</small></span></button>
+            <button type="button" data-start-view="home" data-start-keywords="home inizio pagina principale dashboard" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">⌂</span><span><strong>Home</strong><small>Pagina iniziale</small></span></button>
+            <button type="button" data-start-view="settings" data-start-keywords="impostazioni configurazione account spazio storage" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">⚙</span><span><strong>Impostazioni</strong><small>Preferenze e account</small></span></button>
+          </div>
+          <p id="studioStartEmpty" class="studio-start-empty" role="status" hidden>Nessun risultato.</p>
+          <label class="studio-start-search-label" for="studioStartSearch"><span class="sr-only">Cerca nel menu Start</span>
+            <input id="studioStartSearch" type="search" autocomplete="off" placeholder="Cerca programmi e file">
+          </label>
+        </div>
+        <div class="studio-start-side">
+          <img src="favicon.svg" alt="Brat Animator" width="60" height="60" class="studio-start-user-image">
+          <button type="button" data-start-view="projects">Documenti</button>
+          <button type="button" data-start-view="sounds">Musica</button>
+          <button type="button" data-start-action="account">Account</button>
+          <button type="button" data-start-view="settings">Pannello di controllo</button>
+          <div class="studio-start-side-spacer"></div>
+          <button type="button" data-start-action="close" class="studio-start-shutdown" title="Chiude solo la finestra simulata; i progetti locali restano salvati">Chiudi finestra</button>
+        </div>
+      </div>
+    </nav>
     <div id="studioTaskbar" class="studio-taskbar" aria-label="Barra delle applicazioni">
-      <button id="studioStartButton" class="studio-start-orb" type="button" aria-label="Apri Brat Animator" title="Apri Brat Animator">
+      <button id="studioStartButton" class="studio-start-orb" type="button" aria-label="Menu Start" title="Menu Start" aria-controls="studioStartMenu" aria-expanded="false">
         <img src="favicon.svg" alt="" width="27" height="27">
       </button>
       <button id="studioTaskbarApp" class="studio-taskbar-app" type="button" aria-label="Mostra Brat Animator" title="Brat Animator">
