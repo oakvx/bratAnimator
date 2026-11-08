@@ -136,7 +136,9 @@ try {
     assert.equal(await evaluate("document.getElementById('studioCodeImport').disabled"),false);
     await evaluate("document.querySelector('[data-studio-view=home]').click()");
     assert.equal(await evaluate("document.getElementById('permissionNotice').classList.contains('hidden')"),true);
-    assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),true);
+    // The setup note may remain populated after closing the dialog; the
+    // dialog itself must remain closed until the user explicitly opens it.
+    assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
     await evaluate("document.getElementById('studioAccountButton').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
     assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),false);
