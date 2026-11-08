@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v12-native-7css-login-fix";
+const CACHE_NAME = "brat-animator-v13-win7-start-menu";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -29,6 +29,7 @@ const APP_ASSETS = [
 "./assets/js/sound-hub.js",
   "./assets/js/studio-dashboard.js",
   "./assets/js/win7-shell.js",
+  "./assets/js/win7-start-menu.js",
   "./assets/js/tiktok-config.js",
   "./assets/js/tiktok-link.js",
   "./assets/js/sound-hub-ui.js",
