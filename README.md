@@ -1,173 +1,240 @@
-# Brat Animator
+<p align="center">
+  <img src="./favicon.svg" width="68" height="68" alt="Brat Animator logo" />
+</p>
 
-**Brat Animator** is a static browser-based tool for creating brat-style lyric videos from synchronized **LRC, TTML, Lyricsfile YAML/JSON, SRT and WebVTT lyrics**. It runs locally in the browser, keeps project data in browser storage, and exports MP4/WebM or PNG without a backend.
+<h1 align="center">BRAT ANIMATOR</h1>
 
-Live demo: **https://oakvx.github.io/bratAnimator/**
+<p align="center"><strong>Make the words move.</strong></p>
 
-## Kinetic collage — progressive auto-fit word placement
+<p align="center">
+  A browser-native lyric video studio for expressive typography, precise timing and creative motion.<br/>
+  From classic Brat aesthetics to kinetic word compositions — in one focused editor.
+</p>
 
-Choose **Design → Lyrics display → Kinetic collage (stacked words)**, or use the **Kinetic collage · blue / cream** preset.
+<p align="center">
+  <a href="https://oakvx.github.io/bratAnimator/"><img alt="Launch the studio" src="https://img.shields.io/badge/LAUNCH%20STUDIO-8ACE00?style=for-the-badge&labelColor=151915&color=8ACE00" /></a>
+  <a href="#quick-start"><img alt="Quick start" src="https://img.shields.io/badge/QUICK%20START-2C352B?style=for-the-badge&labelColor=151915&color=2C352B" /></a>
+</p>
 
-Unlike a scrolling word window, this mode **keeps every word of the current composition on screen as it appears**. Words arrive following their LRC / Enhanced LRC timestamps, with immediate full opacity and a brief per-word scale entrance (no fade or transparency). Earlier words stay in fixed positions; the layout does not reflow every time a new word arrives.
+<p align="center">
+  <img alt="Browser-based" src="https://img.shields.io/badge/Browser--based-yes-8ACE00?style=flat-square" />
+  <img alt="No app installation" src="https://img.shields.io/badge/Install-none_required-69786A?style=flat-square" />
+  <img alt="Exports" src="https://img.shields.io/badge/Export-MP4%20%7C%20WebM%20%7C%20PNG-69786A?style=flat-square" />
+  <img alt="Usage rights" src="https://img.shields.io/badge/License-All_rights_reserved-69786A?style=flat-square" />
+</p>
 
-A seeded, deterministic free-space packing algorithm measures **all** the words before showing the first one. It sorts them by estimated footprint, searches available rectangles, and scales the whole composition down if needed so nothing overlaps or spills outside the canvas. Positions look varied rather than forming a uniform grid, but seeking or exporting produces identical placement. Preview, PNG and MP4/WebM use the same canvas renderer.
+<p align="center">
+  <a href="https://oakvx.github.io/bratAnimator/">
+    <img src="./social-preview.png" width="880" alt="Brat Animator — lyric video canvas with signature Brat styling" />
+  </a>
+</p>
 
-The editor exposes:
-- **LRC lines per composition (1–4, default 2):** the number of consecutive lyric rows contributing to one complete collage, *not* a maximum number of words. Every word within those rows is retained until the scene changes.
-- **Word spacing:** the available padding between packed words.
-- **Size contrast:** variation between smaller and larger words.
-- **Transition speed:** how quickly each new word appears.
+<p align="center">
+  <a href="#why-brat-animator">Overview</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#kinetic-collage">Kinetic Collage</a> ·
+  <a href="#quick-start">Get started</a> ·
+  <a href="#for-developers">Developers</a> ·
+  <a href="#permissions--copyright">Permissions</a>
+</p>
 
-An explicit empty LRC line or a pause of more than 0.85 seconds begins a new composition. The blue/cream preset alternates its palette on lyric lines. A composition automatically ends at the beginning of the next grouped scene. Imported project settings and native word timing remain compatible with the existing schema.
+---
 
-## Version 5.0
+## Why Brat Animator?
 
-- Simple and advanced editor modes, with a persistent preference. New users start in simple mode; existing users retain the full editor.
-- Direct Brat canvas editing: drag text, resize with corner handles, stretch with side handles, and use center guides. A drag pauses playback and creates one undo operation; Escape cancels.
-- Project-wide or per-phrase font, color and size, plus per-phrase Brat position, stretch and entrance settings. Reset a phrase to inherit the project defaults.
-- Horizontal, vertical and elastic stretch entrances. The tilted elastic preset uses a 320 ms entrance, 15% deformation and random angles within 8 degrees. Advanced controls reach 800 ms, 30% and 15 degrees.
-- Random inclination belongs to each visual wrapped row and stays fixed after its entrance. Persisted seeds keep angles identical after seeking, reopening and exporting; reroll a phrase or the project explicitly.
-- Custom TTF, OTF, WOFF and WOFF2 fonts stored locally and included in portable projects. Missing fonts require reloading or explicit replacement before export.
-- Manual bilingual lyrics, plain-text/LRC translation association, unmatched-line assignment and independent translation size, font and color. Brat, Music and Cinematic reserve space beneath the original text.
-- Optional text pulses, background zoom and color transitions driven by estimated audio onsets or a manual 40-240 BPM grid. Effects start disabled and reuse the same beat events in preview and export.
-- Optional export clips with start/end controls and timeline markers. Clips preserve original animation/media timing, start the output at zero and apply audio fades at the clip boundaries.
-- Complete `.brat.zip` projects bundle the v5 manifest, uploaded audio, backgrounds and fonts for transfer and offline reopening. JSON export remains available for project metadata and references.
-- Italian UI, including controls, messages and tutorial; first-run language follows Italian browser preferences, while saved language choices take precedence.
+**Great lyric videos need more than text on a background.** The rhythm, placement, scale and reveal of each word change how a song feels.
 
-- Static app, no framework and no `package.json`.
-- Reworked editor layout with a unified charcoal/ivory visual system, responsive controls, preview toolbar, and transport controls.
-- Live zoom controls, keyboard-first commands, and automatic WCAG contrast correction.
-- Text settings accessible from the header and preview, with 10–200% text size, live values, spacing/position controls, and a text-only reset. Smaller brat text preserves its fitted line breaks and shrinks proportionally in preview and export.
-- Solid, linear, and radial canvas fills with optional text/background palette exchange by line, word, or typewriter letter.
-- Uploaded images and videos can fill the background, the text, or both. Exchanging a gradient palette places the gradient inside the text.
-- Project schema `version: 5` with stable phrase identities, styles, translations, font references, random seed, beat effects and export range; migration from v2-v4 JSON and snapshots keeps the new effects disabled.
-- Local IndexedDB media storage for uploaded audio/video/background blobs; project JSON stores metadata and references, not binary blobs.
-- Switchable LRCLIB/lrc.red search, multi-format import/paste, native word start/end timing, Enhanced LRC, compact LRC editor, multi-select timing tools, undo/redo, and waveform/timeline marker dragging.
-- Shared word/character timeline for typewriter, word reveal and karaoke, with punctuation-aware text estimates, Unicode grapheme handling, explicit Enhanced LRC anchors, repeated timestamps and instrumental gaps.
-- Natural phrase durations no longer stretch to fill the interval before the next lyric. Punctuation creates pauses, repeated vowels add a separate sung hold, and completed text stays still until the next line or an explicit empty timestamp.
-- Estimated speed (0.5–2×) is stored with projects, snapshots and JSON; explicit LRC onsets and terminal word timestamps remain fixed. The timing report distinguishes the sung window from the estimated trailing pause.
-- Channel-independent audio energy analysis guides estimated word boundaries without replacing explicit timestamps. It is not speech recognition or forced alignment; review estimated timings before exporting.
-- Starting the timeline at zero trims the same leading interval from preview and exported audio. Timing analysis reports dense lines and inconsistent word timestamps in the editor.
-- Normalizing or shifting editable rows preserves Enhanced LRC tags, millisecond word precision, metadata offsets and timestamp-only gap markers. Rewriting lyric text discards stale word anchors for that row.
-- Background image/video uploads or direct CORS-enabled URLs, with real-time export for frame-accurate video backgrounds and preflight for tainted canvas cases.
-- Word animation modes: `progress`, `fade`, `scale`, `pop`, `glow`, `shake`, `color`, plus configurable letter chunks with spaces excluded.
-- Fast MP4 is vendored through `vendor/mp4-muxer.mjs` pinned to `mp4-muxer@5.2.2` (MIT).
-- Fast MP4 remains video-only when supported. Audio export uses realtime MediaRecorder and can merge loaded local or direct CORS-enabled media audio with volume/fade controls.
-- YouTube is preview/reference only. The app does not download YouTube videos and does not extract audio from YouTube.
-- EN/IT/RU/ZH UI strings, localized SEO pages, manifest, sitemap, service worker assets, GitHub Pages workflow, core tests and a manual QA checklist.
+Brat Animator brings those decisions into an accessible, browser-based workspace. Work with synchronized lyrics, shape the typography, refine the motion and render the result — without a dedicated editing suite or a processing server.
 
-## Using the Editor
+**Simple when you want speed. Detailed when you need control.**
 
-Choose **simple** for loading lyrics/media, changing text size and presets, playback and export. Choose **advanced** to reveal phrase overrides, custom fonts, translations, stretch entrances, music effects and export intervals. The settings button keeps the 10-200% text size control within reach in either mode.
+- **Preview-first workflow.** See the composition while you build it; refine it in the same workspace.
+- **Time-aware typography.** Drive animation with imported word timestamps or adjust estimated timing manually.
+- **Creative control.** Combine presets with your own fonts, colors, backgrounds, movement and line-level settings.
+- **Projects that travel.** Autosave locally and package project assets for transfer or offline reopening.
+- **Browser-native rendering.** The canvas powers both the live preview and exported frames.
 
-In advanced text settings, choose **whole project** or **selected phrase** before changing font, color or size. **Use project settings** clears the selected phrase's overrides. In Brat mode, **edit text in preview** enables dragging and transform handles; the tilted elastic preset gives every visual row a repeatable random inclination without changing lyric timestamps.
+> **Made for music-led visuals:** lyric edits, animated typography, short-form videos, experimental titles and graphic compositions.
 
-Enter a translation for the selected phrase or paste translated text/LRC into the bilingual controls. Plain text associates by order when the phrase counts match; LRC associates within 20 ms of each source timestamp. Assign unmatched translations manually. Translation stays horizontal beneath the original.
+## Features
 
-Export a **complete portable project** to keep uploaded assets with the project. A JSON project stores references to local browser assets, so use the portable ZIP when moving to another browser or computer. A package containing unavailable assets must be repaired before it can be exported. Remote URLs remain subject to network access and CORS restrictions.
+| Creative tools | Timing & media | Editor & delivery |
+| :--- | :--- | :--- |
+| Brat, Music, Cinematic and Kinetic Collage display modes | LRC, Enhanced LRC, TTML, Lyricsfile, SRT and WebVTT import | Simple and advanced editor modes |
+| Typeface controls, custom fonts and per-phrase styling | Word-level timing and waveform/timeline tools | Responsive desktop and mobile layout |
+| Presets, gradients, color exchange and safe zones | Optional local audio/video and background media | MP4/WebM video and PNG/frame export |
+| Stretch, tilt, word entrances and optional beat effects | Audio-informed timing estimates and manual synchronization | Autosave, undo/redo, snapshots and portable projects |
+| Bilingual lyric layouts and translations | Timing validation and lyric editing | Keyboard shortcuts and PWA caching |
 
-Editing, audio analysis, font loading, package creation and rendering run in the browser; there is no processing backend. LRCLIB/lrc.red searches, remote media and YouTube previews still use their respective network services. Once the app shell is cached on localhost/HTTPS, portable projects with all assets included can reopen offline.
+<sub>Availability of some video encoders, real-time audio recording and media formats depends on browser support. Details below.</sub>
 
-## Lyric Sources And Formats
+## Kinetic Collage
 
-Choose **LRCLIB** or **lrc.red** above the song search. The selection is saved with
-the project. Search results and loaded lyrics link to their source. lrc.red track
-details are loaded on demand, followed by Lyricsfile YAML, TTML or LRC in that
-order. LRCLIB records prefer their `lyricsfile` field, with synced/plain fallbacks.
-Requests identify the client, run sequentially and respect `Retry-After` limits.
-Changing providers cancels pending lyric requests and clears old search results.
-API references: [LRCLIB](https://lrclib.net/docs), [lrc.red](https://lrc.red/api),
-and [Lyricsfile 1.0](https://github.com/tranxuanthang/lyricsfile/blob/main/SPECIFICATION.md).
+A different way to animate lyrics: **words accumulate on the canvas, one at a time, until the composition is complete.**
 
-Drop a file in Timing, use the file picker, or paste structured lyrics directly
-into the lyrics editor. Supported imports:
+The placement is intentionally varied — not a rigid grid — but the algorithm works within real spatial constraints.
 
-| Format | Timing used |
+1. **Measure** every word in the composition using the chosen font and size variation.
+2. **Find space** with deterministic rectangle packing, avoiding collisions and keeping text inside the canvas.
+3. **Auto-fit** the complete composition when necessary instead of discarding words.
+4. **Reveal progressively** at the corresponding lyric timestamps. Earlier words stay in place; new words appear **fully opaque**, with no transparency fade.
+
+The result can look spontaneous while remaining reproducible when you seek, reopen or export the project.
+
+**Controls:** LRC lines per composition (1–4), word spacing, size contrast and entrance speed. The blue/cream preset offers a ready-made look; every control can be customized.
+
+<sub>An explicit empty lyric row or a substantial pause starts a new composition. Word timing comes from the imported source where available; missing intervals use the existing timing estimator.</sub>
+
+## Quick start
+
+**1. Open the editor.** Use **[Launch Brat Animator](https://oakvx.github.io/bratAnimator/)**. The application runs directly in a modern browser.
+
+**2. Add lyrics.** Search supported lyric providers or paste/import a timed file. You can also import plain text and use the tap-to-sync workflow.
+
+**3. Check synchronization.** Preview the song, inspect the timeline and waveform, and adjust rows or timestamps where needed.
+
+**4. Build the visual.** Choose a display mode or preset. Adjust typography, color, composition, animation and optional background media.
+
+**5. Preview and export.** Scrub or play the canvas, choose an output format and export. Save a project snapshot or a portable ZIP if you want to revisit the edit later.
+
+### Example: LRC
+
+```lrc
+[00:00.00]make the words move
+[00:02.40]one phrase at a time
+[00:04.90]every frame has a rhythm
+```
+
+A basic LRC file supplies line timestamps. Enhanced LRC and supported TTML/Lyricsfile files can preserve finer timing data at the word level.
+
+### Which style should I choose?
+
+| Mode | Best for |
 | --- | --- |
-| LRC / Enhanced LRC | Line starts and available word starts/terminal markers |
-| TTML (`.ttml`, `.xml`) | Line, word and syllable intervals, including background vocals |
-| Lyricsfile 1.0 (`.lyricsfile.yaml`, `.yaml`, `.yml`, `.lyricsfile`, `.json`) | `start_ms` and optional `end_ms` for lines and words; `plain` fallback |
-| SRT / WebVTT | Cue starts/ends; WebVTT inline timestamps when present |
-| TXT | Plain text for the existing tap-to-sync workflow |
+| **Brat** | Bold, minimal, central typography and classic Brat-inspired motion |
+| **Kinetic Collage** | Dense word compositions with progressive, collision-free placement |
+| **Music** | Synced lyric scrolling and word-progress emphasis |
+| **Cinematic** | More atmospheric, layered lyric treatments |
 
-The editor displays LRC, while project rows retain the original intervals.
-**Known word starts and ends bypass timing estimates, speed controls and audio
-guidance.** Silent gaps and overlapping lines stay intact. Missing intervals use
-the existing estimation path. Adjacent syllables form a displayed word, with
-their original segment intervals also used for character animation. Shifting a
-row moves its complete native timing; editing its text invalidates those anchors.
-Project JSON, autosave and `.brat.zip` preserve the intervals; copying only LRC
-cannot preserve every individual word end.
+## Editing workflow
 
-TTML accepts clock, offset, frame and tick expressions, parent-relative subtitle
-timing and track-absolute Apple Music/lrc.red lyric timing. Sequential (`seq`)
-containers are rejected explicitly. TTML styling and source layout are not
-imported. Lyricsfile `offset_ms`, when supplied, is applied additively like an LRC
-offset. Invalid or oversized imports report an error and leave the project intact.
-YAML parsing is local, uses a safe schema and rejects unsupported versions/tags
-and duplicate keys. The import limit is 2 MB.
+The editor has six stages: **Lyrics → Timing → Design → Canvas → Export → Project**.
 
-## Running Locally
+**Simple mode** keeps the main workflow approachable. **Advanced mode** exposes phrase overrides, fonts, translations, text entrance parameters, beat effects and export intervals. All six stages remain available in both modes.
 
-Open `index.html` directly for a simple file-based run, or serve the folder over localhost to test the PWA pieces.
+In Brat mode, **Edit text in preview** supports direct manipulation: drag to reposition, resize with corner handles or stretch from side handles. The LRC editor supports row operations, selection, timing adjustments and undo/redo.
+
+Project settings can apply globally or to selected phrases where the feature supports phrase-level overrides. Kinetic Collage scene geometry is configured at project level to keep word layouts consistent.
+
+## Import formats
+
+| Format | Supported information |
+| --- | --- |
+| **LRC / Enhanced LRC** | Lyric line timestamps and embedded word-level markers |
+| **TTML** (`.ttml`, `.xml`) | Line, word and syllable intervals, including some background vocals |
+| **Lyricsfile 1.0** (YAML / JSON) | Timed lines and optional word intervals |
+| **SRT / WebVTT** | Subtitle cue times; WebVTT inline timestamps when available |
+| **TXT** | Plain lyrics for manual or tap-based synchronization |
+
+Brat Animator can search **[LRCLIB](https://lrclib.net/docs)** and **[lrc.red](https://lrc.red/api)**. Their availability, coverage and response times depend on the providers. Imported timing is retained where possible; missing word timing is **estimated, not speech-recognized**.
+
+### Import details
+
+- Native start/end timestamps take precedence over rhythm and audio-based estimates.
+- Editing a line's text may invalidate previously attached word anchors for that line.
+- Timing tools preserve supported native word markers when shifting or normalizing lines.
+- YAML uses safe parsing; oversized or incompatible imports are rejected.
+- Source formatting from TTML is not reproduced as an identical visual layout.
+
+## Export & project files
+
+| Output | What to expect |
+| --- | --- |
+| **MP4** | Fast, video-only encoding when the browser supports the required APIs and codec |
+| **WebM / real-time video** | Browser recording path, including optional decoded audio when supported |
+| **PNG / frames** | Still image and frame-sequence capture |
+| **Project JSON** | Editable settings, lyrics, metadata and local asset references |
+| **Portable `.brat.zip`** | A transferable project package containing supported uploaded media and fonts |
+
+Audio and video processing take place in the browser. Adding audio to a rendered video uses real-time recording and can be slower than fast video-only encoding. Codec support, duration and performance vary by device and browser.
+
+**Important:** A project JSON file is not a complete media backup. Local uploads are referenced from browser storage; export a portable project if you need to move them to another device.
+
+## Privacy, offline use & media limitations
+
+- **Local-first:** editing, timeline analysis, rendering and project persistence operate in the browser. Project data is kept in local browser storage and IndexedDB rather than a Brat Animator processing backend.
+- **Network features are optional:** lyric lookup, remote media URLs and YouTube previews contact external services.
+- **Offline-capable application shell:** after successful caching on a supported secure origin or localhost, bundled projects with available assets can be reopened offline.
+- **No YouTube extraction:** YouTube URLs are used only for supported embedded previews and references. No downloading or extraction of YouTube audio/video is implemented.
+- **CORS applies:** third-party media may reject access or prevent canvas-safe export; use files and URLs you are authorized to use.
+
+You are responsible for securing the rights to any lyrics, recordings, videos, fonts, logos and other third-party materials you use or publish.
+
+## For developers
+
+Brat Animator is a **static, framework-free JavaScript application**. It has no build step, no required npm installation and no processing backend. The project includes plain HTML/CSS, Canvas rendering, modular timing and export logic, and browser storage.
+
+| Module | Responsibility |
+| --- | --- |
+| `assets/js/app.js` | Application state, editor orchestration and frame rendering |
+| `assets/js/timing.js` | Timecoded lyrics, word timing and estimation |
+| `assets/js/motion.js` | Geometry and motion-related calculations |
+| `assets/js/kinetic.js` | Deterministic word packing and Kinetic Collage layouts |
+| `assets/js/editor-v5.js` | Advanced controls and phrase-level editor integration |
+| `assets/js/project-assets.js` | Portable assets and project packaging |
+| `assets/js/export.js` | Video export support |
+| `sw.js` | Offline asset caching |
+
+### Local development
+
+For **authorized contributors**, serve the repository directory using a small HTTP server:
 
 ```bash
 python -m http.server 4173
 ```
 
-Then open `http://localhost:4173/`.
+Open [http://localhost:4173/](http://localhost:4173/) in a browser. Opening `index.html` as a local file may work for basic editing, but PWA and browser APIs should be tested on localhost or HTTPS.
 
-## Checks
+### Tests
+
+Node.js runs the unit tests without installing application dependencies:
 
 ```bash
-node --check assets/js/core.js
-node --check assets/js/lyrics.js
-node --check assets/js/lyrics-sources.js
-node --check assets/js/timing.js
-node --check assets/js/media.js
-node --check assets/js/export.js
-node --check assets/js/i18n.js
-node --check assets/js/app.js
-node --check assets/js/motion.js
-node --check assets/js/project-assets.js
-node --check assets/js/editor-v5.js
-node --check assets/js/italian-ui.js
-node --check sw.js
 node --test
 ```
 
-Manual release checks live in [tests/manual-checklist.md](tests/manual-checklist.md).
-
-Run the browser checks with Chrome installed (`CHROME_PATH` can select another Chrome executable). They use isolated temporary profiles and require no npm packages:
+Additional checks:
 
 ```bash
-node tests/natural-timing-browser.mjs
-node tests/text-settings-browser.mjs
-node tests/export-format-browser.mjs
-node tests/motion-browser.mjs
-node tests/music-editor-browser.mjs
-node tests/lyrics-browser.mjs
-node tests/project-assets-browser.mjs
-node tests/editor-v5-browser.mjs
+node --check assets/js/app.js
+node --check assets/js/kinetic.js
+node --check assets/js/editor-v5.js
+node --check sw.js
 ```
 
-These cover timing/pause regressions, proportional text sizing, export formats, real-canvas rotation/stretch bounds, bilingual Music/Cinematic spacing, phrase styles, font/package persistence, direct manipulation and responsive editor behavior. Browser export support depends on available codecs and MediaRecorder.
+Manual release checks live in [tests/manual-checklist.md](tests/manual-checklist.md). The repository also includes browser-specific regression scripts under [tests](tests) for timing, responsive editor behavior, layout and export checks; these require a compatible local Chrome installation and do not replace hands-on QA.
 
-## Media And Rights
+For details of lyric formats, see the [Lyricsfile 1.0 specification](https://github.com/tranxuanthang/lyricsfile/blob/main/SPECIFICATION.md).
 
-Loaded local audio/video, or a direct CORS-enabled media URL that you have permission to use, can be decoded for timing and optionally merged into realtime exports. Remote media may be blocked by browser CORS rules, and remote backgrounds that taint the canvas are blocked from export.
+## Permissions & copyright
 
-YouTube links can be used as preview/reference only. Brat Animator does not download YouTube content, does not bypass embed restrictions, and does not extract YouTube audio.
+**Brat Animator is publicly viewable, but it is not an open-source licensed project.** The copyright holder reserves all rights.
 
-This project does not grant rights to lyrics, songs, audio, brands, videos, images, logos, trademarks, or any other third-party content. Users are responsible for having all rights, licenses, permissions, and clearances before exporting, publishing, sharing, or using any output.
+The official web app may be used subject to the project's terms. **Cloning, publishing, redistributing, modifying, self-hosting, integrating or commercially exploiting the source code requires prior written permission** from the author. See [LICENSE](LICENSE) for the applicable terms.
 
-## Permission
+For licensing or collaboration requests: **oakvx@icloud.com**.
 
-You can use Brat Animator freely. Publishing, public sharing, redistribution, self-hosting, commercial use, integration, cloning, or derivative works require explicit prior written permission from the author.
+Third-party songs, lyrics, images, trademarks and other media remain the property of their respective rights holders. Brat Animator does not grant licenses to that content.
 
-Request permission: **oakvx@icloud.com**
+---
 
-No license is granted by the public availability of this repository. All rights are reserved.
+<p align="center">
+  <strong>BRAT ANIMATOR</strong><br/>
+  Made for lyrics that deserve more than a static screen.<br/>
+  <a href="https://oakvx.github.io/bratAnimator/">Open the studio</a> · <a href="#quick-start">Explore the editor</a>
+</p>
+
+---
 
 ## Languages
 
@@ -188,17 +255,17 @@ No license is granted by the public availability of this repository. All rights 
 
 ## English
 
-Brat Animator creates brat-style lyric videos from LRC lyrics directly in your browser. You can search LRCLIB, paste or import LRC, refine timing with local audio/video, add background media, tune word animations, save project snapshots, and export MP4/WebM or PNG.
+Brat Animator is a browser-based motion typography editor for lyric videos. Import timecoded lyrics, fine-tune word timing against audio, experiment with Brat / Music / Cinematic / Kinetic Collage styles, and export video or still frames. Projects can be saved locally or carried between devices in a portable `.brat.zip` package.
 
-Fast MP4 export is the quickest path and stays video-only. If you enable loaded audio, the app records a realtime export and can merge audio decoded from a local file or a direct CORS-enabled media URL you are allowed to use. YouTube remains preview/reference only and is not downloaded or extracted.
+Fast MP4 encoding is available for video-only exports in supported browsers. Adding audio uses a real-time browser recording path. YouTube links are preview references only; the app does not download video or extract audio.
 
 ## Italiano
 
-Brat Animator crea lyric video brat-style da testi LRC direttamente nel browser. Puoi cercare su LRCLIB, incollare o importare LRC, rifinire il timing con audio/video locale, aggiungere background media, configurare animazioni parola-per-parola, salvare snapshot ed esportare MP4/WebM o PNG.
+**Brat Animator** è un editor di tipografia animata per creare lyric video direttamente nel browser. Puoi cercare e importare testi sincronizzati, perfezionare i timestamp, scegliere preset grafici, personalizzare font e sfondi, controllare l'anteprima ed esportare in MP4, WebM o PNG.
 
-La versione 5 aggiunge interfaccia italiana, modalita semplice/avanzata, impostazioni per frase, modifica diretta del testo nel canvas, font personali, traduzioni, stretch animato e inclinazioni casuali riproducibili per ogni riga visiva. Gli effetti musicali possono seguire i battiti stimati oppure BPM manuali. Puoi esportare un intervallo o un progetto completo `.brat.zip` con audio, sfondi e font caricati; elaborazione e salvataggio restano nel browser.
+Oltre allo stile Brat classico, offre le modalità Music, Cinematic e **Kinetic Collage**. In quest'ultima, tutte le parole della composizione compaiono progressivamente, con dimensioni e posizioni variabili calcolate per evitare sovrapposizioni. Le parole appaiono completamente opache, senza effetti di trasparenza. I progetti sono salvati localmente e possono essere esportati in un pacchetto portabile `.brat.zip`.
 
-L'export Fast MP4 e' il percorso piu veloce e resta video-only. Se abiliti l'audio caricato, l'app registra un export realtime e puo unire audio decodificato da un file locale o da un URL media diretto CORS-enabled che hai il permesso di usare. YouTube resta solo preview/reference e non viene scaricato o estratto.
+La modalità semplice rende immediati i controlli principali; quella avanzata permette di intervenire sui dettagli di timing, animazione e stile. L'esportazione con audio dipende dalle API supportate dal browser. I link YouTube servono unicamente come riferimento e anteprima: nessun audio o video viene scaricato da YouTube.
 
 ## Español
 
