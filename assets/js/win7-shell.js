@@ -5,7 +5,7 @@
     "use strict";
     const api = factory(root);
     if (typeof module === "object" && module.exports) module.exports = api;
-    if (root && root.document) root.BratWin7Shell = api;
+    if (root && root.document) { root.BratWin7Shell = api; api.init(); }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
     "use strict";
     const MINIMIZED = "studio-window-minimized";
