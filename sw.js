@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v9-aero-projects-bratcode-1";
+const CACHE_NAME = "brat-animator-v10-classic-desktop-sound-hub";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_ASSETS = [
   "./assets/css/editor-v5.css",
 "./assets/css/studio-dashboard.css",
   "./assets/css/aero-theme.css",
+  "./assets/css/classic-desktop.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -26,7 +27,9 @@ const APP_ASSETS = [
 "./assets/js/auth-client.js",
   "./assets/js/bratcode.js",
   "./assets/js/backup-reminders.js",
-"./assets/js/studio-dashboard.js",
+"./assets/js/sound-hub.js",
+  "./assets/js/studio-dashboard.js",
+  "./assets/js/sound-hub-ui.js",
   "./assets/js/dashboard-audio.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
