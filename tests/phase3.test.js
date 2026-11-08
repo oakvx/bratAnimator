@@ -132,3 +132,25 @@ test("BRATCODE rejects overly nested payloads without uploading", () => {
     }
     assert.throws(() => BratCode.makeSnapshot({ version: 5, style: deep }), /troppo profonda/);
 });
+
+
+test("BRATCODE SQL validates nested payloads at the RPC trust boundary", () => {
+    const sql = fs.readFileSync(path.join(__dirname, "../supabase/migrations/20261108_bratcode_light.sql"), "utf8");
+    assert.equal((sql.match(/CREATE OR REPLACE FUNCTION public\.bratcode_create\(/g) || []).length, 1);
+    assert.equal((sql.match(/CREATE OR REPLACE FUNCTION public\.bratcode_import\(/g) || []).length, 1);
+    assert.match(sql, /AS \$\$\nDECLARE/);
+    assert.match(sql, /CREATE OR REPLACE FUNCTION public\.bratcode_safe_json/);
+    assert.match(sql, /OR NOT public\.bratcode_safe_json\(p_snapshot\)/);
+    assert.match(sql, /REVOKE ALL ON FUNCTION public\.bratcode_safe_json\(jsonb, integer\) FROM PUBLIC/);
+});
+
+test("Creator Studio registers potentially destructive controls once, outside navigation", () => {
+    const script = fs.readFileSync(path.join(__dirname, "../assets/js/studio-dashboard.js"), "utf8");
+    assert.equal((script.match(/studioProjectDialogConfirm"\)\.addEventListener\("click", confirmProjectDialog\)/g) || []).length, 1);
+    assert.equal((script.match(/studioCodeCreate"\)\.addEventListener\("click", createCode\)/g) || []).length, 1);
+    const start = script.indexOf("    function viewSwitch(next)");
+    const end = script.indexOf("    async function openProject(", start);
+    assert.ok(start !== -1 && end !== -1);
+    assert.equal(script.slice(start, end).includes("studioProjectDialogConfirm"), false,
+        "View transitions must not register handlers");
+});
