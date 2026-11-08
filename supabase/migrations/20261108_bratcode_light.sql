@@ -210,6 +210,36 @@ GRANT EXECUTE ON FUNCTION public.bratcode_active() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.bratcode_revoke() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.bratcode_import(text) TO anon, authenticated;
 
+-- Maintenance entry point. Call from a trusted scheduled task (e.g. pg_cron)
+-- or the Supabase SQL editor. Never expose the service-role credential in JS.
+CREATE OR REPLACE FUNCTION public.bratcode_cleanup()
+RETURNS TABLE (codes_deleted integer, attempts_deleted integer)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+AS $$
+DECLARE
+    v_codes integer;
+    v_attempts integer;
+BEGIN
+    DELETE FROM public.bratcodes
+    WHERE expires_at < now() - interval '7 days';
+    GET DIAGNOSTICS v_codes = ROW_COUNT;
+
+    DELETE FROM public.bratcode_rate_limits
+    WHERE window_start < now() - interval '1 day';
+    GET DIAGNOSTICS v_attempts = ROW_COUNT;
+
+    RETURN QUERY SELECT v_codes, v_attempts;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.bratcode_cleanup() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.bratcode_cleanup() TO service_role;
+
+-- To enable automatic cleanup on a Supabase instance with pg_cron configured,
+-- schedule the trusted query below in the platform's SQL scheduler:
+--   SELECT public.bratcode_cleanup();
+-- A daily cadence is enough; validity always ends at 24 hours even without
+-- maintenance, because every import checks expires_at.
+
 -- Expiry is enforced in all RPCs. Physical cleanup is optional and can be
 -- scheduled using Supabase pg_cron or performed by a trusted administrator:
 -- DELETE FROM public.bratcodes WHERE expires_at < now() - interval '7 days';
