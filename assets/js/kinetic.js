@@ -49,70 +49,140 @@
             end: start + duration * (index + 1) / pieces.length
         }));
     }
+    // A compact typographic cluster is built once for each word group.
+    // Its geometry NEVER depends on the current playback time: words appear
+    // incrementally, without recentering, blur, crossfades or opacity flashing.
     function rowCounts(count, sceneSeed) {
+        // Legacy public helper retained for older projects/tests. Rendering no
+        // longer uses line/row grouping: boxes are packed in two dimensions.
+        if (count < 1) return [];
         if (count <= 2) return Array(count).fill(1);
-        if (count === 3) return noise(sceneSeed, "split") < 0.5 ? [1, 2] : [2, 1];
-        if (count === 4) return noise(sceneSeed, "split") < 0.5 ? [1, 2, 1] : [2, 2];
-        if (count === 5) return noise(sceneSeed, "split") < 0.5 ? [1, 2, 2] : [2, 1, 2];
-        if (count === 6) return noise(sceneSeed, "split") < 0.5 ? [1, 2, 3] : [2, 2, 2];
-        if (count === 7) return [2, 2, 3];
-        if (count === 8) return [2, 3, 3];
-        return [2, 2, 2, 3];
+        return Array.from({ length: Math.ceil(count / 3) }, (_, index) =>
+            Math.min(3, count - index * 3));
+    }
+    function intersects(a, b, gap = 0) {
+        return a.x < b.x + b.width + gap && a.x + a.width + gap > b.x
+            && a.y < b.y + b.height + gap && a.y + a.height + gap > b.y;
+    }
+    function unionBounds(boxes) {
+        const left = Math.min(...boxes.map(box => box.x));
+        const right = Math.max(...boxes.map(box => box.x + box.width));
+        const top = Math.min(...boxes.map(box => box.y));
+        const bottom = Math.max(...boxes.map(box => box.y + box.height));
+        return { left, right, top, bottom, width: right - left, height: bottom - top };
+    }
+    function candidates(box, placed, gap, seed) {
+        const choices = [];
+        function add(x, y) { choices.push({ x, y, width: box.width, height: box.height }); }
+        for (const existing of placed) {
+            const horizontal = [
+                existing.y,
+                existing.y + (existing.height - box.height) * 0.5,
+                existing.y + existing.height - box.height
+            ];
+            const vertical = [
+                existing.x,
+                existing.x + (existing.width - box.width) * 0.5,
+                existing.x + existing.width - box.width
+            ];
+            for (const y of horizontal) {
+                add(existing.x + existing.width + gap, y);
+                add(existing.x - box.width - gap, y);
+            }
+            for (const x of vertical) {
+                add(x, existing.y + existing.height + gap);
+                add(x, existing.y - box.height - gap);
+            }
+        }
+        return choices.filter(candidate =>
+            placed.every(other => !intersects(candidate, other, gap * 0.55)));
+    }
+    function compactPlacement(measured, seed, shortSide, targetAspect) {
+        // Place dominant words first, then dock smaller tokens against the
+        // nearest edges. This produces the screenshot-like "interlocked" mass
+        // instead of equal-width rows or scattered independent coordinates.
+        const order = measured.slice().sort((a, b) =>
+            b.width * b.height - a.width * a.height || a.index - b.index);
+        const placed = [];
+        const gap = Math.max(2, shortSide * 0.006);
+        for (const item of order) {
+            const box = { ...item, x: 0, y: 0 };
+            if (!placed.length) { placed.push(box); continue; }
+            const options = candidates(box, placed, gap, seed);
+            let winner = null;
+            let best = Infinity;
+            for (let i = 0; i < options.length; i += 1) {
+                const candidate = options[i];
+                const bounds = unionBounds([...placed, candidate]);
+                const area = bounds.width * bounds.height;
+                const ratio = bounds.width / Math.max(bounds.height, 1);
+                const aspectPenalty = Math.abs(Math.log(ratio / targetAspect));
+                const cx = candidate.x + candidate.width / 2;
+                const cy = candidate.y + candidate.height / 2;
+                const radial = Math.hypot(cx - (bounds.left + bounds.right) / 2,
+                    cy - (bounds.top + bounds.bottom) / 2);
+                // Candidate jitter is deterministic and small compared to area:
+                // randomness shapes the cluster without sacrificing packing.
+                const jitter = (noise(seed, "dock:" + item.index + ":" + i) - .5) * .10;
+                const score = area * (1 + .20 * aspectPenalty + jitter)
+                    + radial * shortSide * .18;
+                if (score < best) { best = score; winner = candidate; }
+            }
+            // The candidate set is nonempty: placement to the right of the
+            // rightmost box is always available, even at extreme font sizes.
+            placed.push({ ...box, ...(winner || { x: Math.max(...placed.map(p => p.x + p.width)) + gap, y: 0 }) });
+        }
+        return placed.sort((a, b) => a.index - b.index);
     }
     function measureScene(ctx, chosen, width, height, options, sceneSeed) {
         const shortSide = Math.min(width, height);
-        const base = Math.min(width * 0.135, height * 0.265) * options.fontScale;
-        const sizePattern = [0.98, 0.55, 1.26, 0.68, 1.18, 0.46, 1.33, 0.75, 1.15];
-        const rows = [];
-        const counts = rowCounts(chosen.length, sceneSeed);
-        const safeWidth = width * 0.81;
-        const safeHeight = height * 0.68;
-        let cursor = 0;
-        for (let r = 0; r < counts.length; r += 1) {
-            const items = chosen.slice(cursor, cursor + counts[r]);
-            cursor += counts[r];
-            const measurements = items.map((word, index) => {
-                const ordinal = cursor - counts[r] + index;
-                const emphasis = ordinal === chosen.length - 1 ? 1.24 : 1;
-                const randomFactor = 0.78 + noise(sceneSeed, ordinal + ":" + word.text) * 0.5;
-                const ratio = 1 + ((sizePattern[ordinal % sizePattern.length] * randomFactor * emphasis) - 1) * options.variation;
-                const size = Math.max(4, base * ratio);
-                ctx.font = '400 ' + size + 'px ' + options.fontFamily;
-                return { text: word.text, start: word.start, size, width: ctx.measureText(word.text).width };
-            });
-            const gap = Math.max(4, shortSide * 0.009);
-            rows.push({
-                items: measurements,
-                width: measurements.reduce((total, w) => total + w.width, 0) + Math.max(0, measurements.length - 1) * gap,
-                height: Math.max(...measurements.map(w => w.size)),
-                gap
-            });
-        }
-        const measuredHeight = rows.reduce((total, row) => total + row.height * 0.91, 0);
-        const longest = Math.max(...rows.map(row => row.width), 1);
-        const scale = Math.min(1, safeWidth / longest, safeHeight / Math.max(measuredHeight, 1));
-        const totalHeight = measuredHeight * scale;
-        let top = height * (0.5 + options.verticalPosition) - totalHeight / 2;
-        const nodes = [];
-        for (let r = 0; r < rows.length; r += 1) {
-            const row = rows[r];
-            const rowWidth = row.width * scale;
-            const displacement = (noise(sceneSeed, "row" + r) - 0.5) * width * 0.115;
-            const xCenter = clamp(width * (0.5 + options.positionX) + displacement,
-                width * 0.08 + rowWidth / 2, width * 0.92 - rowWidth / 2);
-            let x = xCenter - rowWidth / 2;
-            for (const word of row.items) {
-                const w = word.width * scale;
-                nodes.push({
-                    text: word.text, start: word.start, size: word.size * scale,
-                    x: x + w / 2, y: top + row.height * scale * 0.78,
-                    width: w
-                });
-                x += w + row.gap * scale;
-            }
-            top += row.height * scale * 0.91;
-        }
-        return nodes;
+        const base = Math.min(width * .17, height * .30) * options.fontScale;
+        const patterns = [1.27, .53, 1.03, .62, 1.40, .48, .91, .71, 1.22];
+        const measured = chosen.map((word, index) => {
+            const randomness = .83 + noise(sceneSeed, "size:" + index + ":" + word.text) * .39;
+            const pattern = patterns[(index + Math.floor(noise(sceneSeed, "style") * 4)) % patterns.length];
+            const ratio = 1 + (pattern * randomness - 1) * options.variation;
+            const size = Math.max(4, base * ratio);
+            ctx.font = "400 " + size + "px " + options.fontFamily;
+            return {
+                index, text: word.text, start: word.start, size,
+                width: Math.max(1, ctx.measureText(word.text).width),
+                height: size * 1.02
+            };
+        });
+        const boxes = compactPlacement(measured, sceneSeed, shortSide,
+            clamp(width / height * .90, .85, 2.25));
+        const bounds = unionBounds(boxes);
+        // Keep a safe area in every aspect ratio, including portrait TikTok.
+        const safeWidth = width * .79;
+        const safeHeight = height * .63;
+        const scale = Math.min(1, safeWidth / Math.max(bounds.width, 1),
+            safeHeight / Math.max(bounds.height, 1));
+        const scaledWidth = bounds.width * scale;
+        const scaledHeight = bounds.height * scale;
+        const cx = clamp(width * (.5 + options.positionX), width * .105 + scaledWidth / 2,
+            width * .895 - scaledWidth / 2);
+        const cy = clamp(height * (.5 + options.verticalPosition), height * .185 + scaledHeight / 2,
+            height * .815 - scaledHeight / 2);
+        const left = cx - scaledWidth / 2;
+        const top = cy - scaledHeight / 2;
+        return boxes.map(box => {
+            const x = left + (box.x - bounds.left) * scale;
+            const y = top + (box.y - bounds.top) * scale;
+            const w = box.width * scale;
+            const size = box.size * scale;
+            return {
+                text: box.text, start: box.start,
+                size, x: x + w / 2,
+                // Alphabetic baseline, approximately 80% from box top.
+                y: y + size * .81,
+                width: w,
+                bounds: {
+                    left: x, right: x + w,
+                    top: y, bottom: y + box.height * scale
+                }
+            };
+        });
     }
     function buildFrame(ctx, line, time, width, height, style, seed = 1337) {
         if (!ctx || width <= 0 || height <= 0 || !line) return { groups: [], activeIndex: -1 };
@@ -125,23 +195,22 @@
             else break;
         }
         if (active < 0) return { groups: [], activeIndex: -1 };
-        const lineSeed = String(seed) + ":" + (line.sourceRowId || line.lineIndex || line.displayStart || line.text || "");
-        function groupFor(index) {
-            const windowStart = Math.max(0, index - options.maxWords + 1);
-            const chosen = words.slice(windowStart, index + 1);
-            return measureScene(ctx, chosen, width, height, options, lineSeed + ":" + index);
-        }
-        const duration = 0.44 - options.motion * 0.27;
-        const fraction = clamp((time - words[active].start) / duration, 0, 1);
-        const eased = fraction * fraction * (3 - 2 * fraction);
-        const groups = [];
-        if (active > 0 && eased < 1) {
-            groups.push({ nodes: groupFor(active - 1), alpha: 1 - eased,
-                translateY: -height * 0.012 * eased * options.motion });
-        }
-        groups.push({ nodes: groupFor(active), alpha: active > 0 ? eased : 1,
-            translateY: height * 0.012 * (1 - eased) * options.motion });
-        return { groups, activeIndex: active, activeWord: words[active].text };
+        // Stable pages of at most maxWords tokens: no re-layout per spoken word.
+        // A page switch is a cut, not a translucent two-frame overlap.
+        const sceneStart = Math.floor(active / options.maxWords) * options.maxWords;
+        const sceneEnd = Math.min(words.length, sceneStart + options.maxWords);
+        const chosen = words.slice(sceneStart, sceneEnd);
+        const sceneSeed = String(seed) + ":" +
+            (line.sourceRowId || line.lineIndex || line.displayStart || line.text || "") +
+            ":cluster:" + sceneStart;
+        const layout = measureScene(ctx, chosen, width, height, options, sceneSeed);
+        const revealed = layout.slice(0, active - sceneStart + 1);
+        return {
+            groups: [{ nodes: revealed, alpha: 1, translateY: 0 }],
+            activeIndex: active,
+            activeWord: words[active].text,
+            sceneIndex: Math.floor(active / options.maxWords)
+        };
     }
     // Keep the latest words from previous lyric lines: short LRC lines still form
     // a complete composition instead of returning to a one-word slide.
