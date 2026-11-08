@@ -90,3 +90,45 @@ test("BRATCODE SQL uses owner authentication, expiry and anonymous import access
     assert.match(sql, /TO anon, authenticated;/);
     assert.match(sql, /revoked_at IS NULL/);
 });
+
+
+test("BRATCODE removes nested private fields and unsafe URL/binary references", () => {
+    const project = {
+        version: 5,
+        lyrics: "[00:01.00]safe text",
+        lyricRows: [{ text: "safe text", start: 1,
+            auth: { accessToken: "DO_NOT_SEND" },
+            assetId: "SECRET_ASSET",
+            nested: { url: "https://private.example/media.mp3", password: "PASSWORD" }
+        }],
+        style: {
+            fontFamily: "Arial", fontSize: 82,
+            backgroundFill: {
+                color2: "#224477",
+                blob: "SECRET_MEDIA",
+                sourceUrl: "data:image/png;base64,PRIVATEIMAGE",
+                child: { headers: { authorization: "BEARER" }, file: { binary: "SECRET_BINARY" } }
+            }
+        },
+        metadata: { trackName: "Track", artistName: "Artist" }
+    };
+    const safe = BratCode.sanitizePayload(project);
+    const raw = JSON.stringify(safe);
+    for (const forbidden of [
+        "DO_NOT_SEND", "SECRET_ASSET", "SECRET_MEDIA", "PRIVATEIMAGE",
+        "PASSWORD", "BEARER", "SECRET_BINARY", "private.example"
+    ]) assert.equal(raw.includes(forbidden), false, forbidden);
+    assert.equal(safe.lyricRows[0].text, "safe text");
+    assert.equal(safe.style.backgroundFill.color2, "#224477");
+    assert.equal(safe.style.fontSize, 82);
+});
+
+test("BRATCODE rejects overly nested payloads without uploading", () => {
+    const deep = { value: 1 };
+    let nested = deep;
+    for (let index = 0; index < 30; index++) {
+        nested.child = {};
+        nested = nested.child;
+    }
+    assert.throws(() => BratCode.makeSnapshot({ version: 5, style: deep }), /troppo profonda/);
+});
