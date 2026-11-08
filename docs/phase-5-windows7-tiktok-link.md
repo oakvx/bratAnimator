@@ -2,7 +2,7 @@
 
 ## Ambito
 
-- La dashboard applica la reale libreria 7.css v0.21.1 (licenza MIT), importata tramite il foglio di stile assets/css/win7-app.css. Componenti: window, glass, title-bar, title-bar-controls, window-body.
+- La dashboard applica la reale libreria 7.css v0.21.0 (MIT), distribuita integralmente in vendor/7css/7.scoped.css e caricata prima di assets/css/studio-win7.css. Componenti: window, glass, title-bar, title-bar-controls, window-body.
 - I controlli Minimize, Maximize, Restore e Close modificano la finestra web simulata, non il browser o il sistema operativo. La taskbar riapre il programma.
 - Utilizza il vero favicon.svg del repository, logo verde con scritta brat. Niente simboli sostitutivi, slogan o etichette artificiali.
 - L'editor video conserva il proprio layout e i propri salvataggi. La dashboard è ispirata a Explorer di Windows 7; lo stile usa i componenti 7.css, senza redistribuire wallpaper Microsoft.
@@ -52,3 +52,11 @@ Il client secret, i token TikTok e la service-role key non devono mai entrare ne
 - CHROME_PATH=/usr/bin/google-chrome node tests/studio-dashboard-browser.mjs
 
 Restano necessari test manuali su Safari iOS, auth Supabase reale e OAuth TikTok, dopo configurazione del servizio.
+
+## Correzione login e consolidamento CSS (novembre 2026)
+
+La dashboard utilizza la distribuzione completa di 7.css fornita localmente, senza CDN. Sono stati dismessi i vecchi fogli di stile sovrapposti (studio-dashboard.css, aero-theme.css, classic-desktop.css, win7-app.css) e sostituiti da studio-win7.css.
+
+Il login appariva come una schermata interamente sfocata perché il backdrop della modale era visibile ma 7.css nascondeva .window[role=dialog] in assenza della pseudoclasse :target. Il role=dialog / aria-modal=true è stato spostato al contenitore esterno che è controllato tramite hidden da JavaScript; la finestra 7.css interna è sempre visibile quando l'overlay è aperto. Nessun filtro blur viene più applicato al backdrop. Le tre modalità login, registrazione e codice email usano il componente Tabs nativo di 7.css con aria-selected sincronizzato.
+
+Aggiornati il service worker, il caricamento offline e i test DOM + Chrome per intercettare questa regressione.
