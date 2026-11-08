@@ -130,6 +130,7 @@
                     request.onsuccess = () => {
                         const all = request.result || [];
                         const existing = all.find(item => item.key === key);
+                        if (existing && !config.title) record.title = existing.title || record.title;
                         const saved = all.filter(item => item.kind !== "temporary").length;
                         const temporary = all.filter(item => item.kind === "temporary").length;
                         if (!existing && ((kind === "saved" && saved >= PROJECT_LIMIT) ||
