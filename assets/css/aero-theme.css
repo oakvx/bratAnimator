@@ -402,3 +402,104 @@ body.studio-dashboard-open::before {
 @media (prefers-reduced-motion:reduce) {
   .studio-dashboard button,.studio-nav-link,.studio-project-card { transition:none !important; }
 }
+
+
+/* Phase 3: local project management and sharing */
+.studio-project-entry {
+  display:flex; flex-direction:column; min-width:0;
+  border:1px solid rgba(255,255,255,.86); border-radius:20px;
+  background:linear-gradient(180deg,rgba(252,255,255,.8),rgba(185,230,248,.75));
+  box-shadow:0 11px 23px rgba(42,121,170,.15),inset 0 2px #fff;
+  padding:4px;
+}
+.studio-project-entry > .studio-project-card {
+  border:1px solid rgba(255,255,255,.93);
+  flex:1;
+}
+.studio-project-actions {
+  display:flex;gap:7px;flex-wrap:wrap;align-items:center;
+  padding:8px 6px 5px;
+}
+.studio-project-actions button,
+.studio-library-tools button,
+.studio-backup-reminder button {
+  min-height:31px;
+  flex:1 1 auto;
+  padding:5px 10px;
+  font-size:11px;
+  color:#195f87;
+  border-radius:10px;
+  border:1px solid #84bedc;
+  background:linear-gradient(180deg,#fff 0%,#def6ff 47%,#a4d7f0 48%,#ecfdff 100%);
+  box-shadow:inset 0 2px #fff,0 2px 0 #8bc5db,0 4px 8px rgba(51,124,160,.16);
+}
+.studio-project-actions button:hover,
+.studio-library-tools button:hover,
+.studio-backup-reminder button:hover { filter:brightness(1.045); }
+.studio-project-actions button:active,
+.studio-library-tools button:active,
+.studio-backup-reminder button:active {
+  transform:translateY(2px);
+  box-shadow:inset 0 3px 7px rgba(44,125,170,.26);
+}
+.studio-project-actions button:last-child {
+  color:#9e5552;
+  border-color:#d9aaaf;
+  background:linear-gradient(#fff,#ffe5e6 47%,#f3b9bb 48%,#ffedf0);
+  box-shadow:inset 0 2px #fff,0 2px 0 #dfb2b7,0 4px 8px rgba(148,74,91,.15);
+}
+.studio-temporary-label {
+  position:absolute; top:9px; left:9px; z-index:2;
+  padding:4px 7px;
+  background:linear-gradient(#fff8d2,#ffd775);
+  border:1px solid #e4a74f;
+  border-radius:8px;
+  box-shadow:inset 0 1px #fff;
+  color:#78511b; font:750 9px var(--font-mono,monospace);
+}
+.studio-library-tools {
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  margin:13px 0 18px;
+}
+.studio-library-tools .studio-library-search {
+  min-width:190px;flex:2 1 220px;
+}
+.studio-library-tools input {
+  width:100%;
+  border:1px solid #99cce2 !important;
+  border-radius:12px !important;
+  min-height:44px;
+  color:#185d7e !important;
+  background:linear-gradient(#fff,#f5feff) !important;
+  box-shadow:inset 0 2px 4px rgba(48,118,158,.15),0 2px #fff !important;
+}
+.studio-library-tools button {
+  flex:0 1 auto;min-height:43px;
+}
+.studio-backup-reminder {
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+  padding:11px 13px; margin:13px 0;
+  border:1px solid #e1c272;border-radius:13px;
+  background:linear-gradient(#fffdec,#ffedb0);
+  color:#79551d;
+  box-shadow:inset 0 2px #fff,0 4px 10px #987c3040;
+  font-size:12px;
+}
+.studio-backup-reminder button { flex:0 0 auto; }
+.studio-dashboard :where(.studio-settings-card) input:not([type="checkbox"]) {
+  color:#124a6c;border:1px solid #91c8de;
+  border-radius:12px;background:linear-gradient(#fff,#e9faff);
+  box-shadow:inset 0 2px 4px #5095bc23,0 2px #fff;
+}
+.studio-settings-card label { display:block;margin:13px 0 7px;font-weight:700;font-size:12px;color:#236f96; }
+.studio-settings-card .studio-accent-button { margin-top:10px; }
+#studioShareState { font:650 12px/1.6 var(--font-ui,system-ui);word-break:break-word; }
+#studioCodeMessage { font-size:12px;color:#3b7d8e;min-height:1.5em; }
+#studioProjectDialogError { color:#a9483d; }
+#studioProjectDialogConfirm.studio-delete-button { background:linear-gradient(#fff7f3,#ffc5b9);color:#91453d;border-color:#d8a49d; }
+@media(max-width:550px) {
+  .studio-library-tools { align-items:stretch; }
+  .studio-library-tools .studio-library-search { flex-basis:100%; }
+  .studio-library-tools button { flex:1; }
+  .studio-project-actions button { flex:1; }
+}
