@@ -85,6 +85,7 @@ try {
         if (ready) break;
         await new Promise(resolve => setTimeout(resolve, 100));
     }
+    await evaluate(() => window.BratStudio.show('editor'));
     await evaluate(() => {
         window.auditAssert = (condition, detail) => { if (!condition) throw new Error(detail); };
         window.auditSetLyrics = (text, mode = 'typewriter') => {
