@@ -128,6 +128,11 @@
             result((await requireClient()).auth.signInWithOAuth({
                 provider: "google", options: { redirectTo: redirectUrl() }
             })),
-        signOut: async () => result((await requireClient()).auth.signOut({ scope: "local" }))
+        signOut: async () => result((await requireClient()).auth.signOut({ scope: "local" })),
+        rpc: async (name, params) => {
+            const allowed = ["bratcode_create", "bratcode_active", "bratcode_revoke", "bratcode_import"];
+            if (!allowed.includes(name)) throw new Error("Unsupported application endpoint.");
+            return result((await requireClient()).rpc(name, params || {}));
+        }
     });
 });
