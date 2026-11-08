@@ -311,6 +311,7 @@
         const user = auth.user();
         $("studioCodeCreate").disabled = !backendReady || !user || Boolean(activeCode);
         $("studioCodeCopy").hidden = !activeCode;
+        $("studioCodeCopyLink").hidden = !activeCode;
         $("studioCodeRevoke").hidden = !activeCode;
         if (!backendReady) {
             element.textContent = "Condivisione cloud non configurata. L'editor e i backup locali rimangono disponibili.";
@@ -361,6 +362,17 @@
             $("studioCodeMessage").textContent = "BRATCODE copiato negli appunti.";
         } catch (_) {
             $("studioCodeMessage").textContent = "Copia manualmente il codice visualizzato: " + code;
+        }
+    }
+
+    async function copyCodeLink() {
+        if (!activeCode) return;
+        try {
+            const url = window.BratCode.shareLink(activeCode.code);
+            await navigator.clipboard.writeText(url);
+            $("studioCodeMessage").textContent = "Link temporaneo copiato. Chi lo apre dovrà confermare l'importazione.";
+        } catch (error) {
+            $("studioCodeMessage").textContent = "Non riesco a copiare il link: " + error.message;
         }
     }
 
@@ -601,6 +613,7 @@
     });
     $("studioCodeCreate").addEventListener("click", createCode);
     $("studioCodeCopy").addEventListener("click", copyCode);
+    $("studioCodeCopyLink").addEventListener("click", copyCodeLink);
     $("studioCodeRevoke").addEventListener("click", revokeCode);
     $("studioCodeImport").addEventListener("click", importCode);
     window.addEventListener("brat:backup-exported", () => {
@@ -656,7 +669,24 @@
 
     document.body.classList.add("studio-active");
     // Preserve existing portable project links: they must open the editor.
-    viewSwitch(window.location.hash.startsWith("#project=") ? "editor" : "home");
+    // BRATCODE links prefill the import field; importing always requires
+    // an explicit click. Remove the bearer code from the address bar after
+    // reading it so it is not accidentally reused from browser history.
+    const incomingHash = window.location.hash;
+    if (incomingHash.startsWith("#bratcode=")) {
+        const candidate = incomingHash.slice("#bratcode=".length);
+        try {
+            $("studioCodeInput").value = window.BratCode.prettyCode(candidate);
+            viewSwitch("share");
+            $("studioCodeMessage").textContent = "Link ricevuto. Premi Importa progetto per confermare.";
+        } catch (_) {
+            viewSwitch("share");
+            $("studioCodeMessage").textContent = "Il link BRATCODE non contiene un codice valido.";
+        }
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    } else {
+        viewSwitch(incomingHash.startsWith("#project=") ? "editor" : "home");
+    }
     profile();
     auth.listen(queueAuthChange);
     auth.initialize().then(result => {
