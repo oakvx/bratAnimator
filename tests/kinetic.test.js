@@ -148,3 +148,48 @@ test("settings are bounded and missing word-timing has a deterministic fallback"
     }, 3.5, 710, 400, style);
     assert.equal(frame.activeWord, "lyric");
 });
+
+test("explicit stanza boundary clears the previous canvas immediately", () => {
+    const ctx = canvasContext();
+    const verses = [
+        { ...line("three fast words", 0, 1.5, 0), stanzaIndex: 0 },
+        { ...line("plus four more words", 1.5, 3.5, 1), stanzaIndex: 0 },
+        { ...line("fresh second verse", 3.5, 5.5, 2), stanzaIndex: 1 }
+    ];
+    const before = kinetic.buildTimelineFrame(ctx, verses, 3.3, 1080, 1920, style, 12);
+    assert.ok(before.groups[0].nodes.some(node => node.text === "three"));
+    const after = kinetic.buildTimelineFrame(ctx, verses, 3.51, 1080, 1920, style, 12);
+    assert.deepEqual(after.groups[0].nodes.map(node => node.text), ["fresh"]);
+    assert.ok(!after.groups[0].nodes.some(node => node.text === "three"));
+    assert.equal(after.groups[0].alpha, 1);
+});
+
+test("long vocal pause starts a fresh stanza for imported lyrics without separators", () => {
+    const ctx = canvasContext();
+    const verses = [line("first part", 0, 2, 0), line("second part", 7, 9, 1)];
+    const a = kinetic.buildTimelineFrame(ctx, verses, 1.8, 710, 400, style);
+    const b = kinetic.buildTimelineFrame(ctx, verses, 7.1, 710, 400, style);
+    assert.deepEqual(a.groups[0].nodes.map(n => n.text), ["first", "part"]);
+    assert.deepEqual(b.groups[0].nodes.map(n => n.text), ["second"]);
+    assert.equal(kinetic.buildTimelineFrame(ctx, verses, 5, 710, 400, style).groups.length, 0);
+});
+
+test("rapid rap words reveal at exact timestamps without fade, scale or whole-frame opacity changes", () => {
+    const ctx = canvasContext();
+    const words = Array.from({ length: 28 }, (_, i) => "flow" + i);
+    const fast = [{ ...line(words.join(" "), 0, 1.4, 0), stanzaIndex: 0 }];
+    const start = kinetic.buildTimelineFrame(ctx, fast, 0.01, 1080, 1920, style, 35);
+    const mid = kinetic.buildTimelineFrame(ctx, fast, 0.73, 1080, 1920, style, 35);
+    const end = kinetic.buildTimelineFrame(ctx, fast, 1.35, 1080, 1920, style, 35);
+    assert.equal(start.groups[0].nodes.length, 1);
+    assert.equal(mid.groups[0].nodes.length, 15);
+    assert.equal(end.groups[0].nodes.length, words.length);
+    for (const frame of [start, mid, end]) {
+        assert.equal(frame.groups.length, 1);
+        assert.equal(frame.groups[0].alpha, 1);
+        assert.equal(frame.groups[0].translateY, 0);
+        assert.ok(frame.groups[0].nodes.every(node => !("opacity" in node) && !("scale" in node)));
+    }
+    for (let i = 0; i < mid.groups[0].nodes.length; i += 1)
+        assert.deepEqual(mid.groups[0].nodes[i], end.groups[0].nodes[i]);
+});
