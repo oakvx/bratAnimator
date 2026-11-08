@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v8-creator-studio-auth-2";
+const CACHE_NAME = "brat-animator-v9-frutiger-aero";
 const APP_ASSETS = [
   "./",
   "./index.html",
