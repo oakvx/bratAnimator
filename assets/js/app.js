@@ -5412,7 +5412,7 @@ async function updateExportEstimate() {
             store: workspaceStore,
             async flush() {
                 await (workspaceBootPromise || Promise.resolve());
-                if (workspaceAutosave?.isDirty()) await workspaceAutosave.flush();
+                if (workspaceAutosave) await workspaceAutosave.flush();
             },
             async switchOwner(nextOwner) {
                 await (workspaceBootPromise || Promise.resolve());
@@ -5445,6 +5445,19 @@ async function updateExportEstimate() {
                 if (fallback && !record) workspaceAutosave.schedule(fallback);
                 else announceWorkspaceStatus("ready");
                 renderPreviewAt(0);
+            },
+            async reloadActive() {
+                await (workspaceBootPromise || Promise.resolve());
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                await this.flush();
+                const record = await workspaceStore.getActive(workspaceOwner);
+                workspaceResetting = true;
+                resetProjectView();
+                workspaceResetting = true;
+                if (record?.payload) restoreProjectSettings(record.payload);
+                workspaceResetting = false;
+                renderPreviewAt(0);
+                announceWorkspaceStatus("ready");
             },
             async clearCurrent() {
                 await (workspaceBootPromise || Promise.resolve());
