@@ -195,21 +195,20 @@
             else break;
         }
         if (active < 0) return { groups: [], activeIndex: -1 };
-        // Stable pages of at most maxWords tokens: no re-layout per spoken word.
-        // A page switch is a cut, not a translucent two-frame overlap.
-        const sceneStart = Math.floor(active / options.maxWords) * options.maxWords;
-        const sceneEnd = Math.min(words.length, sceneStart + options.maxWords);
-        const chosen = words.slice(sceneStart, sceneEnd);
+        // One entire stanza occupies exactly one canvas composition, regardless
+        // of word count. Every word has a fixed position for the whole stanza.
         const sceneSeed = String(seed) + ":" +
             (line.sourceRowId || line.lineIndex || line.displayStart || line.text || "") +
-            ":cluster:" + sceneStart;
-        const layout = measureScene(ctx, chosen, width, height, options, sceneSeed);
-        const revealed = layout.slice(0, active - sceneStart + 1);
+            ":stanza";
+        const layout = measureScene(ctx, words, width, height, options, sceneSeed);
+        // Instant, opaque reveal at each word's timestamp. No fade, scale pulse,
+        // opacity transition or repeated whole-frame flash for rapid lyrics.
+        const revealed = layout.filter(node => time >= node.start);
         return {
             groups: [{ nodes: revealed, alpha: 1, translateY: 0 }],
             activeIndex: active,
             activeWord: words[active].text,
-            sceneIndex: Math.floor(active / options.maxWords)
+            sceneIndex: 0
         };
     }
     // Keep the latest words from previous lyric lines: short LRC lines still form
