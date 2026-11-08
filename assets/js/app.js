@@ -268,9 +268,11 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 try {
                     localStorage.setItem(WORKSPACE_HAS_SAVED_KEY, "1");
                     window.dispatchEvent(new CustomEvent("brat:local-save", { detail: { ownerId: workspaceOwner, projectId: workspaceProjectId } }));
-                    if (isGuestOwner()) {
+                    if (isGuestOwner() && workspaceProjectId === "current") {
                         for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
                     } else {
+                        // A temporary save must never erase the guest's active
+                        // permanent-project recovery copy.
                         localStorage.removeItem(getFallbackKey());
                     }
                     localStorage.removeItem(getFallbackTimeKey());
