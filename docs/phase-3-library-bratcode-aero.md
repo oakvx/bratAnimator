@@ -64,8 +64,11 @@ Database security:
 - The client never uses a Supabase secret/service_role key.
 - Rate limiting is best-effort based on PostgREST request headers. Do not
   rely on it as the only internet-facing abuse mitigation.
-- Physical row cleanup is optional; querying expired codes is prevented
-  immediately by expiry checks.
+- Expiry is enforced immediately on every request (24-hour TTL). Physical
+  cleanup can run daily using the privileged `public.bratcode_cleanup()` SQL
+  function, callable from a trusted pg_cron job or SQL editor. It removes
+  expired codes after a 7-day grace period and stale rate-limit counters.
+  Never call it with browser credentials or publish service-role keys.
 
 ## Frutiger Aero dashboard
 
