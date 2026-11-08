@@ -80,3 +80,30 @@ body[data-ui-mode="simple"] #editCanvasBtn { display:none; }
   #editCanvasBtn { max-width:68px; padding:6px; font-size:9px; line-height:1.2; white-space:normal; }
   #stageTextSettingsBtn { max-width:86px; padding:6px; font-size:9px; line-height:1.2; white-space:normal; }
 }
+
+
+/* Export readiness — scoped to the editor, no 7.css window overrides. */
+.export-preflight {
+    margin: 15px 0;
+    padding: 13px 14px;
+    border: 1px solid var(--border, #c7d3da);
+    border-radius: 9px;
+    background: var(--surface, #f7fafb);
+    color: inherit;
+}
+.export-preflight-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.export-preflight-header h3 { margin:0; font-size:14px; font-weight:650; }
+.export-preflight-header button { padding:6px 10px; }
+.export-preflight #exportPreflightSummary { margin:8px 0; font-size:13px; font-weight:600; }
+.export-preflight-list { list-style:none; margin:8px 0 10px; padding:0; display:grid; gap:7px; }
+.export-preflight-list li { position:relative; padding:5px 8px 5px 24px; font-size:12px; line-height:1.5; }
+.export-preflight-list li::before { position:absolute; left:4px; top:4px; font-weight:700; }
+.export-preflight-ok::before { content:"✓"; color:#23834c; }
+.export-preflight-warning::before { content:"!"; color:#9a6e08; }
+.export-preflight-error::before { content:"×"; color:#b72a35; }
+.export-preflight[data-state="blocked"] { border-left:3px solid #b72a35; }
+.export-preflight[data-state="warning"] { border-left:3px solid #c38a15; }
+.export-preflight[data-state="ready"] { border-left:3px solid #278f58; }
+.export-preflight-note { margin:8px 0 0; font-size:11px; opacity:.78; line-height:1.5; }
+.export-preflight [hidden] { display:none !important; }
+@media(max-width:560px) { .export-preflight { padding:10px; } }
