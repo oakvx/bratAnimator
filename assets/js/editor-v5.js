@@ -253,7 +253,7 @@
     }
     $('cancelPackageBtn').hidden = true;
     $('cancelPackageBtn').addEventListener('click', () => packageAbort?.abort());
-    $('exportPackageBtn').addEventListener('click', () => packageAction(async options => { const blob = await Assets.exportPackage(structuredClone(buildProjectPayload()), loadMediaBlob, options); downloadBlob(blob, `${buildExportFileBase()}.brat.zip`); status(t('saved'), false, 'packageStatus'); }));
+    $('exportPackageBtn').addEventListener('click', () => packageAction(async options => { const blob = await Assets.exportPackage(structuredClone(buildProjectPayload()), loadMediaBlob, options); downloadBlob(blob, `${buildExportFileBase()}.brat.zip`); window.dispatchEvent(new CustomEvent('brat:backup-exported')); status(t('saved'), false, 'packageStatus'); }));
     async function persistAssets(assets) {
         if (!assets.length) return;
         const db = await openMediaDb();
@@ -271,7 +271,15 @@
         for (const font of payload.fonts) { const asset = assets.find(asset => asset.id === font.assetId); if (!asset) throw new Error(`Missing font: ${font.name}`); const face = new FontFace(font.family, await asset.blob.arrayBuffer()); await face.load(); }
         if (options.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
         await persistAssets(assets);
-        restoreProjectSettings(payload); await prepareProjectFonts(); saveProjectSettings(); status(t('loaded'), false, 'packageStatus');
+        if (window.BratEditorWorkspace?.restoreImportedPayload) {
+            await window.BratEditorWorkspace.restoreImportedPayload(payload);
+        } else {
+            restoreProjectSettings(payload);
+            saveProjectSettings();
+        }
+        await prepareProjectFonts();
+        window.dispatchEvent(new CustomEvent('brat:project-imported'));
+        status(t('loaded'), false, 'packageStatus');
     }); });
 
     const originalRefreshRows = refreshFromRows;
