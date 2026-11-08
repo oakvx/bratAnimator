@@ -22,6 +22,8 @@
     <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="stylesheet" href="assets/css/editor-v5.css" />
     <link rel="stylesheet" href="assets/css/studio-dashboard.css" />
+    <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
+    <link rel="stylesheet" href="https://unpkg.com/7.css@0.21.1/dist/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/aero-theme.css" />
     <script>
         window.BratStudioShellEnabled = true;
@@ -397,8 +399,10 @@
         </section>
     </div>
 
-    <div id="studioLogoutDialog" class="studio-modal-backdrop" hidden>
-        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioLogoutTitle">
+    <div id="studioLogoutDialog" class="studio-modal-backdrop win7" hidden>
+        <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioLogoutTitle">
+            <div class="title-bar"><div class="title-bar-text">brat animator · session</div></div>
+            <div class="window-body">
             <button id="studioLogoutCancelX" class="studio-modal-close" type="button" aria-label="Annulla">×</button>
             <span class="studio-eyebrow">SESSIONE</span><h2 id="studioLogoutTitle">Vuoi uscire?</h2>
             <p>I tuoi progetti sono salvati in questo browser, non nel cloud. Scegli cosa fare della libreria locale dell'account.</p>
@@ -406,6 +410,7 @@
             <button id="studioLogoutDelete" class="studio-delete-button" type="button">Elimina i progetti locali ed esci</button>
             <button id="studioLogoutCancel" class="studio-guest-button" type="button">Annulla</button>
             <p id="studioLogoutMessage" class="studio-auth-message" role="status"></p>
+            </div>
         </section>
     </div>
 
