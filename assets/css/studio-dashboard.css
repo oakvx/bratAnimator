@@ -133,3 +133,15 @@ body.studio-editor-open .studio-dashboard { display:none; }
 }
 /* Prevent the fixed bottom nav from obstructing content in a mobile dashboard. */
 @media (prefers-reduced-motion:reduce) { .studio-nav *, .studio-dashboard * { scroll-behavior:auto; transition:none; } }
+
+/* Editor return button: visible only when the mobile workspace is open. */
+.studio-editor-back { display:none; }
+@media (max-width:980px) {
+  body.studio-editor-open .studio-editor-back {
+    position:absolute; left:8px; top:50%; transform:translateY(-50%);
+    z-index:3; display:inline-flex; align-items:center; min-width:64px;
+    padding:5px 8px; min-height:32px; border:1px solid #4f6743;
+    border-radius:9px; background:#263521; color:#d7ffae; font-size:10px;
+  }
+  body.studio-editor-open .studio-editor-back:active { transform:translateY(calc(-50% + 1px)); }
+}
