@@ -104,3 +104,42 @@ Run these checks before tagging a release or pushing to GitHub Pages.
 ## Automated Checks
 
 Run `node --test`, then all Chrome checks listed in the README: `natural-timing-browser`, `text-settings-browser`, `export-format-browser`, `motion-browser`, `music-editor-browser`, `project-assets-browser` and `editor-v5-browser` (each under `tests/` with `.mjs`). Use `CHROME_PATH` when Chrome is installed outside the default location.
+
+
+## Fasi 8–12 — Accettazione prima del rilascio
+
+Le seguenti verifiche **non** sono sostituite dai test automatici e richiedono ambiente/profili reali.
+
+### Browser, media e backup
+
+- [ ] Chrome desktop, Firefox desktop, Safari iPhone: creare un progetto, importare file LRC/TTML e audio locale, verificare anteprima e riproduzione.
+- [ ] Esportare MP4/WebM + PNG e verificare effettiva riproducibilità, risoluzione, audio/silenzio e durata.
+- [ ] Esportare e reimportare `.brat.zip`; verificare la presenza dei file binari e la separazione dei loro ID locali.
+- [ ] Testare configurazioni 720, 1080, 1440 e 60 fps su device compatibili, con fallback esplicito se codec indisponibili.
+- [ ] Verificare l'archivio 20+1, il recupero temporaneo e l'assenza di sovrascritture durante importazioni e cambi account.
+- [ ] Su 320/390px verificare topbar, pulsante Impostazioni stage, schede, menu Start, tastiera e scrolling senza overlay nascosti.
+- [ ] Installare la PWA, creare contenuti offline, aggiornare la cache e verificare che non siano cancellati i progetti locali.
+
+### Account e condivisione
+
+- [ ] Sul **proprio** progetto Supabase: signup email, conferma e login; login con password, OTP e Google OAuth.
+- [ ] Richiedere reset password, aprire link e aggiornare la password senza inviare credenziali o token ai log.
+- [ ] Dopo logout verificare libreria locale mantenuta; dopo logout con eliminazione verificare prompt esplicito.
+- [ ] Attivare migrazione BRATCODE con RLS e gateway limit configurati; eseguire `supabase/diagnostics/readiness.sql`.
+- [ ] Creare link BRATCODE, aprirlo da altro browser guest, confermare l'import e verificare che i media non siano inclusi.
+- [ ] Verificare codice revocato/scaduto, tentativi ripetuti e job programmato di cleanup.
+
+### TikTok
+
+- [ ] Creare app Developer autorizzata e configurare tutti i secret **server** (mai nel repo).
+- [ ] Deploy Edge Function, verifica CSRF state, scope minimo, callback e profilo reale.
+- [ ] Testare refresh dei token, revoca provider riuscita e provider temporaneamente non disponibile.
+- [ ] Con provider non disponibile controllare che i token server siano rimossi e il messaggio **non** dichiari falsamente «revocato da TikTok».
+- [ ] Abilitare `assets/js/tiktok-config.js` solo dopo test completi; non promettere post automatici o musica TikTok.
+
+### Nuovi template
+
+- [ ] Attivare Brat Classic, Kinetic Reels, Cinematic e Music Scroll nell'editor.
+- [ ] Per ciascuno controllare layout, fps, risoluzione effettiva, render, autosalvataggio e reimport package.
+- [ ] Dopo cambio template verificare che testi, timestamps originali e media locali siano invariati.
+
