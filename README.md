@@ -69,6 +69,8 @@ Brat Animator implements multiple text-rendering modes, including Brat, Music, C
 
 Kinetic Collage uses resolution-independent two-dimensional word packing: deterministic, compact typography with different font sizes, adjacency constraints and safe canvas margins. Every **stanza has its own stable, isolated canvas**; separate stanzas with blank LRC lines (or supported `[Verse]`/`[Chorus]` headings). New words appear **immediately** at their timestamps: no fade, scaling, or automatic full-screen palette swaps even for fast rap. The complete stanza is auto-fitted, not split after a fixed number of words. Preview and video exports use the same compositor and cached geometry.
 
+The **lowercase lyrics** tool in Timing transforms the actual lyric text without touching LRC markers or imported word timing. See the [stanza / lowercase implementation guide](docs/kinetic-stanzas-lowercase.md) for examples, supported separators and safety limits.
+
 Canvas layout and source timestamps are evaluated independently of dashboard effects. Dashboard click sounds use synthesized Web Audio and are never mixed into exported video.
 
 ## Local project storage
