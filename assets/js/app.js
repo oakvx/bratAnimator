@@ -5992,7 +5992,16 @@ async function updateExportEstimate() {
     openEditorTab(restoredTab);
     updateSidebarStatus();
 
-    if (!showPermissionNotice()) {
+    if (window.BratStudioShellEnabled) {
+        // Keep the first dashboard visit unobstructed. Show the existing usage
+        // notice when the user enters the editor, never silently dismiss it.
+        let editorEntered = false;
+        window.BratEnterEditor = () => {
+            if (editorEntered) return;
+            editorEntered = true;
+            if (!showPermissionNotice()) scheduleTutorial();
+        };
+    } else if (!showPermissionNotice()) {
         scheduleTutorial();
     }
 })();
