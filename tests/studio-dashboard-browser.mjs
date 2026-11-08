@@ -84,7 +84,9 @@ try {
     await send("Page.navigate",{url:origin+"/"});
     await until("Boolean(window.BratStudio && window.BratEditorWorkspace && document.body.classList.contains('studio-dashboard-open'))");
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display !== 'none'"),true);
-    assert.equal(await evaluate("getComputedStyle(document.querySelector('.studio-hero')).backgroundImage.includes('gradient')"),true);
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('.studio-classic-window')).display !== 'none'"),true);
+    assert.equal(await evaluate("Boolean(document.querySelector('#studioDashboard.win7 .window .title-bar .title-bar-text'))"),true);
+    assert.equal(await evaluate("document.body.innerText.includes('BRAT WORKSPACE / 2000')"),false);
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),true);
     await evaluate("document.getElementById('studioSoundToggle').click()");
     assert.equal(await evaluate("window.BratDashboardAudio.isEnabled()"),false);
