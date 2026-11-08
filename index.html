@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="assets/css/editor-v5.css" />
     <script>
         try {
-            window.BratWasReturningUser = ["v5", "v4", "v3", "v2"].some(version => localStorage.getItem(`bratAnimator.project.${version}`));
+            window.BratWasReturningUser = localStorage.getItem("bratAnimator.workspace.hasSaved.v1") === "1" || ["v5", "v4", "v3", "v2"].some(version => localStorage.getItem(`bratAnimator.project.${version}`));
         } catch (_) { window.BratWasReturningUser = false; }
         if (/^https?:$/.test(window.location.protocol)) {
             const manifestLink = document.createElement("link");
@@ -251,6 +251,7 @@
     <script src="assets/js/kinetic.js" defer></script>
     <script src="vendor/fflate.min.js" defer></script>
     <script src="assets/js/project-assets.js" defer></script>
+    <script src="assets/js/local-workspace.js" defer></script>
     <script src="assets/js/app.js" defer></script>
     <script src="assets/js/editor-v5.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
@@ -299,7 +300,7 @@
                     and optionally merge extracted audio into the final export.
                 </p>
             </div>
-            <span class="autosave-pill" id="autosaveBadge">autosaved</span>
+            <span class="autosave-pill" id="autosaveBadge" aria-live="polite">loading local save…</span>
         </div>
 
         <div id="recoveryBanner" class="recovery-banner hidden" role="status">

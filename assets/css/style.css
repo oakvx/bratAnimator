@@ -138,6 +138,11 @@ kbd { display:inline-grid; min-width:20px; min-height:20px; padding:2px 5px;
   background:#ecf8e0; color:#456b2b; font:700 10px var(--font-mono); white-space:nowrap; }
 .autosave-pill::before { width:6px; height:6px; border-radius:50%; background:#699c37; content:""; }
 .autosave-pill.flash { animation:save-flash .45s ease; }
+.autosave-pill[data-workspace-status="pending"]::before,
+.autosave-pill[data-workspace-status="saving"]::before { background: #d7a52d; }
+.autosave-pill[data-workspace-status="error"]::before,
+.autosave-pill[data-workspace-status="fallback"]::before { background: #d95b48; }
+.autosave-pill[data-workspace-status="error"] { border-color: #d95b48; }
 .recovery-banner { display:flex; align-items:center; gap:8px; flex-shrink:0; padding:10px 20px;
   background:#fff3d6; color:#744d14; border-bottom:1px solid #e8d0a1; font-size:12px; }
 .recovery-banner span { flex:1; }
