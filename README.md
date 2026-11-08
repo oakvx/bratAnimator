@@ -1,155 +1,127 @@
-<div align="center">
-  <img src="favicon.svg" alt="Brat Animator" width="56" height="56">
-  <h1>Brat Animator</h1>
-  <p><strong>Local-first lyric video compositor and browser-based motion editor.</strong></p>
-  <a href="https://oakvx.github.io/bratAnimator/">Live application</a>
-</div>
+<p align="center">
+  <img src="./favicon.svg" alt="Brat Animator" width="52" height="52">
+</p>
 
----
+# Brat Animator
 
-## Technical overview
+**Client-side lyric-video compositor and timeline editor.** Static, framework-independent web application with deterministic Canvas rendering, browser-native media processing, and a local-first project model.
 
-Brat Animator is a static, client-side video composition application. It combines synchronized lyrics, deterministic motion graphics, media timing and browser-native rendering in a single editor. Project JSON and imported media are stored locally; video generation runs on the user's device.
-
-**Runtime:** ECMAScript / HTML5 / CSS3 · **Architecture:** dependency-light, framework-free, static PWA · **Backend:** optional Supabase Auth and PostgreSQL RPC for temporary BRATCODE sharing.
+**Application:** https://oakvx.github.io/bratAnimator/
 
 ## Technology stack
 
-| Layer | Technologies |
+| Layer | Implementation |
 | --- | --- |
-| Application | Vanilla JavaScript (ES modules + browser scripts), semantic HTML5, responsive CSS3 |
-| UI / motion | Canvas 2D, requestAnimationFrame, deterministic seeded composition |
-| Audio | Web Audio API, local media decoding, waveform/energy analysis; dashboard micro-interactions synthesized with Web Audio |
-| Video | MediaRecorder, WebCodecs where supported, bundled MP4 muxer, PNG canvas export |
-| Lyrics | LRC / Enhanced LRC, TTML, SRT, WebVTT, Lyricsfile YAML/JSON; LRCLIB and lrc.red integrations |
-| Storage | IndexedDB (projects and media blobs), localStorage (small preferences / recovery metadata) |
-| Portability | JSON project schema v5; portable .brat.zip bundles via bundled fflate |
-| Identity | Optional Supabase Auth (Google OAuth, email/password, email OTP) |
-| Sharing | Optional Supabase PostgreSQL RPC, time-limited BRATCODE Light snapshots |
-| Delivery | Static GitHub Pages deployment, service worker, Web App Manifest |
-| Validation | Node.js built-in test runner, headless Chrome CDP smoke tests, GitHub Actions |
-
-**No npm installation, JavaScript framework, application server, video rendering server, or build pipeline is required to run the core editor.**
+| Runtime | Browser-native ECMAScript (ES2022+); HTML5; CSS3 |
+| UI | Vanilla DOM; responsive Creator Studio; Frutiger Aero design; selectively scoped 7.css components |
+| Rendering | Canvas 2D; deterministic frame compositor; timestamp-driven scene evaluation |
+| Media | Web Audio API; HTMLMediaElement; MediaRecorder; browser codec support |
+| Export | MP4/WebM pipelines; local video recording; PNG frame export; bundled mp4-muxer |
+| Persistence | IndexedDB (project snapshots and binary media); localStorage (light preferences/fallback) |
+| Project interchange | Versioned JSON snapshots; portable .brat.zip archives via bundled fflate |
+| Authentication | Optional Supabase Auth: email/password, email OTP, Google OAuth |
+| Delivery | GitHub Pages; static assets; service worker / Progressive Web App |
+| Tests | Node.js native test runner; browser smoke tests using Chrome DevTools Protocol |
+| Build | No application bundler, JavaScript framework, Node.js server, or required npm install |
 
 ## Architecture
 
-```text
-Browser / PWA
-├── Creator Studio
-│   ├── Responsive dashboard + Frutiger Aero interface
-│   ├── Local project library (20 saved + 1 temporary)
-│   ├── Dashboard Web Audio interaction sounds (user-muteable)
-│   └── Optional authenticated account session
-├── Editor
-│   ├── Lyrics parsing and timing engine
-│   ├── Canvas 2D composition and deterministic animation
-│   ├── Local media / audio analysis
-│   └── PNG / WebM / MP4 / .brat.zip export
-├── Local persistence
-│   ├── IndexedDB: bratAnimator.workspace.v1  (project JSON)
-│   ├── IndexedDB: bratAnimator.media.v1      (binary media)
-│   └── localStorage: UI preferences and backup reminders
-└── Optional remote services
-    ├── Supabase Auth                         (identity only)
-    └── BRATCODE PostgreSQL RPC               (JSON snapshot, TTL 24h)
-```
+The browser owns the application state and performs video rendering locally. Project snapshots reference media blobs in IndexedDB; the application does **not** upload audio or video as part of editing or exporting.
 
-All editing and media processing are local. No automatic cloud synchronization of projects, fonts, audio, video or images is implemented. A valid authenticated account does **not** imply cross-device project availability.
+    UI / Controller (index.html, studio-dashboard.js, app.js)
+          |
+          +-- Timeline / lyrics (core.js, lyrics.js, timing.js)
+          |
+          +-- Visual motion (kinetic.js, motion.js, editor-v5.js)
+          |
+          +-- Render / export (Canvas 2D, export.js, media.js)
+          |
+          +-- Local storage (local-workspace.js, IndexedDB)
+          |
+          +-- Portable archives (project-assets.js, fflate)
+          |
+          +-- Optional identity (auth-client.js, Supabase Auth)
 
-## Capabilities
+Key properties:
 
-- Multi-format synchronized lyrics import, native word timing, line-level editing and audio-assisted synchronization.
-- Brat, Music, Cinematic and Kinetic Collage render modes with per-phrase styling, transitions and typography controls.
-- Editable canvas text transforms, bilingual lyric tracks, seeded animations and undo/redo controls.
-- Audio-driven effects, project-defined export intervals and aspect-ratio presets.
-- Client-side MP4/WebM export, PNG frames, local audio muxing where supported.
-- Portable full projects containing manifests and available media/font assets in .brat.zip.
-- Creator Studio with persistent editor state, local project management, guest/account separation, recovery and backup reminders.
-- Optional BRATCODE Light: multi-use share codes, 24-hour expiry, one active code per account, guest import. **Metadata and lyrics only**; recipients must reattach missing binary media.
+- **Deterministic frame evaluation:** visual geometry is derived from project state, media timestamp, and persisted seed rather than accumulated animation state.
+- **Local-first:** workspace JSON and media binaries are browser-resident. Account identity does not imply cloud project synchronization.
+- **Separated identities:** guest and authenticated users have logically separate local project libraries within one browser profile.
+- **Portable project format:** .brat.zip includes project metadata and available local assets. Plain JSON is metadata-only and is not a complete multimedia backup.
+- **Resilient editing:** debounced autosave, recovery state, legacy JSON migrations, and explicit error reporting. Browser storage can still be evicted.
+- **Client-only media export:** output quality and supported codecs depend on the browser and device.
 
-**Planned, not shipped:** Sound Hub library and TikTok account / favorites / publishing integrations. No undocumented TikTok download or posting capability is implied.
+## Input formats
 
-## Data lifecycle and constraints
+Synchronized lyrics: LRC, enhanced LRC, TTML, SRT, WebVTT, and supported Lyricsfile YAML/JSON data. Timing can be imported, estimated, and adjusted manually.
 
-| Property | Behavior |
-| --- | --- |
-| Schema | Project JSON version 5, migrated from supported legacy versions |
-| Saved projects | 20 per browser profile, shared across account and guest namespaces |
-| Temporary workspace | One additional IndexedDB-backed project, never auto-evicted by the app |
-| Autosave | Debounced local writes with recovery and explicit failure state |
-| Media | Binary blobs stored separately in browser IndexedDB, referenced by asset IDs |
-| Backup | Manual .brat.zip export with activity-based reminders |
-| BRATCODE | Opaque random 128-bit code, server-enforced TTL 24 hours, multi-use |
-| Cloud storage | No project/media synchronization; sharing uploads a temporary **JSON structure** only |
-| Security boundary | Account libraries are logically separated, not encrypted against access to the same browser profile |
+Media: locally supplied audio, images, video backgrounds, and custom font files supported by the browser. Remote media are subject to CORS, source availability, and licensing restrictions.
 
-Browser storage is subject to device/browser quota and eviction. Export .brat.zip backups for long-term preservation.
+## Visual pipeline
 
-## Local execution
+Brat Animator implements multiple text-rendering modes, including Brat, Music, Cinematic, and **Kinetic Collage**.
 
-Serve the repository over an HTTP origin (service workers and several browser APIs do not operate normally from file://).
+Kinetic Collage uses resolution-independent two-dimensional word packing: deterministic, compact typography with different font sizes, adjacency constraints and safe canvas margins. Words are progressively revealed without text opacity crossfades. The preview and media export use the same scene compositor.
 
-```bash
-git clone https://github.com/oakvx/bratAnimator.git
-cd bratAnimator
-python3 -m http.server 8000
-```
+Canvas layout and source timestamps are evaluated independently of dashboard effects. Dashboard click sounds use synthesized Web Audio and are never mixed into exported video.
 
-Open http://localhost:8000. Authentication and temporary server sharing remain optional; the editor works in guest mode without either service.
+## Local project storage
 
-## Optional authentication and BRATCODE backend
+- Primary database: bratAnimator.workspace.v1; object store: projects.
+- Media database: bratAnimator.media.v1; blobs referenced by asset IDs.
+- Project IDs and owner IDs define logical workspace boundaries.
+- Shared browser-profile target capacity: **20 permanent projects + 1 recoverable temporary project**.
+- Storage limits are enforced by IndexedDB transactions and the browser's available quota.
+- Automatic cloud project synchronization is intentionally absent.
+- Export complete .brat.zip archives regularly; browser eviction and user-cleared site data cannot be prevented by the application.
 
-1. Create a Supabase project; copy its **project URL** and **publishable / anon client key** to assets/js/supabase-config.js.
-2. Enable the desired Auth providers and redirect allowlist. Google OAuth requires the provider-side configuration; numeric email OTP requires an appropriate email template and a usable SMTP provider.
-3. Run supabase/migrations/20261108_bratcode_light.sql in the project's SQL editor to enable the BRATCODE RPC functions and their access rules.
-4. Validate owner-scoped creation/revocation and anonymous import before opening sharing publicly.
+## Authentication and backend
 
-Never include the Supabase service-role key, database password, OAuth client secret, or refresh tokens in frontend files. The BRATCODE RPCs enforce ownership, expiration, and code entropy server-side. See docs/phase-2-creator-studio.md and the Phase 3 documentation for deployment details.
+The editor is fully usable as a guest. Supabase Auth is optional for account-based workspaces and future server-backed sharing.
 
-## Repository map
+To enable authentication, configure the **project URL** and **public publishable key** in assets/js/supabase-config.js, then enable the corresponding providers and redirect allowlists in Supabase. Google OAuth requires provider-side setup; public email OTP delivery requires a configured mail transport.
 
-```text
-index.html                 Main application + editor shell
-assets/css/                Studio dashboard, Aero treatment and editor styles
-assets/js/app.js           Editor controller and project lifecycle
-assets/js/local-workspace.js
-                           IndexedDB repository and autosave scheduler
-assets/js/studio-dashboard.js
-                           Dashboard, project library and account UI
-assets/js/dashboard-audio.js
-                           Procedural UI audio (dashboard only)
-assets/js/bratcode.js      Sanitized JSON sharing client
-assets/js/editor-v5.js     Advanced editor and portable package interface
-assets/js/lyrics*.js       Lyrics parsing and source integrations
-assets/js/timing.js        Timeline and timing utilities
-assets/js/motion.js        Motion/composition utilities
-assets/js/project-assets.js
-                           Portable package import/export
-supabase/migrations/       BRATCODE database schema and RPCs
-sw.js                      Versioned PWA cache
-tests/                     Unit, integration and Chrome browser smoke tests
-.github/workflows/         CI and static GitHub Pages deploy
-```
+Never place a Supabase secret/service_role key or OAuth client secret in browser source code.
 
-## Verification
+**BRATCODE** is designed as an optional short-lived, server-backed exchange of project structure, **not** a cloud synchronization mechanism. Media binaries and credentials must never be included. Back-end deployment and access-control configuration are required before public code generation can operate.
 
-```bash
-node --test
-node --check assets/js/app.js
-node --check assets/js/local-workspace.js
-node --check assets/js/studio-dashboard.js
-```
+TikTok account linking, favorites access, and upload workflows remain separate planned integrations, subject to official API authorization.
 
-Chrome smoke tests (no additional npm packages):
+## Development
 
-```bash
-CHROME_PATH=/usr/bin/google-chrome node tests/studio-dashboard-browser.mjs
-```
+Prerequisites: a modern browser; Node.js 22+ for tests.
 
-GitHub Actions runs unit/syntax checks and browser smoke checks when Chrome is available. OAuth and cross-browser storage scenarios additionally require manual QA.
+Serve the repository root using a static HTTP server (for example Python http.server or a local VS Code static-server extension) and open the root index.html. Do not use file:// for production-equivalent testing because browser storage, service workers, and media APIs require a secure or valid local origin.
+
+Automated checks:
+
+    node --test
+    node --check assets/js/app.js
+    node --check assets/js/kinetic.js
+
+Optional Chrome browser audit:
+
+    CHROME_PATH=/usr/bin/google-chrome node tests/studio-dashboard-browser.mjs
+
+CI runs Node.js unit tests, syntax verification, and available Chrome smoke checks. A green test suite does not substitute for manual checks of browser media codecs, mobile touch, and authenticated redirect flows.
+
+## Repository structure
+
+    assets/js/                 Core editor, media, timeline, storage, auth, UI
+    assets/css/                Editor, Creator Studio and Aero-specific styling
+    vendor/                    Bundled external JS dependencies
+    tests/                     Node unit tests and browser automation
+    docs/                      Architecture notes and rollout instructions
+    index.html                 Main application entry point
+    sw.js                      PWA caching and lifecycle
+    .github/workflows/         Continuous integration and static deployment
+
+## Constraints and security
+
+The app depends on browser storage retention, available device memory, and supported codecs. Large exports can be constrained by mobile resources. Browser-backed local data are not encrypted by the application and are not a substitute for archival backups.
+
+Server-side authentication and sharing must enforce authorization, expiration, rate limits, and payload limits independently from browser UI. Content owners are responsible for rights and permissions in any media they import or publish.
 
 ## License
 
-**All rights reserved — no license granted.** Public repository visibility does not grant permission to reuse, modify, redistribute or commercially deploy the code. See [LICENSE](LICENSE) for the full terms.
-
-Third-party music, lyrics, media and fonts are not licensed by this repository; users must secure the appropriate rights.
+**All rights reserved.** Public repository visibility does not grant a reuse, redistribution, or modification license. Refer to [LICENSE](./LICENSE) for the applicable terms. Third-party dependencies retain their respective licenses.
