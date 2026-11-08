@@ -593,6 +593,12 @@
     function queueAuthChange(user) {
         const nextId = user?.id || null;
         authChanging = authChanging.catch(() => {}).then(async () => {
+            // INITIAL_SESSION/getSession and token refresh may repeat the same
+            // identity. Refresh the profile without interrupting the open view.
+            if (initialSessionHandled && nextId === currentUserId) {
+                profile();
+                return;
+            }
             const owner = nextId ? "user:" + nextId : "guest";
             if (owner !== editor.owner()) await editor.switchOwner(owner);
             currentUserId = nextId;
