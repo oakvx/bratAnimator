@@ -273,7 +273,10 @@ try {
         for (const [language, expected] of Object.entries(locales)) {
             await test(`${label} ${language} localized settings fit viewport`, () => evaluate(async (language, expected, viewportWidth) => {
                 document.querySelector(`[data-lang="${language}"]`).click();
-                document.getElementById('textSettingsBtn').click();
+                // On 320px screens the topbar intentionally hides its
+                // settings control; the stage retains a visible equivalent.
+                const visibleSettingsTrigger = innerWidth <= 360 ? 'stageTextSettingsBtn' : 'textSettingsBtn';
+                document.getElementById(visibleSettingsTrigger).click();
                 window.dispatchEvent(new Event('resize'));
                 await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
                 auditAssert(document.getElementById('textSettingsBtn').textContent === expected.settings, 'header translation missing');
@@ -285,7 +288,7 @@ try {
                 auditAssert(resetTextSettingsBtn.textContent === expected.resetTextSettings, 'reset translation missing');
                 auditAssert(document.querySelector('.text-size-presets').getAttribute('aria-label') === expected.textSize, 'preset aria-label untranslated');
                 for (const id of fontScaleInput.getAttribute('aria-describedby').split(/\s+/)) auditAssert(Boolean(document.getElementById(id)?.textContent), `missing description ${id}`);
-                const trigger = document.getElementById('textSettingsBtn');
+                const trigger = document.getElementById(visibleSettingsTrigger);
                 const rect = trigger.getBoundingClientRect();
                 const legend = document.querySelector('#textSettings legend').getBoundingClientRect();
                 const header = document.querySelector('.topbar').getBoundingClientRect();
