@@ -434,9 +434,11 @@
     </div>
 
     <div id="studioProjectDialog" class="studio-modal-backdrop win7" hidden>
-        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
+        <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
+            <div class="title-bar"><div class="title-bar-text">Progetto</div></div>
+            <div class="window-body">
             <button id="studioProjectDialogClose" type="button" class="studio-modal-close" aria-label="Annulla">×</button>
-            <span class="studio-eyebrow">LOCAL PROJECT MANAGER</span>
+
             <h2 id="studioProjectDialogTitle">Gestisci progetto</h2>
             <p id="studioProjectDialogDescription">Le operazioni modificano soltanto i file locali di questo browser.</p>
             <div id="studioProjectRenameField">
@@ -448,11 +450,14 @@
                 <button id="studioProjectDialogConfirm" type="button" class="studio-accent-button">Conferma</button>
                 <button id="studioProjectDialogCancel" type="button">Annulla</button>
             </div>
+            </div>
         </section>
     </div>
 
     <div id="studioAuthDialog" class="studio-modal-backdrop win7" hidden>
-        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
+        <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
+            <div class="title-bar"><div class="title-bar-text">Accesso</div></div>
+            <div class="window-body">
             <button id="studioAuthClose" class="studio-modal-close" type="button" aria-label="Chiudi finestra">×</button>
             
             <h2 id="studioAuthTitle">Accedi a Brat Animator</h2>
@@ -474,12 +479,13 @@
             <div class="studio-auth-divider">oppure</div>
             <button id="studioAuthGoogle" class="studio-google-button" type="button">Continua con Google</button>
             <button id="studioAuthGuest" class="studio-guest-button" type="button">Continua senza account</button>
+            </div>
         </section>
     </div>
 
     <div id="studioLogoutDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioLogoutTitle">
-            <div class="title-bar"><div class="title-bar-text">brat animator · session</div></div>
+            <div class="title-bar"><div class="title-bar-text">Sessione</div></div>
             <div class="window-body">
             <button id="studioLogoutCancelX" class="studio-modal-close" type="button" aria-label="Annulla">×</button>
             <span class="studio-eyebrow">SESSIONE</span><h2 id="studioLogoutTitle">Vuoi uscire?</h2>
