@@ -1,10 +1,11 @@
-const CACHE_NAME = "brat-animator-v8-creator-studio-auth-2";
+const CACHE_NAME = "brat-animator-v9-aero-projects-bratcode-1";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./assets/css/style.css",
   "./assets/css/editor-v5.css",
 "./assets/css/studio-dashboard.css",
+  "./assets/css/aero-theme.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -23,7 +24,10 @@ const APP_ASSETS = [
   "./assets/js/studio-shell.js",
 "./assets/js/supabase-config.js",
 "./assets/js/auth-client.js",
+  "./assets/js/bratcode.js",
+  "./assets/js/backup-reminders.js",
 "./assets/js/studio-dashboard.js",
+  "./assets/js/dashboard-audio.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
   "./favicon.svg",
