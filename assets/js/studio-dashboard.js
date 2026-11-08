@@ -303,7 +303,7 @@
             await editor.flush();
             if (remove) {
                 if (!editor.store) throw new Error("Archivio locale non disponibile.");
-                await editor.store.deleteOwner(editor.owner());
+                await editor.deleteOwnerProjects();
             }
             await auth.signOut();
             closeLogout();
