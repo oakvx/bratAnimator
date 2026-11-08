@@ -54,18 +54,51 @@ test("word windows are capped and preserve visual hierarchy", () => {
     const ctx = canvasContext();
     const frame = kinetic.buildTimelineFrame(ctx, timeline, 10.9, 1080, 1080, style, 321);
     const nodes = frame.groups.at(-1).nodes;
-    assert.equal(nodes.length, 6);
+    assert.ok(nodes.length > 0 && nodes.length <= 6);
     assert.ok(new Set(nodes.map(node => Math.round(node.size))).size > 1);
     assert.equal(nodes.at(-1).text, "you're");
 });
 
-test("timed word change cross-fades without randomness", () => {
+test("words stay completely opaque and never cross-fade or flash", () => {
     const ctx = canvasContext();
-    const frame = kinetic.buildTimelineFrame(ctx, timeline, 3.06, 1080, 1080, style, 1);
-    assert.equal(frame.groups.length, 2);
-    assert.ok(frame.groups[0].alpha > 0);
-    assert.ok(frame.groups[1].alpha > 0);
-    assert.ok(Math.abs(frame.groups[0].alpha + frame.groups[1].alpha - 1) < 0.00001);
+    for (const seconds of [0.01, 1.01, 2.01, 3.01, 3.06, 3.10, 3.4, 4.1, 4.4, 5.3, 6.2, 7.3, 8.1, 10.9]) {
+        const frame = kinetic.buildTimelineFrame(ctx, timeline, seconds, 1080, 1080, style, 1);
+        assert.equal(frame.groups.length, 1, "one stable opaque composition");
+        assert.equal(frame.groups[0].alpha, 1, "no text opacity transitions");
+        assert.equal(frame.groups[0].translateY, 0, "no motion blur induced by bouncing frames");
+    }
+});
+
+test("existing words keep exactly the same position when new words appear in a scene", () => {
+    const ctx = canvasContext();
+    const prev = kinetic.buildTimelineFrame(ctx, timeline, 3.1, 710, 400, style, 77);
+    const next = kinetic.buildTimelineFrame(ctx, timeline, 4.4, 710, 400, style, 77);
+    const left = prev.groups[0].nodes;
+    const right = next.groups[0].nodes;
+    assert.equal(right.length, left.length + 1);
+    for (let i = 0; i < left.length; i++) assert.deepEqual(right[i], left[i],
+        "No recomposition of existing word '" + left[i].text + "'");
+});
+
+test("word boxes form a non-overlapping compact cluster rather than uniform aligned rows", () => {
+    const ctx = canvasContext();
+    for (const [width,height] of [[710,400],[1080,1080],[1080,1920],[1920,1080]]) {
+        const frame = kinetic.buildTimelineFrame(ctx, timeline, 6.9, width, height, style, 42);
+        const nodes = frame.groups[0].nodes;
+        for (let i = 0; i < nodes.length; i++) {
+            const a = nodes[i].bounds;
+            assert.ok(a.left >= width * .09 && a.right <= width * .91, "horizontal margin");
+            assert.ok(a.top >= height * .17 && a.bottom <= height * .83, "vertical margin");
+            for (let j = i + 1; j < nodes.length; j++) {
+                const b = nodes[j].bounds;
+                const overlap = a.left < b.right - .2 && a.right > b.left + .2
+                    && a.top < b.bottom - .2 && a.bottom > b.top + .2;
+                assert.equal(overlap, false, "word boxes cannot overlap");
+            }
+        }
+        assert.ok(new Set(nodes.map(n => Math.round(n.bounds.top))).size > 2,
+            "organic staggered composition, not one baseline");
+    }
 });
 
 test("geometry stays inside the canvas for portrait, square and landscape", () => {
