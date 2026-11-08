@@ -1019,9 +1019,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             let lineIndex = state.timeline.findLastIndex(line => timeSec >= line.displayStart);
             if (state.style.lyricsMode === "brat" && visible?.line) lineIndex = visible.line.lineIndex;
             lineIndex = Math.max(0, lineIndex);
-            // Kinetic palette changes only at lyric-line boundaries, not on
-            // every word: frequent full-screen swaps can appear as flicker.
-            if (state.style.lyricsMode === "kinetic") return lineIndex;
+            // Kinetic does not allow automatic full-screen palette flashes,
+            // regardless of any legacy color-swap controls saved in the project.
+            if (state.style.lyricsMode === "kinetic") return 0;
             if (unit === "line") return lineIndex;
 
             let previousUnits = 0;
@@ -1051,9 +1051,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const base = getThemeColors();
             const swap = state.style.colorSwap || {};
             const stepIndex = getPaletteStepIndex(timeSec, visible);
-            const swapped = BratCore.shouldSwapPalette
+            const swapped = state.style.lyricsMode !== "kinetic" && (BratCore.shouldSwapPalette
                 ? BratCore.shouldSwapPalette(swap, stepIndex)
-                : Boolean(swap.enabled && Math.floor(stepIndex / Math.max(1, swap.interval || 1)) % 2 === 1);
+                : Boolean(swap.enabled && Math.floor(stepIndex / Math.max(1, swap.interval || 1)) % 2 === 1));
             return {
                 ...base,
                 stage: swapped ? base.text : base.stage,
