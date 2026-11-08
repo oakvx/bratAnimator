@@ -231,13 +231,14 @@
                 notify("saving");
                 try {
                     await config.store.saveActive(snapshot, ownerId);
-                    if (generation === currentGeneration) notify("saved");
+                    if (generation === currentGeneration) notify(pending === null ? "saved" : "pending");
                     return true;
                 } catch (error) {
                     if (generation === currentGeneration) {
                         if (pending === null) pending = snapshot;
                         notify("error", error);
-                        onError(error, snapshot);
+                        // Preserve the latest pending edit, not a stale failed write.
+                        onError(error, pending);
                     }
                     throw error;
                 }
@@ -246,13 +247,18 @@
             return task;
         }
 
-        async function discard() {
+        function discard() {
             generation += 1;
             stopTimer();
             pending = null;
-            await chain.catch(() => {});
-            await config.store.clearActive(ownerId);
-            notify("cleared");
+            // Deletion is part of the same queue: an immediate new edit cannot
+            // race ahead of the clear and then be removed accidentally.
+            const deletion = chain.catch(() => {}).then(async () => {
+                await config.store.clearActive(ownerId);
+                notify("cleared");
+            });
+            chain = deletion;
+            return deletion;
         }
 
         return {
