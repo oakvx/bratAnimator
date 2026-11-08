@@ -25,6 +25,7 @@
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <link rel="stylesheet" href="https://unpkg.com/7.css@0.21.1/dist/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/aero-theme.css" />
+    <link rel="stylesheet" href="assets/css/classic-desktop.css" />
     <script>
         window.BratStudioShellEnabled = true;
         try {
@@ -265,6 +266,7 @@
     <script src="assets/js/auth-client.js" defer></script>
     <script src="assets/js/bratcode.js" defer></script>
     <script src="assets/js/backup-reminders.js" defer></script>
+    <script src="assets/js/sound-hub.js" defer></script>
     <script src="assets/js/studio-dashboard.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
 </head>
@@ -274,8 +276,8 @@
     <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
 
     <!-- Phase 2 app shell. Existing editor DOM stays mounted for fast navigation. -->
-    <aside id="studioNav" class="studio-nav" aria-label="Navigazione Brat Animator">
-        <div class="studio-nav-brand"><span class="studio-mark">b.</span><span>brat<span class="studio-brand-sub">ANIMATOR</span></span></div>
+    <aside id="studioNav" class="studio-nav win7" aria-label="Navigazione Brat Animator">
+        <div class="studio-nav-brand"><span class="studio-mark">b.</span><span>brat animator</span></div>
         <div class="studio-nav-links">
             <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page"><span aria-hidden="true">⌂</span> Home</button>
             <button type="button" data-studio-view="editor" class="studio-nav-link"><span aria-hidden="true">✎</span> Editor</button>
@@ -289,26 +291,35 @@
         </div>
     </aside>
 
-    <section id="studioDashboard" class="studio-dashboard" aria-labelledby="studioTitle">
+    <section id="studioDashboard" class="studio-dashboard win7" aria-labelledby="studioTitle">
         <div class="studio-dashboard-inner">
+            <div class="studio-classic-window window active">
+                <div class="title-bar"><div class="title-bar-text">Brat Animator</div></div>
+                <div class="window-body">
             <header class="studio-dashboard-head">
-                <div><span class="studio-eyebrow">BRAT ANIMATOR · CREATOR STUDIO</span><h1 id="studioTitle">Il tuo studio.</h1><p id="studioGreeting">Crea, modifica e pubblica i tuoi lyric video. Tutto il lavoro resta sul dispositivo.</p></div>
+                <div><h1 id="studioTitle">Home</h1><p id="studioGreeting">I progetti sono salvati su questo dispositivo.</p></div>
                 <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
             </header>
             <div id="studioNotice" class="studio-notice" role="status" hidden></div>
 
             <div id="studioHomeView" class="studio-view">
-                <div class="studio-hero">
-                    <div><span class="studio-eyebrow studio-hero-kicker">BRAT WORKSPACE / 2000</span><h2>your lyrics.<br /><em>in motion.</em></h2><p>Componi il testo. Modella il movimento. Esporta il video direttamente dal browser.</p>
-                        <div class="studio-hero-actions"><button id="studioNewProject" class="studio-accent-button" type="button">+ Nuovo progetto</button><button id="studioContinue" class="studio-outline-button" type="button">Apri editor</button></div>
-                    </div>
-                    <div class="studio-hero-art" aria-hidden="true"><span>brat.</span><small>CREATE / EDIT / EXPORT</small></div>
+                <div class="studio-classic-commandbar">
+                    <button id="studioNewProject" class="studio-accent-button" type="button">Nuovo progetto</button>
+                    <button id="studioContinue" class="studio-outline-button" type="button">Apri editor</button>
+                    <button type="button" data-studio-view="projects">Tutti i progetti</button>
                 </div>
-                <div class="studio-section-heading"><div><span class="studio-eyebrow">WORKSPACE</span><h2>Progetti recenti</h2></div><button type="button" data-studio-view="projects">Tutti i progetti</button></div>
-                <div id="studioRecentProjects" class="studio-project-grid" aria-live="polite"></div>
-                <div class="studio-panels">
-                    <div class="studio-panel-card"><div class="studio-panel-icon">♫</div><h3>Sound Hub</h3><p>La libreria audio locale e le raccolte personali arriveranno nella Fase 4.</p><span>In preparazione</span></div>
-                    <div class="studio-panel-card"><div class="studio-panel-icon">↗</div><h3>BRATCODE</h3><p>Condividi le impostazioni del tuo progetto con un codice. Disponibile dalla Fase 3.</p><span>In preparazione</span></div>
+                <div class="studio-classic-home">
+                    <section class="studio-classic-directory">
+                        <h2>Progetti recenti</h2>
+                        <div id="studioRecentProjects" class="studio-project-grid" aria-live="polite"></div>
+                    </section>
+                    <section class="studio-classic-shortcuts" aria-label="Accesso rapido">
+                        <h2>Apri</h2>
+                        <button type="button" data-studio-view="projects"><span aria-hidden="true">▣</span> Progetti</button>
+                        <button type="button" data-studio-view="sounds"><span aria-hidden="true">♫</span> Sound Hub</button>
+                        <button type="button" data-studio-view="share"><span aria-hidden="true">⇄</span> BRATCODE</button>
+                        <button type="button" data-studio-view="settings"><span aria-hidden="true">⚙</span> Impostazioni</button>
+                    </section>
                 </div>
             </div>
 
@@ -322,6 +333,39 @@
                 </div>
                 <p id="studioBackupReminder" class="studio-backup-reminder" role="status" hidden>Hai modificato questo progetto senza creare un backup recente. Esporta una copia .brat.zip per conservarlo anche fuori dal browser. <button id="studioBackupNow" type="button">Crea backup</button><button id="studioBackupDismiss" type="button">Più tardi</button></p>
                 <div id="studioProjectList" class="studio-project-grid"></div>
+            </div>
+
+            <div id="studioSoundsView" class="studio-view" hidden>
+                <div class="studio-classic-commandbar studio-sound-toolbar">
+                    <button id="studioSoundImport" class="studio-accent-button" type="button">Importa audio</button>
+                    <input id="studioSoundFileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.webm" multiple hidden>
+                    <button id="studioSoundNewCollection" type="button">Nuova raccolta</button>
+                    <span id="studioSoundStats" class="studio-sound-stats">0 audio</span>
+                </div>
+                <div class="studio-sound-browser">
+                    <aside class="studio-sound-tree" aria-label="Categorie audio">
+                        <h2>Sound Hub</h2>
+                        <button type="button" data-sound-filter="all" class="is-selected">Tutti gli audio</button>
+                        <button type="button" data-sound-filter="favorites">Preferiti</button>
+                        <button type="button" data-sound-filter="recent">Recenti</button>
+                        <div class="studio-sound-tree-section"><span>Raccolte</span></div>
+                        <div id="studioSoundCollections" class="studio-sound-collections"></div>
+                    </aside>
+                    <div class="studio-sound-content">
+                        <div class="studio-sound-searchbar">
+                            <label class="sr-only" for="studioSoundSearch">Cerca audio</label>
+                            <input id="studioSoundSearch" type="search" placeholder="Cerca nella libreria…" autocomplete="off">
+                            <button id="studioSoundRefresh" type="button">Aggiorna</button>
+                        </div>
+                        <div id="studioSoundNotice" class="studio-sound-notice" role="status" hidden></div>
+                        <div id="studioSoundList" class="studio-sound-list" aria-live="polite"></div>
+                        <div class="studio-sound-playerbar">
+                            <div class="studio-sound-now"><span aria-hidden="true">♫</span><span id="studioSoundNowPlaying">Nessun audio selezionato</span></div>
+                            <audio id="studioSoundPlayer" controls preload="none" aria-label="Anteprima audio"></audio>
+                        </div>
+                        <p class="studio-sound-help">Gli audio rimangono in questo browser. Per inserirne uno nell'editor, premi «Usa nel progetto».</p>
+                    </div>
+                </div>
             </div>
 
             <div id="studioShareView" class="studio-view" hidden>
@@ -351,11 +395,30 @@
                 <div class="studio-settings-card"><h3>TikTok</h3><p>Il collegamento facoltativo dell'account TikTok sarà disponibile nelle prossime fasi.</p></div>
             </div>
 
-            <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><span id="studioFutureIcon">♫</span><span class="studio-eyebrow">COMING NEXT</span><h2 id="studioFutureTitle">Prossimamente</h2><p id="studioFutureText">Questa funzionalità è in preparazione.</p><button type="button" data-studio-view="home">Torna alla Home</button></div></div>
+            <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><h2 id="studioFutureTitle">Informazioni</h2><p id="studioFutureText"></p><span id="studioFutureIcon" hidden>♫</span><button type="button" data-studio-view="home">Indietro</button></div></div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <div id="studioProjectDialog" class="studio-modal-backdrop" hidden>
+    <div id="studioSoundCollectionDialog" class="studio-modal-backdrop win7" hidden>
+        <section class="studio-modal window active" role="dialog" aria-modal="true" aria-labelledby="studioSoundCollectionTitle">
+            <div class="title-bar"><div class="title-bar-text">Sound Hub</div></div>
+            <div class="window-body">
+                <h2 id="studioSoundCollectionTitle">Nuova raccolta</h2>
+                <form id="studioSoundCollectionForm">
+                    <label for="studioSoundCollectionName">Nome raccolta</label>
+                    <input id="studioSoundCollectionName" maxlength="64" required autocomplete="off">
+                    <div class="studio-classic-commandbar">
+                        <button type="submit">Crea</button>
+                        <button id="studioSoundCollectionCancel" type="button">Annulla</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div id="studioProjectDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioProjectDialogTitle">
             <button id="studioProjectDialogClose" type="button" class="studio-modal-close" aria-label="Annulla">×</button>
             <span class="studio-eyebrow">LOCAL PROJECT MANAGER</span>
@@ -373,7 +436,7 @@
         </section>
     </div>
 
-    <div id="studioAuthDialog" class="studio-modal-backdrop" hidden>
+    <div id="studioAuthDialog" class="studio-modal-backdrop win7" hidden>
         <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
             <button id="studioAuthClose" class="studio-modal-close" type="button" aria-label="Chiudi finestra">×</button>
             <span class="studio-eyebrow">BRAT ANIMATOR ACCOUNT</span>
