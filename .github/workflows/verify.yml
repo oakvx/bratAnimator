@@ -37,7 +37,7 @@ jobs:
           node --check sw.js
       - name: Run JavaScript unit tests
         run: node --test
-      - name: Creator Studio browser smoke (if Chrome is available)
+      - name: Windows 7 dashboard browser smoke (if Chrome is available)
         run: |
           CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
           if [ -n "$CHROME_PATH" ]; then
