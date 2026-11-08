@@ -96,8 +96,12 @@ try {
     await evaluate("document.getElementById('permissionNoticeAckBtn').click()");
     assert.equal(await evaluate("document.getElementById('studioDashboard').hidden"),false);
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display"),"none");
+    await evaluate("document.getElementById('lyricsInput').value = '[00:01.00] smoke test lyric'; document.getElementById('lyricsInput').dispatchEvent(new Event('input', { bubbles: true }));");
+    await until("window.BratEditorWorkspace.store.getActive('guest').then(record => record?.payload?.lyrics?.includes('smoke test lyric'))", 9000);
     await evaluate("document.querySelector('[data-studio-view=\"projects\"]').click()");
     await until("!document.getElementById('studioProjectsView').hidden");
+    await until("document.getElementById('studioProjectList').querySelectorAll('.studio-project-card').length > 0");
+
     assert.equal(await evaluate("document.body.classList.contains('studio-dashboard-open')"),true);
     await evaluate("document.querySelector('[data-studio-view=\"editor\"]').click()");
     await until("document.body.classList.contains('studio-editor-open')");
@@ -113,6 +117,11 @@ try {
 } finally {
     ws?.close();
     browser.kill();
+    await new Promise(resolve => {
+        if (browser.exitCode !== null || browser.signalCode !== null) { resolve(); return; }
+        browser.once("exit", resolve);
+        setTimeout(resolve, 2500);
+    });
     server.close();
-    await rm(profile,{recursive:true,force:true});
+    await rm(profile,{recursive:true,force:true,maxRetries:12,retryDelay:200});
 }
