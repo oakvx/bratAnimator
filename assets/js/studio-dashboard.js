@@ -401,33 +401,7 @@
             $("studioFutureText").textContent = "La libreria audio locale con raccolte e preferiti arriverà nella Fase 4.";
         }
         if (next === "share") refreshCode().catch(error => notify(error.message, true));
-        $("studioProjectSearch")?.addEventListener("input", () => renderProjects().catch(error => notify(error.message, true)));
-    $("studioProjectDialogClose").addEventListener("click", closeProjectDialog);
-    $("studioProjectDialogCancel").addEventListener("click", closeProjectDialog);
-    $("studioProjectDialogConfirm").addEventListener("click", confirmProjectDialog);
-    $("studioProjectRenameInput").addEventListener("keydown", event => {
-        if (event.key === "Enter") { event.preventDefault(); confirmProjectDialog(); }
-    });
-    $("studioBackupActive").addEventListener("click", exportBackup);
-    $("studioBackupNow").addEventListener("click", exportBackup);
-    $("studioImportBundle").addEventListener("click", importBundle);
-    $("studioBackupDismiss").addEventListener("click", () => {
-        window.BratBackupReminders?.dismiss(editor.owner(), editor.projectId?.());
-        updateBackupReminder();
-    });
-    $("studioCodeCreate").addEventListener("click", createCode);
-    $("studioCodeCopy").addEventListener("click", copyCode);
-    $("studioCodeRevoke").addEventListener("click", revokeCode);
-    $("studioCodeImport").addEventListener("click", importCode);
-    window.addEventListener("brat:backup-exported", () => {
-        notify("Backup completo esportato. Conserva il file .brat.zip al sicuro.");
-        updateBackupReminder();
-    });
-    window.addEventListener("brat:project-imported", () => {
-        notify("Progetto .brat.zip importato.");
-        viewSwitch("editor");
-    });
-    window.addEventListener("brat:backup-reminder-state", updateBackupReminder);
+
 
     document.querySelectorAll("[data-studio-view]").forEach(button => {
             const active = button.dataset.studioView === next;
@@ -581,6 +555,36 @@
             if (user) closeAuth();
         }).catch(error => notify("Impossibile cambiare libreria: " + error.message, true));
     }
+
+    // Register dashboard controls exactly once. View transitions must never
+    // add duplicate listeners (especially destructive project actions).
+        $("studioProjectSearch")?.addEventListener("input", () => renderProjects().catch(error => notify(error.message, true)));
+    $("studioProjectDialogClose").addEventListener("click", closeProjectDialog);
+    $("studioProjectDialogCancel").addEventListener("click", closeProjectDialog);
+    $("studioProjectDialogConfirm").addEventListener("click", confirmProjectDialog);
+    $("studioProjectRenameInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") { event.preventDefault(); confirmProjectDialog(); }
+    });
+    $("studioBackupActive").addEventListener("click", exportBackup);
+    $("studioBackupNow").addEventListener("click", exportBackup);
+    $("studioImportBundle").addEventListener("click", importBundle);
+    $("studioBackupDismiss").addEventListener("click", () => {
+        window.BratBackupReminders?.dismiss(editor.owner(), editor.projectId?.());
+        updateBackupReminder();
+    });
+    $("studioCodeCreate").addEventListener("click", createCode);
+    $("studioCodeCopy").addEventListener("click", copyCode);
+    $("studioCodeRevoke").addEventListener("click", revokeCode);
+    $("studioCodeImport").addEventListener("click", importCode);
+    window.addEventListener("brat:backup-exported", () => {
+        notify("Backup completo esportato. Conserva il file .brat.zip al sicuro.");
+        updateBackupReminder();
+    });
+    window.addEventListener("brat:project-imported", () => {
+        notify("Progetto .brat.zip importato.");
+        viewSwitch("editor");
+    });
+    window.addEventListener("brat:backup-reminder-state", updateBackupReminder);
 
     document.querySelectorAll("[data-studio-view]").forEach(button =>
         button.addEventListener("click", () => viewSwitch(button.dataset.studioView)));
