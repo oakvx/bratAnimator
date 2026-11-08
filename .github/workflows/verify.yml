@@ -29,3 +29,11 @@ jobs:
           node --check sw.js
       - name: Run JavaScript unit tests
         run: node --test
+      - name: Creator Studio browser smoke (if Chrome is available)
+        run: |
+          CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$CHROME_PATH" ]; then
+            CHROME_PATH="$CHROME_PATH" node tests/studio-dashboard-browser.mjs
+          else
+            echo "Chrome/Chromium not installed; manual browser QA remains required."
+          fi
