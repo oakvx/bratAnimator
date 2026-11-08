@@ -21,7 +21,9 @@
     <link rel="alternate" hreflang="x-default" href="https://oakvx.github.io/bratAnimator/" />
     <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="stylesheet" href="assets/css/editor-v5.css" />
+    <link rel="stylesheet" href="assets/css/studio-dashboard.css" />
     <script>
+        window.BratStudioShellEnabled = true;
         try {
             window.BratWasReturningUser = localStorage.getItem("bratAnimator.workspace.hasSaved.v1") === "1" || ["v5", "v4", "v3", "v2"].some(version => localStorage.getItem(`bratAnimator.project.${version}`));
         } catch (_) { window.BratWasReturningUser = false; }
@@ -256,11 +258,111 @@
     <script src="assets/js/editor-v5.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
     <script src="assets/js/studio-shell.js" defer></script>
+    <script src="assets/js/supabase-config.js" defer></script>
+    <script src="assets/js/auth-client.js" defer></script>
+    <script src="assets/js/studio-dashboard.js" defer></script>
 </head>
 
 <body>
     <a class="skip-link" href="#editor">skip to editor</a>
     <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
+
+    <!-- Phase 2 app shell. Existing editor DOM stays mounted for fast navigation. -->
+    <aside id="studioNav" class="studio-nav" aria-label="Navigazione Brat Animator">
+        <div class="studio-nav-brand"><span class="studio-mark">b.</span><span>brat<span class="studio-brand-sub">ANIMATOR</span></span></div>
+        <div class="studio-nav-links">
+            <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page"><span aria-hidden="true">⌂</span> Home</button>
+            <button type="button" data-studio-view="editor" class="studio-nav-link"><span aria-hidden="true">✎</span> Editor</button>
+            <button type="button" data-studio-view="projects" class="studio-nav-link"><span aria-hidden="true">▦</span> Progetti</button>
+            <button type="button" data-studio-view="sounds" class="studio-nav-link"><span aria-hidden="true">♫</span> Sound Hub</button>
+            <button type="button" data-studio-view="share" class="studio-nav-link"><span aria-hidden="true">↗</span> BRATCODE</button>
+        </div>
+        <div class="studio-nav-bottom">
+            <button type="button" data-studio-view="settings" class="studio-nav-link"><span aria-hidden="true">⚙</span> Impostazioni</button>
+            <button id="studioNavAccount" type="button" class="studio-nav-account"><span id="studioAvatar" class="studio-avatar">G</span><span id="studioNavIdentity">Modalità ospite</span></button>
+        </div>
+    </aside>
+
+    <section id="studioDashboard" class="studio-dashboard" aria-labelledby="studioTitle">
+        <div class="studio-dashboard-inner">
+            <header class="studio-dashboard-head">
+                <div><span class="studio-eyebrow">BRAT ANIMATOR · CREATOR STUDIO</span><h1 id="studioTitle">Il tuo spazio creativo.</h1><p id="studioGreeting">Crea, modifica e pubblica i tuoi lyric video. Tutto il lavoro resta sul dispositivo.</p></div>
+                <button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button>
+            </header>
+            <div id="studioNotice" class="studio-notice" role="status" hidden></div>
+
+            <div id="studioHomeView" class="studio-view">
+                <div class="studio-hero">
+                    <div><span class="studio-eyebrow studio-hero-kicker">YOUR NEXT EDIT STARTS HERE</span><h2>make something<br /><em>unforgettable.</em></h2><p>Lyrics, motion, timing, video. Un unico editor, senza limiti all'esportazione.</p>
+                        <div class="studio-hero-actions"><button id="studioNewProject" class="studio-accent-button" type="button">+ Nuovo progetto</button><button id="studioContinue" class="studio-outline-button" type="button">Apri editor</button></div>
+                    </div>
+                    <div class="studio-hero-art" aria-hidden="true"><span>brat.</span><small>CREATE / EDIT / EXPORT</small></div>
+                </div>
+                <div class="studio-section-heading"><div><span class="studio-eyebrow">WORKSPACE</span><h2>Riprendi il tuo lavoro</h2></div><button type="button" data-studio-view="projects">Tutti i progetti</button></div>
+                <div id="studioRecentProjects" class="studio-project-grid" aria-live="polite"></div>
+                <div class="studio-panels">
+                    <div class="studio-panel-card"><div class="studio-panel-icon">♫</div><h3>Sound Hub</h3><p>La libreria audio locale e le raccolte personali arriveranno nella Fase 4.</p><span>In preparazione</span></div>
+                    <div class="studio-panel-card"><div class="studio-panel-icon">↗</div><h3>BRATCODE</h3><p>Condividi le impostazioni del tuo progetto con un codice. Disponibile dalla Fase 3.</p><span>In preparazione</span></div>
+                </div>
+            </div>
+
+            <div id="studioProjectsView" class="studio-view" hidden>
+                <div class="studio-section-heading"><div><span class="studio-eyebrow">SAVED LOCALLY</span><h2>I tuoi progetti</h2><p id="studioProjectCount">Archivio locale del dispositivo</p></div><button id="studioProjectsNew" class="studio-accent-button" type="button">+ Nuovo</button></div>
+                <p class="studio-muted">Le librerie sono separate per account, ma usano lo stesso spazio del browser. Nessuna sincronizzazione cloud automatica.</p>
+                <div id="studioProjectList" class="studio-project-grid"></div>
+            </div>
+
+            <div id="studioSettingsView" class="studio-view" hidden>
+                <div class="studio-section-heading"><div><span class="studio-eyebrow">ACCOUNT & PRIVACY</span><h2>Impostazioni</h2></div></div>
+                <div class="studio-settings-card"><h3>Account</h3><p id="studioAccountDescription">Stai utilizzando Brat Animator come ospite.</p>
+                    <div class="studio-settings-actions"><button id="studioSettingsLogin" class="studio-accent-button" type="button">Accedi / Registrati</button><button id="studioSettingsLogout" type="button" hidden>Esci dall'account</button></div>
+                </div>
+                <div class="studio-settings-card"><h3>Archiviazione locale</h3><p>I progetti restano in questo browser. Se cancelli i dati del sito o cambi dispositivo, non saranno sincronizzati automaticamente.</p><p id="studioStorageUsage" class="studio-storage-usage">Spazio occupato: in verifica…</p></div>
+                <div id="studioGuestTransfer" class="studio-settings-card" hidden><h3>Progetto ospite</h3><p>Puoi copiare il progetto ospite in questo account. L'originale rimane disponibile come ospite.</p><button id="studioTransferGuest" type="button">Copia il progetto ospite</button></div>
+                <div class="studio-settings-card"><h3>TikTok</h3><p>Il collegamento facoltativo dell'account TikTok sarà disponibile nelle prossime fasi.</p></div>
+            </div>
+
+            <div id="studioFutureView" class="studio-view" hidden><div class="studio-future"><span id="studioFutureIcon">♫</span><span class="studio-eyebrow">COMING NEXT</span><h2 id="studioFutureTitle">Prossimamente</h2><p id="studioFutureText">Questa funzionalità è in preparazione.</p><button type="button" data-studio-view="home">Torna alla Home</button></div></div>
+        </div>
+    </section>
+
+    <div id="studioAuthDialog" class="studio-modal-backdrop" hidden>
+        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioAuthTitle">
+            <button id="studioAuthClose" class="studio-modal-close" type="button" aria-label="Chiudi finestra">×</button>
+            <span class="studio-eyebrow">BRAT ANIMATOR ACCOUNT</span>
+            <h2 id="studioAuthTitle">Benvenuto nello studio.</h2>
+            <p>Accedi per avere una libreria locale associata al tuo account. Puoi continuare a usare l'editor gratuitamente anche senza registrarti.</p>
+            <div id="studioAuthSetup" class="studio-auth-setup" role="status" hidden>Autenticazione non ancora collegata. Un amministratore deve configurare Supabase; per ora puoi usare l'editor come ospite.</div>
+            <div class="studio-auth-tabs" role="group" aria-label="Modalità di accesso">
+                <button type="button" data-auth-mode="login" class="is-active">Accedi</button>
+                <button type="button" data-auth-mode="register">Registrati</button>
+                <button type="button" data-auth-mode="otp">Codice email</button>
+            </div>
+            <form id="studioAuthForm" novalidate>
+                <label for="studioAuthEmail">Email</label>
+                <input id="studioAuthEmail" type="email" autocomplete="email" required placeholder="nome@esempio.it" />
+                <div id="studioAuthPasswordWrap"><label for="studioAuthPassword">Password</label><input id="studioAuthPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Inserisci la password" /></div>
+                <div id="studioAuthCodeWrap" hidden><label for="studioAuthCode">Codice ricevuto via email</label><input id="studioAuthCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Codice OTP" /></div>
+                <p id="studioAuthMessage" class="studio-auth-message" role="status"></p>
+                <button id="studioAuthSubmit" class="studio-accent-button studio-auth-submit" type="submit">Accedi</button>
+            </form>
+            <div class="studio-auth-divider">oppure</div>
+            <button id="studioAuthGoogle" class="studio-google-button" type="button">Continua con Google</button>
+            <button id="studioAuthGuest" class="studio-guest-button" type="button">Continua senza account</button>
+        </section>
+    </div>
+
+    <div id="studioLogoutDialog" class="studio-modal-backdrop" hidden>
+        <section class="studio-modal" role="dialog" aria-modal="true" aria-labelledby="studioLogoutTitle">
+            <button id="studioLogoutCancelX" class="studio-modal-close" type="button" aria-label="Annulla">×</button>
+            <span class="studio-eyebrow">SESSIONE</span><h2 id="studioLogoutTitle">Vuoi uscire?</h2>
+            <p>I tuoi progetti sono salvati in questo browser, non nel cloud. Scegli cosa fare della libreria locale dell'account.</p>
+            <button id="studioLogoutKeep" class="studio-accent-button studio-auth-submit" type="button">Mantieni i progetti ed esci</button>
+            <button id="studioLogoutDelete" class="studio-delete-button" type="button">Elimina i progetti locali ed esci</button>
+            <button id="studioLogoutCancel" class="studio-guest-button" type="button">Annulla</button>
+            <p id="studioLogoutMessage" class="studio-auth-message" role="status"></p>
+        </section>
+    </div>
 
     <header class="topbar main-menu-v4" aria-label="main menu">
         <a class="menu-brand" href="#editor" aria-label="Brat Animator editor">

@@ -204,7 +204,11 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         // Phase 1: persist the active guest workspace in IndexedDB. Account switching
         // and multi-project library navigation are introduced in later phases.
-        const WORKSPACE_OWNER = "guest";
+        let workspaceOwner = "guest";
+        let workspaceBootPromise = null;
+        const isGuestOwner = () => workspaceOwner === "guest";
+        const getFallbackKey = () => isGuestOwner() ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + workspaceOwner;
+        const getFallbackTimeKey = () => isGuestOwner() ? WORKSPACE_FALLBACK_TIME_KEY : "bratAnimator.workspace.fallbackAt." + workspaceOwner;
         const WORKSPACE_LEGACY_KEYS = ["bratAnimator.project.v5", "bratAnimator.project.v4", "bratAnimator.project.v3", "bratAnimator.project.v2"];
         const WORKSPACE_FALLBACK_TIME_KEY = "bratAnimator.workspace.fallbackAt.v1";
         const WORKSPACE_HAS_SAVED_KEY = "bratAnimator.workspace.hasSaved.v1";
@@ -240,16 +244,20 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (status === "saved") {
                 try {
                     localStorage.setItem(WORKSPACE_HAS_SAVED_KEY, "1");
-                    for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
-                    localStorage.removeItem(WORKSPACE_FALLBACK_TIME_KEY);
+                    if (isGuestOwner()) {
+                        for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+                    } else {
+                        localStorage.removeItem(getFallbackKey());
+                    }
+                    localStorage.removeItem(getFallbackTimeKey());
                 } catch (_) {}
             }
         }
 
         function writeLegacyFallback(payload, error = null) {
             try {
-                localStorage.setItem(WORKSPACE_LEGACY_KEYS[0], JSON.stringify(payload));
-                localStorage.setItem(WORKSPACE_FALLBACK_TIME_KEY, String(Date.now()));
+                localStorage.setItem(getFallbackKey(), JSON.stringify(payload));
+                localStorage.setItem(getFallbackTimeKey(), String(Date.now()));
                 announceWorkspaceStatus("fallback", error);
                 return true;
             } catch (fallbackError) {
@@ -269,20 +277,20 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             let existing = null;
             let readError = null;
             try {
-                existing = await workspaceStore.getActive(WORKSPACE_OWNER);
+                existing = await workspaceStore.getActive(workspaceOwner);
             } catch (error) {
                 readError = error;
                 console.warn("IndexedDB workspace could not be read; localStorage recovery remains available", error);
             }
             if (generation !== workspaceDiscardGeneration) return;
 
-            const fallbackAt = Number(localStorage.getItem(WORKSPACE_FALLBACK_TIME_KEY)) || 0;
+            const fallbackAt = Number(localStorage.getItem(getFallbackTimeKey())) || 0;
             const fallbackIsNewer = Boolean(legacyProject && existing && fallbackAt > existing.updatedAt);
             const toRestore = fallbackIsNewer ? legacyProject : existing?.payload;
             const hadEarlyEdits = Boolean(workspaceEarlyDirty);
             workspaceAutosave = window.BratWorkspace.createAutosave({
                 store: workspaceStore,
-                ownerId: WORKSPACE_OWNER,
+                ownerId: workspaceOwner,
                 delay: 700,
                 onStatus: announceWorkspaceStatus,
                 onError: (error, payload) => {
@@ -4327,22 +4335,24 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             workspaceResetting = true;
             const discard = workspaceAutosave
                 ? workspaceAutosave.discard()
-                : workspaceStore?.clearActive(WORKSPACE_OWNER);
+                : workspaceStore?.clearActive(workspaceOwner);
             Promise.resolve(discard).catch(error => {
                 console.warn("could not clear IndexedDB autosave", error);
                 announceWorkspaceStatus("error", error);
             });
             localStorage.removeItem(WORKSPACE_HAS_SAVED_KEY);
-            localStorage.removeItem(WORKSPACE_FALLBACK_TIME_KEY);
-            localStorage.removeItem("bratAnimator.project.v5");
+            localStorage.removeItem(getFallbackTimeKey());
+            localStorage.removeItem(getFallbackKey());
+            if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+            resetProjectView();
+        }
+
+        function resetProjectView() {
             state.lyricRows = [];
             state.fonts = [];
             state.seed = 1337;
             state.beatEffects = BratCore.normalizeBeatEffects?.() || { enabled: false };
             state.exportRange = { enabled: false, start: 0, end: null };
-            localStorage.removeItem("bratAnimator.project.v2");
-            localStorage.removeItem("bratAnimator.project.v3");
-            localStorage.removeItem("bratAnimator.project.v4");
             lyricsInput.value = "";
             searchQueryInput.value = "";
             startFromZeroCheckbox.checked = false;
@@ -5396,9 +5406,119 @@ async function updateExportEstimate() {
         });
         registerServiceWorker();
         renderPreviewAt(0);
+        window.BratEditorWorkspace = {
+            whenReady: () => workspaceBootPromise || Promise.resolve(),
+            owner: () => workspaceOwner,
+            store: workspaceStore,
+            async flush() {
+                await (workspaceBootPromise || Promise.resolve());
+                if (workspaceAutosave) await workspaceAutosave.flush();
+            },
+            async switchOwner(nextOwner) {
+                await (workspaceBootPromise || Promise.resolve());
+                const owner = String(nextOwner || "guest");
+                if (owner === workspaceOwner) return;
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                await this.flush();
+                // Fetch before switching to avoid hiding the current workspace if a read fails.
+                const record = await workspaceStore.getActive(owner);
+                let fallback = null;
+                try {
+                    const raw = localStorage.getItem(owner === "guest" ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + owner);
+                    if (raw) fallback = JSON.parse(raw);
+                } catch (_) {}
+                workspaceDiscardGeneration += 1;
+                workspaceOwner = owner;
+                workspaceAutosave = window.BratWorkspace.createAutosave({
+                    store: workspaceStore,
+                    ownerId: workspaceOwner,
+                    delay: 700,
+                    onStatus: announceWorkspaceStatus,
+                    onError: (error, payload) => writeLegacyFallback(payload, error)
+                });
+                workspaceResetting = true;
+                resetProjectView();
+                workspaceResetting = true;
+                const payload = record?.payload || fallback;
+                if (payload) restoreProjectSettings(payload);
+                workspaceResetting = false;
+                if (fallback && !record) workspaceAutosave.schedule(fallback);
+                else announceWorkspaceStatus("ready");
+                renderPreviewAt(0);
+            },
+            async reloadActive() {
+                await (workspaceBootPromise || Promise.resolve());
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                await this.flush();
+                const record = await workspaceStore.getActive(workspaceOwner);
+                workspaceResetting = true;
+                resetProjectView();
+                workspaceResetting = true;
+                if (record?.payload) restoreProjectSettings(record.payload);
+                workspaceResetting = false;
+                renderPreviewAt(0);
+                announceWorkspaceStatus("ready");
+            },
+            async clearCurrent() {
+                await (workspaceBootPromise || Promise.resolve());
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                await workspaceAutosave.discard();
+                try {
+                    localStorage.removeItem(getFallbackKey());
+                    localStorage.removeItem(getFallbackTimeKey());
+                } catch (_) {}
+                workspaceResetting = true;
+                resetProjectView();
+                announceWorkspaceStatus("cleared");
+            },
+            async createNew() {
+                await this.flush();
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                const previous = await workspaceStore.getActive(workspaceOwner);
+                if (previous && (previous.payload?.lyrics?.trim() || previous.payload?.audio?.assetId || previous.payload?.background?.assetId)) {
+                    const id = "archive-" + (window.crypto?.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2));
+                    await workspaceStore.saveProject(previous.payload, {
+                        ownerId: workspaceOwner, projectId: id,
+                        title: buildProjectLabel(previous.payload)
+                    });
+                }
+                await this.clearCurrent();
+                return true;
+            },
+            async deleteOwnerProjects() {
+                await this.flush();
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                const removed = await workspaceStore.deleteOwner(workspaceOwner);
+                try {
+                    localStorage.removeItem(getFallbackKey());
+                    localStorage.removeItem(getFallbackTimeKey());
+                    if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+                } catch (_) {}
+                return removed;
+            },
+            async openProject(projectId) {
+                await this.flush();
+                if (projectId === "current") return true;
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                await workspaceStore.activateProject(workspaceOwner, projectId);
+                const current = await workspaceStore.getActive(workspaceOwner);
+                if (!current) throw new Error("Il progetto non è stato recuperato.");
+                workspaceResetting = true;
+                resetProjectView();
+                workspaceResetting = true;
+                restoreProjectSettings(current.payload);
+                workspaceResetting = false;
+                announceWorkspaceStatus("ready");
+                renderPreviewAt(0);
+                return true;
+            },
+            pause() {
+                if (state.isPlaying) stopPlayback(false);
+            }
+        };
         // Async hydration runs after the existing editor has initialized. The
         // synchronous legacy restore above remains the safety net while migrating.
-        initializeLocalWorkspace(sharedProject, autosavedProject).catch(error => {
+        workspaceBootPromise = initializeLocalWorkspace(sharedProject, autosavedProject).catch(error => {
             console.warn("workspace initialization failed", error);
             workspaceReady = true;
             announceWorkspaceStatus("error", error);
@@ -5872,7 +5992,16 @@ async function updateExportEstimate() {
     openEditorTab(restoredTab);
     updateSidebarStatus();
 
-    if (!showPermissionNotice()) {
+    if (window.BratStudioShellEnabled) {
+        // Keep the first dashboard visit unobstructed. Show the existing usage
+        // notice when the user enters the editor, never silently dismiss it.
+        let editorEntered = false;
+        window.BratEnterEditor = () => {
+            if (editorEntered) return;
+            editorEntered = true;
+            if (!showPermissionNotice()) scheduleTutorial();
+        };
+    } else if (!showPermissionNotice()) {
         scheduleTutorial();
     }
 })();
