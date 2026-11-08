@@ -205,10 +205,33 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         // Phase 1: persist the active guest workspace in IndexedDB. Account switching
         // and multi-project library navigation are introduced in later phases.
         let workspaceOwner = "guest";
+        const ACTIVE_PREFIX = "bratAnimator.workspace.active.";
+        function lastProjectId(owner) {
+            try { return localStorage.getItem(ACTIVE_PREFIX + owner) === "temporary" ? "temporary" : "current"; }
+            catch (_) { return "current"; }
+        }
+        let workspaceProjectId = lastProjectId(workspaceOwner);
+        function setWorkspaceProjectId(projectId) {
+            workspaceProjectId = projectId === "temporary" ? "temporary" : "current";
+            try { localStorage.setItem(ACTIVE_PREFIX + workspaceOwner, workspaceProjectId); } catch (_) {}
+        }
+        function makeWorkspaceAutosave() {
+            return window.BratWorkspace.createAutosave({
+                store: workspaceStore,
+                ownerId: workspaceOwner,
+                projectId: workspaceProjectId,
+                delay: 700,
+                onStatus: announceWorkspaceStatus,
+                onError: (error, payload) => {
+                    console.warn("IndexedDB autosave failed", error);
+                    writeLegacyFallback(payload, error);
+                }
+            });
+        }
         let workspaceBootPromise = null;
         const isGuestOwner = () => workspaceOwner === "guest";
-        const getFallbackKey = () => isGuestOwner() ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + workspaceOwner;
-        const getFallbackTimeKey = () => isGuestOwner() ? WORKSPACE_FALLBACK_TIME_KEY : "bratAnimator.workspace.fallbackAt." + workspaceOwner;
+        const getFallbackKey = () => workspaceProjectId === "temporary" ? "bratAnimator.workspace.tempFallback." + workspaceOwner : isGuestOwner() ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + workspaceOwner;
+        const getFallbackTimeKey = () => workspaceProjectId === "temporary" ? "bratAnimator.workspace.tempFallbackAt." + workspaceOwner : isGuestOwner() ? WORKSPACE_FALLBACK_TIME_KEY : "bratAnimator.workspace.fallbackAt." + workspaceOwner;
         const WORKSPACE_LEGACY_KEYS = ["bratAnimator.project.v5", "bratAnimator.project.v4", "bratAnimator.project.v3", "bratAnimator.project.v2"];
         const WORKSPACE_FALLBACK_TIME_KEY = "bratAnimator.workspace.fallbackAt.v1";
         const WORKSPACE_HAS_SAVED_KEY = "bratAnimator.workspace.hasSaved.v1";
@@ -244,6 +267,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (status === "saved") {
                 try {
                     localStorage.setItem(WORKSPACE_HAS_SAVED_KEY, "1");
+                    window.dispatchEvent(new CustomEvent("brat:local-save", { detail: { ownerId: workspaceOwner, projectId: workspaceProjectId } }));
                     if (isGuestOwner()) {
                         for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
                     } else {
@@ -277,7 +301,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             let existing = null;
             let readError = null;
             try {
-                existing = await workspaceStore.getActive(workspaceOwner);
+                existing = await workspaceStore.getProject(workspaceOwner, workspaceProjectId);
             } catch (error) {
                 readError = error;
                 console.warn("IndexedDB workspace could not be read; localStorage recovery remains available", error);
@@ -288,16 +312,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const fallbackIsNewer = Boolean(legacyProject && existing && fallbackAt > existing.updatedAt);
             const toRestore = fallbackIsNewer ? legacyProject : existing?.payload;
             const hadEarlyEdits = Boolean(workspaceEarlyDirty);
-            workspaceAutosave = window.BratWorkspace.createAutosave({
-                store: workspaceStore,
-                ownerId: workspaceOwner,
-                delay: 700,
-                onStatus: announceWorkspaceStatus,
-                onError: (error, payload) => {
-                    console.warn("IndexedDB autosave failed", error);
-                    writeLegacyFallback(payload, error);
-                }
-            });
+            workspaceAutosave = makeWorkspaceAutosave();
             workspaceReady = true;
 
             if (!sharedProject && !hadEarlyEdits && toRestore) {
@@ -318,7 +333,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (workspaceEarlyDirty) {
                 workspaceAutosave.schedule(workspaceEarlyDirty);
                 workspaceEarlyDirty = null;
-            } else if (!sharedProject && legacyProject && (!existing || fallbackIsNewer)) {
+            } else if (!sharedProject && legacyProject && workspaceProjectId === "current" && (!existing || fallbackIsNewer)) {
                 // A successful IndexedDB write removes the legacy copy; failures retain it.
                 workspaceAutosave.schedule(legacyProject);
             } else if (readError) {
@@ -4343,7 +4358,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             localStorage.removeItem(WORKSPACE_HAS_SAVED_KEY);
             localStorage.removeItem(getFallbackTimeKey());
             localStorage.removeItem(getFallbackKey());
-            if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+            if (isGuestOwner() && workspaceProjectId === "current") for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
             resetProjectView();
         }
 
@@ -5421,21 +5436,16 @@ async function updateExportEstimate() {
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
                 await this.flush();
                 // Fetch before switching to avoid hiding the current workspace if a read fails.
-                const record = await workspaceStore.getActive(owner);
+                const record = await workspaceStore.getProject(owner, lastProjectId(owner));
                 let fallback = null;
                 try {
-                    const raw = localStorage.getItem(owner === "guest" ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + owner);
+                    const raw = localStorage.getItem(lastProjectId(owner) === "temporary" ? "bratAnimator.workspace.tempFallback." + owner : owner === "guest" ? WORKSPACE_LEGACY_KEYS[0] : "bratAnimator.workspace.fallback." + owner);
                     if (raw) fallback = JSON.parse(raw);
                 } catch (_) {}
                 workspaceDiscardGeneration += 1;
                 workspaceOwner = owner;
-                workspaceAutosave = window.BratWorkspace.createAutosave({
-                    store: workspaceStore,
-                    ownerId: workspaceOwner,
-                    delay: 700,
-                    onStatus: announceWorkspaceStatus,
-                    onError: (error, payload) => writeLegacyFallback(payload, error)
-                });
+                setWorkspaceProjectId(lastProjectId(owner));
+                workspaceAutosave = makeWorkspaceAutosave();
                 workspaceResetting = true;
                 resetProjectView();
                 workspaceResetting = true;
@@ -5450,7 +5460,7 @@ async function updateExportEstimate() {
                 await (workspaceBootPromise || Promise.resolve());
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
                 await this.flush();
-                const record = await workspaceStore.getActive(workspaceOwner);
+                const record = await workspaceStore.getProject(workspaceOwner, workspaceProjectId);
                 workspaceResetting = true;
                 resetProjectView();
                 workspaceResetting = true;
@@ -5492,7 +5502,7 @@ async function updateExportEstimate() {
                 try {
                     localStorage.removeItem(getFallbackKey());
                     localStorage.removeItem(getFallbackTimeKey());
-                    if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+                    if (isGuestOwner() && workspaceProjectId === "current") for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
                 } catch (_) {}
                 return removed;
             },
