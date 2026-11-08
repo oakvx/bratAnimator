@@ -112,6 +112,15 @@
         listen,
         user: () => currentUser,
         ownerId: () => currentUser?.id ? "user:" + currentUser.id : "guest",
+        // Only the current Supabase JWT is used to authenticate calls to our
+        // own Edge Function. Never expose TikTok OAuth tokens in the browser.
+        getAccessToken: async () => {
+            const sdk = await requireClient();
+            const { data, error } = await sdk.auth.getSession();
+            if (error) throw error;
+            if (!data?.session?.access_token) throw new Error("Accedi a Brat Animator.");
+            return data.session.access_token;
+        },
         signInWithPassword: async (email, password) =>
             result((await requireClient()).auth.signInWithPassword({ email, password })),
         signUp: async (email, password) =>
