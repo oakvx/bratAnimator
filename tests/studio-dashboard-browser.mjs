@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const chrome = process.env.CHROME_PATH;
+const configuredSmoke = process.env.BRAT_AUTH_CONFIGURED_SMOKE === "1";
 assert.ok(chrome, "Set CHROME_PATH to Google Chrome/Chromium for browser smoke tests");
 const profile = await mkdtemp(path.join(tmpdir(), "brat-studio-smoke-"));
 const mime = { ".html":"text/html", ".js":"text/javascript", ".css":"text/css", ".mjs":"text/javascript", ".svg":"image/svg+xml", ".json":"application/json", ".webmanifest":"application/manifest+json", ".png":"image/png" };
@@ -17,6 +18,12 @@ const server = createServer(async (req, res) => {
     const pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
     const filename = path.resolve(root, "." + pathname, pathname.endsWith("/") ? "index.html" : "");
     if (!filename.startsWith(root + path.sep) && filename !== root) { res.writeHead(403).end(); return; }
+    // This suite verifies the guest/unconfigured UI without external services.
+    if (pathname === "/assets/js/supabase-config.js" && !configuredSmoke) {
+        res.writeHead(200, { "Content-Type":"text/javascript", "Cache-Control":"no-store" })
+            .end('window.BratSupabaseConfig = { url: "", publishableKey: "" };');
+        return;
+    }
     try { res.writeHead(200, { "Content-Type":mime[path.extname(filename)] || "application/octet-stream", "Cache-Control":"no-store" }).end(await readFile(filename)); }
     catch (_) { res.writeHead(404).end(); }
 });
@@ -179,7 +186,7 @@ try {
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),true);
     await evaluate("document.getElementById('studioAccountButton').click()");
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
-    assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),false);
+    assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),configuredSmoke);
     await evaluate("document.getElementById('studioAuthGuest').click()");
     // Hidden editor shortcuts must never export while browsing the dashboard.
     await evaluate("window.__hiddenExportClicks=0; document.getElementById('exportVideoBtn').addEventListener('click', () => window.__hiddenExportClicks++); document.dispatchEvent(new KeyboardEvent('keydown',{key:'e',bubbles:true,cancelable:true}))");

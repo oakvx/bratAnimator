@@ -11,15 +11,15 @@ try {
         CREATE ROLE anon;
         CREATE ROLE authenticated;
         CREATE ROLE service_role BYPASSRLS;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
     `);
-    for (const file of [
-        "../supabase/migrations/20261108000100_bratcode_light.sql",
-        "../supabase/migrations/20261108000200_tiktok_link.sql",
-        "../supabase/migrations/20261108000300_tiktok_login.sql",
-        "../supabase/tests/tiktok_auth.sql"
-    ]) {
-        await db.exec(await Deno.readTextFile(new URL(file, import.meta.url)));
+    const migrationsUrl = new URL("../supabase/migrations/", import.meta.url);
+    const migrations = [];
+    for await (const entry of Deno.readDir(migrationsUrl)) {
+        if (entry.isFile && /^\d+_.+\.sql$/.test(entry.name)) migrations.push(entry.name);
     }
+    for (const name of migrations.sort()) await db.exec(await Deno.readTextFile(new URL(name, migrationsUrl)));
+    await db.exec(await Deno.readTextFile(new URL("../supabase/tests/tiktok_auth.sql", import.meta.url)));
     const diagnostics = await db.exec(await Deno.readTextFile(new URL("../supabase/diagnostics/readiness.sql", import.meta.url)));
     if (diagnostics[0].rows.some(row => row.ready !== true) ||
         diagnostics[1].rows.some(row => row.anon_can_read !== false || row.member_can_read !== false)) {

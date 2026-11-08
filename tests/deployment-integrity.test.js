@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const vm = require("node:vm");
 const root = path.resolve(__dirname, "..");
 const read = file => fs.readFileSync(path.join(root,file),"utf8");
 
@@ -27,13 +28,26 @@ test("all local stylesheet/script entrypoint assets exist and are available offl
 test("offline asset list never contains credential files or TikTok server sources", () => {
     const sw = read("sw.js");
     assert.doesNotMatch(sw,/SERVICE_ROLE_KEY|TIKTOK_CLIENT_SECRET|supabase\/functions\//);
-    assert.match(sw,/brat-animator-v16-supabase-tiktok-login/);
+    assert.match(sw,/brat-animator-v17-configured-supabase/);
 });
 
-test("public Supabase config is fail closed until an operator sets it", () => {
+test("public Supabase config uses a publishable key and TikTok remains opt-in", () => {
     const source=read("assets/js/supabase-config.js");
-    assert.match(source,/url:\s*""/);
-    assert.match(source,/publishableKey:\s*""/);
+    const sandbox={window:{}};
+    vm.runInNewContext(source,sandbox);
+    const config=sandbox.window.BratSupabaseConfig;
+    assert.equal(new URL(config.url).protocol,"https:");
+    assert.match(config.publishableKey,/^sb_publishable_[A-Za-z0-9_-]+$/);
     const tiktok=read("assets/js/tiktok-config.js");
     assert.match(tiktok,/enabled:\s*false/);
+});
+
+test("missing, partial and server-only Supabase configurations stay disabled", () => {
+    const source=read("assets/js/auth-client.js");
+    for(const config of [{},{url:"https://example.supabase.co"},{publishableKey:"sb_publishable_test_key"},
+        {url:"https://example.supabase.co",publishableKey:"sb_secret_never_public"}]) {
+        const sandbox={URL,atob,module:{exports:{}},BratSupabaseConfig:config};
+        vm.runInNewContext(source,sandbox);
+        assert.equal(sandbox.module.exports.configured(),false);
+    }
 });

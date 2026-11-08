@@ -52,8 +52,11 @@ test("dashboard renders concrete navigation and all three auth options", () => {
 
 test("auth bootstrap is never configured with service-role credentials", () => {
     const config = fs.readFileSync(path.join(__dirname, "../assets/js/supabase-config.js"), "utf8");
-    assert.match(config, /publishableKey:\s*""/);
-    assert.match(config, /url:\s*""/);
+    const sandbox = { window: {} };
+    vm.runInNewContext(config, sandbox);
+    const settings = sandbox.window.BratSupabaseConfig;
+    assert.equal(new URL(settings.url).protocol, "https:");
+    assert.match(settings.publishableKey, /^sb_publishable_[A-Za-z0-9_-]+$/);
     const authCode = fs.readFileSync(path.join(__dirname, "../assets/js/auth-client.js"), "utf8");
     assert.ok(authCode.includes("signInWithPassword"));
     assert.ok(authCode.includes("signUp"));
