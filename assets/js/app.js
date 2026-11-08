@@ -5317,15 +5317,27 @@ async function updateExportEstimate() {
         });
 
         document.addEventListener("keydown", (event) => {
+            // Editor shortcuts must not fire behind the Windows 7 dashboard,
+            // auth dialogs, or the editor command palette.
             if (document.body.classList.contains("permission-notice-open")) return;
-            if (commandPalette && !commandPalette.classList.contains("hidden") && event.key === "Escape") {
+            if (document.body.classList.contains("studio-active") &&
+                !document.body.classList.contains("studio-editor-open")) return;
+            if (document.querySelector('.studio-modal-backdrop:not([hidden])')) return;
+            const paletteOpen = Boolean(commandPalette && !commandPalette.classList.contains("hidden"));
+            if (paletteOpen && event.key === "Escape") {
                 event.preventDefault();
                 closeCommandPalette();
                 return;
             }
-
+            if (paletteOpen || event.isComposing) return;
             const target = event.target;
-            const isTyping = target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+            const isTyping = target && (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable);
+            // Command palette is available even while a lyrics input is focused.
+            if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key?.toLowerCase() === "k") {
+                event.preventDefault();
+                openCommandPalette();
+                return;
+            }
             if (isTyping && event.code !== "Space") return;
             if (event.code === "Space" && state.tapSync.active) {
                 event.preventDefault();
@@ -5335,11 +5347,6 @@ async function updateExportEstimate() {
             if (isTyping) return;
             const shortcutKey = event.key?.toLowerCase();
             if (event.ctrlKey || event.metaKey) {
-                if (shortcutKey === "k") {
-                    event.preventDefault();
-                    openCommandPalette();
-                    return;
-                }
                 if (shortcutKey === "s") {
                     event.preventDefault();
                     saveSnapshotBtn?.click();

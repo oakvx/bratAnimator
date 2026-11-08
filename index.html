@@ -277,6 +277,7 @@
     <script src="assets/js/tiktok-link.js" defer></script>
     <script src="assets/js/sound-hub-ui.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
+    <script src="assets/js/export-preflight.js" defer></script>
 </head>
 
 <body>
@@ -1102,6 +1103,18 @@
                 Video-only export stays fast when supported. If loaded audio is enabled, export records in real time
                 and merges only extracted local or direct CORS-enabled media audio you have permission to use.
             </p>
+
+            <!-- Phase 7: informative checks only; exportVideo performs final validation. -->
+            <section id="exportPreflight" class="export-preflight" aria-labelledby="exportPreflightTitle" data-state="ready">
+                <div class="export-preflight-header">
+                    <h3 id="exportPreflightTitle">Export readiness</h3>
+                    <button id="exportPreflightRefresh" type="button">Check again</button>
+                </div>
+                <p id="exportPreflightSummary" role="status" aria-live="polite">Checking export settings…</p>
+                <ul id="exportPreflightList" class="export-preflight-list"></ul>
+                <button id="exportPreflightFix" type="button" hidden>Fix lyric timing</button>
+                <p class="export-preflight-note">This is a preliminary check. Final codec support, external-media permissions and export range are verified when exporting.</p>
+            </section>
 
             <div class="row">
                 <div>

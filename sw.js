@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v13-win7-start-menu";
+const CACHE_NAME = "brat-animator-v14-export-preflight";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -34,6 +34,7 @@ const APP_ASSETS = [
   "./assets/js/tiktok-link.js",
   "./assets/js/sound-hub-ui.js",
   "./assets/js/dashboard-audio.js",
+  "./assets/js/export-preflight.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
   "./favicon.svg",

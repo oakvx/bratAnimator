@@ -103,6 +103,14 @@ Search matches local labels and aliases without network requests or reading proj
 
 See [Phase 6 implementation and QA notes](docs/phase-6-win7-start-menu.md). Offline/PWA support is included.
 
+## Editor export readiness (Phase 7)
+
+The Export panel now includes a non-blocking **readiness checklist** based on the actual LRC parser and current local media/browser settings. It flags missing or malformed timestamps, absent encoding capability, audio recording limitations and resource-intensive 1440+/60fps settings. It does not upload media, alter the project or replace the exporter's final codec and CORS validation.
+
+Keyboard shortcuts are restricted to the active editor rather than firing behind the Windows 7 dashboard or dialogs. Ctrl/Cmd+K is available even when editing text, and other editor shortcuts pause while its command palette is open.
+
+See [Phase 7 behavior and QA](docs/phase-7-export-preflight.md).
+
 ## Authentication and backend
 
 The editor is fully usable as a guest. Supabase Auth is optional for account-based workspaces and future server-backed sharing.
@@ -130,6 +138,7 @@ Automated checks:
     node --check assets/js/sound-hub-ui.js
     node --check assets/js/win7-shell.js
     node --check assets/js/win7-start-menu.js
+    node --check assets/js/export-preflight.js
     node --check assets/js/tiktok-link.js
 
 Optional Chrome browser audit:

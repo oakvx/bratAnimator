@@ -178,13 +178,31 @@ try {
     assert.equal(await evaluate("document.getElementById('studioAuthDialog').hidden"),false);
     assert.equal(await evaluate("document.getElementById('studioAuthSetup').hidden"),false);
     await evaluate("document.getElementById('studioAuthGuest').click()");
+    // Hidden editor shortcuts must never export while browsing the dashboard.
+    await evaluate("window.__hiddenExportClicks=0; document.getElementById('exportVideoBtn').addEventListener('click', () => window.__hiddenExportClicks++); document.dispatchEvent(new KeyboardEvent('keydown',{key:'e',bubbles:true,cancelable:true}))");
+    assert.equal(await evaluate("window.__hiddenExportClicks"),0);
     await evaluate("document.getElementById('studioContinue').click()");
     await until("document.body.classList.contains('studio-editor-open')");
     assert.equal(await evaluate("document.getElementById('permissionNotice').classList.contains('hidden')"),false);
     await evaluate("document.getElementById('permissionNoticeAckBtn').click()");
     assert.equal(await evaluate("document.getElementById('studioDashboard').hidden"),false);
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display"),"none");
+    // Phase 7: non-destructive export readiness, including the existing parser.
+    await until("Boolean(window.BratExportPreflightInstance)");
+    assert.equal(await evaluate("document.getElementById('exportPreflight').dataset.state"),"blocked");
+    await evaluate("document.getElementById('lyricsInput').focus(); document.getElementById('lyricsInput').dispatchEvent(new KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true,cancelable:true}))");
+    await until("!document.getElementById('commandPalette').classList.contains('hidden')");
+    await evaluate("document.getElementById('commandPaletteInput').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))");
+    assert.equal(await evaluate("document.getElementById('commandPalette').classList.contains('hidden')"),true);
     await evaluate("document.getElementById('lyricsInput').value = '[00:01.00] smoke test lyric'; document.getElementById('lyricsInput').dispatchEvent(new Event('input', { bubbles: true }));");
+    await until("document.getElementById('exportPreflight').dataset.state !== 'blocked'");
+    assert.equal(await evaluate("document.getElementById('exportPreflightList').textContent.includes('1 timed lyric line recognized')"),true);
+    await evaluate("document.getElementById('exportFpsSelect').value='60';document.getElementById('exportFpsSelect').dispatchEvent(new Event('change',{bubbles:true}))");
+    // State can already be "warning" because the default audio option is
+    // selected but no file is loaded. Wait for the 60-fps row itself.
+    await until("document.getElementById('exportPreflightList').textContent.includes('60 fps')");
+    assert.equal(await evaluate("document.getElementById('exportPreflight').dataset.state"),"warning");
+    await evaluate("document.getElementById('exportFpsSelect').value='30';document.getElementById('exportFpsSelect').dispatchEvent(new Event('change',{bubbles:true}))");
     await until("window.BratEditorWorkspace.store.getActive('guest').then(record => record?.payload?.lyrics?.includes('smoke test lyric'))", 9000);
     await evaluate("document.querySelector('[data-studio-view=\"projects\"]').click()");
     await until("!document.getElementById('studioProjectsView').hidden");
