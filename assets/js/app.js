@@ -4337,7 +4337,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (payload.style && typeof payload.style === "object") state.style = { ...state.style, ...payload.style };
             writeStyleControls(state.style, state.animationMode);
             setTheme(payload.theme || "green");
-            state.language = window.BratI18n?.applyLanguage?.(payload.language || window.BratI18n?.getSavedLanguage?.() || "en") || "en";
+            // The interface language is a browser preference. A saved/imported
+            // project must not silently reset a user's explicit selection.
+            state.language = window.BratI18n?.applyLanguage?.(window.BratI18n?.getSavedLanguage?.() || payload.language || "en") || "en";
             rebuildTimelineFromCurrentInputs();
             renderLrcRows();
             applyFormatPreset();
