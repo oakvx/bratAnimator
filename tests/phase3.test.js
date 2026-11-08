@@ -68,11 +68,11 @@ test("manual backup reminders are based on editing, not merely page visits", () 
     assert.equal(reminders.shouldRemind("guest", "current"), false);
 });
 
-test("Aero theme and sounds are restricted to the dashboard", () => {
-    const css = fs.readFileSync(path.join(__dirname, "../assets/css/aero-theme.css"), "utf8");
-    assert.match(css, /studio-hero/);
-    assert.match(css, /linear-gradient/);
-    assert.match(css, /studio-project-entry/);
+test("native 7.css layout and sounds are restricted to the dashboard", () => {
+    const css = fs.readFileSync(path.join(__dirname, "../assets/css/studio-win7.css"), "utf8");
+    assert.match(css, /studio-classic-home/);
+    assert.match(css, /studio-project-card/);
+    assert.match(css, /studio-modal-backdrop/);
     assert.doesNotMatch(css, /#previewCanvas\s*\{|\.stage-canvas-zone\s*\{/);
     const sound = fs.readFileSync(path.join(__dirname, "../assets/js/dashboard-audio.js"), "utf8");
     assert.match(sound, /AudioContextClass/);
