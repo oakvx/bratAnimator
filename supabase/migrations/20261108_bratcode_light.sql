@@ -48,6 +48,12 @@ BEGIN
         OR coalesce(p_snapshot->>'type', '') <> 'bratcode-light'
         OR coalesce(p_snapshot->>'schemaVersion','') <> '1'
         OR p_snapshot ?| ARRAY['binary','assets','mediaBlobs','credentials','tokens','auth']
+        OR jsonb_typeof(p_snapshot->'payload') <> 'object'
+        OR (p_snapshot->'payload') ?| ARRAY['binary','assets','mediaBlobs','credentials','tokens','auth']
+        OR coalesce(p_snapshot #>> '{payload,audio,assetId}', '') <> ''
+        OR coalesce(p_snapshot #>> '{payload,audio,url}', '') <> ''
+        OR coalesce(p_snapshot #>> '{payload,background,assetId}', '') <> ''
+        OR coalesce(p_snapshot #>> '{payload,background,url}', '') <> ''
     THEN
         RAISE EXCEPTION 'Invalid or oversized BRATCODE Light snapshot';
     END IF;
