@@ -4,11 +4,21 @@
 
 Live demo: **https://oakvx.github.io/bratAnimator/**
 
-## Kinetic collage (word composition)
+## Kinetic collage — progressive auto-fit word placement
 
-Select **Design → Lyrics display → Kinetic collage (stacked words)**, or apply **Style preset → Kinetic collage · blue / cream**. This mode arranges the currently sung and recently sung words as a moving cluster with deliberately varied type sizes, in the style of short-form lyric edits. It is not a CSS overlay: the same Canvas code is used for preview, PNG and MP4/WebM rendering.
+Choose **Design → Lyrics display → Kinetic collage (stacked words)**, or use the **Kinetic collage · blue / cream** preset.
 
-The visible words (2–9), size contrast and transition speed can be adjusted in a dedicated control group. The blue/cream preset uses a blue canvas with cream text and swaps the palette on each lyric line. Original LRC word timings are respected, and lines without native per-word timing use the existing timing estimator. Frame composition is seeded/deterministic, including after seeking, on reopening and during export. Existing Brat/Music/Cinematic modes remain available.
+Unlike a scrolling word window, this mode **keeps every word of the current composition on screen as it appears**. Words arrive following their LRC / Enhanced LRC timestamps, with a brief per-word fade/scale entrance. Earlier words stay in fixed positions; the layout does not reflow every time a new word arrives.
+
+A seeded, deterministic free-space packing algorithm measures **all** the words before showing the first one. It sorts them by estimated footprint, searches available rectangles, and scales the whole composition down if needed so nothing overlaps or spills outside the canvas. Positions look varied rather than forming a uniform grid, but seeking or exporting produces identical placement. Preview, PNG and MP4/WebM use the same canvas renderer.
+
+The editor exposes:
+- **LRC lines per composition (1–4, default 2):** the number of consecutive lyric rows contributing to one complete collage, *not* a maximum number of words. Every word within those rows is retained until the scene changes.
+- **Word spacing:** the available padding between packed words.
+- **Size contrast:** variation between smaller and larger words.
+- **Transition speed:** how quickly each new word appears.
+
+An explicit empty LRC line or a pause of more than 0.85 seconds begins a new composition. The blue/cream preset alternates its palette on lyric lines. A composition automatically ends at the beginning of the next grouped scene. Imported project settings and native word timing remain compatible with the existing schema.
 
 ## Version 5.0
 

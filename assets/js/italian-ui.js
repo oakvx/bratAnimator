@@ -8,9 +8,10 @@
     const phrases = {
         "kinetic collage": "collage cinetico", "kinetic collage (stacked words)": "collage cinetico (parole sfalsate)",
         "kinetic collage · blue / cream": "collage cinetico · blu / crema",
-        "words on screen": "parole sullo schermo", "size contrast": "contrasto dimensioni", "transition speed": "velocità transizione",
-        "Words change size and position to follow the music. Optimized for short-form lyric videos.": "Le parole cambiano dimensione e posizione seguendo la musica. Ottimizzato per lyric video brevi.",
-        "Use the blue collage preset for a blue/cream palette that alternates at each lyric line. Word timing comes from LRC or imported enhanced timestamps.": "Usa il preset collage blu per alternare blu e crema a ogni frase. La sincronizzazione usa i tempi LRC o i timestamp avanzati importati.",
+        "LRC lines per composition": "righe LRC per composizione", "word spacing": "spaziatura tra parole",
+        "size contrast": "contrasto dimensioni", "transition speed": "velocità transizione",
+        "Every word appears progressively in a free space. The layout fits the complete composition automatically.": "Ogni parola compare progressivamente in uno spazio libero. La composizione si adatta automaticamente.",
+        "The blue/cream preset alternates colors between LRC lines. All words in each composition remain visible until the next one; silence clears the canvas.": "Il preset blu/crema alterna i colori tra le righe LRC. Tutte le parole restano visibili fino alla composizione successiva; le pause svuotano lo schermo.",
         "skip to editor": "vai all’editor", "main menu": "menu principale", "Brat Animator editor": "editor Brat Animator",
         "editor commands": "comandi editor", "editor controls": "controlli editor", "editor sections": "sezioni editor",
         "theme controls": "controlli tema", "language selector": "selettore lingua", "project status": "stato progetto",

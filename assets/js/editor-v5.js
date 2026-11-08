@@ -90,6 +90,12 @@
     readStyleControls = function () {
         if (syncing) return;
         const row = editingRow();
+        // Kinetic collage parameters describe an entire scene. Changing them
+        // always edits the project, even when a Brat-specific phrase was selected.
+        if (lyricsDisplayModeSelect?.value === 'kinetic' && row) {
+            $('styleScopeSelect').value = 'project';
+            return baseReadStyle();
+        }
         if (!row) return baseReadStyle();
         const globalStyle = state.style;
         const globalMode = state.animationMode;

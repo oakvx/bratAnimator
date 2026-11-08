@@ -544,11 +544,15 @@
 
             <fieldset id="kineticSettings" class="v5-block kinetic-settings" aria-describedby="kineticHelp" hidden>
                 <legend>kinetic collage</legend>
-                <p id="kineticHelp" class="mini-copy">Words change size and position to follow the music. Optimized for short-form lyric videos.</p>
+                <p id="kineticHelp" class="mini-copy">Every word appears progressively in a free space. The layout fits the complete composition automatically.</p>
                 <div class="kinetic-setting-grid">
-                    <label for="kineticWordsInput">words on screen
-                        <output id="kineticWordsValue" for="kineticWordsInput">6</output>
-                        <input id="kineticWordsInput" type="range" min="2" max="9" step="1" value="6" />
+                    <label for="kineticLinesInput">LRC lines per composition
+                        <output id="kineticLinesValue" for="kineticLinesInput">2</output>
+                        <input id="kineticLinesInput" type="range" min="1" max="4" step="1" value="2" />
+                    </label>
+                    <label for="kineticSpacingInput">word spacing
+                        <output id="kineticSpacingValue" for="kineticSpacingInput">55%</output>
+                        <input id="kineticSpacingInput" type="range" min="0" max="100" step="1" value="55" />
                     </label>
                     <label for="kineticVariationInput">size contrast
                         <output id="kineticVariationValue" for="kineticVariationInput">72%</output>
@@ -559,7 +563,7 @@
                         <input id="kineticMotionInput" type="range" min="0" max="100" step="1" value="55" />
                     </label>
                 </div>
-                <p class="mini-copy">Use the blue collage preset for a blue/cream palette that alternates at each lyric line. Word timing comes from LRC or imported enhanced timestamps.</p>
+                <p class="mini-copy">The blue/cream preset alternates colors between LRC lines. All words in each composition remain visible until the next one; silence clears the canvas.</p>
             </fieldset>
 
             <div class="row color-row">
