@@ -1,0 +1,28 @@
+name: Verify pull requests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/phase-1-local-foundation
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax checks
+        run: |
+          node --check assets/js/local-workspace.js
+          node --check assets/js/app.js
+          node --check assets/js/editor-v5.js
+          node --check assets/js/project-assets.js
+          node --check sw.js
+      - name: Run JavaScript unit tests
+        run: node --test
