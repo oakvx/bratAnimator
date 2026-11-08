@@ -13,7 +13,7 @@
 | Layer | Implementation |
 | --- | --- |
 | Runtime | Browser-native ECMAScript (ES2022+); HTML5; CSS3 |
-| UI | Vanilla DOM; 7.css v0.21.1; Windows 7 Aero window manager, native title controls, taskbar and Explorer layout |
+| UI | Vanilla DOM; full 7.css v0.21.0 (MIT, locally bundled); native windows, ARIA tabs, Explorer navigation and taskbar |
 | Rendering | Canvas 2D; deterministic frame compositor; timestamp-driven scene evaluation |
 | Media | Web Audio API; HTMLMediaElement; MediaRecorder; browser codec support |
 | Export | MP4/WebM pipelines; local video recording; PNG frame export; bundled mp4-muxer |
@@ -82,6 +82,19 @@ Canvas layout and source timestamps are evaluated independently of dashboard eff
 - Automatic cloud project synchronization is intentionally absent.
 - Export complete .brat.zip archives regularly; browser eviction and user-cleared site data cannot be prevented by the application.
 
+## Dashboard and Windows 7 UI
+
+The app ships the full, unmodified upstream `vendor/7css/7.scoped.css`
+(v0.21.0, MIT). The only dashboard-specific CSS is
+`assets/css/studio-win7.css`, which owns layout without repainting native
+7.css buttons, title controls, inputs or tabs. No runtime CDN is required.
+Video-editor CSS remains independent.
+
+All confirmation and authentication windows use JavaScript-controlled
+visibility: the accessible dialog role is on the overlay, **not** on the
+inner `.window`. 7.css hides `.window[role=dialog]` unless activated through
+the URL `:target`; that rule is incompatible with our event-driven dialogs.
+
 ## Authentication and backend
 
 The editor is fully usable as a guest. Supabase Auth is optional for account-based workspaces and future server-backed sharing.
@@ -119,7 +132,8 @@ CI runs Node.js unit tests, syntax verification, and available Chrome smoke chec
 ## Repository structure
 
     assets/js/                 Core editor, media, timeline, storage, auth, UI
-    assets/css/                Editor and Windows 7-style application shell
+    assets/css/                Editor CSS and isolated Win7 dashboard layout (studio-win7.css)
+    vendor/7css/               Complete upstream scoped 7.css distribution + MIT license
     vendor/                    Bundled external JS dependencies
     tests/                     Node unit tests and browser automation
     docs/                      Architecture notes and rollout instructions
