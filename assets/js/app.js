@@ -5485,29 +5485,31 @@ async function updateExportEstimate() {
                 await this.clearCurrent();
                 return true;
             },
+            async deleteOwnerProjects() {
+                await this.flush();
+                if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
+                const removed = await workspaceStore.deleteOwner(workspaceOwner);
+                try {
+                    localStorage.removeItem(getFallbackKey());
+                    localStorage.removeItem(getFallbackTimeKey());
+                    if (isGuestOwner()) for (const key of WORKSPACE_LEGACY_KEYS) localStorage.removeItem(key);
+                } catch (_) {}
+                return removed;
+            },
             async openProject(projectId) {
                 await this.flush();
                 if (projectId === "current") return true;
                 if (!workspaceStore) throw new Error("Archiviazione locale non disponibile.");
-                const target = await workspaceStore.getProject(workspaceOwner, projectId);
-                if (!target) throw new Error("Questo progetto non è più disponibile.");
-                const active = await workspaceStore.getActive(workspaceOwner);
-                if (active && (active.payload?.lyrics?.trim() || active.payload?.audio?.assetId || active.payload?.background?.assetId)) {
-                    const id = "archive-" + (window.crypto?.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2));
-                    await workspaceStore.saveProject(active.payload, {
-                        ownerId: workspaceOwner, projectId: id, title: buildProjectLabel(active.payload)
-                    });
-                }
-                await workspaceStore.saveProject(target.payload, {
-                    ownerId: workspaceOwner, projectId: "current", title: target.title
-                });
-                await workspaceStore.deleteProject(workspaceOwner, projectId);
+                await workspaceStore.activateProject(workspaceOwner, projectId);
+                const current = await workspaceStore.getActive(workspaceOwner);
+                if (!current) throw new Error("Il progetto non è stato recuperato.");
                 workspaceResetting = true;
                 resetProjectView();
                 workspaceResetting = true;
-                restoreProjectSettings(target.payload);
+                restoreProjectSettings(current.payload);
                 workspaceResetting = false;
                 announceWorkspaceStatus("ready");
+                renderPreviewAt(0);
                 return true;
             },
             pause() {
