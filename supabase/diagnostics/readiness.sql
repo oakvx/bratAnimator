@@ -1,5 +1,5 @@
 -- Read-only deployment readiness checks for BRATCODE Light and TikTok.
--- Execute in Supabase SQL Editor AFTER all three versioned migrations.
+-- Execute in Supabase SQL Editor AFTER all versioned migrations.
 -- This script does not retrieve, reveal or modify tokens, project content,
 -- auth accounts, client secrets or source IPs.
 SELECT 'bratcodes RLS' AS check_name,
@@ -46,6 +46,11 @@ SELECT 'TikTok login redemption RPC',
 UNION ALL
 SELECT 'TikTok browser link confirmation RPC',
        to_regprocedure('public.tiktok_complete_link(text,text,text,uuid)') IS NOT NULL
+UNION ALL
+SELECT 'BRATCODE account RPCs deny anonymous calls',
+       NOT coalesce(has_function_privilege('anon',to_regprocedure('public.bratcode_create(jsonb)'),'EXECUTE'),true)
+       AND NOT coalesce(has_function_privilege('anon',to_regprocedure('public.bratcode_active()'),'EXECUTE'),true)
+       AND NOT coalesce(has_function_privilege('anon',to_regprocedure('public.bratcode_revoke()'),'EXECUTE'),true)
 ORDER BY check_name;
 
 -- The following checks verify that anonymous users cannot read sensitive

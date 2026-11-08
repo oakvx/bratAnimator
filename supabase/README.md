@@ -20,9 +20,10 @@ Non usare `SUPABASE_SERVICE_ROLE_KEY` nel browser, in `assets/js/supabase-config
 
 Le migrazioni versionate sono:
 
-- `supabase/migrations/20261108000100_bratcode_light.sql`
-- `supabase/migrations/20261108000200_tiktok_link.sql`
-- `supabase/migrations/20261108000300_tiktok_login.sql`
+- `supabase/migrations/20261108201634_bratcode_light.sql`
+- `supabase/migrations/20261108201640_tiktok_link.sql`
+- `supabase/migrations/20261108201645_tiktok_login.sql`
+- `supabase/migrations/20261108202103_bratcode_privileges_and_tiktok_index.sql`
 
 Distribuiscile con le modalità approvate per il progetto Supabase (SQL Editor / migrazioni CLI), **dopo un backup del database e una verifica dello schema**. Quindi esegui il controllo read-only:
 

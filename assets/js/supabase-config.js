@@ -1,8 +1,7 @@
-/* Fill with your own Supabase project's public URL and publishable (or legacy anon) key.
-   Both are safe to expose in a browser. NEVER use service_role or secret keys here.
-   Authentication remains disabled while these strings are empty.
+/* Public Supabase connection for Brat Animator.
+   Only a publishable key belongs here; never add a secret or service_role key.
    Setup: docs/supabase-tiktok-setup.md */
 window.BratSupabaseConfig = {
-    url: "",
-    publishableKey: ""
+    url: "https://asokmgswqbdsaiubdzvw.supabase.co",
+    publishableKey: "sb_publishable_TvfVb4hYXZRYb0NxrcwiVQ_NRyAVwFV"
 };

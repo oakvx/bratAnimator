@@ -27,7 +27,7 @@ https://www.isg.hest.ethz.ch/en/anleitungen/windows-specific-information/windows
 1. Configurare Supabase Auth in assets/js/supabase-config.js con URL e chiave pubblica publishable/anon.
 2. Registrare una TikTok developer app con Login Kit for Web. Richiedere user.info.basic e impostare come redirect URI esatto:
    https://PROJECT_REF.supabase.co/functions/v1/tiktok-link
-3. Applicare le migrazioni SQL `supabase/migrations/20261108000200_tiktok_link.sql` e `supabase/migrations/20261108000300_tiktok_login.sql`.
+3. Applicare le migrazioni SQL `supabase/migrations/20261108201640_tiktok_link.sql` e `supabase/migrations/20261108201645_tiktok_login.sql`.
 4. Distribuire la funzione supabase/functions/tiktok-link/index.ts con il nome tiktok-link. Nel file supabase/config.toml è specificato verify_jwt=false perché il callback GET non dispone di un JWT, ma possiede uno state CSRF monouso. Le richieste POST verificano comunque esplicitamente il JWT tramite Supabase Auth.
 5. Impostare nel runtime Supabase (non nel codice pubblico) i secret TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET, TIKTOK_REDIRECT_URI, BRAT_APP_ORIGIN e BRAT_APP_URL.
    Per GitHub Pages, BRAT_APP_ORIGIN = https://oakvx.github.io e BRAT_APP_URL = https://oakvx.github.io/bratAnimator/.

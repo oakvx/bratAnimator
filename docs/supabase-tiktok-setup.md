@@ -1,6 +1,6 @@
 # Supabase e accesso TikTok
 
-Il codice è pronto per la configurazione, ma l'accesso rimane disattivato finché non vengono creati e configurati il progetto Supabase e l'app TikTok. L'editor resta utilizzabile come ospite. Nessun progetto, audio o video viene caricato su Supabase.
+La configurazione del frontend usa il progetto `asokmgswqbdsaiubdzvw` e diventa pubblica dopo il merge e il deploy Pages. Le quattro migrazioni sono applicate e la funzione `tiktok-link` è distribuita. Restano da verificare i redirect Auth, la consegna email e le credenziali TikTok prima di dichiarare completati i login reali. TikTok rimane disattivato dal flag pubblico fino al collaudo del provider. L'editor resta utilizzabile come ospite. Nessun progetto, audio o video viene caricato su Supabase.
 
 ## 1. Crea il progetto Supabase
 
@@ -24,21 +24,26 @@ Se usi un dominio diverso, sostituiscilo in tutte le configurazioni. Abilita il 
 
 ## 2. Applica il database
 
-Installa Node.js 22.13+ e usa la CLI ufficiale Supabase:
+Installa Node.js 22.13+ e usa la CLI ufficiale Supabase. I comandi qui sotto fissano la versione 2.122.1: [CLI v3 cambia la selezione del progetto e le conferme per gli ambienti remoti](https://supabase.com/changelog/supabase-cli-v3).
 
 ```powershell
-npx supabase login
-npx supabase link --project-ref PROJECT_REF
-npx supabase db push
+npx supabase@2.122.1 login
+npx supabase@2.122.1 link --project-ref PROJECT_REF
+npx supabase@2.122.1 db push
 ```
 
 Le migrazioni hanno versioni distinte e vanno applicate in ordine:
 
-1. `20261108000100_bratcode_light.sql`
-2. `20261108000200_tiktok_link.sql`
-3. `20261108000300_tiktok_login.sql`
+1. `20261108201634_bratcode_light.sql`
+2. `20261108201640_tiktok_link.sql`
+3. `20261108201645_tiktok_login.sql`
+4. `20261108202103_bratcode_privileges_and_tiktok_index.sql`
 
-In alternativa esegui i tre file nel SQL Editor, nell'ordine indicato. Su un progetto in cui hai già eseguito manualmente le vecchie migrazioni, verifica/allinea la cronologia con `supabase migration list` e `supabase migration repair` prima di usare `db push`; non applicare nuovamente alla cieca migrazioni già registrate. I nomi originali con lo stesso prefisso `20261108` sono stati separati perché la CLI richiede versioni univoche.
+Le versioni coincidono con la cronologia del progetto remoto, generata al deploy tramite MCP. L'ultima migrazione revoca i grant anonimi predefiniti dalle RPC riservate agli account e aggiunge l'indice sulla foreign key degli stati di login. Solo `bratcode_import` rimane richiamabile senza login.
+
+I controlli Advisors segnalano [le sei tabelle senza policy](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy) come informazione: sono volutamente private, con tutti i grant diretti revocati ai browser. Le RPC BRATCODE sono [API intenzionali con `SECURITY DEFINER`](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable): le operazioni degli account verificano `auth.uid()`, mentre l'importazione anonima verifica codice, scadenza, revoca e limite dei tentativi. Le segnalazioni su queste API vanno lette nel contesto del loro contratto; non aggiungere policy pubbliche per eliminarle.
+
+In alternativa esegui i quattro file nel SQL Editor, nell'ordine indicato. Su un progetto in cui hai già eseguito manualmente le vecchie migrazioni, verifica/allinea la cronologia con `npx supabase@2.122.1 migration list` e `npx supabase@2.122.1 migration repair` prima di usare `db push`; non applicare nuovamente alla cieca migrazioni già registrate. I nomi originali con lo stesso prefisso `20261108` sono stati separati perché la CLI richiede versioni univoche.
 
 Le tabelle OAuth hanno RLS e nessun privilegio per `anon` o `authenticated`. Solo la funzione server con `service_role` può accedere a identità, stati e credenziali TikTok.
 
@@ -67,8 +72,8 @@ BRAT_APP_URL=https://oakvx.github.io/bratAnimator/
 `BRAT_APP_ORIGIN` contiene solo protocollo e host; `BRAT_APP_URL` include il percorso del sito. La funzione accetta richieste browser solo dall'origine configurata. Il file `.env` è ignorato da Git. Non aggiungerlo a cartelle pubbliche, artefatti del sito o commit.
 
 ```powershell
-npx supabase secrets set --env-file supabase/.env
-npx supabase functions deploy tiktok-link
+npx supabase@2.122.1 secrets set --env-file supabase/.env
+npx supabase@2.122.1 functions deploy tiktok-link
 ```
 
 Supabase fornisce automaticamente `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` nel runtime della funzione. `verify_jwt = false` in `supabase/config.toml` permette al callback TikTok di raggiungerla. Le azioni di collegamento, stato e revoca continuano a verificare esplicitamente il JWT Supabase; le azioni `login` e `redeem` hanno una verifica dedicata dello stato e della prova browser.

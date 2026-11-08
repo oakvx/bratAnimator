@@ -32,7 +32,7 @@ Non pubblicare una secret/service-role key nel codice o nella configurazione pub
 
 ## Fase 10 — BRATCODE Light
 
-- Codice server preesistente nelle RPC PostgreSQL `bratcode_create`, `bratcode_active`, `bratcode_revoke`, `bratcode_import` e `bratcode_cleanup` (migrazione `20261108000100_bratcode_light.sql`).
+- Codice server preesistente nelle RPC PostgreSQL `bratcode_create`, `bratcode_active`, `bratcode_revoke`, `bratcode_import` e `bratcode_cleanup` (migrazione `20261108201634_bratcode_light.sql`).
 - Nuovo **Copia link**: URL con identificatore opaco temporaneo nel fragment `#bratcode=...`, vincolato all'origine e al percorso dell'app.
 - Apertura link: precompilazione del codice e **conferma esplicita** all'importazione; nessun download o sostituzione automatica. Rimozione del fragment dalla barra dell'indirizzo dopo la lettura.
 - Il formato trasporta **solo** struttura e testo del progetto; file media, token e riferimenti browser-local vengono eliminati dal payload.

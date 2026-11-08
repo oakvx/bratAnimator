@@ -18,6 +18,12 @@ BEGIN
     ASSERT NOT has_function_privilege('anon', 'public.tiktok_redeem_login(text,text,text)', 'EXECUTE');
     ASSERT NOT has_function_privilege('authenticated', 'public.tiktok_complete_link(text,text,text,uuid)', 'EXECUTE');
     ASSERT NOT has_function_privilege('anon', 'public.tiktok_find_created_user(text)', 'EXECUTE');
+    ASSERT NOT has_function_privilege('anon', 'public.bratcode_create(jsonb)', 'EXECUTE');
+    ASSERT NOT has_function_privilege('anon', 'public.bratcode_active()', 'EXECUTE');
+    ASSERT NOT has_function_privilege('anon', 'public.bratcode_revoke()', 'EXECUTE');
+    ASSERT NOT has_function_privilege('anon', 'public.bratcode_safe_json(jsonb,integer)', 'EXECUTE');
+    ASSERT has_function_privilege('authenticated', 'public.bratcode_create(jsonb)', 'EXECUTE');
+    ASSERT has_function_privilege('anon', 'public.bratcode_import(text)', 'EXECUTE');
 
     ASSERT public.tiktok_start_login(v_state, v_challenge, repeat('4', 64));
     ASSERT public.tiktok_redeem_login(v_state, v_challenge, v_ticket) IS NULL;

@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v16-supabase-tiktok-login";
+const CACHE_NAME = "brat-animator-v17-configured-supabase";
 const APP_ASSETS = [
   "./",
   "./index.html",
