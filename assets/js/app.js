@@ -5578,7 +5578,13 @@ async function updateExportEstimate() {
             async deleteProject(projectId) {
                 await this.flush();
                 if (projectId === workspaceProjectId) {
+                    const wasTemporary = workspaceProjectId === "temporary";
                     await this.clearCurrent();
+                    if (wasTemporary) {
+                        setWorkspaceProjectId("current");
+                        workspaceAutosave = makeWorkspaceAutosave();
+                        await this.reloadActive();
+                    }
                     return;
                 }
                 await workspaceStore.deleteProject(workspaceOwner, projectId);
