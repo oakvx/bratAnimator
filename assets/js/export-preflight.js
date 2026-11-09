@@ -21,8 +21,10 @@
         } catch (_) { lines = []; }
         const count = Array.isArray(lines) ? lines.length : 0;
         const checks = [];
-        if (!lyrics.trim()) {
-            checks.push({ status: "error", text: "No lyrics yet. Add timed LRC lyrics before exporting.", action: "timing" });
+        if (!lyrics.trim() && !settings.hasVisualClips) {
+            checks.push({ status: "error", text: "Add timed lyrics or a visual clip before exporting.", action: "timing" });
+        } else if (!lyrics.trim() && settings.hasVisualClips) {
+            checks.push({ status: "ok", text: "Visual clips ready: video-only export does not require lyrics." });
         } else if (!count) {
             checks.push({ status: "error", text: "No valid timed lyric lines. Check [MM:SS.xx] timestamps in Timing.", action: "timing" });
         } else {
@@ -68,6 +70,7 @@
         function readSettings() {
             return {
                 lyrics: $("lyricsInput")?.value || "",
+                hasVisualClips: Boolean(win.BratComposer?.hasVisualClips(win.BratMultitrackHost?.snapshot?.())),
                 startFromZero: $("startFromZeroCheckbox")?.checked,
                 hasRecorder: typeof win.MediaRecorder !== "undefined",
                 canFast: Boolean(win.BratExport?.canAttemptFastExport?.(win)),
@@ -104,6 +107,7 @@
             if (scheduled != null) win.clearTimeout(scheduled);
             scheduled = win.setTimeout(() => { scheduled = null; refresh(); }, 120);
         }
+        win.addEventListener?.("brat:multitrack-changed", schedule);
         refreshButton.addEventListener("click", refresh);
         fixButton.addEventListener("click", () => {
             document.querySelector('[data-open-tab="timing"]')?.click();
