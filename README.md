@@ -111,7 +111,7 @@ Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`.
 
 The `Tracks` editor tab provides a versioned clip/track graph for video, overlays, lyrics and audio. The new `assets/js/multitrack.js` model supports trim, split, move, duplicate, ordering, mute/visibility, locking and stable asset references; `assets/js/multitrack-ui.js` exposes the initial browser controls. The graph is included in IndexedDB saves, project JSON and `.brat.zip` media archives while retaining project format v5 for backward compatibility.
 
-**Phase 14 is preparatory:** track clips are editable metadata and are **not yet composited into the preview or export**. Existing lyrics/background/audio render exactly as before. Phase 15 will integrate additional visual layers; phase 16 will integrate their audio. Details: [phase 14 implementation](docs/phase-14-multitrack-core.md).
+**Phase 15 is now integrated:** local video/image/text clips render in the preview and PNG/MP4/WebM exports, including video-only projects without LRC. The Tracks panel imports multiple local videos and images and controls per-clip X/Y, size, rotation, fit and opacity. Track order controls the visual stack around the legacy lyrics layer. **Audio embedded in added video clips is still muted and is not exported until phase 16.** See [video compositor details](docs/phase-15-video-composer.md); the [phase 14 foundation](docs/phase-14-multitrack-core.md) remains available.
 ## Storage and project format
 
 | Store | Name | Content |
@@ -214,6 +214,7 @@ sw.js                 service worker
 | Kinetic stanzas, lowercase | [kinetic-stanzas-lowercase.md](docs/kinetic-stanzas-lowercase.md) |
 | Export engine v2 (phase 13) | [phase-13-export-engine.md](docs/phase-13-export-engine.md) |
 | Multitrack core (phase 14) | [phase-14-multitrack-core.md](docs/phase-14-multitrack-core.md) |
+| Video Composer (phase 15) | [phase-15-video-composer.md](docs/phase-15-video-composer.md) |
 | Supabase and TikTok | [supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md) |
 
 ## License
