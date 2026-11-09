@@ -562,3 +562,19 @@ body.panel-closed .page-shell { margin-left:0; }
     #section-tracks .mt-select { min-width:55%; }
     #section-tracks .mt-clip-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* Phase 15: clip transform controls; scoped to the classic editor window. */
+#section-tracks .mt-visual-form {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:10px; margin:12px 0; padding:12px;
+    border:1px solid var(--border, #7775); border-radius:8px;
+}
+#section-tracks .mt-visual-form label { display:flex; flex-direction:column; gap:5px; min-width:0; }
+#section-tracks .mt-visual-form input,
+#section-tracks .mt-visual-form select { min-width:0; width:100%; box-sizing:border-box; }
+#section-tracks .mt-visual-form #mtApplyVisual { align-self:end; min-height:34px; }
+#section-tracks .mt-visual-form #mtClipText { max-width:100%; }
+#section-tracks .file-button { cursor:pointer; }
+@media(max-width:600px) {
+    #section-tracks .mt-visual-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
