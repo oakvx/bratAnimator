@@ -4228,7 +4228,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         async function exportPreviewFrames() {
             const dims = getExportDimensions();
-            const duration = Math.max(getTimelineDuration(), 1);
+            const duration = Math.max(getPlaybackDuration(), 1);
             for (const [index, ratio] of [0.15, 0.5, 0.85].entries()) {
                 const frameCanvas = document.createElement("canvas");
                 frameCanvas.width = dims.width;
@@ -4856,7 +4856,7 @@ async function updateExportEstimate() {
         }
 
         async function exportCurrentFramePng() {
-            if (window.BratEditor && !await window.BratEditor.prepareExport(false)) return;
+            if (window.BratEditor && (lyricsInput.value.trim() || !BratComposer.hasVisualClips(state.multitrack)) && !await window.BratEditor.prepareExport(false)) return;
             const dims = getExportDimensions();
             const frameCanvas = document.createElement("canvas");
             frameCanvas.width = dims.width;
@@ -5009,7 +5009,7 @@ async function updateExportEstimate() {
         });
 
         playPauseBtn.addEventListener("click", () => {
-            if (!state.timeline.length) return;
+            if (!state.timeline.length && !BratComposer.hasVisualClips(state.multitrack)) return;
 
             if (state.isPlaying) {
                 stopPlayback(true);
@@ -5402,6 +5402,15 @@ async function updateExportEstimate() {
                         name: state.background.name || "Background imported",
                         duration: Number(state.backgroundElement?.duration || 0) });
                 }
+                const ids = new Set(result.map(item => item.assetId));
+                for (const track of state.multitrack.tracks) {
+                    for (const clip of track.clips) {
+                        if (!clip.source?.assetId || ids.has(clip.source.assetId)) continue;
+                        ids.add(clip.source.assetId);
+                        result.push({ kind: clip.kind, assetId: clip.source.assetId,
+                            name: clip.source.name || clip.name, duration: clip.duration });
+                    }
+                }
                 return result;
             },
             async importMedia(file, trackId) {
@@ -5443,10 +5452,11 @@ async function updateExportEstimate() {
                 const assetId = await storeMediaBlob(file, file.name, kind);
                 const stored = await loadMediaBlob(assetId);
                 if (!stored?.blob) throw new Error("IndexedDB did not persist the selected media.");
+                const start = Math.max(0, Math.min(state.pausedElapsedSec, 86399));
                 state.multitrack = BratTracks.apply(state.multitrack, "add-clip", {
                     trackId, clip: {
-                        kind, name: file.name, start: Math.min(state.pausedElapsedSec, 86399),
-                        duration: Math.min(duration, 600, 86400 - state.pausedElapsedSec),
+                        kind, name: file.name, start,
+                        duration: Math.max(0.01, Math.min(duration, 600, 86400 - start)),
                         source: { kind, assetId, name: file.name }
                     }
                 });
@@ -6281,7 +6291,7 @@ async function updateExportEstimate() {
     }
 
     function ensureTimeline() {
-        if (state.timeline.length) return true;
+        if (state.timeline.length || BratComposer.hasVisualClips(state.multitrack)) return true;
         if (!lyricsInput?.value.trim()) return false;
         rebuildTimelineFromCurrentInputs();
         return state.timeline.length > 0;
