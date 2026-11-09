@@ -37,12 +37,14 @@
         } else {
             checks.push({ status: "ok", text: hasRecorder ? "Browser recording is available." : "Fast video encoding is available (codec support is checked when exporting)." });
         }
-        if (settings.audioSelected && settings.audioLoaded && !hasRecorder) {
-            checks.push({ status: "error", text: "Audio export requires browser MediaRecorder support." });
-        } else if (settings.audioSelected && !settings.audioLoaded) {
+        if (settings.audioSelected && settings.audioLoaded && !hasRecorder && !canFast) {
+            checks.push({ status: "error", text: "Audio export requires compatible AAC encoding or MediaRecorder support." });
+        } else if (settings.audioSelected && !settings.audioLoaded && !settings.hasTrackAudio) {
             checks.push({ status: "warning", text: "No audio is loaded. Export will be silent unless you import an audio/video file.", action: "timing" });
         } else if (settings.audioSelected && settings.audioLoaded) {
-            checks.push({ status: "ok", text: "Local audio is ready; merging audio may require real-time export." });
+            checks.push({ status: "ok", text: "Legacy audio is ready; audio codec support will be verified during export." });
+        } else if (settings.hasTrackAudio) {
+            checks.push({ status: "ok", text: "Multitrack audio and embedded video soundtracks are selected; codec decoding is verified at export." });
         } else {
             checks.push({ status: "ok", text: "Video-only export selected." });
         }
@@ -71,6 +73,7 @@
             return {
                 lyrics: $("lyricsInput")?.value || "",
                 hasVisualClips: Boolean(win.BratComposer?.hasVisualClips(win.BratMultitrackHost?.snapshot?.())),
+                hasTrackAudio: Boolean(win.BratAudioMixer?.audible(win.BratMultitrackHost?.snapshot?.()).length),
                 startFromZero: $("startFromZeroCheckbox")?.checked,
                 hasRecorder: typeof win.MediaRecorder !== "undefined",
                 canFast: Boolean(win.BratExport?.canAttemptFastExport?.(win)),
