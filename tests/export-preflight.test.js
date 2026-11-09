@@ -57,10 +57,16 @@ test("missing audio is a warning and does not pretend to render a soundtrack", (
     assert.match(result.checks.find(check => check.status === "warning").text, /silent/);
 });
 
-test("audio recording requires MediaRecorder even if fast video is available", () => {
+test("audio readiness does not block browsers with a potential fast AAC path", () => {
     const result = assess({ ...base, hasRecorder: false, canFast: true, audioSelected: true, audioLoaded: true }, parse);
-    assert.equal(result.state, "blocked");
-    assert.ok(result.checks.some(check => check.status === "error" && check.text.includes("MediaRecorder")));
+    assert.equal(result.state, "ready");
+    assert.ok(result.checks.some(check => check.text.includes("codec support")));
+});
+
+test("phase 16 recognizes sound from video and audio tracks even without legacy Timing audio", () => {
+    const result = assess({ ...base, audioSelected: false, hasTrackAudio: true }, parse);
+    assert.equal(result.state, "ready");
+    assert.ok(result.checks.some(check => check.text.includes("Multitrack audio")));
 });
 
 test("performance warnings are advisory and do not disable export", () => {
