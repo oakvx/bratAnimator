@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v19-stanza-kinetic-lowercase";
+const CACHE_NAME = "brat-animator-v20-phase13-export-engine";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -16,6 +16,8 @@ const APP_ASSETS = [
   "./assets/js/timing.js",
   "./assets/js/media.js",
   "./assets/js/export.js",
+  "./assets/js/export-plan.js",
+  "./assets/js/export-engine.js",
   "./assets/js/i18n.js",
   "./assets/js/local-workspace.js",
 "./assets/js/app.js",
