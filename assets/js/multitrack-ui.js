@@ -83,6 +83,7 @@
             if (!track.clips.length) clipsEl.append(element("p", "mini-copy", "No clips in this track."));
         } else clipsEl.append(element("p", "mini-copy", "Select or add a track."));
         byId("mtTrackName").value = track?.name || "";
+        byId("mtTrackVolume").value = String(Math.round((track?.volume ?? 1) * 100));
         const previousKind = kindField.value;
         kindField.replaceChildren();
         for (const kind of availableKinds(track?.kind)) {
@@ -116,6 +117,10 @@
             byId("mtClipFit").value = clip.transform.fit;
             startField.value = String(clip.start);
             durationField.value = String(clip.duration);
+            byId("mtClipRate").value = String(clip.playbackRate);
+            byId("mtClipVolume").value = String(Math.round(clip.volume * 100));
+            byId("mtClipFadeIn").value = String(clip.fadeIn || 0);
+            byId("mtClipFadeOut").value = String(clip.fadeOut || 0);
             byId("mtSplitAt").value = String(clip.start + clip.duration / 2);
             kindField.value = clip.kind;
             // Rebuild matching source choices for the selected clip's type.
@@ -131,6 +136,10 @@
             nameField.value = "";
             startField.value = "0";
             durationField.value = "5";
+            byId("mtClipRate").value = "1";
+            byId("mtClipVolume").value = "100";
+            byId("mtClipFadeIn").value = "0";
+            byId("mtClipFadeOut").value = "0";
             byId("mtClipText").value = "";
             byId("mtClipX").value = "50";
             byId("mtClipY").value = "50";
@@ -140,12 +149,13 @@
             byId("mtClipOpacity").value = "100";
             byId("mtClipFit").value = "cover";
         }
-        for (const id of ["mtAddClip", "mtApplyClip", "mtDuplicateClip", "mtDeleteClip", "mtSplitClip", "mtApplyVisual"]) {
+        for (const id of ["mtAddClip", "mtApplyClip", "mtDuplicateClip", "mtDeleteClip", "mtSplitClip", "mtApplyVisual", "mtApplyAudio"]) {
             byId(id).disabled = !track || track.locked || (id !== "mtAddClip" && !clip);
         }
         for (const id of ["mtRenameTrack", "mtDeleteTrack", "mtMoveTrackUp", "mtMoveTrackDown"]) {
             byId(id).disabled = !track || track.locked;
         }
+        byId("mtApplyTrackVolume").disabled = !track || track.locked;
         if (track) byId("mtDeleteTrack").title = "Deletes all clips in this track";
     }
     kindField.addEventListener("change", () => {
@@ -166,7 +176,7 @@
         input.value = "";
         const selected = selection().track;
         if (!selected || selected.locked) {
-            message("Select an unlocked Video or Overlay track first.", true);
+            message("Select an unlocked Video, Overlay or Audio track first.", true);
             return;
         }
         for (const file of files) {
@@ -177,6 +187,23 @@
             } catch (error) { message(error.message || "Media import failed.", true); }
         }
         render();
+    });
+    byId("mtApplyTrackVolume").addEventListener("click", () => {
+        const { track } = selection();
+        if (track) run("set-track", {
+            trackId: track.id, volume: Number(byId("mtTrackVolume").value) / 100
+        });
+    });
+    byId("mtApplyAudio").addEventListener("click", () => {
+        const { clip } = selection();
+        if (!clip) return;
+        run("set-clip", {
+            clipId: clip.id,
+            volume: Number(byId("mtClipVolume").value) / 100,
+            fadeIn: Number(byId("mtClipFadeIn").value),
+            fadeOut: Number(byId("mtClipFadeOut").value),
+            playbackRate: Number(byId("mtClipRate").value)
+        });
     });
     byId("mtApplyVisual").addEventListener("click", () => {
         const { clip } = selection();
