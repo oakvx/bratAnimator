@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v22-phase15-composer";
+const CACHE_NAME = "brat-animator-v23-phase16-audio-mixer";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -20,6 +20,7 @@ const APP_ASSETS = [
   "./assets/js/export-engine.js",
   "./assets/js/multitrack.js",
   "./assets/js/video-composer.js",
+  "./assets/js/audio-mixer.js",
   "./assets/js/i18n.js",
   "./assets/js/local-workspace.js",
 "./assets/js/app.js",
