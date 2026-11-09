@@ -128,6 +128,6 @@ test("phase 16 explicitly fails when an audio track has missing or undecodable m
     let graph = insert(Tracks.empty(), "main-audio", "audio", "bad-audio");
     await assert.rejects(() => mixer.prepare(graph), /Cannot decode audio/);
     graph = insert(Tracks.empty(), "main-audio", "audio", "");
-    await assert.rejects(() => mixer.prepare(graph), /no imported local file/);
+    await assert.rejects(() => mixer.prepare(graph), /has no local file/);
     mixer.dispose();
 });
