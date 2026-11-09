@@ -352,6 +352,9 @@ try {
         const preflight = await BratMultitrackHost.mixer().prepare(BratMultitrackHost.snapshot());
         auditAssert(preflight.clips.length === 2,
             'expected embedded video audio + SFX; found ' + preflight.clips.length + '; warnings: ' + preflight.warnings.join('; '));
+        const preview = await BratMultitrackHost.mixer().play(BratMultitrackHost.snapshot(), () => 0);
+        auditAssert(preview.clips.length === 2, 'preview mixer did not schedule both sound sources');
+        BratMultitrackHost.mixer().stop();
         const movie = await auditExport('video');
         const encoded = new TextDecoder('latin1').decode(await auditLastExportBlob.arrayBuffer());
         auditAssert(encoded.includes('A_OPUS') || encoded.includes('A_AAC') || encoded.includes('soun'),
