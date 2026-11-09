@@ -57,6 +57,7 @@
             if (!window || window.volume === 0) continue;
             const source = context.createBufferSource();
             source.buffer = clip.buffer;
+            if (source.playbackRate) source.playbackRate.value = window.playbackRate;
             const gain = context.createGain();
             source.connect(gain);
             gain.connect(destination);
@@ -70,7 +71,7 @@
             for (const point of points.slice(1)) {
                 gain.gain.linearRampToValueAtTime(gainAt(window, point), at(point));
             }
-            source.start(at(window.overlapStart), window.sourceOffset, window.duration);
+            source.start(at(window.overlapStart), window.sourceOffset, window.duration * window.playbackRate);
             sources.push(source);
         }
         return sources;
