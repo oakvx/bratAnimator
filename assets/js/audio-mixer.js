@@ -161,7 +161,14 @@
             decoded.clear();
         }
 
-        return Object.freeze({ getBuffer, prepare, play, stop, dispose, resetSources,
+        function prune(graph) {
+            const keys = new Set(Tracks.normalize(graph).tracks.flatMap(track =>
+                track.clips.filter(clip => ["audio", "video"].includes(clip.kind) && clip.source.assetId)
+                    .map(clip => clip.source.assetId)));
+            for (const key of decoded.keys()) if (!keys.has(key)) decoded.delete(key);
+        }
+
+        return Object.freeze({ getBuffer, prepare, play, stop, dispose, resetSources, prune,
             get cachedCount() { return decoded.size; } });
     }
 
