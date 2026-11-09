@@ -29,7 +29,7 @@ test("clip crop retains absolute source offset instead of restarting audio", () 
     const buffer = { duration: 20 };
     const clip = { buffer, start: 3, duration: 10, offset: 2, volume: 0.6 };
     assert.deepEqual(Plan.clipWindow(clip, plan), {
-        sourceOffset: 4, destinationOffset: 0, duration: 4,
+        sourceOffset: 4, playbackRate: 1, destinationOffset: 0, duration: 4,
         clipStart: 3, clipEnd: 13, overlapStart: 5, overlapEnd: 9,
         volume: 0.6, fadeIn: 0, fadeOut: 0
     });
@@ -73,6 +73,33 @@ test("mixed tracks are scheduled separately in the same export timebase", () => 
         ["start", 0.25, 6, 4],
         ["start", 2.25, 1, 2]
     ]);
+});
+
+test("phase 16 source time and crop duration follow playbackRate for audio and embedded video", () => {
+    const plan = Plan.create({ width: 720, height: 720, fps: 24, start: 5, end: 9 });
+    const buffer = { duration: 12 };
+    const clip = { buffer, start: 2, duration: 6, offset: 1, playbackRate: 2, volume: .5 };
+    const window = Plan.clipWindow(clip, plan);
+    // Audio is consumed at 2x speed, so only five seconds of project time
+    // are available from (12 - 1) seconds of source after the crop.
+    assert.equal(window.playbackRate, 2);
+    assert.equal(window.sourceOffset, 7);
+    assert.equal(window.overlapStart, 5);
+    assert.equal(window.overlapEnd, 7.5);
+    assert.equal(window.duration, 2.5);
+    const events = [];
+    const context = {
+        createBufferSource: () => ({
+            playbackRate: { value: 1 }, connect() {},
+            start(...args) { events.push(args); events.push(this.playbackRate.value); }
+        }),
+        createGain: () => ({ connect() {}, gain: {
+            setValueAtTime() {}, linearRampToValueAtTime() {}
+        } })
+    };
+    const nodes = Engine.scheduleAudio(context, {}, [clip], plan);
+    assert.equal(nodes.length, 1);
+    assert.deepEqual(events, [[0, 7, 5], 2]);
 });
 
 test("capability probing never promises fast MP4 without required codecs", async () => {
