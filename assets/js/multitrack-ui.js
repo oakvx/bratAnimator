@@ -106,6 +106,14 @@
         if ([...sourceField.options].some(option => option.value === oldSource)) sourceField.value = oldSource;
         if (clip) {
             nameField.value = clip.name;
+            byId("mtClipText").value = clip.source.text || "";
+            byId("mtClipX").value = String(Math.round(clip.transform.x * 100));
+            byId("mtClipY").value = String(Math.round(clip.transform.y * 100));
+            byId("mtClipWidth").value = String(Math.round(clip.transform.width * 100));
+            byId("mtClipHeight").value = String(Math.round(clip.transform.height * 100));
+            byId("mtClipRotation").value = String(clip.transform.rotation);
+            byId("mtClipOpacity").value = String(Math.round(clip.opacity * 100));
+            byId("mtClipFit").value = clip.transform.fit;
             startField.value = String(clip.start);
             durationField.value = String(clip.duration);
             byId("mtSplitAt").value = String(clip.start + clip.duration / 2);
@@ -123,8 +131,16 @@
             nameField.value = "";
             startField.value = "0";
             durationField.value = "5";
+            byId("mtClipText").value = "";
+            byId("mtClipX").value = "50";
+            byId("mtClipY").value = "50";
+            byId("mtClipWidth").value = track?.kind === "video" ? "100" : "52";
+            byId("mtClipHeight").value = track?.kind === "video" ? "100" : "52";
+            byId("mtClipRotation").value = "0";
+            byId("mtClipOpacity").value = "100";
+            byId("mtClipFit").value = "cover";
         }
-        for (const id of ["mtAddClip", "mtApplyClip", "mtDuplicateClip", "mtDeleteClip", "mtSplitClip"]) {
+        for (const id of ["mtAddClip", "mtApplyClip", "mtDuplicateClip", "mtDeleteClip", "mtSplitClip", "mtApplyVisual"]) {
             byId(id).disabled = !track || track.locked || (id !== "mtAddClip" && !clip);
         }
         for (const id of ["mtRenameTrack", "mtDeleteTrack", "mtMoveTrackUp", "mtMoveTrackDown"]) {
@@ -143,6 +159,41 @@
             option.value = item.assetId;
             sourceField.append(option);
         }
+    });
+    byId("mtImportMediaInput").addEventListener("change", async event => {
+        const input = event.currentTarget;
+        const files = [...(input.files || [])];
+        input.value = "";
+        const selected = selection().track;
+        if (!selected || selected.locked) {
+            message("Select an unlocked Video or Overlay track first.", true);
+            return;
+        }
+        for (const file of files) {
+            try {
+                message("Importing " + file.name + "...");
+                await host.importMedia(file, selected.id);
+                message("Imported locally: " + file.name);
+            } catch (error) { message(error.message || "Media import failed.", true); }
+        }
+        render();
+    });
+    byId("mtApplyVisual").addEventListener("click", () => {
+        const { clip } = selection();
+        if (!clip) return;
+        run("set-clip", {
+            clipId: clip.id,
+            opacity: Number(byId("mtClipOpacity").value) / 100,
+            text: byId("mtClipText").value,
+            transform: {
+                x: Number(byId("mtClipX").value) / 100,
+                y: Number(byId("mtClipY").value) / 100,
+                width: Number(byId("mtClipWidth").value) / 100,
+                height: Number(byId("mtClipHeight").value) / 100,
+                rotation: Number(byId("mtClipRotation").value),
+                fit: byId("mtClipFit").value
+            }
+        });
     });
     byId("mtAddTrack").addEventListener("click", () => run("add-track", {
         kind: byId("mtTrackType").value
