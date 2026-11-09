@@ -4,184 +4,209 @@
 
 # Brat Animator
 
-**Client-side lyric-video compositor and timeline editor.** Static, framework-independent web application with deterministic Canvas rendering, browser-native media processing, and a local-first project model.
+<p>
+  <a href="https://github.com/oakvx/bratAnimator/actions/workflows/verify.yml"><img alt="Verify" src="https://img.shields.io/github/actions/workflow/status/oakvx/bratAnimator/verify.yml?style=flat-square&label=verify"></a>
+  <a href="https://github.com/oakvx/bratAnimator/actions/workflows/pages.yml"><img alt="Pages deploy" src="https://img.shields.io/github/actions/workflow/status/oakvx/bratAnimator/pages.yml?style=flat-square&label=pages"></a>
+  <a href="https://github.com/oakvx/bratAnimator/commits"><img alt="Last commit" src="https://img.shields.io/github/last-commit/oakvx/bratAnimator?style=flat-square"></a>
+  <img alt="Top language" src="https://img.shields.io/github/languages/top/oakvx/bratAnimator?style=flat-square">
+  <img alt="Repo size" src="https://img.shields.io/github/repo-size/oakvx/bratAnimator?style=flat-square">
+  <a href="https://github.com/oakvx/bratAnimator/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/oakvx/bratAnimator?style=flat-square"></a>
+  <img alt="License: all rights reserved" src="https://img.shields.io/badge/license-all%20rights%20reserved-64748B?style=flat-square">
+  <img alt="PWA" src="https://img.shields.io/badge/PWA-offline%20ready-5A0FC8?style=flat-square">
+</p>
 
-**Application:** https://oakvx.github.io/bratAnimator/
+Client-side lyric-video compositor and timeline editor. A static, framework-free web app with a deterministic Canvas 2D renderer, browser-native media encoding and a local-first project model. There is no processing backend: audio and video are never uploaded while editing or exporting.
 
-## Technology stack
+**App:** <https://oakvx.github.io/bratAnimator/> · **License:** all rights reserved (see [LICENSE](./LICENSE))
+
+## Contents
+
+- [Stack](#stack)
+- [Architecture](#architecture)
+- [Rendering model](#rendering-model)
+- [Export pipeline](#export-pipeline)
+- [Storage and project format](#storage-and-project-format)
+- [Input formats](#input-formats)
+- [PWA and offline behavior](#pwa-and-offline-behavior)
+- [UI shell](#ui-shell)
+- [Optional backend: Supabase and TikTok](#optional-backend-supabase-and-tiktok)
+- [Development and testing](#development-and-testing)
+- [Repository layout](#repository-layout)
+- [Constraints](#constraints)
+- [Documentation](#documentation)
+
+## Stack
 
 | Layer | Implementation |
 | --- | --- |
-| Runtime | Browser-native ECMAScript (ES2022+); HTML5; CSS3 |
-| UI | Vanilla DOM; full 7.css v0.21.0 (MIT, locally bundled); native windows, ARIA tabs, Explorer navigation and taskbar |
-| Rendering | Canvas 2D; deterministic frame compositor; timestamp-driven scene evaluation |
-| Media | Web Audio API; HTMLMediaElement; MediaRecorder; browser codec support |
-| Export | MP4/WebM pipelines; local video recording; PNG frame export; bundled mp4-muxer |
-| Persistence | IndexedDB (project snapshots and binary media); localStorage (light preferences/fallback) |
-| Project interchange | Versioned JSON snapshots; portable .brat.zip archives via bundled fflate |
-| Authentication | Optional Supabase Auth: email/password, email OTP, Google OAuth, TikTok Login Kit |
-| External OAuth | Optional TikTok Login Kit for Web: Supabase Edge Function (Deno/TypeScript), OAuth 2.0, server-side token vault |
-| Delivery | GitHub Pages; static assets; service worker / Progressive Web App |
-| Tests | Node.js native test runner; browser smoke tests using Chrome DevTools Protocol |
-| Build | No application bundler, JavaScript framework, Node.js server, or required npm install |
+| Runtime | Browser-native ECMAScript (ES2022+), HTML5, CSS3 |
+| UI | Vanilla DOM; 7.css v0.21.0 (MIT, bundled locally); ARIA tabs |
+| Rendering | Canvas 2D; timestamp-driven scene evaluation |
+| Media | Web Audio API, HTMLMediaElement, MediaRecorder, WebCodecs (`VideoEncoder`) |
+| Export | MP4 via vendored `mp4-muxer`; WebM / local recording; PNG frame export |
+| Persistence | IndexedDB (project snapshots, media blobs); `localStorage` (preferences, fallback) |
+| Interchange | Versioned JSON snapshots; `.brat.zip` archives via vendored `fflate` |
+| Auth (optional) | Supabase Auth: email/password, email OTP, Google OAuth, TikTok Login Kit |
+| Edge (optional) | Supabase Edge Function (Deno/TypeScript) for the TikTok OAuth 2.0 flow, server-side token vault |
+| Delivery | GitHub Pages; service worker / PWA |
+| Tests | Node.js native test runner; Chrome DevTools Protocol browser suites |
+| Build | None: no bundler, framework, Node server or required `npm install` |
 
 ## Architecture
 
-The browser owns the application state and performs video rendering locally. Project snapshots reference media blobs in IndexedDB; the application does **not** upload audio or video as part of editing or exporting.
+The browser owns all state and renders locally. Project snapshots reference media blobs stored in IndexedDB.
 
-    UI / Controller (index.html, studio-dashboard.js, sound-hub-ui.js, app.js)
-          |
-          +-- Timeline / lyrics (core.js, lyrics.js, timing.js)
-          |
-          +-- Visual motion (kinetic.js, motion.js, editor-v5.js)
-          |
-          +-- Render / export (Canvas 2D, export.js, media.js)
-          |
-          +-- Local storage (local-workspace.js, IndexedDB)
-          |
-          +-- Sound Hub (sound-hub.js, Web Crypto SHA-256, IndexedDB)
-          |
-          +-- Portable archives (project-assets.js, fflate)
-          |
-          +-- Optional identity (auth-client.js, Supabase Auth)
-          |
-          +-- Optional TikTok link (tiktok-link.js, Supabase Edge Function)
+```mermaid
+flowchart TD
+    UI["UI / controller<br/>index.html · app.js · studio-dashboard.js · sound-hub-ui.js"]
+    UI --> TL["Timeline & lyrics<br/>core · lyrics · lyrics-sources · lyrics-case · timing"]
+    UI --> VIS["Visual motion<br/>kinetic · motion · editor-v5 · editor-templates"]
+    TL --> CMP["Canvas 2D compositor"]
+    VIS --> CMP
+    CMP --> EXP["Export<br/>export · media · export-preflight"]
+    UI --> STO["Local storage<br/>local-workspace · IndexedDB"]
+    UI --> SH["Sound Hub<br/>sound-hub · Web Crypto SHA-256"]
+    STO --> PA["Portable archives<br/>project-assets · fflate"]
+    UI -.optional.-> AUTH["Identity<br/>auth-client · Supabase Auth"]
+    AUTH -.-> TT["TikTok link<br/>tiktok-link · Edge Function"]
+```
 
-Key properties:
+Design properties:
 
-- **Deterministic frame evaluation:** visual geometry is derived from project state, media timestamp, and persisted seed rather than accumulated animation state.
-- **Local-first:** workspace JSON and media binaries are browser-resident. Account identity does not imply cloud project synchronization.
-- **Separated identities:** guest and authenticated users have logically separate local project libraries within one browser profile.
-- **Portable project format:** .brat.zip includes project metadata and available local assets. Plain JSON is metadata-only and is not a complete multimedia backup.
-- **Resilient editing:** debounced autosave, recovery state, legacy JSON migrations, and explicit error reporting. Browser storage can still be evicted.
-- **Client-only media export:** output quality and supported codecs depend on the browser and device.
-- **Local Sound Hub:** imported audio is SHA-256 deduplicated within a shared local media database; favorites, recents and playlists are metadata scoped to the local owner. The editor is modified only by explicit insertion.
+- **Deterministic evaluation.** Geometry is a pure function of project state, media timestamp and a persisted seed. No accumulated animation state, so preview and export produce the same frames.
+- **Local-first.** Workspace JSON and media binaries are browser-resident. An account identity does not imply cloud synchronization.
+- **Separated identities.** Guest and authenticated users have logically separate project libraries within one browser profile.
+- **Resilient editing.** Debounced autosave, a recoverable temporary project, legacy JSON migrations, explicit error reporting.
+- **Sound Hub.** Imported audio is deduplicated by SHA-256 in the shared media database. Favorites, recents and playlists are metadata scoped to the local owner. The editor changes only on explicit insertion.
+
+## Rendering model
+
+Text modes: Brat, Music, Cinematic and **Kinetic Collage**.
+
+Kinetic Collage uses resolution-independent 2D word packing: variable font sizes, adjacency constraints and safe canvas margins. Each stanza gets its own stable, isolated canvas; stanzas are separated by blank LRC lines or `[Verse]` / `[Chorus]` headings. Words appear at their timestamps with no fade, scale or automatic palette swap. The whole stanza is auto-fitted rather than split after a fixed word count. Preview and export share the same compositor and cached geometry.
+
+The *lowercase lyrics* tool (Timing) rewrites lyric text without touching LRC markers or imported word timing. Details: [docs/kinetic-stanzas-lowercase.md](docs/kinetic-stanzas-lowercase.md).
+
+Canvas layout and source timestamps are independent of dashboard effects. Dashboard click sounds are synthesized with Web Audio and are never mixed into exports.
+
+## Export pipeline
+
+| Path | Mechanism | Notes |
+| --- | --- | --- |
+| Fast MP4 | WebCodecs `VideoEncoder` (H.264, `avc1.42001f`, Annex B, variable bitrate) muxed with the vendored `mp4-muxer` ES module | Enabled only after a capability probe |
+| Recording | `MediaRecorder` | Container and codec depend on the browser |
+| Frames | PNG export | |
+
+The fast path is gated by `VideoEncoder.isConfigSupported()` (see `assets/js/export.js`):
+
+- width and height are rounded to even values, minimum 16 px;
+- bitrate = `max(4 Mbps, w × h × max(24, fps) × 0.09)`;
+- if `VideoEncoder` / `VideoFrame` or the muxer module is missing, the path is reported as unavailable.
+
+`export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
+
+## Storage and project format
+
+| Store | Name | Content |
+| --- | --- | --- |
+| IndexedDB | `bratAnimator.workspace.v1` (object store `projects`) | Project snapshots |
+| IndexedDB | `bratAnimator.media.v1` | Media blobs, referenced by asset ID |
+| IndexedDB | `bratAnimator.soundhub.v1` | Track and collection metadata (file data stays in the media DB) |
+
+- Project ID and owner ID define the logical workspace boundary.
+- Target capacity per browser profile: **20 permanent projects + 1 recoverable temporary project**, enforced by IndexedDB transactions and the browser quota.
+- `.brat.zip` contains project metadata and the available local assets. Plain JSON is metadata only and is not a complete multimedia backup.
+- Cloud project synchronization is intentionally absent. Browser eviction and cleared site data cannot be prevented, so export `.brat.zip` regularly.
 
 ## Input formats
 
-Synchronized lyrics: LRC, enhanced LRC, TTML, SRT, WebVTT, and supported Lyricsfile YAML/JSON data. Timing can be imported, estimated, and adjusted manually.
+- **Lyrics:** LRC, enhanced LRC, TTML, SRT, WebVTT, Lyricsfile YAML/JSON. Timing can be imported, estimated or adjusted manually.
+- **Media:** local audio, images, video backgrounds and custom font files supported by the browser. Remote media are subject to CORS, availability and licensing.
 
-Media: locally supplied audio, images, video backgrounds, and custom font files supported by the browser. Remote media are subject to CORS, source availability, and licensing restrictions.
+## PWA and offline behavior
 
-## Visual pipeline
+`sw.js` precaches the application shell under a versioned cache name (`CACHE_NAME`); older caches are deleted on `activate`.
 
-Brat Animator implements multiple text-rendering modes, including Brat, Music, Cinematic, and **Kinetic Collage**.
+| Request | Strategy |
+| --- | --- |
+| Navigations; `supabase-config.js`; `tiktok-config.js` | Network first, cache fallback, `index.html` as offline fallback |
+| Other same-origin `GET` | Cache first, network fill |
+| Cross-origin or non-`GET` | Not intercepted |
 
-Kinetic Collage uses resolution-independent two-dimensional word packing: deterministic, compact typography with different font sizes, adjacency constraints and safe canvas margins. Every **stanza has its own stable, isolated canvas**; separate stanzas with blank LRC lines (or supported `[Verse]`/`[Chorus]` headings). New words appear **immediately** at their timestamps: no fade, scaling, or automatic full-screen palette swaps even for fast rap. The complete stanza is auto-fitted, not split after a fixed number of words. Preview and video exports use the same compositor and cached geometry.
+Bump `CACHE_NAME` and the precache list whenever shipped assets change. `tests/deployment-integrity.test.js` checks precache integrity.
 
-The **lowercase lyrics** tool in Timing transforms the actual lyric text without touching LRC markers or imported word timing. See the [stanza / lowercase implementation guide](docs/kinetic-stanzas-lowercase.md) for examples, supported separators and safety limits.
+## UI shell
 
-Canvas layout and source timestamps are evaluated independently of dashboard effects. Dashboard click sounds use synthesized Web Audio and are never mixed into exported video.
+The dashboard ships the unmodified upstream `vendor/7css/7.scoped.css` (v0.21.0, MIT). The only dashboard-specific stylesheet is `assets/css/studio-win7.css`, which owns layout and does not repaint native 7.css controls. No runtime CDN is required.
 
-## Local project storage
+Dialogs use JavaScript-controlled visibility. The dialog role is placed on the overlay, not on the inner `.window`, because 7.css hides `.window[role=dialog]` unless it is activated through `:target`, which is incompatible with event-driven dialogs.
 
-- Primary database: bratAnimator.workspace.v1; object store: projects.
-- Media database: bratAnimator.media.v1; blobs referenced by asset IDs.
-- Sound Hub index: bratAnimator.soundhub.v1; tracks and collections metadata. File data remains in the existing shared media database.
-- Project IDs and owner IDs define logical workspace boundaries.
-- Shared browser-profile target capacity: **20 permanent projects + 1 recoverable temporary project**.
-- Storage limits are enforced by IndexedDB transactions and the browser's available quota.
-- Automatic cloud project synchronization is intentionally absent.
-- Export complete .brat.zip archives regularly; browser eviction and user-cleared site data cannot be prevented by the application.
+The taskbar Start orb opens a searchable launcher (`win7-start-menu.js`): local labels and aliases only, no network requests and no project data access. Keyboard shortcuts are scoped to the active editor; <kbd>Ctrl/Cmd</kbd>+<kbd>K</kbd> works even while editing text.
 
-## Dashboard and Windows 7 UI
+## Optional backend: Supabase and TikTok
 
-The app ships the full, unmodified upstream `vendor/7css/7.scoped.css`
-(v0.21.0, MIT). The only dashboard-specific CSS is
-`assets/css/studio-win7.css`, which owns layout without repainting native
-7.css buttons, title controls, inputs or tabs. No runtime CDN is required.
-Video-editor CSS remains independent.
+The editor is fully usable as a guest. Everything below is opt-in.
 
-All confirmation and authentication windows use JavaScript-controlled
-visibility: the accessible dialog role is on the overlay, **not** on the
-inner `.window`. 7.css hides `.window[role=dialog]` unless activated through
-the URL `:target`; that rule is incompatible with our event-driven dialogs.
+- **Supabase Auth.** Set the project URL and the public publishable key in `assets/js/supabase-config.js`, then enable providers and redirect allowlists in Supabase. Google OAuth needs provider-side setup; email OTP needs a mail transport. Never put a `service_role` key or an OAuth client secret in browser code.
+- **BRATCODE.** Short-lived, origin-bound share links that prefill the import field and require an explicit import action. It exchanges project structure only (no media, no credentials) and is not a sync mechanism. It needs the provided database RPCs/migrations and gateway rate limiting.
+- **TikTok Login Kit.** Edge Function with a private identity mapping, single-use OAuth state and a browser-bound login proof. Unlinking removes the server-side tokens even when provider revocation fails. Requires an approved TikTok Developer App, credentials and a deployed function. Music favorites and publishing are out of scope.
 
-## Windows 7 Start menu (Phase 6)
+Do not claim live external authentication or TikTok linking before provider-side end-to-end tests. Setup: [supabase/README.md](supabase/README.md), [docs/supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md).
 
-The taskbar Start orb now opens a functional, searchable Windows 7-inspired launcher. The panel uses the bundled 7.css glass window surface; the two-column Explorer launcher layout is isolated in `assets/css/studio-win7.css` and the behavior in `assets/js/win7-start-menu.js`.
+## Development and testing
 
-Search matches local labels and aliases without network requests or reading project data. Launcher commands reuse the existing project, editor, Sound Hub, BRATCODE, settings and account workflows. Escape dismisses the menu, arrow keys select a result, and Enter activates it. You can reopen a minimized Brat Animator window from Start, while «Chiudi finestra» only closes the **simulated** application window and does not remove browser data.
+Requirements: a modern browser; Node.js 22.13+ for tests.
 
-See [Phase 6 implementation and QA notes](docs/phase-6-win7-start-menu.md). Offline/PWA support is included.
+Serve the repository root over HTTP (for example `python3 -m http.server`) and open `index.html`. Do not use `file://`: storage, service workers and media APIs need a valid origin.
 
-## Editor export readiness (Phase 7)
+```sh
+node --test                       # unit tests
+node --check assets/js/app.js     # syntax checks (repeat per module)
 
-The Export panel now includes a non-blocking **readiness checklist** based on the actual LRC parser and current local media/browser settings. It flags missing or malformed timestamps, absent encoding capability, audio recording limitations and resource-intensive 1440+/60fps settings. It does not upload media, alter the project or replace the exporter's final codec and CORS validation.
+# Chrome DevTools Protocol suites
+CHROME_PATH=/usr/bin/google-chrome node tests/studio-dashboard-browser.mjs
+CHROME_PATH=/usr/bin/google-chrome node tests/editor-v5-browser.mjs
+CHROME_PATH=/usr/bin/google-chrome node tests/export-format-browser.mjs
+```
 
-Keyboard shortcuts are restricted to the active editor rather than firing behind the Windows 7 dashboard or dialogs. Ctrl/Cmd+K is available even when editing text, and other editor shortcuts pause while its command palette is open.
+CI requires all nine Chrome suites, the Node unit and syntax checks, TypeScript validation and Deno typing of the Edge Function. Real IndexedDB assertions are part of the browser suites. A green pipeline does not replace manual Safari iOS / Firefox media tests or real provider OAuth tests.
 
-See [Phase 7 behavior and QA](docs/phase-7-export-preflight.md).
+## Repository layout
 
-## Fasi 8–12 — release hardening and editor templates
+```text
+assets/js/            editor, media, timeline, storage, auth, UI modules
+assets/css/           editor CSS; isolated Win7 dashboard layout (studio-win7.css)
+vendor/               bundled third-party JS (mp4-muxer, fflate, js-yaml) and 7.css
+supabase/             migrations and Edge Function
+tests/                Node unit tests and browser automation
+docs/                 design notes and rollout plans
+index.html            application entry point
+sw.js                 service worker
+.github/workflows/    CI and static deployment
+```
 
-The consolidated release implements the following improvements:
+## Constraints
 
-- **Phase 8 / QA:** all nine Chrome browser suites are required in the GitHub Actions matrix, with unit tests, syntax checks, TypeScript validation, offline precache integrity and real IndexedDB assertions. Fixed preview resolution refresh, localization restoration and mobile settings navigation.
-- **Phase 9 / Auth:** complete optional password-recovery UI and Supabase Auth client flow; actual authentication still requires a configured Supabase project, SMTP and Google provider.
-- **Phase 10 / BRATCODE:** shareable, origin-bound links that prefill the import field but require an explicit import action. Database RPCs and their migrations are provided; server rollout and gateway rate limiting remain administrative actions.
-- **Phase 11 / TikTok:** hardened callback configuration and bounded JSON requests; unlink removes server-side stored tokens even when provider revocation fails and reports provider status accurately. The TikTok Developer App approval, OAuth credentials and function deployment are still required before enabling this optional feature.
-- **Phase 12 / Editor:** four actual one-click templates — Brat Classic, Kinetic Reels, Cinematic and Music Scroll — through a separate pure control adapter. Existing lyrics and media are preserved.
+- Retention of browser storage, device memory and codec support bound what a project can do. Large exports can fail on mobile.
+- Browser-held data is not encrypted by the app and is not an archive.
+- Server-side authentication and sharing must enforce authorization, expiry, rate limits and payload limits independently of the UI.
+- Importers are responsible for the rights to the media they import or publish.
 
-For rollout and operator-only tasks consult [phases 8–12 acceptance and deployment plan](docs/phases-8-to-12-rollout.md) and [Supabase setup and verification](supabase/README.md). **Do not claim live external authentication or TikTok linking before performing provider-side end-to-end tests.**
+## Documentation
 
-## Authentication and backend
-
-The editor is fully usable as a guest. Supabase Auth is optional for account-based workspaces and future server-backed sharing.
-
-To enable authentication, configure the **project URL** and **public publishable key** in assets/js/supabase-config.js, then enable the corresponding providers and redirect allowlists in Supabase. Google OAuth requires provider-side setup; public email OTP delivery requires a configured mail transport.
-
-Never place a Supabase secret/service_role key or OAuth client secret in browser source code.
-
-**BRATCODE** is designed as an optional short-lived, server-backed exchange of project structure, **not** a cloud synchronization mechanism. Media binaries and credentials must never be included. Back-end deployment and access-control configuration are required before public code generation can operate.
-
-The optional **TikTok sign-in and account-link flows** use an Edge Function, private identity mapping, single-use OAuth state and a browser-bound login proof. They remain disabled until Supabase and TikTok Login Kit are configured. See [Supabase and TikTok setup](docs/supabase-tiktok-setup.md) for project creation, migrations, secrets, deployment and end-to-end verification. Music favorites and publishing are outside this integration.
-
-## Development
-
-Prerequisites: a modern browser; Node.js 22.13+ for tests.
-
-Serve the repository root using a static HTTP server (for example Python http.server or a local VS Code static-server extension) and open the root index.html. Do not use file:// for production-equivalent testing because browser storage, service workers, and media APIs require a secure or valid local origin.
-
-Automated checks:
-
-    node --test
-    node --check assets/js/app.js
-    node --check assets/js/kinetic.js
-    node --check assets/js/sound-hub.js
-    node --check assets/js/sound-hub-ui.js
-    node --check assets/js/win7-shell.js
-    node --check assets/js/win7-start-menu.js
-    node --check assets/js/export-preflight.js
-    node --check assets/js/editor-templates.js
-    node --check assets/js/tiktok-link.js
-
-Optional Chrome browser audit:
-
-    CHROME_PATH=/usr/bin/google-chrome node tests/studio-dashboard-browser.mjs
-    CHROME_PATH=/usr/bin/google-chrome node tests/editor-v5-browser.mjs
-    CHROME_PATH=/usr/bin/google-chrome node tests/export-format-browser.mjs
-
-CI **requires** all nine Chrome regression suites, in addition to Node.js unit/syntax checks and Deno Edge Function typing. A green test suite does not replace manual Safari iOS/Firefox media compatibility and real provider OAuth tests.
-
-## Repository structure
-
-    assets/js/                 Core editor, media, timeline, storage, auth, UI
-    assets/css/                Editor CSS and isolated Win7 dashboard layout (studio-win7.css)
-    vendor/7css/               Complete upstream scoped 7.css distribution + MIT license
-    vendor/                    Bundled external JS dependencies
-    tests/                     Node unit tests and browser automation
-    docs/                      Architecture notes and rollout instructions
-    index.html                 Main application entry point
-    sw.js                      PWA caching and lifecycle
-    .github/workflows/         Continuous integration and static deployment
-
-## Constraints and security
-
-The app depends on browser storage retention, available device memory, and supported codecs. Large exports can be constrained by mobile resources. Browser-backed local data are not encrypted by the application and are not a substitute for archival backups.
-
-Server-side authentication and sharing must enforce authorization, expiration, rate limits, and payload limits independently from browser UI. Content owners are responsible for rights and permissions in any media they import or publish.
+| Topic | File |
+| --- | --- |
+| Local foundation | [phase-1-local-foundation.md](docs/phase-1-local-foundation.md) |
+| Creator studio | [phase-2-creator-studio.md](docs/phase-2-creator-studio.md) |
+| Library, BRATCODE, Aero | [phase-3-library-bratcode-aero.md](docs/phase-3-library-bratcode-aero.md) |
+| Sound Hub, classic desktop | [phase-4-sound-hub-classic-desktop.md](docs/phase-4-sound-hub-classic-desktop.md) |
+| Windows 7 UI, TikTok link | [phase-5-windows7-tiktok-link.md](docs/phase-5-windows7-tiktok-link.md) |
+| Start menu | [phase-6-win7-start-menu.md](docs/phase-6-win7-start-menu.md) |
+| Export preflight | [phase-7-export-preflight.md](docs/phase-7-export-preflight.md) |
+| Hardening, auth, templates | [phases-8-to-12-rollout.md](docs/phases-8-to-12-rollout.md) |
+| Kinetic stanzas, lowercase | [kinetic-stanzas-lowercase.md](docs/kinetic-stanzas-lowercase.md) |
+| Supabase and TikTok | [supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md) |
 
 ## License
 
-**All rights reserved.** Public repository visibility does not grant a reuse, redistribution, or modification license. Refer to [LICENSE](./LICENSE) for the applicable terms. Third-party dependencies retain their respective licenses.
+**All rights reserved.** Public visibility grants no right to reuse, redistribute or modify. See [LICENSE](./LICENSE). Third-party dependencies keep their own licenses.
