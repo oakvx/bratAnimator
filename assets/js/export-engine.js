@@ -200,7 +200,23 @@
                 const AudioContext = environment.AudioContext || environment.webkitAudioContext;
                 if (!AudioContext) throw new Error("Web Audio is required for exporting audio.");
                 audioContext = new AudioContext();
-                if (audioContext.state === "suspended") await audioContext.resume();
+                if (audioContext.state === "suspended") {
+                    // Background exports and automated browsers can lack a user activation.
+                    // Never await a permanently suspended context without a timeout.
+                    let resumeTimer;
+                    try {
+                        await Promise.race([
+                            audioContext.resume(),
+                            new Promise((_, reject) => {
+                                resumeTimer = setTimeout(
+                                    () => reject(new Error("Audio playback is blocked by the browser. Click Export again after interacting with the page.")),
+                                    3000
+                                );
+                            })
+                        ]);
+                    } finally { clearTimeout(resumeTimer); }
+                    if (audioContext.state !== "running") throw new Error("Audio context could not start.");
+                }
                 const destination = audioContext.createMediaStreamDestination();
                 for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
                 // Source nodes are scheduled only after MediaRecorder begins.
