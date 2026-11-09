@@ -107,6 +107,11 @@ Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`.
 
 `export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
 
+## Multitrack model (phase 14)
+
+The `Tracks` editor tab provides a versioned clip/track graph for video, overlays, lyrics and audio. The new `assets/js/multitrack.js` model supports trim, split, move, duplicate, ordering, mute/visibility, locking and stable asset references; `assets/js/multitrack-ui.js` exposes the initial browser controls. The graph is included in IndexedDB saves, project JSON and `.brat.zip` media archives while retaining project format v5 for backward compatibility.
+
+**Phase 14 is preparatory:** track clips are editable metadata and are **not yet composited into the preview or export**. Existing lyrics/background/audio render exactly as before. Phase 15 will integrate additional visual layers; phase 16 will integrate their audio. Details: [phase 14 implementation](docs/phase-14-multitrack-core.md).
 ## Storage and project format
 
 | Store | Name | Content |
@@ -208,6 +213,7 @@ sw.js                 service worker
 | Hardening, auth, templates | [phases-8-to-12-rollout.md](docs/phases-8-to-12-rollout.md) |
 | Kinetic stanzas, lowercase | [kinetic-stanzas-lowercase.md](docs/kinetic-stanzas-lowercase.md) |
 | Export engine v2 (phase 13) | [phase-13-export-engine.md](docs/phase-13-export-engine.md) |
+| Multitrack core (phase 14) | [phase-14-multitrack-core.md](docs/phase-14-multitrack-core.md) |
 | Supabase and TikTok | [supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md) |
 
 ## License
