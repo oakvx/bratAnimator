@@ -5457,11 +5457,12 @@ async function updateExportEstimate() {
             },
             async importMedia(file, trackId) {
                 if (!file || state.exportInProgress) throw new Error("Cannot import media while exporting.");
-                const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v)$/i.test(file.name);
+                const isAudio = file.type.startsWith("audio/") || /\.(mp3|wav|m4a|aac|ogg|oga|flac|opus)$/i.test(file.name);
+                const isVideo = !isAudio && (file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v)$/i.test(file.name));
                 const isImage = file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(file.name);
-                if (!isVideo && !isImage) throw new Error("Choose a supported local video or image.");
+                if (!isVideo && !isImage && !isAudio) throw new Error("Choose a supported local video, image or audio file.");
                 if (!file.size || file.size > 512 * 1024 * 1024) throw new Error("Media file must be smaller than 512 MiB.");
-                const kind = isVideo ? "video" : "image";
+                const kind = isAudio ? "audio" : isVideo ? "video" : "image";
                 const track = state.multitrack.tracks.find(item => item.id === trackId);
                 if (!track || !BratTracks.accepts(track.kind, kind)) throw new Error("Select a compatible video or overlay track.");
                 let duration = 5;
@@ -5492,17 +5493,22 @@ async function updateExportEstimate() {
                     }
                 }
                 const assetId = await storeMediaBlob(file, file.name, kind);
+                if (isAudio) {
+                    const decoded = await trackAudioMixer.getBuffer(assetId, "audio");
+                    duration = decoded.buffer.duration;
+                }
                 const stored = await loadMediaBlob(assetId);
                 if (!stored?.blob) throw new Error("IndexedDB did not persist the selected media.");
                 const start = Math.max(0, Math.min(state.pausedElapsedSec, 86399));
                 state.multitrack = BratTracks.apply(state.multitrack, "add-clip", {
                     trackId, clip: {
                         kind, name: file.name, start,
-                        duration: Math.max(0.01, Math.min(duration, 600, 86400 - start)),
+                        duration: Math.max(0.01, Math.min(duration, 86400 - start)),
                         source: { kind, assetId, name: file.name }
                     }
                 });
                 await visualComposer.sync(state.multitrack);
+                if (state.isPlaying) startPreviewAudio();
                 renderPreviewAt(state.pausedElapsedSec);
                 updateExportEstimate();
                 saveProjectSettings();
