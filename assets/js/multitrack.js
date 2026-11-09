@@ -46,6 +46,19 @@
         };
     }
 
+    function normalizeTransform(value, trackType, kind) {
+        const input = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+        const full = trackType === "video";
+        return {
+            x: clamp(finite(input.x, 0.5), 0, 1),
+            y: clamp(finite(input.y, 0.5), 0, 1),
+            width: clamp(finite(input.width, full ? 1 : 0.52), 0.01, 4),
+            height: clamp(finite(input.height, full ? 1 : 0.52), 0.01, 4),
+            rotation: clamp(finite(input.rotation, 0), -360, 360),
+            fit: input.fit === "contain" ? "contain" : "cover"
+        };
+    }
+
     function normalizeClip(input, trackType, fallbackId) {
         assert(input && typeof input === "object" && !Array.isArray(input), "Invalid clip.");
         const kind = CLIP_TYPES.includes(input.kind) ? input.kind : trackType === "audio" ? "audio" :
@@ -62,7 +75,9 @@
             source: normalizeSource(input.source, kind),
             muted: input.muted === true,
             opacity: clamp(finite(input.opacity, 1), 0, 1),
-            volume: clamp(finite(input.volume, 1), 0, 2)
+            volume: clamp(finite(input.volume, 1), 0, 2),
+            // Normalized canvas coordinates. Independent of export resolution.
+            transform: normalizeTransform(input.transform, trackType, kind)
         };
     }
 
@@ -269,6 +284,8 @@
                 if (args.muted != null) clip.muted = args.muted === true;
                 if (args.opacity != null) clip.opacity = clamp(finite(args.opacity, clip.opacity), 0, 1);
                 if (args.volume != null) clip.volume = clamp(finite(args.volume, clip.volume), 0, 2);
+                if (args.transform != null) clip.transform = normalizeTransform({ ...clip.transform, ...args.transform }, track.kind, clip.kind);
+                if (args.text != null && clip.kind === "text") clip.source.text = safeString(args.text, "", 4000);
                 break;
             }
             default: throw new Error("Unknown multitrack operation.");
@@ -293,5 +310,5 @@
     }
 
     return Object.freeze({ VERSION, TRACK_TYPES, CLIP_TYPES, MAX_TRACKS, MAX_CLIPS,
-        empty, normalize, normalizeClip, accepts, apply, activeAt, endTime });
+        empty, normalize, normalizeTransform, normalizeClip, accepts, apply, activeAt, endTime });
 });
