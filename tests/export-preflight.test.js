@@ -33,6 +33,14 @@ test("no lyrics and invalid timestamps are blocking without changing export stat
     }
 });
 
+test("visual-only projects can export without LRC while empty projects remain blocked", () => {
+    const result = assess({ ...base, lyrics: "", hasVisualClips: true }, parse);
+    assert.equal(result.state, "ready");
+    assert.equal(result.errors, 0);
+    assert.ok(result.checks.some(check => check.text.includes("video-only")));
+    assert.equal(assess({ ...base, lyrics: "", hasVisualClips: false }, parse).state, "blocked");
+});
+
 test("no browser video-encoding pipeline is reported as blocking", () => {
     const result = assess({ ...base, hasRecorder: false, canFast: false }, parse);
     assert.equal(result.state, "blocked");
