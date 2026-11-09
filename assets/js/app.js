@@ -15,6 +15,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const BratKinetic = window.BratKinetic;
         const BratTracks = window.BratTracks;
         const BratComposer = window.BratComposer;
+        const BratAudioMixer = window.BratAudioMixer;
         const PROJECT_VERSION = BratCore.PROJECT_VERSION || 5;
 
         const previewCanvas = document.getElementById("previewCanvas");
@@ -864,8 +865,24 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return Math.max(0, (state.audioBuffer?.duration || 0) - getAudioTimelineOffset(timeline));
         }
 
+        function legacyAudioTracked() {
+            const id = state.audio?.assetId;
+            return Boolean(id && state.multitrack?.tracks.some(track =>
+                track.clips.some(clip => ["audio", "video"].includes(clip.kind) && clip.source?.assetId === id)));
+        }
+
         function startPreviewAudio() {
-            if (!syncAudio || state.exportInProgress || state.tapSync?.active) return;
+            if (state.exportInProgress || state.tapSync?.active) return;
+            // New audio clips (including video soundtracks) share the same
+            // absolute timeline clock as the visual compositor.
+            trackAudioMixer.play(state.multitrack, () => state.isPlaying ? getElapsedSeconds() : NaN)
+                .then(result => { if (result.warnings.length) updateTrackAudioStatus(result.warnings.join(" ")); })
+                .catch(error => updateTrackAudioStatus(error.message, true));
+            if (!syncAudio) return;
+            if (legacyAudioTracked()) {
+                syncAudio.pause();
+                return;
+            }
             const target = state.pausedElapsedSec + getAudioTimelineOffset();
             if (!Number.isFinite(syncAudio.duration) || target >= syncAudio.duration) return;
             syncAudio.currentTime = Math.max(0, target);
@@ -2125,6 +2142,16 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (options.guides) drawSafeZones(ctx, width, height);
         }
 
+        function updateTrackAudioStatus(message, error = false) {
+            const note = document.getElementById("mtAudioStatus");
+            if (!note) return;
+            note.textContent = message;
+            note.classList.toggle("is-error", error);
+        }
+        const trackAudioMixer = BratAudioMixer.createController({
+            loadAsset: loadMediaBlob,
+            onStatus: text => updateTrackAudioStatus(text, true)
+        });
         const visualComposer = BratComposer.createController({
             loadAsset: loadMediaBlob,
             onReady: () => {
@@ -2290,6 +2317,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function stopPlayback(keepCurrentTime = true) {
+            trackAudioMixer.stop();
             if (keepCurrentTime) {
                 state.pausedElapsedSec = getElapsedSeconds();
             } else {
@@ -3701,7 +3729,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function seekTo(seconds) {
             stopPlayback(true);
-            state.pausedElapsedSec = clamp(seconds, 0, Math.max(getTimelineDuration(), (state.audioAnalysis?.duration || 0) - getAudioTimelineOffset()));
+            state.pausedElapsedSec = clamp(seconds, 0, getPlaybackDuration());
             if (syncAudio && Number.isFinite(syncAudio.duration)) syncAudio.currentTime = clamp(state.pausedElapsedSec + getAudioTimelineOffset(), 0, syncAudio.duration);
             renderPreviewAt(state.pausedElapsedSec);
             drawWaveform();
@@ -4347,6 +4375,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             cancelLyricsRequest();
             payload = migrateProjectPayload(payload);
             state.multitrack = BratTracks.normalize(payload.multitrack);
+            trackAudioMixer.resetSources();
             visualComposer.sync(state.multitrack).catch(console.warn);
             window.dispatchEvent(new CustomEvent('brat:multitrack-changed', { detail: { source: 'restore' } }));
 
@@ -4413,6 +4442,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function resetProjectView() {
             state.multitrack = BratTracks.empty();
+            trackAudioMixer.resetSources();
             visualComposer.sync(state.multitrack).catch(console.warn);
             window.dispatchEvent(new CustomEvent('brat:multitrack-changed', { detail: { source: 'reset' } }));
             state.lyricRows = [];
@@ -4819,17 +4849,23 @@ async function updateExportEstimate() {
                     width: dims.width, height: dims.height, fps, start: exportWindow.start, end: exportWindow.end
                 });
                 const audio = includeAudio ? getAudioSettingsFromControls() : null;
-                // Phase 13 keeps the existing single audio UI, but the engine accepts
-                // multiple independently positioned audio clips for future tracks.
-                const audioClips = includeAudio ? [{
-                    buffer: state.audioBuffer,
-                    start: 0,
-                    offset: getAudioTimelineOffset(),
-                    duration: getAudioExportDuration(),
-                    volume: audio.volume,
-                    fadeIn: audio.fadeIn,
-                    fadeOut: audio.fadeOut
-                }] : [];
+                exportStatus.textContent = "preparing multitrack audio…";
+                const mix = await trackAudioMixer.prepare(state.multitrack, exportWindow);
+                const audioClips = [...mix.clips];
+                // A file added through the legacy Timing panel must be merged only
+                // once when it also appears on an explicit audio/video track.
+                if (includeAudio && !legacyAudioTracked()) {
+                    audioClips.push({
+                        buffer: state.audioBuffer,
+                        start: 0,
+                        offset: getAudioTimelineOffset(),
+                        duration: getAudioExportDuration(),
+                        volume: audio.volume,
+                        fadeIn: audio.fadeIn,
+                        fadeOut: audio.fadeOut
+                    });
+                }
+                if (mix.warnings.length) updateTrackAudioStatus(mix.warnings.join(" "), true);
                 let warning = "";
                 const output = await BratExportEngine.exportTimeline({
                     plan, canvas: exportCanvas, context: exportCtx, audioClips,
@@ -4846,7 +4882,7 @@ async function updateExportEstimate() {
                     }
                 });
                 downloadBlob(output.blob, buildExportFileBase() + "." + output.extension);
-                exportStatus.textContent = "export complete: " + output.extension.toUpperCase() + " (" + output.mode + ")" + (warning && output.mode === "realtime" ? " • compatibility fallback" : "");
+                exportStatus.textContent = "export complete: " + output.extension.toUpperCase() + " (" + output.mode + ")" + (warning && output.mode === "realtime" ? " • compatibility fallback" : "") + (mix.warnings.length ? " • " + mix.warnings.length + " audio warning(s) in Tracks" : "");
             } catch (error) {
                 console.error(error);
                 exportStatus.textContent = error?.message || "export failed";
@@ -5361,6 +5397,7 @@ async function updateExportEstimate() {
         updateCompatibilityPanel();
         window.addEventListener("beforeunload", () => {
             visualComposer.dispose();
+            trackAudioMixer.dispose();
             if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
             releaseBackgroundObjectUrl();
         });
@@ -5369,9 +5406,12 @@ async function updateExportEstimate() {
         window.BratMultitrackHost = {
             snapshot: () => BratTracks.normalize(state.multitrack),
             composer: () => visualComposer,
+            mixer: () => trackAudioMixer,
             apply(operation, args) {
                 if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
                 state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                trackAudioMixer.stop();
+                if (state.isPlaying) startPreviewAudio();
                 visualComposer.sync(state.multitrack).catch(console.warn);
                 renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
                 updateExportEstimate();
@@ -5382,6 +5422,8 @@ async function updateExportEstimate() {
             replace(graph) {
                 if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
                 state.multitrack = BratTracks.normalize(graph);
+                trackAudioMixer.stop();
+                if (state.isPlaying) startPreviewAudio();
                 visualComposer.sync(state.multitrack).catch(console.warn);
                 renderPreviewAt(state.pausedElapsedSec);
                 updateExportEstimate();
