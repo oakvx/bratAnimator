@@ -27,6 +27,7 @@ await once(server, 'listening');
 const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = spawn(chrome, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--autoplay-policy=no-user-gesture-required',
     '--disable-background-networking', '--remote-debugging-port=0',
     `--user-data-dir=${path.join(artifacts, 'profile')}`, 'about:blank'
 ], { windowsHide: true, stdio: 'ignore' });
