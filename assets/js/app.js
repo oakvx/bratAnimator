@@ -5466,6 +5466,7 @@ async function updateExportEstimate() {
                 const track = state.multitrack.tracks.find(item => item.id === trackId);
                 if (!track || !BratTracks.accepts(track.kind, kind)) throw new Error("Select a compatible video or overlay track.");
                 let duration = 5;
+                let durationKnown = !isVideo;
                 if (isVideo) {
                     const url = URL.createObjectURL(file);
                     const video = document.createElement("video");
@@ -5484,7 +5485,34 @@ async function updateExportEstimate() {
                             video.muted = true;
                             video.src = url;
                         });
-                        if (!Number.isFinite(duration) || duration <= 0) throw new Error("Video duration is unavailable.");
+                        durationKnown = Number.isFinite(duration) && duration > 0;
+                        if (!durationKnown) {
+                            // Browser-recorded WebM often reports Infinity despite
+                            // containing valid timed frames. Seeking near EOF can
+                            // recover the real duration on Chromium.
+                            try {
+                                const recovered = await new Promise(resolve => {
+                                    const timer = setTimeout(() => finish(null), 1800);
+                                    function finish(value) {
+                                        clearTimeout(timer);
+                                        video.removeEventListener("seeked", onSeek);
+                                        video.removeEventListener("timeupdate", onSeek);
+                                        resolve(value);
+                                    }
+                                    function onSeek() {
+                                        const value = video.currentTime;
+                                        if (Number.isFinite(value) && value > 0 && value < 86400) finish(value);
+                                    }
+                                    video.addEventListener("seeked", onSeek);
+                                    video.addEventListener("timeupdate", onSeek);
+                                    try { video.currentTime = 10000000; } catch (_) { finish(null); }
+                                });
+                                if (Number.isFinite(recovered) && recovered > 0) {
+                                    duration = recovered;
+                                    durationKnown = true;
+                                }
+                            } catch (_) {}
+                        }
                     } finally {
                         video.pause();
                         video.removeAttribute("src");
@@ -5496,6 +5524,13 @@ async function updateExportEstimate() {
                 if (isAudio) {
                     const decoded = await trackAudioMixer.getBuffer(assetId, "audio");
                     duration = decoded.buffer.duration;
+                } else if (isVideo && !durationKnown) {
+                    const decoded = await trackAudioMixer.getBuffer(assetId, "video");
+                    if (decoded.buffer?.duration > 0) {
+                        duration = decoded.buffer.duration;
+                        durationKnown = true;
+                    }
+                    if (!durationKnown) updateTrackAudioStatus("Video duration not detectable; set the clip length manually (default 5 s).", true);
                 }
                 const stored = await loadMediaBlob(assetId);
                 if (!stored?.blob) throw new Error("IndexedDB did not persist the selected media.");
