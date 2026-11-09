@@ -578,3 +578,21 @@ body.panel-closed .page-shell { margin-left:0; }
 @media(max-width:600px) {
     #section-tracks .mt-visual-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* Phase 16 — compact audio mixing controls in the existing Tracks panel. */
+#section-tracks .mt-audio-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid var(--border, #7775);
+    border-radius: 8px;
+}
+#section-tracks .mt-audio-form label { display: flex; flex-direction: column; min-width: 0; gap: 5px; }
+#section-tracks .mt-audio-form input { min-width: 0; width: 100%; box-sizing: border-box; }
+#section-tracks .mt-audio-form button { align-self: end; min-height: 34px; }
+#section-tracks #mtAudioStatus.is-error { color: var(--danger, #b91c1c); }
+@media(max-width:600px) {
+    #section-tracks .mt-audio-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
