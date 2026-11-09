@@ -128,7 +128,9 @@ try {
             });
             const operation = kind === 'png' ? exportCurrentFramePng() : kind === 'preview' ? exportPreviewClip() : exportVideo();
             await operation;
-            const result = await auditDecode(await captured);
+            const actualDownload = await captured;
+            window.auditLastExportBlob = actualDownload.blob;
+            const result = await auditDecode(actualDownload);
             auditAssert(!state.exportInProgress, 'export flag not reset');
             return result;
         };
@@ -204,6 +206,39 @@ try {
         const output = await auditExport('png');
         auditAssert(output.width === 3000 && output.height === 3000, JSON.stringify(output));
         return output;
+    }));
+    await test('phase 13 exports a real audio track alongside composited frames', () => evaluate(async () => {
+        auditSelect('square', 720);
+        lyricsInput.value = '[00:00.00] exported audio\n[00:00.20] synchronized video';
+        rebuildTimelineFromCurrentInputs();
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = ctx.createBuffer(2, 48000, 48000);
+        for (let channel = 0; channel < 2; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let index = 0; index < data.length; index++) {
+                data[index] = Math.sin(index * 2 * Math.PI * 440 / 48000) * 0.1;
+            }
+        }
+        await ctx.close();
+        state.audioBuffer = buffer;
+        includeAudioInExportCheckbox.checked = true;
+        const plan = BratExportPlan.create({ width: 720, height: 720, fps: 24, start: 0, end: 1 });
+        const support = await BratExportEngine.probe({
+            plan, audioClips: [{ buffer }], loadMuxer: () => BratExport.loadMp4MuxerModule()
+        });
+        try {
+            const output = await auditExport('video');
+            auditAssert(output.width === 720 && output.height === 720, 'unexpected output dimensions');
+            auditAssert(['video/mp4', 'video/webm'].some(type => output.type.startsWith(type)), output.type);
+            const bytes = await auditLastExportBlob.arrayBuffer();
+            const content = new TextDecoder('latin1').decode(bytes);
+            auditAssert(content.includes('soun') || content.includes('A_OPUS') || content.includes('A_AAC'), 'missing encoded audio track');
+            if (support.fast) auditAssert(output.filename.endsWith('.mp4'), 'fast AAC path did not produce MP4');
+            return { type: output.type, width: output.width, height: output.height, encoder: support.fast ? 'webcodecs' : 'recording' };
+        } finally {
+            state.audioBuffer = null;
+            includeAudioInExportCheckbox.checked = false;
+        }
     }));
     await test('no uncaught JavaScript errors', async () => { assert.deepEqual(runtimeErrors, []); return runtimeErrors; });
 } catch (error) {
