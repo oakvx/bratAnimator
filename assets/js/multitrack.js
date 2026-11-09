@@ -294,6 +294,7 @@
                 if (args.muted != null) clip.muted = args.muted === true;
                 if (args.opacity != null) clip.opacity = clamp(finite(args.opacity, clip.opacity), 0, 1);
                 if (args.volume != null) clip.volume = clamp(finite(args.volume, clip.volume), 0, 2);
+                if (args.playbackRate != null) clip.playbackRate = clamp(finite(args.playbackRate, clip.playbackRate), 0.1, 8);
                 if (args.fadeIn != null) clip.fadeIn = clamp(finite(args.fadeIn, clip.fadeIn), 0, clip.duration);
                 if (args.fadeOut != null) clip.fadeOut = clamp(finite(args.fadeOut, clip.fadeOut), 0, clip.duration);
                 if (args.transform != null) clip.transform = normalizeTransform({ ...clip.transform, ...args.transform }, track.kind, clip.kind);
