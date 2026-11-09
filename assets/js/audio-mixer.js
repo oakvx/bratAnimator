@@ -122,6 +122,11 @@
         async function play(graph, getTime) {
             stop();
             const currentGeneration = generation;
+            // Resume synchronously from the user's Play gesture, before fetching
+            // media asynchronously (otherwise iOS/Safari can block the context).
+            const unlock = audible(graph).length ? ensureContext() : null;
+            const resumePromise = unlock?.state === "suspended" ? unlock.resume() : null;
+            if (resumePromise) await resumePromise;
             const result = await prepare(graph);
             if (closed || currentGeneration !== generation) return result;
             const position = typeof getTime === "function" ? getTime() : getTime;
