@@ -1,5 +1,8 @@
 # Phase 15 — Video Composer
 
+> **Aggiornamento:** la fase 16 è ora implementata e integra l'audio delle clip video nei browser in cui `decodeAudioData` supporta il codec. Per i limiti attuali e il mixer, consulta [fase 16](phase-16-audio-mixer.md). Le sezioni sottostanti descrivono il perimetro originario della fase 15.
+
+
 ## Scope
 
 This phase connects the persisted `multitrack` graph from phase 14 to actual preview rendering, MP4/WebM export and still-frame PNG/preview export. The same [PR #20](https://github.com/oakvx/bratAnimator/pull/20) remains open for phases 16 and 17.
