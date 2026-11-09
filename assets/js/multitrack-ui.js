@@ -177,10 +177,12 @@
         const { clip } = selection();
         if (!clip) return;
         const start = Number(startField.value), duration = Number(durationField.value);
-        // A later start moves a clip without changing its source in-point.
+        const name = nameField.value;
+        // Capture all values before the first operation triggers a UI re-render.
+        // Moving a clip must not adjust its media source in-point.
         if (start !== clip.start) run("move-clip", { clipId: clip.id, start });
         if (duration !== clip.duration) run("trim-clip", { clipId: clip.id, duration });
-        if (nameField.value !== clip.name) run("set-clip", { clipId: clip.id, name: nameField.value });
+        if (name !== clip.name) run("set-clip", { clipId: clip.id, name });
     });
     byId("mtSplitClip").addEventListener("click", () => {
         const { clip } = selection();
