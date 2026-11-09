@@ -258,6 +258,7 @@
     <script src="assets/js/export-plan.js" defer></script>
     <script src="assets/js/export-engine.js" defer></script>
     <script src="assets/js/multitrack.js" defer></script>
+    <script src="assets/js/video-composer.js" defer></script>
     <script src="assets/js/i18n.js" defer></script>
     <script src="assets/js/motion.js" defer></script>
     <script src="assets/js/kinetic.js" defer></script>
@@ -1215,7 +1216,13 @@
 
         <div id="section-tracks" class="section editor-section" data-editor-tab="tracks" role="tabpanel" aria-labelledby="tab-tracks">
             <div class="section-title">multitrack project • phase 14</div>
-            <p class="mini-copy">Organize clip metadata, timing and track order. Preview and export still use the original editor until phases 15–16.</p>
+            <p class="mini-copy">Add local videos and images as independent layers. Preview and export render visible layers; audio embedded in imported clips is planned for phase 16.</p>
+            <div class="row">
+                <label class="file-button" for="mtImportMediaInput">import video / image
+                    <input id="mtImportMediaInput" type="file" accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+                </label>
+                <span class="mini-copy">Up to 512 MiB per file · stored locally</span>
+            </div>
             <div class="row mt-control-bar">
                 <label for="mtTrackType">track type</label>
                 <select id="mtTrackType"><option value="video">Video</option><option value="overlay">Overlay</option><option value="lyrics">Lyrics</option><option value="audio">Audio</option></select>
@@ -1238,6 +1245,17 @@
                 <label for="mtClipName">name <input id="mtClipName" maxlength="180" placeholder="clip name"></label>
                 <label for="mtClipStart">start (seconds) <input id="mtClipStart" type="number" min="0" max="86400" step="0.01" value="0"></label>
                 <label for="mtClipDuration">duration (seconds) <input id="mtClipDuration" type="number" min="0.01" max="86400" step="0.01" value="5"></label>
+            </div>
+            <div class="mt-visual-form">
+                <label for="mtClipText">overlay text <input id="mtClipText" type="text" maxlength="4000" placeholder="Title or sticker text"></label>
+                <label for="mtClipX">center X (0–100%) <input id="mtClipX" type="number" step="1" min="0" max="100" value="50"></label>
+                <label for="mtClipY">center Y (0–100%) <input id="mtClipY" type="number" step="1" min="0" max="100" value="50"></label>
+                <label for="mtClipWidth">width (%) <input id="mtClipWidth" type="number" step="1" min="1" max="400" value="100"></label>
+                <label for="mtClipHeight">height (%) <input id="mtClipHeight" type="number" step="1" min="1" max="400" value="100"></label>
+                <label for="mtClipRotation">rotation (°) <input id="mtClipRotation" type="number" step="1" min="-360" max="360" value="0"></label>
+                <label for="mtClipOpacity">opacity (%) <input id="mtClipOpacity" type="number" step="1" min="0" max="100" value="100"></label>
+                <label for="mtClipFit">fit <select id="mtClipFit"><option value="cover">cover</option><option value="contain">contain</option></select></label>
+                <button id="mtApplyVisual" type="button">apply visual settings</button>
             </div>
             <div class="row mt-control-bar">
                 <button id="mtAddClip" type="button">add clip</button>
