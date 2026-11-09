@@ -93,8 +93,8 @@ Canvas layout and source timestamps are independent of dashboard effects. Dashbo
 
 | Path | Mechanism | Notes |
 | --- | --- | --- |
-| Fast MP4 | WebCodecs `VideoEncoder` (H.264, `avc1.42001f`, Annex B, variable bitrate) muxed with the vendored `mp4-muxer` ES module | Enabled only after a capability probe |
-| Recording | `MediaRecorder` | Container and codec depend on the browser |
+| Fast MP4 | WebCodecs H.264 video and optional AAC audio, mixed offline via Web Audio, multiplexed with local `mp4-muxer` | Enabled after runtime codec/capability probes (phase 13) |
+| Recording fallback | Canvas capture + Web Audio mixer + `MediaRecorder` | Real-time recording; container and codecs depend on the browser |
 | Frames | PNG export | |
 
 The fast path is gated by `VideoEncoder.isConfigSupported()` (see `assets/js/export.js`):
@@ -102,6 +102,8 @@ The fast path is gated by `VideoEncoder.isConfigSupported()` (see `assets/js/exp
 - width and height are rounded to even values, minimum 16 px;
 - bitrate = `max(4 Mbps, w × h × max(24, fps) × 0.09)`;
 - if `VideoEncoder` / `VideoFrame` or the muxer module is missing, the path is reported as unavailable.
+
+Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`. All exports use a shared absolute timeline and support multiple independently trimmed audio sources at engine level. The current interface still exposes one imported audio track; visual multitracks, overlays and embedded video-audio mixing will follow in phases 14–17 of the [single incremental PR](https://github.com/oakvx/bratAnimator/pull/20). Fast MP4 with AAC is available only on browsers supporting the required WebCodecs audio/video encoders; otherwise MediaRecorder provides the compatibility path. See [phase 13 design and limits](docs/phase-13-export-engine.md).
 
 `export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
 
@@ -187,7 +189,7 @@ sw.js                 service worker
 
 ## Constraints
 
-- Retention of browser storage, device memory and codec support bound what a project can do. Large exports can fail on mobile.
+- Retention of browser storage, device memory and codec support bound what a project can do. Large exports can fail on mobile. Phase 13's offline audio mix and in-memory MP4 muxer have particular memory costs.
 - Browser-held data is not encrypted by the app and is not an archive.
 - Server-side authentication and sharing must enforce authorization, expiry, rate limits and payload limits independently of the UI.
 - Importers are responsible for the rights to the media they import or publish.
@@ -205,6 +207,7 @@ sw.js                 service worker
 | Export preflight | [phase-7-export-preflight.md](docs/phase-7-export-preflight.md) |
 | Hardening, auth, templates | [phases-8-to-12-rollout.md](docs/phases-8-to-12-rollout.md) |
 | Kinetic stanzas, lowercase | [kinetic-stanzas-lowercase.md](docs/kinetic-stanzas-lowercase.md) |
+| Export engine v2 (phase 13) | [phase-13-export-engine.md](docs/phase-13-export-engine.md) |
 | Supabase and TikTok | [supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md) |
 
 ## License
