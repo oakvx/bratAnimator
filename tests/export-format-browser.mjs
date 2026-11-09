@@ -241,6 +241,46 @@ try {
             includeAudioInExportCheckbox.checked = false;
         }
     }));
+    await test('phase 15 composites local MP4 plus PNG overlay without requiring LRC', () => evaluate(async () => {
+        auditSelect('square', 720);
+        includeAudioInExportCheckbox.checked = false;
+        state.audioBuffer = null;
+        lyricsInput.value = '[00:00.00] source video\n[00:00.15] end';
+        rebuildTimelineFromCurrentInputs();
+        await auditExport('video');
+        const source = new File([auditLastExportBlob], 'video-source.mp4', { type: 'video/mp4' });
+        const imported = await BratMultitrackHost.importMedia(source, 'main-video');
+        auditAssert(imported.kind === 'video', 'video file was not accepted');
+        const overlayCanvas = document.createElement('canvas');
+        overlayCanvas.width = 64; overlayCanvas.height = 64;
+        const overlayCtx = overlayCanvas.getContext('2d');
+        overlayCtx.fillStyle = '#fa1241';
+        overlayCtx.fillRect(0, 0, 64, 64);
+        const png = await new Promise(resolve => overlayCanvas.toBlob(resolve, 'image/png'));
+        const sticker = await BratMultitrackHost.importMedia(new File([png], 'sticker.png', { type: 'image/png' }), 'main-overlay');
+        auditAssert(sticker.kind === 'image', 'image overlay was not accepted');
+        const stickerId = BratMultitrackHost.snapshot().selectedClipId;
+        BratMultitrackHost.apply('set-clip', { clipId: stickerId,
+            transform: { x: 0.5, y: 0.5, width: .4, height: .4, fit: 'contain' }, opacity: 1 });
+        lyricsInput.value = '';
+        rebuildTimelineFromCurrentInputs();
+        await BratMultitrackHost.composer().prepare(BratMultitrackHost.snapshot(), .1);
+        renderPreviewAt(.1);
+        const ctx = previewCanvas.getContext('2d');
+        const center = [...ctx.getImageData(previewCanvas.width / 2, previewCanvas.height / 2, 1, 1).data];
+        auditAssert(center[0] > 225 && center[1] < 80 && center[2] < 110, 'PNG overlay missing from video composite: ' + center);
+        const snapshot = await auditExport('png');
+        auditAssert(snapshot.width === 720 && snapshot.height === 720, 'wrong PNG output');
+        const movie = await auditExport('video');
+        auditAssert(movie.width === 720 && movie.height === 720, 'wrong video output');
+        const trackGraph = BratMultitrackHost.snapshot();
+        auditAssert(trackGraph.tracks[0].clips.length === 1 && trackGraph.tracks[1].clips.length === 1,
+            'visual clips not retained');
+        BratMultitrackHost.replace(BratTracks.empty());
+        lyricsInput.value = '[00:00.00] restored';
+        rebuildTimelineFromCurrentInputs();
+        return { video: movie.type, center, images: trackGraph.tracks[1].clips.length };
+    }));
     await test('no uncaught JavaScript errors', async () => { assert.deepEqual(runtimeErrors, []); return runtimeErrors; });
 } catch (error) {
     failures += 1;
