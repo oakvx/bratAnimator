@@ -5411,6 +5411,7 @@ async function updateExportEstimate() {
                 if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
                 state.multitrack = BratTracks.apply(state.multitrack, operation, args);
                 trackAudioMixer.stop();
+                trackAudioMixer.prune(state.multitrack);
                 if (state.isPlaying) startPreviewAudio();
                 visualComposer.sync(state.multitrack).catch(console.warn);
                 renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
@@ -5422,7 +5423,7 @@ async function updateExportEstimate() {
             replace(graph) {
                 if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
                 state.multitrack = BratTracks.normalize(graph);
-                trackAudioMixer.stop();
+                trackAudioMixer.resetSources();
                 if (state.isPlaying) startPreviewAudio();
                 visualComposer.sync(state.multitrack).catch(console.warn);
                 renderPreviewAt(state.pausedElapsedSec);
