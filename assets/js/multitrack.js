@@ -76,6 +76,8 @@
             muted: input.muted === true,
             opacity: clamp(finite(input.opacity, 1), 0, 1),
             volume: clamp(finite(input.volume, 1), 0, 2),
+            fadeIn: clamp(finite(input.fadeIn, 0), 0, duration),
+            fadeOut: clamp(finite(input.fadeOut, 0), 0, duration),
             // Normalized canvas coordinates. Independent of export resolution.
             transform: normalizeTransform(input.transform, trackType, kind)
         };
@@ -98,6 +100,7 @@
             id: safeId(input.id || fallbackId, "track"),
             name: safeString(input.name, kind, 100),
             kind, visible: input.visible !== false, muted: input.muted === true,
+            volume: clamp(finite(input.volume, 1), 0, 2),
             locked: input.locked === true, clips
         };
     }
@@ -189,6 +192,7 @@
                     requireUnlocked(track);
                     if (args.muted != null) track.muted = args.muted === true;
                     if (args.visible != null) track.visible = args.visible === true;
+                    if (args.volume != null) track.volume = clamp(finite(args.volume, track.volume), 0, 2);
                 }
                 break;
             }
@@ -259,6 +263,8 @@
                 clip.start = nextStart;
                 clip.sourceIn = nextSourceIn;
                 clip.duration = nextDuration;
+                clip.fadeIn = Math.min(clip.fadeIn, nextDuration);
+                clip.fadeOut = Math.min(clip.fadeOut, nextDuration);
                 break;
             }
             case "split-clip": {
@@ -272,6 +278,10 @@
                     sourceIn: clip.sourceIn + leftDuration * clip.playbackRate,
                     duration: clip.duration - leftDuration };
                 clip.duration = leftDuration;
+                clip.fadeIn = Math.min(clip.fadeIn, leftDuration);
+                clip.fadeOut = Math.min(clip.fadeOut, leftDuration);
+                right.fadeIn = Math.min(right.fadeIn, right.duration);
+                right.fadeOut = Math.min(right.fadeOut, right.duration);
                 track.clips.splice(index + 1, 0, right);
                 graph.selectedTrackId = track.id;
                 graph.selectedClipId = right.id;
@@ -284,6 +294,8 @@
                 if (args.muted != null) clip.muted = args.muted === true;
                 if (args.opacity != null) clip.opacity = clamp(finite(args.opacity, clip.opacity), 0, 1);
                 if (args.volume != null) clip.volume = clamp(finite(args.volume, clip.volume), 0, 2);
+                if (args.fadeIn != null) clip.fadeIn = clamp(finite(args.fadeIn, clip.fadeIn), 0, clip.duration);
+                if (args.fadeOut != null) clip.fadeOut = clamp(finite(args.fadeOut, clip.fadeOut), 0, clip.duration);
                 if (args.transform != null) clip.transform = normalizeTransform({ ...clip.transform, ...args.transform }, track.kind, clip.kind);
                 if (args.text != null && clip.kind === "text") clip.source.text = safeString(args.text, "", 4000);
                 break;
