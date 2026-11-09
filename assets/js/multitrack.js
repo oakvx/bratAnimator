@@ -21,7 +21,7 @@
     const clamp = (value, lo, hi) => Math.min(hi, Math.max(lo, value));
     const safeString = (value, fallback = "", length = 180) =>
         typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, length) : fallback;
-    const safeId = (value, prefix) => /^[a-zA-Z0-9_-]{1,128}$/.test(value || "") ? value : id(prefix);
+    const safeId = (value, prefix) => typeof value === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(value) ? value : id(prefix);
     const clone = value => JSON.parse(JSON.stringify(value));
     const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
@@ -51,8 +51,8 @@
         const kind = CLIP_TYPES.includes(input.kind) ? input.kind : trackType === "audio" ? "audio" :
             trackType === "lyrics" ? "text" : "image";
         assert(accepts(trackType, kind), "Clip type is incompatible with track.");
-        const start = clamp(finite(input.start, 0), 0, MAX_TIME);
-        const duration = clamp(finite(input.duration, 5), 0.01, MAX_TIME - start || 0.01);
+        const start = clamp(finite(input.start, 0), 0, MAX_TIME - 0.01);
+        const duration = clamp(finite(input.duration, 5), 0.01, MAX_TIME - start);
         const sourceIn = clamp(finite(input.sourceIn, 0), 0, MAX_TIME);
         const playbackRate = clamp(finite(input.playbackRate, 1), 0.1, 8);
         return {
@@ -280,8 +280,8 @@
         const graph = normalize(input);
         if (!Number.isFinite(time) || time < 0) return [];
         return graph.tracks.flatMap((track, order) => {
-            if (!track.visible || track.muted) return [];
-            return track.clips.filter(clip => !clip.muted && (!type || clip.kind === type) &&
+            if (!track.visible) return [];
+            return track.clips.filter(clip => !(clip.kind === "audio" && (track.muted || clip.muted)) && (!type || clip.kind === type) &&
                 time >= clip.start && time < clip.start + clip.duration).map(clip => ({
                 trackId: track.id, order, clip, sourceTime: clip.sourceIn + (time - clip.start) * clip.playbackRate
             }));
