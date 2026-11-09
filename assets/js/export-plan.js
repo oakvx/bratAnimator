@@ -47,13 +47,16 @@
         if (!clip?.buffer || clip.muted) return null;
         const buffer = clip.buffer;
         const sourceOffset = Math.max(0, finite(clip.offset, 0));
-        const length = Math.max(0, Math.min(finite(clip.duration, buffer.duration - sourceOffset), buffer.duration - sourceOffset));
+        const playbackRate = clamp(finite(clip.playbackRate, 1), 0.1, 8);
+        const playableDuration = Math.max(0, (buffer.duration - sourceOffset) / playbackRate);
+        const length = Math.max(0, Math.min(finite(clip.duration, playableDuration), playableDuration));
         const start = Math.max(0, finite(clip.start, 0));
         const overlapStart = Math.max(start, plan.start);
         const overlapEnd = Math.min(start + length, plan.end);
         if (!Number.isFinite(buffer.duration) || overlapEnd - overlapStart <= 0) return null;
         return Object.freeze({
-            sourceOffset: sourceOffset + overlapStart - start,
+            sourceOffset: sourceOffset + (overlapStart - start) * playbackRate,
+            playbackRate,
             destinationOffset: overlapStart - plan.start,
             duration: overlapEnd - overlapStart,
             clipStart: start,
