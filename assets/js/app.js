@@ -13,6 +13,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const BratMedia = window.BratMedia || {};
         const BratExport = window.BratExport || {};
         const BratKinetic = window.BratKinetic;
+        const BratTracks = window.BratTracks;
         const PROJECT_VERSION = BratCore.PROJECT_VERSION || 5;
 
         const previewCanvas = document.getElementById("previewCanvas");
@@ -347,6 +348,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         const state = {
+            multitrack: BratTracks.empty(),
             lyricRows: [],
             seed: 1337,
             fonts: [],
@@ -4149,6 +4151,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             getBackgroundSettingsFromControls();
             return {
                 version: PROJECT_VERSION,
+                multitrack: BratTracks.normalize(state.multitrack),
                 lyricRows: getLrcLineObjects(),
                 seed: state.seed,
                 fonts: state.fonts,
@@ -4295,6 +4298,8 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (!payload || typeof payload !== "object") return false;
             cancelLyricsRequest();
             payload = migrateProjectPayload(payload);
+            state.multitrack = BratTracks.normalize(payload.multitrack);
+            window.dispatchEvent(new CustomEvent('brat:multitrack-changed', { detail: { source: 'restore' } }));
 
             state.lyricRows = payload.lyricRows || [];
             state.seed = payload.seed ?? 1337;
@@ -4358,6 +4363,8 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function resetProjectView() {
+            state.multitrack = BratTracks.empty();
+            window.dispatchEvent(new CustomEvent('brat:multitrack-changed', { detail: { source: 'reset' } }));
             state.lyricRows = [];
             state.fonts = [];
             state.seed = 1337;
@@ -5308,6 +5315,38 @@ async function updateExportEstimate() {
         });
         registerServiceWorker();
         renderPreviewAt(0);
+        window.BratMultitrackHost = {
+            snapshot: () => BratTracks.normalize(state.multitrack),
+            apply(operation, args) {
+                if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
+                state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                saveProjectSettings();
+                window.dispatchEvent(new CustomEvent("brat:multitrack-changed", { detail: { source: "edit" } }));
+                return BratTracks.normalize(state.multitrack);
+            },
+            replace(graph) {
+                if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
+                state.multitrack = BratTracks.normalize(graph);
+                saveProjectSettings();
+                window.dispatchEvent(new CustomEvent("brat:multitrack-changed", { detail: { source: "replace" } }));
+                return BratTracks.normalize(state.multitrack);
+            },
+            // Phase 14 offers references to assets already imported by the original editor;
+            // actual per-clip decoding/rendering will land in phase 15.
+            sources() {
+                const result = [];
+                if (state.audio?.assetId) {
+                    result.push({ kind: "audio", assetId: state.audio.assetId, name: state.audio.name || "Audio imported",
+                        duration: Number(state.audioBuffer?.duration || state.metadata?.duration || 0) });
+                }
+                if (state.background?.assetId && ["image", "video"].includes(state.background.kind)) {
+                    result.push({ kind: state.background.kind, assetId: state.background.assetId,
+                        name: state.background.name || "Background imported",
+                        duration: Number(state.backgroundElement?.duration || 0) });
+                }
+                return result;
+            }
+        };
         window.BratEditorWorkspace = {
             whenReady: () => workspaceBootPromise || Promise.resolve(),
             owner: () => workspaceOwner,
