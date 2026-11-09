@@ -257,6 +257,7 @@
     <script src="assets/js/export.js" defer></script>
     <script src="assets/js/export-plan.js" defer></script>
     <script src="assets/js/export-engine.js" defer></script>
+    <script src="assets/js/multitrack.js" defer></script>
     <script src="assets/js/i18n.js" defer></script>
     <script src="assets/js/motion.js" defer></script>
     <script src="assets/js/kinetic.js" defer></script>
@@ -265,6 +266,7 @@
     <script src="assets/js/project-assets.js" defer></script>
     <script src="assets/js/local-workspace.js" defer></script>
     <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/multitrack-ui.js" defer></script>
     <script src="assets/js/editor-v5.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
     <script src="assets/js/studio-shell.js" defer></script>
@@ -667,6 +669,7 @@
             <button id="tab-canvas" class="editor-tab" data-open-tab="canvas" type="button" role="tab" aria-selected="false" aria-controls="section-canvas"><span>4</span> canvas</button>
             <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export"><span>5</span> export</button>
             <button id="tab-project" class="editor-tab" data-open-tab="project" type="button" role="tab" aria-selected="false" aria-controls="section-project"><span>6</span> project</button>
+            <button id="tab-tracks" class="editor-tab" data-open-tab="tracks" type="button" role="tab" aria-selected="false" aria-controls="section-tracks"><span>7</span> tracks</button>
         </nav>
 
         <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
@@ -1208,6 +1211,46 @@
             <div id="exportStatus" class="meta muted" data-status-key="noExport">no export yet</div>
             <div id="exportEstimate" class="meta muted" data-status-key="estimateNA">estimated export time: n/a</div>
             <div class="pill-note" data-i18n="exportNote">video-only by default; loaded local audio can be merged when enabled</div>
+        </div>
+
+        <div id="section-tracks" class="section editor-section" data-editor-tab="tracks" role="tabpanel" aria-labelledby="tab-tracks">
+            <div class="section-title">multitrack project • phase 14</div>
+            <p class="mini-copy">Organize clip metadata, timing and track order. Preview and export still use the original editor until phases 15–16.</p>
+            <div class="row mt-control-bar">
+                <label for="mtTrackType">track type</label>
+                <select id="mtTrackType"><option value="video">Video</option><option value="overlay">Overlay</option><option value="lyrics">Lyrics</option><option value="audio">Audio</option></select>
+                <button id="mtAddTrack" type="button">add track</button>
+            </div>
+            <div id="mtTrackList" class="mt-track-list" role="group" aria-label="Multitrack tracks"></div>
+            <div class="row">
+                <label for="mtTrackName">selected track</label>
+                <input id="mtTrackName" type="text" maxlength="100" placeholder="track name">
+                <button id="mtRenameTrack" type="button">rename</button>
+                <button id="mtMoveTrackUp" type="button">move up</button>
+                <button id="mtMoveTrackDown" type="button">move down</button>
+                <button id="mtDeleteTrack" type="button">delete track</button>
+            </div>
+            <div class="section-title">clips</div>
+            <div id="mtClipList" class="mt-clip-list" role="group" aria-label="Clips in selected track"></div>
+            <div class="mt-clip-form">
+                <label for="mtClipKind">type <select id="mtClipKind"></select></label>
+                <label for="mtClipSource">imported media <select id="mtClipSource"></select></label>
+                <label for="mtClipName">name <input id="mtClipName" maxlength="180" placeholder="clip name"></label>
+                <label for="mtClipStart">start (seconds) <input id="mtClipStart" type="number" min="0" max="86400" step="0.01" value="0"></label>
+                <label for="mtClipDuration">duration (seconds) <input id="mtClipDuration" type="number" min="0.01" max="86400" step="0.01" value="5"></label>
+            </div>
+            <div class="row mt-control-bar">
+                <button id="mtAddClip" type="button">add clip</button>
+                <button id="mtApplyClip" type="button">apply start / duration</button>
+                <button id="mtDuplicateClip" type="button">duplicate</button>
+                <button id="mtDeleteClip" type="button">delete clip</button>
+            </div>
+            <div class="row">
+                <label for="mtSplitAt">split at (seconds)</label>
+                <input id="mtSplitAt" type="number" min="0" max="86400" step="0.01" value="2.5">
+                <button id="mtSplitClip" type="button">split selected clip</button>
+            </div>
+            <p id="mtStatus" class="meta muted" aria-live="polite">Multitrack metadata is saved with this project.</p>
         </div>
 
         <div id="section-project" class="section editor-section" data-editor-tab="project" role="tabpanel" aria-labelledby="tab-project">
