@@ -59,6 +59,29 @@ test("phase 16 decodes each locally imported audio source once and reuses buffer
     assert.equal(mixer.cachedCount, 0);
 });
 
+test("removing a clip releases stale decoded media while preserving shared sources", async () => {
+    let graph = insert(Tracks.empty(), "main-audio", "audio", "shared");
+    const first = graph.selectedClipId;
+    graph = Tracks.apply(graph, "duplicate-clip", { clipId: first });
+    const mixer = AudioMixer.createController({
+        environment: { AudioContext: class {
+            async decodeAudioData() { return { duration: 10, length: 480000 }; }
+            close() { return Promise.resolve(); }
+        } },
+        loadAsset: async () => ({ blob: new Blob([new Uint8Array([1, 2])]), name: "shared.wav" })
+    });
+    await mixer.prepare(graph);
+    assert.equal(mixer.cachedCount, 1);
+    graph = Tracks.apply(graph, "remove-clip", { clipId: first });
+    mixer.prune(graph);
+    assert.equal(mixer.cachedCount, 1);
+    graph = Tracks.apply(graph, "remove-clip", { clipId: graph.selectedClipId ||
+        graph.tracks[3].clips[0].id });
+    mixer.prune(graph);
+    assert.equal(mixer.cachedCount, 0);
+    mixer.dispose();
+});
+
 test("phase 16 playback and cropped export use the same source offsets", async () => {
     const started = [], gains = [], stopped = [];
     const buffer = { duration: 20, length: 20 * 48000 };
