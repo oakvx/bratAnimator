@@ -241,7 +241,7 @@ try {
             includeAudioInExportCheckbox.checked = false;
         }
     }));
-    await test('phase 15 composites local MP4 plus PNG overlay without requiring LRC', () => evaluate(async () => {
+    await test('phase 15 composites two independent MP4s plus PNG overlay without LRC', () => evaluate(async () => {
         auditSelect('square', 720);
         includeAudioInExportCheckbox.checked = false;
         state.audioBuffer = null;
@@ -251,6 +251,22 @@ try {
         const source = new File([auditLastExportBlob], 'video-source.mp4', { type: 'video/mp4' });
         const imported = await BratMultitrackHost.importMedia(source, 'main-video');
         auditAssert(imported.kind === 'video', 'video file was not accepted');
+        // Encode a second, independently seekable blue video layer with the same engine.
+        const blueCanvas = document.createElement('canvas');
+        blueCanvas.width = blueCanvas.height = 96;
+        const blueCtx = blueCanvas.getContext('2d');
+        const bluePlan = BratExportPlan.create({ width: 96, height: 96, fps: 12, start: 0, end: .5 });
+        const blueVideo = await BratExportEngine.exportTimeline({
+            plan: bluePlan, canvas: blueCanvas, context: blueCtx,
+            audioClips: [], loadMuxer: () => BratExport.loadMp4MuxerModule(),
+            renderFrame(context) { context.fillStyle = '#00bbff'; context.fillRect(0, 0, 96, 96); }
+        });
+        auditAssert(blueVideo.extension === 'mp4', 'secondary video must use MP4 in this browser');
+        await BratMultitrackHost.importMedia(new File([blueVideo.blob], 'second-layer.mp4', { type: 'video/mp4' }), 'main-overlay');
+        const blueId = BratMultitrackHost.snapshot().selectedClipId;
+        BratMultitrackHost.apply('set-clip', { clipId: blueId,
+            transform: { x: .25, y: .25, width: .3, height: .3, fit: 'cover' } });
+
         const overlayCanvas = document.createElement('canvas');
         overlayCanvas.width = 64; overlayCanvas.height = 64;
         const overlayCtx = overlayCanvas.getContext('2d');
@@ -269,17 +285,20 @@ try {
         const ctx = previewCanvas.getContext('2d');
         const center = [...ctx.getImageData(previewCanvas.width / 2, previewCanvas.height / 2, 1, 1).data];
         auditAssert(center[0] > 225 && center[1] < 80 && center[2] < 110, 'PNG overlay missing from video composite: ' + center);
+        const blue = [...ctx.getImageData(180, 180, 1, 1).data];
+        auditAssert(blue[0] < 70 && blue[1] > 140 && blue[2] > 180, 'second video layer not composited: ' + blue);
+
         const snapshot = await auditExport('png');
         auditAssert(snapshot.width === 720 && snapshot.height === 720, 'wrong PNG output');
         const movie = await auditExport('video');
         auditAssert(movie.width === 720 && movie.height === 720, 'wrong video output');
         const trackGraph = BratMultitrackHost.snapshot();
-        auditAssert(trackGraph.tracks[0].clips.length === 1 && trackGraph.tracks[1].clips.length === 1,
+        auditAssert(trackGraph.tracks[0].clips.length === 1 && trackGraph.tracks[1].clips.length === 2,
             'visual clips not retained');
         BratMultitrackHost.replace(BratTracks.empty());
         lyricsInput.value = '[00:00.00] restored';
         rebuildTimelineFromCurrentInputs();
-        return { video: movie.type, center, images: trackGraph.tracks[1].clips.length };
+        return { video: movie.type, center, blue, clips: trackGraph.tracks[1].clips.length };
     }));
     await test('no uncaught JavaScript errors', async () => { assert.deepEqual(runtimeErrors, []); return runtimeErrors; });
 } catch (error) {
