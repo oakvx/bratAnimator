@@ -5,3 +5,8 @@
 supabase/.temp/
 supabase/.branches/
 node_modules/
+
+# Do not accidentally publish separately sourced Windows audio files.
+# See assets/sounds/windows7/README.md for local setup and rights guidance.
+assets/sounds/windows7/*.wav
+assets/sounds/windows7/*.WAV
