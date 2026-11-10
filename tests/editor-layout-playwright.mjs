@@ -50,6 +50,28 @@ try {
         await page.waitForFunction(() => Boolean(window.BratStudio?.show && window.BratMultitrackHost));
         await page.evaluate(() => window.BratStudio.show('editor'));
         await page.waitForSelector('#panel', { state: 'visible' });
+        const architecture = await page.evaluate(() => ({
+            groupsReady: document.body.dataset.inspectorLayout === 'organized',
+            order: [...document.querySelectorAll('.editor-tabs [data-open-tab]')].map(node => node.dataset.openTab),
+            moved: {
+                clearProject: document.getElementById('clearSavedBtn').closest('.editor-section')?.dataset.editorTab,
+                portableExport: document.getElementById('exportProjectBtn').closest('.editor-section')?.dataset.editorTab,
+                safeZones: document.getElementById('safeZonesCheckbox').closest('.editor-section')?.dataset.editorTab
+            },
+            strayClipHeadings: [...document.querySelectorAll('#section-tracks > .section-title')].length,
+            strayExportNotes: document.querySelectorAll('#section-export > .pill-note').length,
+            duplicateIds: [...document.querySelectorAll('[id]')].map(n => n.id)
+                .filter((id, index, ids) => ids.indexOf(id) !== index)
+        }));
+        assert.equal(architecture.groupsReady, true);
+        assert.deepEqual(architecture.order, tabs, 'Navigation must match the editor workflow');
+        assert.deepEqual(architecture.moved, {
+            clearProject: 'project', portableExport: 'project', safeZones: 'canvas'
+        });
+        assert.equal(architecture.strayClipHeadings, 1);
+        assert.equal(architecture.strayExportNotes, 0);
+        assert.deepEqual(architecture.duplicateIds, []);
+        console.log('EDITOR IA ' + viewport.name + ': ' + JSON.stringify(architecture));
         for (const name of tabs) {
             const tab = page.locator('[data-open-tab="' + name + '"]');
             await tab.click({ force: true });
@@ -85,10 +107,37 @@ try {
                 viewport.name + ' document overflows by ' + (metrics.docWidth - viewport.width) + 'px');
             assert.deepEqual(metrics.overflow, [], viewport.name + '/' + name + ' form controls exceed inspector width');
         }
+        // Select a text overlay, then an audio clip, and verify that the
+        // properties inspector exposes only relevant controls.
+        await page.evaluate(() => {
+            window.BratMultitrackHost.apply('add-clip', {
+                trackId: 'main-overlay', clip: { kind: 'text', name: 'Text for layout test',
+                    start: 0, duration: 2, source: { kind: 'text', text: 'Title' } }
+            });
+        });
+        await page.locator('[data-open-tab="tracks"]').click({ force: true });
+        assert.equal(await page.locator('[data-layout-group="track-visual"]').isVisible(), true);
+        assert.equal(await page.locator('[data-layout-group="track-audio"]').isVisible(), false);
+        await page.screenshot({ path: path.join(output, viewport.name + '-visual-properties.png'), fullPage: true });
+        await page.evaluate(() => {
+            window.BratMultitrackHost.apply('add-clip', {
+                trackId: 'main-audio', clip: { kind: 'audio', name: 'Audio for layout test',
+                    start: 0, duration: 2, source: { kind: 'audio' } }
+            });
+        });
+        assert.equal(await page.locator('[data-layout-group="track-visual"]').isVisible(), false);
+        assert.equal(await page.locator('[data-layout-group="track-audio"]').isVisible(), true);
+        await page.screenshot({ path: path.join(output, viewport.name + '-audio-properties.png'), fullPage: true });
+        // The advanced editor must remain usable after controls were moved.
+        await page.locator('#editorModeSelect').selectOption('advanced');
+        await page.locator('[data-open-tab="design"]').click({ force: true });
+        assert.equal(await page.locator('#entranceSettings').isVisible(), true);
+        assert.equal(await page.locator('#textSettings').isVisible(), true);
+        await page.screenshot({ path: path.join(output, viewport.name + '-advanced-design.png'), fullPage: true });
         assert.deepEqual(errors, [], viewport.name + ' runtime page errors');
         await context.close();
     }
-    console.log('LAYOUT AUDIT PASS: ' + summary.length + ' screenshots, no horizontal clipping and functional tabs.');
+    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 6) + ' screenshots, no horizontal clipping, correct grouping and functional tabs.');
 } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
