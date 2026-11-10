@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v24-phase17-layout-audit";
+const CACHE_NAME = "brat-animator-v25-phase17-timeline";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ const APP_ASSETS = [
   "./vendor/7css/7.scoped.css",
   "./assets/css/studio-win7.css",
   "./assets/css/editor-layout.css",
+  "./assets/css/timeline-editor.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -22,6 +23,7 @@ const APP_ASSETS = [
   "./assets/js/multitrack.js",
   "./assets/js/video-composer.js",
   "./assets/js/audio-mixer.js",
+  "./assets/js/timeline-core.js",
   "./assets/js/i18n.js",
   "./assets/js/local-workspace.js",
 "./assets/js/app.js",
@@ -32,6 +34,7 @@ const APP_ASSETS = [
   "./assets/js/project-assets.js",
   "./assets/js/editor-v5.js",
   "./assets/js/editor-layout.js",
+  "./assets/js/timeline-editor.js",
   "./assets/js/italian-ui.js",
   "./assets/js/studio-shell.js",
 "./assets/js/supabase-config.js",
