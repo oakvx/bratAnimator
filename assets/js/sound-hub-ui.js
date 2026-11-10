@@ -11,6 +11,26 @@
 
     const library = api.createLibrary();
     const audio = $("studioSoundPlayer");
+    const playerbar = $("studioSoundPlayerbar");
+    const seekInput = $("studioSoundSeek");
+    const timeOutput = $("studioSoundTime");
+    const playPause = $("studioSoundPlayPause");
+    const formatTime = value => {
+        const seconds = Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+        return Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0");
+    };
+    function updatePlayerbar() {
+        const active = Boolean(audio.currentSrc || audio.getAttribute("src"));
+        playerbar.hidden = !active;
+        if (!active) return;
+        const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+        seekInput.disabled = duration <= 0;
+        seekInput.value = String(duration > 0 ? Math.round(audio.currentTime / duration * 1000) : 0);
+        timeOutput.textContent = formatTime(audio.currentTime) + " / " + formatTime(duration);
+        playPause.textContent = audio.paused ? "▶" : "Ⅱ";
+        playPause.setAttribute("aria-label", audio.paused ? "Riproduci" : "Pausa");
+        playerbar.classList.toggle("is-playing", !audio.paused);
+    }
     let view = "home";
     let filter = "all";
     let selectedCollection = "";
@@ -56,6 +76,7 @@
         previewId = null;
         previewOwner = null;
         $("studioSoundNowPlaying").textContent = "Nessun audio selezionato";
+        updatePlayerbar();
     }
     async function preview(track) {
         try {
@@ -72,6 +93,7 @@
             previewOwner = owner;
             audio.src = previewUrl;
             $("studioSoundNowPlaying").textContent = track.name;
+            updatePlayerbar();
             try { await audio.play(); }
             catch (_) { setNotice("Premi Play nel lettore per ascoltare questo audio."); }
         } catch (error) {
@@ -319,6 +341,20 @@
         refresh().catch(error => setNotice(error.message, true));
     }
 
+    for (const event of ["loadedmetadata", "durationchange", "timeupdate", "play", "pause", "ended", "emptied"]) {
+        audio.addEventListener(event, updatePlayerbar);
+    }
+    playPause.addEventListener("click", () => {
+        if (!audio.getAttribute("src")) return;
+        if (audio.paused) audio.play().catch(error => setNotice(error.message, true));
+        else audio.pause();
+    });
+    $("studioSoundStop").addEventListener("click", clearPreview);
+    seekInput.addEventListener("input", () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+            audio.currentTime = audio.duration * Number(seekInput.value) / 1000;
+        }
+    });
     $("studioSoundImport").addEventListener("click", () => $("studioSoundFileInput").click());
     $("studioSoundFileInput").addEventListener("change", () =>
         importFiles().catch(error => setNotice(error.message, true)));
