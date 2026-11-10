@@ -600,6 +600,8 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const entry = state.undoStack.pop();
             state.redoStack.push({ label: entry.label, payload: current });
             restoreProjectSettings(entry.payload, { skipHistory: true });
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            saveProjectSettings();
             setProjectFeatureStatus(`undid ${entry.label}`);
             updateUndoRedoState();
         }
@@ -610,6 +612,8 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const entry = state.redoStack.pop();
             state.undoStack.push({ label: entry.label, payload: current });
             restoreProjectSettings(entry.payload, { skipHistory: true });
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            saveProjectSettings();
             setProjectFeatureStatus(`redid ${entry.label}`);
             updateUndoRedoState();
         }
@@ -5407,9 +5411,23 @@ async function updateExportEstimate() {
             snapshot: () => BratTracks.normalize(state.multitrack),
             composer: () => visualComposer,
             mixer: () => trackAudioMixer,
+            currentTime: () => state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec,
+            duration: () => getPlaybackDuration(),
+            seek: seconds => seekTo(seconds),
+            undo: () => undoProjectChange(),
+            redo: () => redoProjectChange(),
+            history: () => ({ undo: state.undoStack.length, redo: state.redoStack.length }),
             apply(operation, args) {
                 if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
-                state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                if (operation === "select-track" || operation === "select-clip") {
+                    state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                } else {
+                    // Use the same bounded project history as lyric editing.
+                    // A complete drag is committed once, on pointerup.
+                    commitProjectChange("multitrack " + operation, () => {
+                        state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                    });
+                }
                 trackAudioMixer.stop();
                 trackAudioMixer.prune(state.multitrack);
                 if (state.isPlaying) startPreviewAudio();
@@ -5536,12 +5554,14 @@ async function updateExportEstimate() {
                 const stored = await loadMediaBlob(assetId);
                 if (!stored?.blob) throw new Error("IndexedDB did not persist the selected media.");
                 const start = Math.max(0, Math.min(state.pausedElapsedSec, 86399));
-                state.multitrack = BratTracks.apply(state.multitrack, "add-clip", {
+                commitProjectChange("import multitrack media", () => {
+                    state.multitrack = BratTracks.apply(state.multitrack, "add-clip", {
                     trackId, clip: {
                         kind, name: file.name, start,
                         duration: Math.max(0.01, Math.min(duration, 86400 - start)),
                         source: { kind, assetId, name: file.name }
                     }
+                });
                 });
                 await visualComposer.sync(state.multitrack);
                 if (state.isPlaying) startPreviewAudio();
