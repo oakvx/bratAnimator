@@ -245,6 +245,17 @@
     }
     async function renderTrack(track, collections) {
         const row = node("div", "studio-sound-row");
+        row.tabIndex = 0;
+        row.setAttribute("role", "group");
+        row.setAttribute("aria-label", "Audio: " + track.name);
+        row.addEventListener("dblclick", event => {
+            if (!event.target.closest("button, select")) preview(track);
+        });
+        row.addEventListener("keydown", event => {
+            if (event.target !== row || !["Enter", " "].includes(event.key)) return;
+            event.preventDefault();
+            preview(track);
+        });
         const icon = node("span", "studio-sound-disc");
         icon.setAttribute("aria-hidden", "true");
         const main = node("div", "studio-sound-row-main");
@@ -354,6 +365,40 @@
         if (Number.isFinite(audio.duration) && audio.duration > 0) {
             audio.currentTime = audio.duration * Number(seekInput.value) / 1000;
         }
+    });
+    const browserPane = $("studioSoundsView").querySelector(".studio-sound-browser");
+    let dropDepth = 0;
+    browserPane.addEventListener("dragenter", event => {
+        if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+        event.preventDefault();
+        dropDepth++;
+        browserPane.classList.add("is-file-drop");
+    });
+    browserPane.addEventListener("dragover", event => {
+        if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+    });
+    browserPane.addEventListener("dragleave", () => {
+        dropDepth = Math.max(0, dropDepth - 1);
+        if (!dropDepth) browserPane.classList.remove("is-file-drop");
+    });
+    browserPane.addEventListener("drop", event => {
+        event.preventDefault();
+        dropDepth = 0;
+        browserPane.classList.remove("is-file-drop");
+        if (!event.dataTransfer?.files?.length) return;
+        const audioFiles = [...event.dataTransfer.files].filter(file =>
+            file.type.startsWith("audio/") || /\.(mp3|wav|m4a|aac|ogg|flac|webm)$/i.test(file.name));
+        if (!audioFiles.length) {
+            setNotice("Trascina file audio MP3, WAV, M4A, OGG o FLAC.", true);
+            return;
+        }
+        const fileInput = $("studioSoundFileInput");
+        const transfer = new DataTransfer();
+        audioFiles.forEach(file => transfer.items.add(file));
+        fileInput.files = transfer.files;
+        fileInput.dispatchEvent(new Event("change", { bubbles: true }));
     });
     $("studioSoundImport").addEventListener("click", () => $("studioSoundFileInput").click());
     $("studioSoundFileInput").addEventListener("change", () =>
