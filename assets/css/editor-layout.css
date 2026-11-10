@@ -201,3 +201,31 @@ body.studio-editor-open .inspector-group :where(input,button,select,textarea):fo
     body.studio-editor-open .inspector-group .mt-audio-form,
     body.studio-editor-open .inspector-group .mt-visual-form { grid-template-columns: 1fr; }
 }
+
+/* Public, indexable description on the actual editor homepage, compact enough
+   to preserve the original Windows 7 dashboard composition. */
+.studio-seo-intro {
+    padding: 13px 15px;
+    margin: 10px 0 13px;
+    border: 1px solid #c9d8bc;
+    border-radius: 8px;
+    background: #f4faee;
+    color: #263324;
+}
+.studio-seo-intro h2 {
+    margin: 0 0 5px;
+    color: #284122;
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.3;
+}
+.studio-seo-intro p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.studio-seo-intro a { color: #356d19; text-decoration: underline; }
+.studio-seo-intro .studio-seo-note { margin-top: 5px; font-size: 10px; color: #657261; }
+@media(max-width:500px) {
+    .studio-seo-intro { padding: 11px 12px; margin: 8px 0 11px; }
+}
