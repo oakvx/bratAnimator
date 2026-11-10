@@ -48,7 +48,32 @@ try {
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         await page.goto('http://127.0.0.1:' + server.address().port, { waitUntil: 'load' });
-        await page.waitForFunction(() => Boolean(window.BratStudio?.show && window.BratMultitrackHost));
+        await page.waitForFunction(() => Boolean(window.BratStudio?.show && window.BratMultitrackHost && window.BratGuidedTour));
+        assert.equal(await page.locator('#studioMainWindow.window.glass.active').isVisible(), true);
+        assert.equal(await page.locator('#studioAddressCurrent').textContent(), 'Home');
+        assert.equal(await page.locator('.studio-seo-intro').count(), 0, 'Promotional free editor banner must not return');
+        assert.ok(!(await page.locator('#studioHomeView').innerText()).includes('Free Brat Video Editor Online'));
+        await page.screenshot({ path: path.join(output, viewport.name + '-aero-home.png'), fullPage: true });
+        // The help button must open a real interactive 7.css window, with
+        // working progress, selectable steps and a demo action on the timeline.
+        await page.locator('#studioAddressHelp').click();
+        await page.waitForSelector('#tutorialOverlay:not(.hidden)');
+        assert.equal(await page.locator('#tutorialStepNav button').count(), 9);
+        assert.equal(await page.locator('#tutorialBar').getAttribute('max'), '9');
+        await page.locator('#tutorialStepNav button').nth(3).click();
+        assert.equal(await page.locator('#tutorialTitle').textContent(), 'Arrange clips on the timeline');
+        await page.locator('#tutorialActionBtn').click();
+        assert.ok(await page.evaluate(() => window.BratMultitrackHost.snapshot().tracks
+            .some(track => track.clips.some(clip => clip.name === 'Brat demo title'))),
+            'Interactive tutorial action did not add a reversible sample clip');
+        await page.screenshot({ path: path.join(output, viewport.name + '-aero-guided-tour.png'), fullPage: true });
+        await page.locator('#tutorialStepNav button').nth(6).click();
+        assert.equal(await page.evaluate(() => window.BratStudio.getView()), 'sounds');
+        assert.equal(await page.locator('#studioSoundPlayerbar').isVisible(), false,
+            'Sound Hub must not show its player until an audio track is selected');
+        await page.locator('#tutorialWindowClose').click();
+        assert.equal(await page.locator('#tutorialOverlay').isVisible(), false);
+        await page.screenshot({ path: path.join(output, viewport.name + '-aero-sound-hub.png'), fullPage: true });
         await page.evaluate(() => window.BratStudio.show('editor'));
         await page.waitForSelector('#panel', { state: 'visible' });
         const architecture = await page.evaluate(() => ({
@@ -238,8 +263,8 @@ try {
         await seoPage.screenshot({ path: path.join(output, 'seo-' + item.locale + '.png'), fullPage: true });
     }
     await seoContext.close();
-    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 10) +
-        ' screenshots, 180-clip virtualization, localized SEO, no horizontal clipping and functional tabs.');
+    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 16) +
+        ' screenshots, Aero dashboard and onboarding, 180-clip virtualization, localized SEO, no horizontal clipping and functional tabs.');
 } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
