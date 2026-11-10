@@ -104,7 +104,7 @@
     }
 
     if (design) {
-        const presets = createGroup(design, "style-presets", "Quick looks");
+        const presets = createGroup(design, "style-presets", "Looks & animation");
         add(design, presets, [".editor-template-section", "#themePresetSelect"]);
         const typography = createGroup(design, "style-typography", "Typography");
         add(design, typography, ["#textSettings", "#entranceSettings"]);
@@ -142,6 +142,9 @@
             "Edit overlays, position, scale, rotation and opacity.");
         add(tracks, visual, ["#mtClipText"]);
         add(tracks, clips, ["#mtStatus"]);
+        // This old heading became redundant after replacing the flat form with
+        // grouped, labelled controls.
+        tracks.querySelector(':scope > .section-title:not(:first-child)')?.remove();
         const lead = tracks.querySelector(":scope > .mini-copy");
         if (lead) lead.textContent = "Import media, arrange clips and choose the properties of the selected layer. All changes are stored locally.";
         const sourceText = sources.querySelector(".mini-copy");
@@ -162,7 +165,10 @@
         const intro = output.querySelector(":scope > p[data-i18n='exportIntro']");
         if (intro) intro.textContent = "Export your current arrangement as video or still frames. Timing and audio are taken from the same timeline.";
         const endnote = output.querySelector(":scope > .pill-note");
-        if (endnote) endnote.textContent = "Additional video and audio tracks are included automatically. Legacy Timing audio is optional.";
+        if (endnote) {
+            endnote.textContent = "Audio/video tracks are mixed automatically. Legacy Timing audio is optional.";
+            settings.append(endnote);
+        }
     }
 
     if (project) {
@@ -202,7 +208,7 @@
         const clip = track?.clips.find(item => item.id === graph.selectedClipId);
         const audio = tracks?.querySelector('[data-layout-group="track-audio"]');
         const visual = tracks?.querySelector('[data-layout-group="track-visual"]');
-        if (audio) audio.hidden = !track || !(track.kind === "audio" || ["audio", "video"].includes(clip?.kind) || track.kind === "video");
+        if (audio) audio.hidden = !clip || !["audio", "video"].includes(clip.kind);
         if (visual) visual.hidden = !clip || !["text", "image", "video"].includes(clip.kind);
     }
     window.addEventListener("brat:multitrack-changed", syncTrackPropertyPanels);
