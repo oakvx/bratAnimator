@@ -125,3 +125,79 @@ body.studio-window-maximized #studioMainWindow.window.glass.active {animation:no
 @media(prefers-reduced-motion:reduce) {
   body.studio-dashboard-open #studioMainWindow.window.glass.active {animation:none;}
 }
+
+/* Window chrome for the actual video editor. 7.css draws the titlebar,
+   caption icons and glass border; these rules only position it in the UI. */
+#studioEditorChrome.studio-editor-chrome {display:none !important;}
+#studioEditorChrome .window.glass.active {filter:none;}
+@media(min-width:981px) {
+  body.studio-editor-open #studioEditorChrome.studio-editor-chrome {
+    display:block !important;
+    position:fixed;top:0;left:0;right:0;height:34px;
+    z-index:70;pointer-events:none;
+  }
+  body.studio-editor-open #studioEditorChrome .window.glass.active {
+    display:block;
+    position:absolute;inset:0;
+    width:100%;min-height:34px;height:34px;
+    margin:0;padding:2px 6px;border-radius:0;
+    border:1px solid #a5d2ed;
+    box-shadow:inset 0 1px 0 #fff8;
+    background:linear-gradient(#e3f7ffb5,#78b9e8c4);
+    pointer-events:auto;
+  }
+  body.studio-editor-open #studioEditorChrome .title-bar {
+    display:flex;align-items:center;justify-content:space-between;
+    height:29px;min-height:29px;
+    padding:0 3px 0 8px;
+  }
+  body.studio-editor-open #studioEditorChrome .title-bar-text {
+    color:#17405d;font:600 12px "Segoe UI",Tahoma,sans-serif;
+    text-shadow:0 1px #fff;
+  }
+  body.studio-editor-open #studioEditorChrome .title-bar-controls button {cursor:pointer;}
+  body.studio-editor-open .topbar.main-menu-v4 {
+    inset:34px 0 auto;
+    top:34px;
+    z-index:45;
+    color:#173d58;
+    border-bottom:1px solid #9abed8;
+    background:linear-gradient(#fcfeff,#e1f0fb 45%,#c6dff0 46%,#e6f4ff);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  body.studio-editor-open .topbar.win7 :where(button,.chip) {
+    color:#254560;border:1px solid #9ebcce;border-radius:3px;
+    background:var(--w7-el-grad);
+    box-shadow:var(--w7-el-sd);
+    text-shadow:0 1px #fff;
+  }
+  body.studio-editor-open .topbar.win7 :where(button,.chip):hover {
+    color:#173f5b;border-color:#4996c8;background:var(--w7-el-grad-h);
+  }
+  body.studio-editor-open .topbar.win7 :where(button,.chip):active,
+  body.studio-editor-open .topbar.win7 .lang-btn[aria-pressed=true] {
+    color:#193c52;background:var(--w7-el-grad-a);
+  }
+  body.studio-editor-open .topbar .menu-brand-copy strong {
+    color:#184a6a;font-family:"Segoe UI",Tahoma,sans-serif;font-size:17px;
+  }
+  body.studio-editor-open .topbar .menu-brand-copy span {color:#4d7287;}
+  body.studio-editor-open .topbar .theme-switch {
+    border-color:#b2cadb;background:#e8f4fa;border-radius:4px;
+  }
+  body.studio-editor-open .topbar .lang-switch {border-color:#b2cadb;}
+  body.studio-editor-open .panel {
+    top:calc(var(--topbar-height) + 34px);
+    bottom:var(--brat-taskbar-height);
+    border-right-color:#a9cadd;
+    box-shadow:0 6px 14px #1b52741a;
+  }
+  body.studio-editor-open .page-shell {
+    padding-top:calc(var(--topbar-height) + 34px);
+    padding-bottom:var(--brat-taskbar-height);
+  }
+  body.studio-editor-open #editor.app {
+    height:calc(100dvh - var(--topbar-height) - 34px - var(--brat-taskbar-height));
+  }
+  body.studio-editor-open .studio-taskbar {display:flex;}
+}
