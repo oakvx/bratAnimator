@@ -413,3 +413,79 @@ body.studio-dashboard-open {
 @media(prefers-reduced-motion:reduce) {
   .tutorial-overlay *,#studioDashboard .studio-nav-link,#studioDashboard .studio-sound-row {transition:none !important;}
 }
+
+/* Original Aero-inspired desktop wallpaper: luminous blue glass, soft green
+   aurora and light beams, rather than a flat webpage background. */
+body.studio-dashboard-open {
+  background-color:#12618e;
+  background-image:
+    radial-gradient(ellipse 36% 60% at 79% 36%,rgba(219,252,255,.54) 0%,rgba(98,204,231,.18) 48%,transparent 85%),
+    conic-gradient(from 193deg at 70% 54%,transparent 0deg,rgba(215,255,255,.20) 15deg,transparent 36deg,rgba(219,255,248,.20) 44deg,transparent 66deg),
+    radial-gradient(ellipse 70% 38% at 21% 103%,rgba(81,178,91,.86) 0%,rgba(51,151,109,.28) 50%,transparent 100%),
+    radial-gradient(ellipse 80% 40% at 40% 5%,rgba(10,108,178,.82),transparent 100%),
+    linear-gradient(155deg,#073e79 0%,#168cc4 42%,#77d0ec 69%,#2f91b6 100%);
+  background-attachment:fixed;
+}
+#studioDashboard .studio-dashboard-inner {position:relative;}
+#studioDashboard .studio-sound-empty-workspace {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  box-sizing:border-box;
+  min-height:100%;
+  max-width:100%;
+  padding:28px 22px;
+  text-align:center;
+  color:#35566e;
+  background:
+    radial-gradient(circle at 50% 28%,rgba(213,239,255,.82),transparent 56%),
+    linear-gradient(#fff,#f5faff);
+}
+#studioDashboard .studio-sound-empty-icon {
+  display:grid;place-items:center;
+  width:74px;height:74px;
+  border-radius:16px;
+  color:#3b7aaf;
+  font:46px/1 'Segoe UI Symbol','Segoe UI',sans-serif;
+  background:linear-gradient(145deg,#fff,#d9edfe);
+  border:1px solid #b1cee4;
+  text-shadow:0 1px 0 #fff;
+  box-shadow:inset 0 2px 0 #fff,0 3px 12px rgba(54,106,146,.15);
+}
+#studioDashboard .studio-sound-empty-title {
+  font:650 clamp(17px,2.3vw,21px)/1.25 "Segoe UI",Tahoma,sans-serif;
+  color:#245072;
+}
+#studioDashboard .studio-sound-empty-description {
+  max-width:440px;margin:0;
+  font:12px/1.7 "Segoe UI",Tahoma,sans-serif;
+  color:#55738a;
+}
+#studioDashboard .studio-sound-empty-actions {
+  display:flex;flex-wrap:wrap;gap:9px;justify-content:center;
+}
+#studioDashboard .studio-sound-empty-actions button {
+  min-height:33px;padding:6px 13px;border-radius:4px;
+  font:12px "Segoe UI",Tahoma,sans-serif;
+  box-shadow:inset 0 1px rgba(255,255,255,.95),0 1px 2px rgba(39,85,116,.12);
+}
+#studioDashboard .studio-sound-empty-actions .studio-sound-empty-primary {
+  color:#164f74;
+  border-color:#74aad0;
+  background:linear-gradient(#fff 0%,#e9f6ff 44%,#c0e1f7 49%,#e4f4ff 100%);
+}
+#studioDashboard .studio-sound-empty-actions .studio-sound-empty-primary:hover {
+  border-color:#287cae;
+  background:linear-gradient(#fff,#d0edff 47%,#a4d4f1 49%,#d1eaff);
+}
+#studioDashboard .studio-sound-empty-footnote {
+  max-width:440px;margin:0;
+  font:10px/1.6 "Segoe UI",Tahoma,sans-serif;
+  color:#718a9c;
+}
+@media(max-width:580px) {
+  #studioDashboard .studio-sound-empty-workspace {padding:17px 13px;gap:9px;}
+  #studioDashboard .studio-sound-empty-icon {width:53px;height:53px;font-size:32px;border-radius:12px;}
+}
