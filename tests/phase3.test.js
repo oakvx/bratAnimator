@@ -68,17 +68,16 @@ test("manual backup reminders are based on editing, not merely page visits", () 
     assert.equal(reminders.shouldRemind("guest", "current"), false);
 });
 
-test("native 7.css layout and sounds are restricted to the dashboard", () => {
+test("the 7.css shell styles and sounds are isolated from rendered video", () => {
     const css = fs.readFileSync(path.join(__dirname, "../assets/css/studio-win7.css"), "utf8");
     assert.match(css, /studio-classic-home/);
     assert.match(css, /studio-project-card/);
     assert.match(css, /studio-modal-backdrop/);
     assert.doesNotMatch(css, /#previewCanvas\s*\{|\.stage-canvas-zone\s*\{/);
     const sound = fs.readFileSync(path.join(__dirname, "../assets/js/dashboard-audio.js"), "utf8");
-    assert.match(sound, /AudioContextClass/);
-    assert.match(sound, /studio-editor-open/);
+    assert.match(sound, /\.studio-taskbar/);
     assert.match(sound, /data-dashboard-sound-toggle/);
-    assert.doesNotMatch(sound, /fetch\(/);
+    assert.doesNotMatch(sound, /AudioContext|fetch\(/);
 });
 
 test("BRATCODE SQL uses owner authentication, expiry and anonymous import access", () => {

@@ -4,7 +4,7 @@ const api = require("../assets/js/win7-start-menu.js");
 
 function fixture() {
     const handlers = new Map();
-    function el(id, dataset = {}, textContent = "") {
+    function el(id, dataset = {}, textContent = "", allOnly = false) {
         const listeners = new Map();
         const attrs = new Map();
         return {
@@ -12,6 +12,7 @@ function fixture() {
             focusCount: 0, clickCount: 0,
             addEventListener(type, callback) { listeners.set(type, callback); },
             setAttribute(name, value) { attrs.set(name, String(value)); },
+            hasAttribute(name) { return allOnly && name === "data-start-all-only" || attrs.has(name); },
             getAttribute(name) { return attrs.get(name) || null; },
             focus() { this.focusCount++; },
             click() { this.clickCount++; },
@@ -29,8 +30,9 @@ function fixture() {
     const search = el("studioStartSearch");
     const empty = el("studioStartEmpty"); empty.hidden = true;
     const results = el("studioStartResults");
+    const programs = el("studioStartPrograms");
     const entries = [
-        el("new", { startAction: "new", startKeywords: "nuovo progetto video" }, "Nuovo progetto"),
+        el("new", { startAction: "new", startKeywords: "nuovo progetto video" }, "Nuovo progetto", true),
         el("sounds", { startView: "sounds", startKeywords: "musica sound hub audio" }, "Sound Hub"),
         el("projects", { startView: "projects", startKeywords: "progetti archivio" }, "Progetti"),
         el("account", { startAction: "account" }, "Account"),
@@ -41,7 +43,7 @@ function fixture() {
     const newButton = el("studioNewProject");
     const accountButton = el("studioNavAccount");
     const elements = { studioStartMenu:menu, studioStartButton:start, studioStartSearch:search, studioStartEmpty:empty,
-        studioStartResults:results, studioNewProject:newButton, studioNavAccount:accountButton };
+        studioStartResults:results, studioStartPrograms:programs, studioNewProject:newButton, studioNavAccount:accountButton };
     const document = {
         body: { classList: { contains: () => false } },
         getElementById(id) { return elements[id] || null; },
@@ -56,7 +58,7 @@ function fixture() {
         BratWin7ShellInstance: { restore() { calls.push("restore"); }, close() { calls.push("close"); } }
     };
     const controller = api.createStartMenu(document, win);
-    return {menu,start,search,empty,entries,document,win,newButton,accountButton,controller,calls};
+    return {menu,start,search,empty,entries,programs,document,win,newButton,accountButton,controller,calls};
 }
 
 test("Start search is case and accent insensitive, with no external service", () => {
@@ -99,6 +101,7 @@ test("Start routes to the existing local studio without bypassing its APIs", () 
     assert.deepEqual(f.calls, ["restore","sounds"]);
     assert.equal(f.controller.isOpen(), false);
     f.start.fire("click");
+    f.programs.fire("click");
     f.menu.fire("click", f.entries[0]);
     assert.equal(f.newButton.clickCount, 1);
     f.start.fire("click");

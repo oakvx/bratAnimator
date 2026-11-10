@@ -27,14 +27,38 @@ const server = createServer(async (request, response) => {
 });
 server.listen(0, '127.0.0.1');
 await once(server, 'listening');
+
+// An uncompressed 24-bit bitmap of the same dimensions as activity.bmp.
+// Distinct pixel values per frame let the test verify playback and ordering.
+function bootFixture() {
+    const size = 200;
+    const frames = 105;
+    const frameBytes = size * size * 3;
+    const pixels = frameBytes * frames;
+    const bmp = Buffer.alloc(54 + pixels);
+    bmp.write('BM');
+    bmp.writeUInt32LE(bmp.length, 2);
+    bmp.writeUInt32LE(54, 10);
+    bmp.writeUInt32LE(40, 14);
+    bmp.writeInt32LE(size, 18);
+    bmp.writeInt32LE(size * frames, 22);
+    bmp.writeUInt16LE(1, 26);
+    bmp.writeUInt16LE(24, 28);
+    bmp.writeUInt32LE(pixels, 34);
+    for (let frame = 0; frame < frames; frame++) {
+        const start = 54 + (frames - 1 - frame) * frameBytes;
+        bmp.fill(frame, start, start + frameBytes);
+    }
+    return { name: 'activity.bmp', mimeType: 'image/bmp', buffer: bmp };
+}
+
 let browser;
 try {
     browser = await chromium.launch({
         headless: true, executablePath: process.env.CHROME_PATH || '/usr/bin/chromium',
         args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--disable-background-networking']
     });
-    // Real Windows 7 boot, not a static decoration: first paint, skip, menu,
-    // Start orb, desktop shortcut, taskbar restore and the 7.css About window.
+    // Theme import, offline boot and desktop/window controls.
     const bootContext = await browser.newContext({
         viewport: { width: 1366, height: 768 }, reducedMotion: 'no-preference'
     });
@@ -45,16 +69,37 @@ try {
     const bootPage = await bootContext.newPage();
     bootPage.on('pageerror', error => { throw error; });
     await bootPage.goto('http://127.0.0.1:' + server.address().port, { waitUntil: 'domcontentloaded' });
-    await bootPage.waitForFunction(() => Boolean(window.BratBoot));
-    assert.equal(await bootPage.locator('#studioBoot').isVisible(), true,
-        'Boot animation must be visible before the desktop');
-    assert.equal(await bootPage.locator('.win7-boot-pane').count(), 4);
-    await bootPage.screenshot({ path: path.join(output, 'win7-boot-startup.png'), fullPage: true });
-    await bootPage.locator('#studioBootSkip').click();
-    await bootPage.waitForFunction(() => !window.BratBoot.isVisible());
+    assert.equal(await bootPage.evaluate(async () => (await window.BratBoot.ready).reason), 'unavailable');
     assert.equal(await bootPage.locator('#studioBoot').isVisible(), false);
-    assert.equal(await bootPage.evaluate(() => document.body.classList.contains('studio-boot-complete')), true);
-    await bootPage.waitForFunction(() => Boolean(window.BratStudio?.show));
+    await bootPage.evaluate(() => window.BratStudio.show('settings'));
+    await bootPage.locator('#studioWin7Files').setInputFiles({
+        name: 'activity.bmp', mimeType: 'image/bmp', buffer: Buffer.from('invalid')
+    });
+    await bootPage.waitForFunction(() => document.getElementById('studioWin7AssetsStatus').textContent.includes('non validi'));
+    const orb = await bootPage.evaluate(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 54;
+        canvas.height = 162;
+        return canvas.toDataURL('image/png').split(',')[1];
+    });
+    await bootPage.locator('#studioWin7Files').setInputFiles([
+        bootFixture(),
+        { name: 'start-orb.png', mimeType: 'image/png', buffer: Buffer.from(orb, 'base64') }
+    ]);
+    await bootPage.waitForFunction(() => document.body.classList.contains('win7-has-orb'));
+    await bootPage.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+    await bootContext.setOffline(true);
+    await bootPage.reload({ waitUntil: 'domcontentloaded' });
+    await bootPage.locator('#studioBoot').waitFor({ state: 'visible' });
+    await bootPage.waitForFunction(() => document.getElementById('studioBootFrames')
+        .getContext('2d').getImageData(0, 0, 1, 1).data[0] > 0);
+    await bootPage.keyboard.press('Escape');
+    assert.equal(await bootPage.evaluate(async () => (await window.BratBoot.ready).reason), 'skipped');
+    assert.equal(await bootPage.locator('#studioBoot').isVisible(), false);
+    assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
+    assert.equal(await bootPage.locator('#studioStartButton').evaluate(button => getComputedStyle(button).backgroundImage.includes('blob:')), true);
+    await bootContext.setOffline(false);
+    await bootPage.locator('#studioDesktopLauncher').dblclick();
     await bootPage.locator('#studioWin7MenuBar > li').first().click();
     assert.equal(await bootPage.locator('#studioWin7MenuBar > li').first().getAttribute('aria-expanded'), 'true');
     assert.equal(await bootPage.locator('#studioWin7MenuBar [data-win7-command="projects"]').isVisible(), true);
@@ -67,22 +112,33 @@ try {
     await bootPage.locator('#studioAboutClose').click();
     await bootPage.locator('#studioStartButton').click();
     assert.equal(await bootPage.locator('#studioStartMenu').isVisible(), true);
+    assert.equal(await bootPage.locator('#studioStartButton').evaluate(button => getComputedStyle(button).backgroundPositionY), '100%');
+    const allPrograms = bootPage.locator('#studioStartPrograms');
+    const settingsEntry = bootPage.locator('#studioStartResults [data-start-view="settings"]');
+    assert.equal(await settingsEntry.isVisible(), false);
+    await allPrograms.click();
+    assert.equal(await settingsEntry.isVisible(), true);
+    await allPrograms.click();
+    assert.equal(await settingsEntry.isVisible(), false);
     await bootPage.screenshot({ path: path.join(output, 'win7-start-menu.png'), fullPage: true });
     await bootPage.keyboard.press('Escape');
     await bootPage.locator('#studioShowDesktop').click();
     assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
     assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), true);
     await bootPage.screenshot({ path: path.join(output, 'win7-desktop-icons.png'), fullPage: true });
-    await bootPage.locator('[data-desktop-view="projects"]').click();
+    await bootPage.locator('[data-desktop-view="projects"]').dblclick();
     assert.equal(await bootPage.evaluate(() => window.BratStudio.getView()), 'projects');
     assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), false);
     await bootPage.evaluate(() => window.BratStudio.show('editor'));
     assert.equal(await bootPage.locator('#studioEditorChrome .window.glass.active').isVisible(), true,
         'The editor must also use a real 7.css window caption');
     await bootPage.screenshot({ path: path.join(output, 'win7-video-editor-titlebar.png'), fullPage: true });
+    const editorCaption = bootPage.locator('#studioEditorChrome');
+    const restoredWidth = (await editorCaption.boundingBox()).width;
     await bootPage.locator('#studioEditorMaximize').click();
     assert.equal(await bootPage.locator('#studioEditorMaximize').getAttribute('aria-label'), 'Restore');
-    assert.equal(await bootPage.evaluate(() => document.body.classList.contains('panel-closed')), true);
+    assert.ok((await editorCaption.boundingBox()).width > restoredWidth);
+    assert.equal(await bootPage.evaluate(() => document.body.classList.contains('panel-closed')), false);
     await bootPage.locator('#studioStartButton').click();
     assert.equal(await bootPage.locator('#studioStartMenu').isVisible(), true,
         'Start must remain accessible from the active editor');
@@ -90,8 +146,21 @@ try {
     await bootPage.locator('#studioEditorMinimize').click();
     assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), true);
     assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
+    assert.equal(await editorCaption.isVisible(), false);
+    await bootPage.locator('#studioTaskbarApp').click();
+    assert.equal(await bootPage.evaluate(() => window.BratStudio.getView()), 'editor');
+    assert.equal(await editorCaption.isVisible(), true);
+    await bootPage.locator('#studioShowDesktop').click();
+    assert.equal(await editorCaption.isVisible(), false);
+    await bootPage.locator('#studioShowDesktop').click();
+    assert.equal(await editorCaption.isVisible(), true);
+    await bootPage.evaluate(() => window.BratStudio.show('settings'));
+    await bootPage.locator('#studioWin7RemoveAssets').click();
+    await bootPage.waitForFunction(() => !document.body.classList.contains('win7-has-orb'));
+    await bootPage.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal(await bootPage.evaluate(async () => (await window.BratBoot.ready).reason), 'unavailable');
     await bootContext.close();
-    console.log('WINDOWS 7 SHELL PASS: animated boot, real 7.css menus, Start, About, taskbar and desktop shortcuts.');
+    console.log('WINDOWS 7 SHELL PASS: offline theme import, boot frames, 7.css menus, Start and window controls.');
     const tabs = ['lyrics', 'timing', 'tracks', 'design', 'canvas', 'export', 'project'];
     const summary = [];
     for (const viewport of [
