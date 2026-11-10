@@ -40,12 +40,14 @@
     function rootFor(container, selector) {
         return rootChild(container, container?.querySelector(selector));
     }
+    const optionalGroups = new Set(["style-motion", "style-background", "style-library", "export-preflight", "project-preview"]);
     function createGroup(container, key, heading, description = "") {
-        const group = document.createElement("section");
+        const collapsible = optionalGroups.has(key);
+        const group = document.createElement(collapsible ? "details" : "section");
         group.className = "inspector-group";
         group.dataset.layoutGroup = key;
         group.setAttribute("aria-label", heading);
-        const title = document.createElement("h3");
+        const title = document.createElement(collapsible ? "summary" : "h3");
         title.className = "inspector-group-heading";
         title.textContent = heading;
         group.append(title);
@@ -189,6 +191,22 @@
         if (externalLabel) external.prepend(externalLabel);
         const spareTitle = project.querySelector(":scope > .project-tools-title");
         spareTitle?.remove();
+    }
+
+    // Preflight stays collapsed until requested. Surface its concise status in
+    // the disclosure heading even while the detailed list is out of view.
+    const diagnostics = output?.querySelector('[data-layout-group="export-preflight"]');
+    const report = $("exportPreflightSummary");
+    const diagnosticsTitle = diagnostics?.querySelector(".inspector-group-heading");
+    if (diagnostics && report && diagnosticsTitle) {
+        const refreshReport = () => {
+            const text = report.textContent.trim().replace(/\\s+/g, " ");
+            diagnosticsTitle.textContent = text
+                ? "Preflight checks · " + (text.length > 54 ? text.slice(0, 51) + "…" : text)
+                : "Preflight checks";
+        };
+        new MutationObserver(refreshReport).observe(report, { characterData: true, childList: true, subtree: true });
+        refreshReport();
     }
 
     const leadTitles = {
