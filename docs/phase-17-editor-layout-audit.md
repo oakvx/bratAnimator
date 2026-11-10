@@ -33,6 +33,22 @@ Questa iterazione riguarda esclusivamente la **qualità dell'interfaccia esisten
 - Screenshot archiviati come artifact **`playwright-editor-layout`** in ogni CI; scaricabili dalla scheda GitHub Actions.
 - Restano attivi i test browser legacy di export, lyrics, editor V5, timing, dashboard, motion, media e gli unit test.
 
-## Perimetro non ancora concluso
+## Fase 17B — Timeline professionale completata
 
-Questa è la **revisione IA/layout della fase 17**, non l'intera fase 17: la nuova timeline drag-and-drop, zoom/snap e le scorciatoie per clip, così come gli stress test di performance su dispositivi mobili e Safari, rimangono ancora da implementare o validare. Nessun merge automatico.
+- `assets/js/timeline-core.js` calcola coordinate in secondi, tick della scala temporale, attrazione magnetica (snapping) verso estremi clip/testina e operazioni deterministiche di spostamento e trim. Gestisce lock e compatibilità delle tracce, oltre ai limiti di durata e velocità.
+- `assets/js/timeline-editor.js` disegna una **timeline orizzontale sotto l'anteprima**: più tracce, layer selezionabili, drag/drop, maniglie per trim, seek su ruler, zoom e fit-to-project, snapping disattivabile, split alla testina, tasti freccia per spostamento e cancellazione. L'importazione da File drag-and-drop usa lo storage locale già presente.
+- L'applicazione conserva **un solo stato per gesto** nella cronologia undo/redo del progetto; la selezione non genera una revisione. Le modifiche ritornano ai componenti di preview ed export già esistenti.
+- `assets/css/timeline-editor.css` fornisce un workspace con preview e timeline distinte, layout responsive e controlli accessibili.
+- Le clip fuori dall'intervallo visualizzato sono escluse dal rendering DOM; l'audit Playwright prova un progetto con **180 clip**, verificando la presenza di un numero limitato di nodi e l'assenza di overflow orizzontale.
+- I test reali Playwright su **desktop 1440×900 e mobile 390×844** trascinano un clip, verificano le coordinate finali, eseguono undo/redo, zoom-in e fit, e catturano screenshot. La suite include anche il rendering delle landing page SEO inglese e italiana.
+- `tests/timeline-core.test.js` verifica snapping, limiti, cross-track moves, trims, timecode e lock.
+
+## SEO e comunicazione del prodotto
+
+- Posizionamento principale **Brat Video Editor**; copertura complementare per **Free Brat Video Editor Online**, **Free Online Video Editor** e **Editor Video Brat Gratis Online**.
+- Aggiornate le pagine index/en/ru/zh, aggiunta `it/index.html`, i dati strutturati, la sitemap reciproca `hreflang` e i metadati della PWA. Le dichiarazioni sulla gratuità d'uso rispettano i termini: permesso richiesto per la pubblicazione/redistribuzione.
+- I test `tests/seo-metadata.test.js` verificano canonical, locale, JSON-LD, descrizioni italiane/inglesi e formato di export.
+
+## Consegna e limiti di compatibilità
+
+La **fase 17 è implementata** con CI automatica Chromium. Restano consigliati test manuali su Safari/iOS e Firefox, codec particolari e progetti video molto grandi prima di un merge pubblico. Il repository mantiene la **PR #20 aperta in draft**, senza merge automatico.
