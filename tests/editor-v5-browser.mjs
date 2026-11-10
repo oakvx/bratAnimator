@@ -48,6 +48,7 @@ try {
     await cdp('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
     await cdp('Page.navigate', { url: origin });
     await poll(() => document.readyState === 'complete' && !!window.BratEditor, 'v5 editor ready');
+    await poll(() => window.BratBoot && !window.BratBoot.isVisible(), 'Windows startup intro complete', 200);
     await evaluate(() => window.BratStudio.show('editor'));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
