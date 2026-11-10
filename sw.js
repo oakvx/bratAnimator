@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v28-win7-sound-placeholders";
+const CACHE_NAME = "brat-animator-v29-win7-desktop-boot";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -12,6 +12,8 @@ const APP_ASSETS = [
   "./assets/css/editor-layout.css",
   "./assets/css/timeline-editor.css",
   "./assets/css/studio-aero-polish.css",
+  "./assets/css/win7-boot.css",
+  "./assets/css/win7-desktop-polish.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -47,6 +49,8 @@ const APP_ASSETS = [
   "./assets/js/studio-help.js",
   "./assets/js/win7-shell.js",
   "./assets/js/win7-start-menu.js",
+  "./assets/js/win7-window-menu.js",
+  "./assets/js/win7-boot.js",
   "./assets/js/tiktok-config.js",
   "./assets/js/tiktok-login.js",
   "./assets/js/tiktok-link.js",
