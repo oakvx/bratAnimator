@@ -428,11 +428,16 @@
                         </div>
                         <div id="studioSoundNotice" class="studio-sound-notice" role="status" hidden></div>
                         <div id="studioSoundList" class="studio-sound-list" aria-live="polite"></div>
-                        <div class="studio-sound-playerbar">
-                            <div class="studio-sound-now"><span aria-hidden="true">♫</span><span id="studioSoundNowPlaying">Nessun audio selezionato</span></div>
-                            <audio id="studioSoundPlayer" controls preload="none" aria-label="Anteprima audio"></audio>
+                        <div class="studio-sound-playerbar" id="studioSoundPlayerbar" hidden aria-label="Anteprima audio selezionata">
+                            <button id="studioSoundPlayPause" type="button" aria-label="Riproduci o metti in pausa" title="Play / pausa">▶</button>
+                            <div class="studio-sound-now"><span class="studio-sound-status-led" aria-hidden="true"></span><span id="studioSoundNowPlaying">Nessun audio selezionato</span></div>
+                            <label class="studio-sound-seek-label" for="studioSoundSeek">Posizione</label>
+                            <input id="studioSoundSeek" type="range" min="0" max="1000" value="0" step="1" aria-label="Posizione di riproduzione" />
+                            <output id="studioSoundTime">0:00 / 0:00</output>
+                            <button id="studioSoundStop" type="button" title="Ferma anteprima" aria-label="Ferma anteprima">■</button>
+                            <audio id="studioSoundPlayer" preload="none" aria-label="Anteprima audio" hidden></audio>
                         </div>
-                        <p class="studio-sound-help">Gli audio rimangono in questo browser. Per inserirne uno nell'editor, premi «Usa nel progetto».</p>
+                        <p class="studio-sound-help">File salvati localmente. Scegli ▶ per l'anteprima o «Usa nel progetto» per montare l'audio nella timeline.</p>
                     </div>
                 </div>
             </div>
