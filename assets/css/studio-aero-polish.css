@@ -1,0 +1,415 @@
+/* Windows 7 Aero refinement: window, Explorer, Sound Hub and guided tour.
+ * Keeps the real bundled 7.css rules responsible for native chrome.
+ * Scoped to Brat shell only; export canvas and rendered media are unaffected.
+ */
+:root {
+  --brat-explorer-line: #bdd3e1;
+  --brat-explorer-text: #244863;
+}
+body.studio-dashboard-open {
+  background-color: #287cae;
+  background-image:
+    radial-gradient(ellipse 65% 55% at 85% 15%, rgba(255,255,255,.35), transparent 72%),
+    radial-gradient(ellipse 100% 46% at 22% 110%, rgba(81,175,105,.38), transparent 78%),
+    linear-gradient(155deg,#0b629f 0%,#4eabd8 43%,#93d1e6 76%,#4a95b8 100%);
+}
+#studioDashboard .studio-dashboard-inner {
+  width: min(100%, 1540px);
+  padding: 15px clamp(9px,1.8vw,25px) 25px;
+}
+#studioDashboard #studioMainWindow.window.glass.active {
+  min-height: min(850px, calc(100dvh - 77px));
+  border: 1px solid rgba(238,251,255,.95);
+  box-shadow:
+    0 0 0 1px rgba(27,81,118,.66),
+    0 0 0 5px rgba(255,255,255,.17),
+    0 15px 42px rgba(7,37,75,.42),
+    0 3px 6px rgba(11,48,89,.22);
+}
+#studioDashboard #studioMainWindow > .title-bar {
+  min-height: 35px;
+  padding: 3px 6px 4px 10px;
+}
+#studioDashboard #studioMainWindow > .title-bar .title-bar-text {
+  font-size: 12px;
+  text-shadow: 0 1px 0 rgba(255,255,255,.88);
+}
+#studioDashboard .studio-classic-body-grid {
+  min-height: min(760px, calc(100dvh - 160px));
+}
+#studioDashboard #studioNav {
+  background: linear-gradient(90deg,#e7f4ff 0%,#f7fbff 75%,#edf6fc 100%);
+  border-right:1px solid #b6ccdc;
+}
+#studioDashboard .studio-nav-brand {
+  color:#1b4463;
+  font-weight:700;
+  border-bottom:1px solid #c2d9e9;
+}
+#studioDashboard .studio-nav-link {
+  border-radius:3px;
+  min-height:37px;
+  transition:background .11s ease,border-color .11s ease;
+}
+#studioDashboard .studio-nav-link[aria-current="page"],
+#studioDashboard .studio-nav-link.is-active {
+  border:1px solid #84bbe0;
+  background:linear-gradient(#fafdff 0%,#dceeff 49%,#b9def9 50%,#e0f0fc 100%);
+  box-shadow:inset 0 1px 0 #fff,0 1px 1px #c3d6e7;
+  color:#143d58;
+}
+#studioDashboard .studio-dashboard-head {
+  padding:12px 15px 9px;
+  border-bottom:0;
+  background:linear-gradient(#ffffff,#edf7ff);
+}
+#studioDashboard .studio-dashboard-head h1 {color:#1c486b; font-size:18px;}
+#studioDashboard .studio-addressbar {
+  display:flex;align-items:center;gap:7px;
+  margin:0;
+  padding:7px 14px;
+  background:linear-gradient(#fafdff 0%,#eff7ff 47%,#dbeefa 100%);
+  border-top:1px solid #fff;
+  border-bottom:1px solid #b7ccdc;
+}
+#studioDashboard .studio-addressbar > button {
+  flex:0 0 auto;
+  min-height:27px;
+  padding:3px 10px;
+  white-space:nowrap;
+  border-color:#abc7dd;
+  font-size:11px;
+}
+#studioDashboard .studio-address-path {
+  display:flex;align-items:center;gap:8px;
+  min-height:29px;min-width:0;flex:1;
+  padding:4px 9px;
+  background:#fff;
+  border:1px solid #9dbbd3;
+  box-shadow:inset 0 1px 3px rgba(15,66,104,.12);
+  font-size:12px;color:#466882;
+}
+#studioDashboard .studio-address-path strong {
+  font-weight:600;
+  color:#24516f;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#studioDashboard .studio-address-separator {font-weight:700;color:#7193aa;}
+#studioDashboard .studio-view {
+  min-height:350px;
+  padding:12px 15px 19px;
+}
+#studioDashboard .studio-classic-commandbar {
+  margin:-12px -15px 12px;
+  padding:8px 12px;
+  gap:7px;
+  background:linear-gradient(#fff,#e5f3ff);
+  border-bottom:1px solid #b9d1e2;
+}
+#studioDashboard .studio-classic-directory,
+#studioDashboard .studio-classic-shortcuts,
+#studioDashboard .studio-settings-card,
+#studioDashboard .studio-panel-card {
+  border:1px solid #c2d6e3;
+  box-shadow:inset 0 1px 0 #fff;
+}
+#studioDashboard .studio-classic-directory h2,
+#studioDashboard .studio-classic-shortcuts h2 {
+  background:linear-gradient(#fcfeff,#edf6fd);
+  color:#315672;
+}
+#studioDashboard :where(button,input,select):focus-visible {
+  outline:2px solid #2d85c6;
+  outline-offset:2px;
+}
+/* Explorer file manager: tree + details list + conditional WMP-style player. */
+#studioDashboard .studio-sound-browser {
+  grid-template-columns: 176px minmax(0,1fr);
+  height: clamp(410px,61dvh,690px);
+  min-height:0;
+  overflow:hidden;
+  border:1px solid #b4cbdc;
+  box-shadow:inset 0 0 0 1px #fff;
+}
+#studioDashboard .studio-sound-tree {
+  overflow:auto;
+  background:linear-gradient(90deg,#f0f8fd 0%,#f8fbff 100%);
+  padding:10px 7px;
+}
+#studioDashboard .studio-sound-tree h2 {
+  color:#4b687f;
+  font-weight:700;
+  text-transform:uppercase;
+  font-size:10px;
+  letter-spacing:.05em;
+}
+#studioDashboard .studio-sound-tree button,
+#studioDashboard .studio-sound-collections button {
+  border-radius:3px;
+  min-height:31px;
+  padding:6px 9px;
+  color:#254c69;
+}
+#studioDashboard .studio-sound-tree button.is-selected {
+  background:linear-gradient(#fafdff,#d6ecff);
+  box-shadow:inset 0 1px 0 #fff;
+  border-color:#84bee4;
+  font-weight:650;
+}
+#studioDashboard .studio-sound-content {
+  display:flex;flex-direction:column;
+  min-height:0;overflow:hidden;
+}
+#studioDashboard .studio-sound-searchbar {
+  flex:0 0 auto;
+  padding:7px 9px;
+  background:linear-gradient(#fff,#f1f8ff);
+  border-bottom:1px solid #c1d5e5;
+}
+#studioDashboard .studio-sound-searchbar input {
+  min-height:29px;
+  box-shadow:inset 0 1px 2px rgba(34,76,104,.12);
+}
+#studioDashboard .studio-sound-list {
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  background:linear-gradient(#fff,#fdfefe);
+  scrollbar-color:#a7bfd3 #eff5fa;
+}
+#studioDashboard .studio-sound-row {
+  padding:8px 10px;
+  min-height:51px;
+  border-bottom:1px solid #e5eef5;
+  transition:background .1s ease;
+}
+#studioDashboard .studio-sound-row:nth-child(even) {background:#f8fbfe;}
+#studioDashboard .studio-sound-row:hover,
+#studioDashboard .studio-sound-row:focus-visible {background:#deeffd;}
+#studioDashboard .studio-sound-row:focus-visible {outline-offset:-2px;}
+#studioDashboard .studio-sound-row-main strong {color:#26465b;}
+#studioDashboard .studio-sound-row-actions {gap:5px;}
+#studioDashboard .studio-sound-row-actions button {
+  border-radius:3px;
+  min-width:28px;
+}
+#studioDashboard .studio-sound-playerbar {
+  display:grid;
+  grid-template-columns:31px minmax(105px,1fr) minmax(100px,2fr) 84px 30px;
+  align-items:center;gap:9px;
+  flex:0 0 auto;
+  min-height:48px;
+  padding:8px 10px;
+  background:linear-gradient(#f6fbff,#d8e9f6);
+  border-top:1px solid #aac5d9;
+}
+#studioDashboard .studio-sound-playerbar[hidden] {display:none !important;}
+#studioDashboard .studio-sound-playerbar > button {
+  display:grid;place-items:center;
+  width:30px;height:29px;
+  padding:0;
+  color:#254b69;
+  border-color:#97b7d0;
+  font-size:14px;
+}
+#studioDashboard .studio-sound-playerbar.is-playing .studio-sound-status-led {
+  background:#5ca52a; box-shadow:0 0 0 2px rgba(112,170,74,.22);
+}
+#studioDashboard .studio-sound-now {
+  flex:initial;
+  display:flex;gap:8px;
+  min-width:0;width:100%;
+  color:#295372;
+  font-size:11px;
+}
+#studioDashboard .studio-sound-status-led {
+  flex:0 0 7px;
+  width:7px;height:7px;
+  border-radius:50%;
+  background:#9cb5c5;
+}
+#studioDashboard .studio-sound-playerbar input[type=range] {
+  min-width:0;
+  width:100%;
+  margin:0;
+  accent-color:#2d82b9;
+}
+#studioDashboard .studio-sound-seek-label {
+  position:absolute;
+  width:1px;height:1px;overflow:hidden;
+  clip:rect(0,0,0,0);
+}
+#studioDashboard #studioSoundTime {
+  font:11px Consolas,monospace;
+  color:#3d6682;
+  text-align:center;
+  white-space:nowrap;
+}
+#studioDashboard .studio-sound-help {
+  flex:0 0 auto;
+  padding:7px 11px;
+  background:#f2f8fc;
+  border-top:1px solid #d5e5ef;
+  color:#638095;
+}
+#studioDashboard .studio-sound-browser.is-file-drop {
+  outline:3px solid #5aabdf;
+  outline-offset:-3px;
+}
+/* Interactive walkthrough is a genuine 7.css child window. */
+.tutorial-overlay {
+  z-index:1700;
+}
+.tutorial-overlay .tutorial-card.window.glass.active {
+  display:block;
+  position:fixed;
+  right:18px;
+  bottom:calc(var(--brat-taskbar-height,46px) + 15px);
+  left:auto;
+  top:auto;
+  width:min(445px,calc(100vw - 26px));
+  max-height:calc(100dvh - 28px);
+  overflow:auto;
+  padding:4px;
+  border-radius:7px;
+  border-color:rgba(242,253,255,.92);
+  box-shadow:0 0 0 1px #397395,0 8px 30px #082a4770,0 2px 3px #14395488;
+  color:#264a67;
+}
+.tutorial-overlay[data-side="left"] .tutorial-card.window.glass.active {
+  right:auto;left:18px;
+}
+.tutorial-overlay .tutorial-card .title-bar {
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:32px;
+}
+.tutorial-overlay .tutorial-card .title-bar-text {
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;
+  text-shadow:0 1px 0 #fff;
+}
+.tutorial-overlay .tutorial-card .window-body {
+  padding:16px 17px 14px;
+  background:#fff;
+}
+.tutorial-overlay .tutorial-heading {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;
+}
+.tutorial-overlay .tutorial-kicker {
+  font:700 10px/1.3 "Segoe UI",Tahoma,sans-serif;
+  color:#59798e;letter-spacing:.07em;
+}
+.tutorial-overlay .tutorial-progress {
+  font:700 11px Consolas,monospace;
+  color:#2d6b9a;
+  text-transform:none;
+  letter-spacing:0;
+}
+.tutorial-overlay .tutorial-bar {
+  display:block;
+  width:100%;height:10px;
+  margin:8px 0 13px;
+  accent-color:#71b83d;
+}
+.tutorial-overlay .tutorial-card h2 {
+  margin:3px 0 9px;
+  color:#214d6e;
+  font:650 20px/1.2 "Segoe UI",Tahoma,sans-serif;
+  letter-spacing:-.02em;
+}
+.tutorial-overlay .tutorial-card p {
+  font:12px/1.6 "Segoe UI",Tahoma,sans-serif;
+  color:#4a667c;
+}
+.tutorial-overlay .tutorial-tip {
+  background:#f0f8ff;
+  border:1px solid #c8deee;
+  border-left:3px solid #559bcc;
+  border-radius:2px;
+  padding:10px 11px;
+  font-size:11px;
+}
+.tutorial-overlay .tutorial-step-nav {
+  display:flex;
+  gap:4px;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  padding:13px 0 8px;
+}
+.tutorial-overlay .tutorial-step-dot {
+  display:grid;place-items:center;
+  padding:0;min-height:26px;min-width:26px;
+  border:1px solid #adcadf;
+  border-radius:4px;
+  background:linear-gradient(#fff,#e9f4fd);
+  color:#416983;
+  font:11px Consolas,monospace;
+}
+.tutorial-overlay .tutorial-step-dot[aria-current="true"] {
+  background:linear-gradient(#d6f0ff,#92caee);
+  border-color:#3f8bb9;
+  color:#174e74;
+  box-shadow:inset 0 1px 0 #fff;
+}
+.tutorial-overlay .tutorial-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  margin:9px 0 6px;
+}
+.tutorial-overlay .tutorial-actions button {
+  min-width:0;
+  min-height:30px;
+  padding:5px 8px;
+  font-size:11px;
+}
+.tutorial-overlay .tutorial-actions #tutorialActionBtn:not(.hidden) {
+  grid-column:1/-1;
+  order:-1;
+  border-color:#9dc3a9;
+  background:linear-gradient(#fff,#dff3d8);
+  color:#2f6730;
+}
+.tutorial-overlay .tutorial-keyboard {font-size:10px !important;color:#8095a4 !important; margin:5px 0 0 !important;}
+.tutorial-focus {
+  outline:3px solid #67c1f6 !important;
+  outline-offset:4px !important;
+  box-shadow:0 0 0 7px rgba(58,162,219,.18);
+}
+@media(max-width:980px) {
+  #studioDashboard .studio-dashboard-inner {padding:7px 7px 65px;}
+  #studioDashboard .studio-classic-body-grid {min-height:0;}
+}
+@media(max-width:580px) {
+  #studioDashboard .studio-view {padding:10px 10px 16px;}
+  #studioDashboard .studio-classic-commandbar {margin:-10px -10px 10px;}
+  #studioDashboard .studio-addressbar {padding:6px 8px;gap:4px;}
+  #studioDashboard .studio-address-path {gap:5px;font-size:11px;min-width:0;}
+  #studioDashboard .studio-sound-browser {grid-template-columns:1fr;height:clamp(390px,68dvh,620px);}
+  #studioDashboard .studio-sound-tree {display:flex;flex-wrap:wrap;gap:4px;padding:7px;border-right:0;border-bottom:1px solid #bfd6e6;max-height:128px;}
+  #studioDashboard .studio-sound-tree h2 {width:100%;margin-bottom:1px;}
+  #studioDashboard .studio-sound-tree button {min-height:28px;}
+  #studioDashboard .studio-sound-row-actions {gap:5px;}
+  #studioDashboard .studio-sound-playerbar {
+    grid-template-columns:29px minmax(0,1fr) 55px 29px;
+    gap:6px;
+  }
+  #studioDashboard .studio-sound-playerbar #studioSoundSeek {
+    grid-column:1/-1;grid-row:2;
+  }
+  #studioDashboard .studio-sound-now {grid-column:2;grid-row:1;}
+  #studioDashboard #studioSoundTime {grid-column:3;grid-row:1;}
+  #studioDashboard #studioSoundStop {grid-column:4;grid-row:1;}
+  .tutorial-overlay .tutorial-card.window.glass.active,
+  .tutorial-overlay[data-side="left"] .tutorial-card.window.glass.active {
+    right:7px;left:7px;bottom:calc(var(--brat-taskbar-height,43px) + 6px);
+    width:auto;
+    max-height:min(76dvh,635px);
+  }
+  .tutorial-overlay .tutorial-card .window-body {padding:13px;}
+  .tutorial-overlay .tutorial-card h2 {font-size:18px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .tutorial-overlay *,#studioDashboard .studio-nav-link,#studioDashboard .studio-sound-row {transition:none !important;}
+}
