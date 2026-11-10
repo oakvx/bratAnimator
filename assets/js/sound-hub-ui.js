@@ -329,13 +329,33 @@
         const list = $("studioSoundList");
         list.replaceChildren();
         if (!tracks.length) {
-            const empty = node("div", "studio-sound-blank");
-            empty.append(
-                node("strong", "", allTracks.length ? "Nessun risultato" : "La libreria è vuota"),
-                node("span", "", allTracks.length
-                    ? "Cambia filtro o ricerca."
-                    : "Importa un file audio dal tuo dispositivo.")
-            );
+            const empty = node("div", "studio-sound-blank studio-sound-empty-workspace");
+            const icon = node("div", "studio-sound-empty-icon", allTracks.length ? "⌕" : "♫");
+            icon.setAttribute("aria-hidden", "true");
+            const title = node("strong", "studio-sound-empty-title",
+                allTracks.length ? "Nessun audio trovato" : "La tua libreria audio");
+            const message = node("p", "studio-sound-empty-description",
+                allTracks.length
+                    ? "Nessuna traccia corrisponde a questa ricerca. Puoi cambiare filtro o tornare a tutti gli audio."
+                    : "Importa MP3, WAV o altri file compatibili dal dispositivo. Organizzali in raccolte, ascoltali qui e aggiungili ai tuoi progetti.");
+            const actions = node("div", "studio-sound-empty-actions");
+            if (allTracks.length) {
+                actions.append(button("Mostra tutti gli audio", "Rimuovi i filtri e la ricerca", () => {
+                    filter = "all";
+                    selectedCollection = "";
+                    $("studioSoundSearch").value = "";
+                    refresh().catch(error => setNotice(error.message, true));
+                }, "studio-sound-empty-primary"));
+            } else {
+                actions.append(button("Importa il primo audio", "Seleziona uno o più file locali", () =>
+                    $("studioSoundFileInput").click(), "studio-sound-empty-primary"));
+                actions.append(button("Crea una raccolta", "Organizza la libreria audio", () =>
+                    collectionDialog("create"), "studio-sound-empty-secondary"));
+            }
+            empty.append(icon, title, message, actions);
+            const note = node("p", "studio-sound-empty-footnote",
+                "I file restano nel browser: nessun caricamento necessario per montare i tuoi video.");
+            empty.append(note);
             list.append(empty);
             return;
         }
