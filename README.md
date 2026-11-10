@@ -107,11 +107,15 @@ Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`.
 
 `export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
 
-## Editor organization (phase 17 — layout pass)
+## Professional timeline & editor (phase 17)
 
-The inspector now follows **Find → Lyrics → Timeline → Style → Canvas → Export → Project**, with related settings grouped and the original DOM controls retained. Properties are contextual to the selected clip. Optional expert panels are collapsible, and mobile navigation uses the original Brat logo.
+The inspector follows **Find → Lyrics → Timeline → Style → Canvas → Export → Project**, with related controls grouped and preserved element IDs. Properties are contextual to selected clip types, optional expert panels are collapsible, and mobile navigation uses the original Brat logo.
 
-Desktop/mobile screenshots and structural checks are generated in CI by [Playwright](tests/editor-layout-playwright.mjs). This is a UX/layout pass; advanced drag-and-drop timeline features remain outside this iteration.
+The **full-width timeline below the preview** supports pointer-driven clip moves across compatible lanes, edge trimming, snapping to clip edges and playhead, track selection, mouse/touch interaction, keyboard nudging, split-at-playhead, dropping local files, adjustable zoom and fit-to-project. Undo/redo records complete clip gestures as one history step. Timeline clipping and ruler rendering are culled to visible time ranges for longer projects. The underlying graph, media storage and export pipeline stay the same.
+
+[Playwright layout and interaction tests](tests/editor-layout-playwright.mjs) cover desktop and mobile editor panels, clip dragging, history, zoom, the localized English/Italian landing pages and 180-clip virtualization. Browser-specific manual QA remains appropriate before production publishing.
+
+**SEO:** The primary search focus is **Free Brat Video Editor Online** (English) and **Editor Video Brat Gratis Online** (Italian), with substantive localized pages, reciprocal `hreflang`, and structured `WebApplication` data. Free usage does not override the publication/redistribution restrictions in the [terms](terms.html).
 
 ## Multitrack model (phase 14)
 
@@ -223,6 +227,7 @@ sw.js                 service worker
 | Video Composer (phase 15) | [phase-15-video-composer.md](docs/phase-15-video-composer.md) |
 | Multitrack Audio Mixer (phase 16) | [phase-16-audio-mixer.md](docs/phase-16-audio-mixer.md) |
 | Editor layout audit (phase 17) | [phase-17-editor-layout-audit.md](docs/phase-17-editor-layout-audit.md) |
+| Professional Timeline (phase 17) | [phase-17-professional-timeline.md](docs/phase-17-professional-timeline.md) |
 | Supabase and TikTok | [supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md) |
 
 ## License
