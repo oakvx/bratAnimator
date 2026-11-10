@@ -107,6 +107,12 @@ Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`.
 
 `export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
 
+## Editor organization (phase 17 — layout pass)
+
+The inspector now follows **Find → Lyrics → Timeline → Style → Canvas → Export → Project**, with related settings grouped and the original DOM controls retained. Properties are contextual to the selected clip. Optional expert panels are collapsible, and mobile navigation uses the original Brat logo.
+
+Desktop/mobile screenshots and structural checks are generated in CI by [Playwright](tests/editor-layout-playwright.mjs). This is a UX/layout pass; advanced drag-and-drop timeline features remain outside this iteration.
+
 ## Multitrack model (phase 14)
 
 The `Tracks` editor tab provides a versioned clip/track graph for video, overlays, lyrics and audio. The new `assets/js/multitrack.js` model supports trim, split, move, duplicate, ordering, mute/visibility, locking and stable asset references; `assets/js/multitrack-ui.js` exposes the initial browser controls. The graph is included in IndexedDB saves, project JSON and `.brat.zip` media archives while retaining project format v5 for backward compatibility.
@@ -216,6 +222,7 @@ sw.js                 service worker
 | Multitrack core (phase 14) | [phase-14-multitrack-core.md](docs/phase-14-multitrack-core.md) |
 | Video Composer (phase 15) | [phase-15-video-composer.md](docs/phase-15-video-composer.md) |
 | Multitrack Audio Mixer (phase 16) | [phase-16-audio-mixer.md](docs/phase-16-audio-mixer.md) |
+| Editor layout audit (phase 17) | [phase-17-editor-layout-audit.md](docs/phase-17-editor-layout-audit.md) |
 | Supabase and TikTok | [supabase-tiktok-setup.md](docs/supabase-tiktok-setup.md) |
 
 ## License
