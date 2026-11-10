@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="vendor/7css/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/studio-win7.css" />
 <link rel="stylesheet" href="assets/css/editor-layout.css" />
+<link rel="stylesheet" href="assets/css/timeline-editor.css" />
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <!-- 7.css is imported by win7-app.css after application styles. -->
     <!-- Former theme assets/css/aero-theme.css retired. -->
@@ -261,6 +262,7 @@
     <script src="assets/js/multitrack.js" defer></script>
     <script src="assets/js/video-composer.js" defer></script>
     <script src="assets/js/audio-mixer.js" defer></script>
+<script src="assets/js/timeline-core.js" defer></script>
     <script src="assets/js/i18n.js" defer></script>
     <script src="assets/js/motion.js" defer></script>
     <script src="assets/js/kinetic.js" defer></script>
@@ -272,6 +274,7 @@
     <script src="assets/js/multitrack-ui.js" defer></script>
     <script src="assets/js/editor-v5.js" defer></script>
 <script src="assets/js/editor-layout.js" defer></script>
+<script src="assets/js/timeline-editor.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
     <script src="assets/js/studio-shell.js" defer></script>
     <script src="assets/js/supabase-config.js" defer></script>
@@ -1393,6 +1396,34 @@
                 <div class="hint"><span data-i18n="hint">export a frame or render the video</span><kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> seek</div>
                 <p id="stageSourceCredit" class="mini-copy" hidden></p>
             </div>
+            <section id="studioTimelineDock" class="studio-timeline" aria-label="Multitrack video editing timeline">
+                <div class="studio-tl-toolbar">
+                    <strong class="studio-tl-title">timeline</strong>
+                    <span id="studioTlCurrent" class="studio-tl-clock" aria-label="Current playhead">0:00</span>
+                    <div class="studio-tl-tools" aria-label="Timeline editing tools">
+                        <button id="studioTlUndo" type="button" title="Undo timeline edit (Ctrl+Z)" aria-label="Undo timeline edit" disabled>↶</button>
+                        <button id="studioTlRedo" type="button" title="Redo timeline edit (Ctrl+Shift+Z)" aria-label="Redo timeline edit" disabled>↷</button>
+                        <button id="studioTlSplit" type="button" title="Split selected clip at playhead">split</button>
+                        <label class="studio-tl-snap"><input id="studioTlSnap" type="checkbox" checked> snap</label>
+                        <button id="studioTlZoomOut" type="button" aria-label="Zoom timeline out">−</button>
+                        <label class="studio-tl-zoom-label" for="studioTlZoom">zoom
+                            <input id="studioTlZoom" type="range" min="12" max="240" step="1" value="48" />
+                        </label>
+                        <output id="studioTlZoomValue" for="studioTlZoom">48 px/s</output>
+                        <button id="studioTlZoomIn" type="button" aria-label="Zoom timeline in">+</button>
+                        <button id="studioTlFit" type="button" title="Fit timeline to project">fit</button>
+                    </div>
+                </div>
+                <div id="studioTlViewport" class="studio-tl-viewport" tabindex="0" role="region" aria-label="Scrollable multitrack timeline. Drag clips to move, drag edges to trim, drop local media onto a compatible track.">
+                    <div id="studioTlWorld" class="studio-tl-world">
+                        <div id="studioTlRuler" class="studio-tl-ruler" aria-label="Click to seek"></div>
+                        <div id="studioTlLanes" class="studio-tl-lanes"></div>
+                        <div id="studioTlPlayhead" class="studio-tl-playhead" aria-label="Playhead"></div>
+                        <div id="studioTlSnapGuide" class="studio-tl-snap-guide" hidden></div>
+                    </div>
+                </div>
+                <p id="studioTlStatus" class="studio-tl-status" role="status" aria-live="polite">Drag clips to move or trim · scroll horizontally to navigate · drop local media onto a track</p>
+            </section>
         </div>
     </main>
 </body>
