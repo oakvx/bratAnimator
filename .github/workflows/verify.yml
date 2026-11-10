@@ -92,6 +92,34 @@ jobs:
             sleep 2
           done
 
+  layout-playwright:
+    name: Playwright UI layout / desktop + mobile
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Resolve Chromium
+        shell: bash
+        run: |
+          CHROME_PATH="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$CHROME_PATH"
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+      - name: Install headless Playwright test runner
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.58.2
+      - name: Audit real editor sections and save visual evidence
+        run: node tests/editor-layout-playwright.mjs
+      - name: Upload screenshots for manual visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-editor-layout
+          path: artifacts/editor-layout/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
   tiktok-edge-check:
     name: Type-check TikTok Edge Function
     runs-on: ubuntu-latest
