@@ -19,6 +19,15 @@
         $(id)?.addEventListener("click", showTour);
     }
     $("studioAddressHome")?.addEventListener("click", home);
+    root.document.querySelectorAll("[data-studio-quick-tab]").forEach(button => {
+        button.addEventListener("click", () => {
+            root.BratStudio?.show("editor");
+            root.document.querySelector('[data-open-tab="' + button.dataset.studioQuickTab + '"]')?.click();
+        });
+    });
+    root.document.querySelectorAll("[data-studio-quick-view]").forEach(button => {
+        button.addEventListener("click", () => root.BratStudio?.show(button.dataset.studioQuickView));
+    });
     root.addEventListener("brat:studio-view", event => {
         if ($("studioAddressCurrent")) {
             $("studioAddressCurrent").textContent = titles[event.detail?.view] || "Brat Animator";
