@@ -366,6 +366,11 @@
                 <div><h1 id="studioTitle">Home</h1><p id="studioGreeting">I progetti sono salvati su questo dispositivo.</p></div>
                 <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
             </header>
+            <nav class="studio-addressbar" aria-label="Percorso dell'applicazione">
+                <button id="studioAddressHome" type="button" title="Vai alla home">⌂</button>
+                <div class="studio-address-path"><span>Brat Animator</span><span class="studio-address-separator" aria-hidden="true">›</span><strong id="studioAddressCurrent">Home</strong></div>
+                <button id="studioAddressHelp" type="button" title="Apri il tutorial interattivo (F1)">? Guida</button>
+            </nav>
             <div id="studioNotice" class="studio-notice" role="status" hidden></div>
 
             <div id="studioHomeView" class="studio-view">
@@ -1374,17 +1379,26 @@
         </div>
     </div>
 
-    <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
-        <div class="tutorial-card">
-            <div id="tutorialProgress" class="tutorial-progress">step 1 of 6</div>
-            <h2 id="tutorialTitle">start with the preview</h2>
-            <p id="tutorialBody">The green canvas is the video you will export. The controls panel changes what appears here.</p>
-            <div id="tutorialTip" class="tutorial-tip" hidden></div>
-            <div class="tutorial-actions">
-                <button id="tutorialSkipBtn" type="button">skip</button>
-                <button id="tutorialBackBtn" type="button">back</button>
-                <button id="tutorialActionBtn" type="button" class="hidden">try it</button>
-                <button id="tutorialNextBtn" type="button" class="primary">next</button>
+    <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="false" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
+        <div class="tutorial-card window glass active win7">
+            <div class="title-bar">
+                <div class="title-bar-text"><img src="favicon.svg" width="16" height="16" alt=""> Guida introduttiva — Brat Animator</div>
+                <div class="title-bar-controls"><button id="tutorialWindowClose" type="button" aria-label="Chiudi guida" title="Chiudi"></button></div>
+            </div>
+            <div class="window-body">
+                <div class="tutorial-heading"><span class="tutorial-kicker">BRAT STUDIO / GUIDED TOUR</span><span id="tutorialProgress" class="tutorial-progress">1 / 8</span></div>
+                <progress id="tutorialBar" class="tutorial-bar" value="1" max="8" aria-label="Progresso guida"></progress>
+                <h2 id="tutorialTitle">Discover your workspace</h2>
+                <p id="tutorialBody">Learn the editor with real interactions.</p>
+                <div id="tutorialTip" class="tutorial-tip" hidden></div>
+                <div id="tutorialStepNav" class="tutorial-step-nav" aria-label="Passaggi della guida"></div>
+                <div class="tutorial-actions">
+                    <button id="tutorialSkipBtn" type="button">Chiudi</button>
+                    <button id="tutorialBackBtn" type="button">Indietro</button>
+                    <button id="tutorialActionBtn" type="button" class="hidden">Prova</button>
+                    <button id="tutorialNextBtn" type="button" class="primary">Avanti</button>
+                </div>
+                <p class="tutorial-keyboard">← → per navigare · Esc per uscire · F1 per riaprire</p>
             </div>
         </div>
     </div>
