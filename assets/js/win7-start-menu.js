@@ -39,7 +39,6 @@
         }
         function isOpen() { return !menu.hidden; }
         function open() {
-            if (document.body.classList.contains("studio-editor-open")) return;
             menu.hidden = false;
             start.setAttribute("aria-expanded", "true");
             search.value = "";
