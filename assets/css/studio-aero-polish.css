@@ -489,3 +489,92 @@ body.studio-dashboard-open {
   #studioDashboard .studio-sound-empty-workspace {padding:17px 13px;gap:9px;}
   #studioDashboard .studio-sound-empty-icon {width:53px;height:53px;font-size:32px;border-radius:12px;}
 }
+
+/* Explorer-style links on the start surface — actual navigation actions. */
+#studioDashboard .studio-welcome-panel {
+  margin-top:13px;
+  border:1px solid #bcd1e0;
+  background:#f9fcff;
+  box-shadow:inset 0 1px 0 #fff;
+}
+#studioDashboard .studio-welcome-panel h2 {
+  margin:0;
+  padding:9px 12px;
+  font-size:12px;
+  color:#335c79;
+  border-bottom:1px solid #d1e2ee;
+  background:linear-gradient(#fff,#e9f4fc);
+}
+#studioDashboard .studio-welcome-grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  padding:12px;
+}
+#studioDashboard .studio-welcome-grid button {
+  display:grid;
+  grid-template-columns:29px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:1px 9px;
+  padding:10px;
+  min-height:65px;
+  text-align:left;
+  border:1px solid #bbd6e8;
+  background:linear-gradient(#fff,#eef7fe);
+  box-shadow:inset 0 1px 0 #fff;
+  color:#285273;
+}
+#studioDashboard .studio-welcome-grid button:hover,
+#studioDashboard .studio-welcome-grid button:focus-visible {
+  background:linear-gradient(#fff,#d8edfd);
+  border-color:#65a7d5;
+}
+#studioDashboard .studio-welcome-grid button > span {
+  grid-row:1/3;
+  font-size:24px;
+  color:#437eae;
+  text-align:center;
+}
+#studioDashboard .studio-welcome-grid button > strong {
+  font-size:12px;
+  font-weight:650;
+}
+#studioDashboard .studio-welcome-grid button > small {
+  color:#72899b;
+  font-size:10px;
+  line-height:1.4;
+}
+@media(max-width:980px) {
+  #studioDashboard #studioMainWindow.window.glass.active {
+    min-height:0;
+  }
+  #studioDashboard .studio-classic-body-grid {
+    min-height:0;
+  }
+  #studioDashboard .studio-welcome-grid {gap:7px;}
+}
+@media(max-width:580px) {
+  #studioDashboard .studio-sound-browser {
+    grid-template-rows:auto minmax(0,1fr);
+    align-content:start;
+  }
+  #studioDashboard .studio-sound-tree {
+    align-self:start;
+    min-height:0;
+    max-height:140px;
+    overflow:auto;
+  }
+  #studioDashboard .studio-sound-content {
+    min-height:0;
+  }
+  #studioDashboard .studio-welcome-grid {
+    grid-template-columns:1fr;
+    padding:8px;
+  }
+  #studioDashboard .studio-welcome-grid button {
+    min-height:48px;
+    grid-template-columns:26px minmax(0,1fr);
+    padding:7px 9px;
+  }
+}
