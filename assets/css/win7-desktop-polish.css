@@ -201,3 +201,9 @@ body.studio-window-maximized #studioMainWindow.window.glass.active {animation:no
   }
   body.studio-editor-open .studio-taskbar {display:flex;}
 }
+
+/* Start remains accessible from the taskbar while the editor is active. */
+body.studio-editor-open #studioStartMenu.studio-start-menu:not([hidden]) {
+  display:block !important;
+  z-index:1099;
+}
