@@ -112,9 +112,11 @@ test("Start routes to the existing local studio without bypassing its APIs", () 
     assert.equal(f.controller.isOpen(), false);
 });
 
-test("Start menu stays inert when the editor is foregrounded", () => {
+test("Start menu stays accessible above the foregrounded editor", () => {
     const f = fixture();
     f.document.body.classList.contains = value => value === "studio-editor-open";
     f.controller.open();
+    assert.equal(f.controller.isOpen(), true);
+    f.controller.close();
     assert.equal(f.controller.isOpen(), false);
 });

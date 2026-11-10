@@ -33,6 +33,65 @@ try {
         headless: true, executablePath: process.env.CHROME_PATH || '/usr/bin/chromium',
         args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required', '--disable-background-networking']
     });
+    // Real Windows 7 boot, not a static decoration: first paint, skip, menu,
+    // Start orb, desktop shortcut, taskbar restore and the 7.css About window.
+    const bootContext = await browser.newContext({
+        viewport: { width: 1366, height: 768 }, reducedMotion: 'no-preference'
+    });
+    await bootContext.addInitScript(() => {
+        sessionStorage.setItem('bratAnimator.permissionNotice.dismissed.v1', 'true');
+        localStorage.setItem('bratAnimator.tutorial.seen.v1', 'true');
+    });
+    const bootPage = await bootContext.newPage();
+    bootPage.on('pageerror', error => { throw error; });
+    await bootPage.goto('http://127.0.0.1:' + server.address().port, { waitUntil: 'domcontentloaded' });
+    await bootPage.waitForFunction(() => Boolean(window.BratBoot));
+    assert.equal(await bootPage.locator('#studioBoot').isVisible(), true,
+        'Boot animation must be visible before the desktop');
+    assert.equal(await bootPage.locator('.win7-boot-pane').count(), 4);
+    await bootPage.screenshot({ path: path.join(output, 'win7-boot-startup.png'), fullPage: true });
+    await bootPage.locator('#studioBootSkip').click();
+    await bootPage.waitForFunction(() => !window.BratBoot.isVisible());
+    assert.equal(await bootPage.locator('#studioBoot').isVisible(), false);
+    assert.equal(await bootPage.evaluate(() => document.body.classList.contains('studio-boot-complete')), true);
+    await bootPage.waitForFunction(() => Boolean(window.BratStudio?.show));
+    await bootPage.locator('#studioWin7MenuBar > li').first().click();
+    assert.equal(await bootPage.locator('#studioWin7MenuBar > li').first().getAttribute('aria-expanded'), 'true');
+    assert.equal(await bootPage.locator('#studioWin7MenuBar [data-win7-command="projects"]').isVisible(), true);
+    await bootPage.screenshot({ path: path.join(output, 'win7-native-file-menu.png'), fullPage: true });
+    await bootPage.keyboard.press('Escape');
+    await bootPage.locator('#studioWin7MenuBar > li').last().click();
+    await bootPage.locator('[data-win7-command="about"]').click();
+    assert.equal(await bootPage.locator('#studioAboutDialog').isVisible(), true);
+    await bootPage.screenshot({ path: path.join(output, 'win7-about-dialog.png'), fullPage: true });
+    await bootPage.locator('#studioAboutClose').click();
+    await bootPage.locator('#studioStartButton').click();
+    assert.equal(await bootPage.locator('#studioStartMenu').isVisible(), true);
+    await bootPage.screenshot({ path: path.join(output, 'win7-start-menu.png'), fullPage: true });
+    await bootPage.keyboard.press('Escape');
+    await bootPage.locator('#studioShowDesktop').click();
+    assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
+    assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), true);
+    await bootPage.screenshot({ path: path.join(output, 'win7-desktop-icons.png'), fullPage: true });
+    await bootPage.locator('[data-desktop-view="projects"]').click();
+    assert.equal(await bootPage.evaluate(() => window.BratStudio.getView()), 'projects');
+    assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), false);
+    await bootPage.evaluate(() => window.BratStudio.show('editor'));
+    assert.equal(await bootPage.locator('#studioEditorChrome .window.glass.active').isVisible(), true,
+        'The editor must also use a real 7.css window caption');
+    await bootPage.screenshot({ path: path.join(output, 'win7-video-editor-titlebar.png'), fullPage: true });
+    await bootPage.locator('#studioEditorMaximize').click();
+    assert.equal(await bootPage.locator('#studioEditorMaximize').getAttribute('aria-label'), 'Restore');
+    assert.equal(await bootPage.evaluate(() => document.body.classList.contains('panel-closed')), true);
+    await bootPage.locator('#studioStartButton').click();
+    assert.equal(await bootPage.locator('#studioStartMenu').isVisible(), true,
+        'Start must remain accessible from the active editor');
+    await bootPage.keyboard.press('Escape');
+    await bootPage.locator('#studioEditorMinimize').click();
+    assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), true);
+    assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
+    await bootContext.close();
+    console.log('WINDOWS 7 SHELL PASS: animated boot, real 7.css menus, Start, About, taskbar and desktop shortcuts.');
     const tabs = ['lyrics', 'timing', 'tracks', 'design', 'canvas', 'export', 'project'];
     const summary = [];
     for (const viewport of [
@@ -49,6 +108,8 @@ try {
         page.on('pageerror', error => errors.push(error.message));
         await page.goto('http://127.0.0.1:' + server.address().port, { waitUntil: 'load' });
         await page.waitForFunction(() => Boolean(window.BratStudio?.show && window.BratMultitrackHost && window.BratGuidedTour));
+        await page.waitForFunction(() => window.BratBoot && !window.BratBoot.isVisible());
+        assert.equal(await page.locator('#studioBoot').isVisible(), false);
         assert.equal(await page.locator('#studioMainWindow.window.glass.active').isVisible(), true);
         assert.equal(await page.locator('#studioAddressCurrent').textContent(), 'Home');
         assert.equal(await page.locator('[data-studio-quick-tab]').count(), 2);

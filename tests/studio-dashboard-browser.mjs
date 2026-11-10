@@ -90,6 +90,7 @@ try {
     await send("Runtime.enable");
     await send("Page.navigate",{url:origin+"/"});
     await until("Boolean(window.BratStudio && window.BratEditorWorkspace && document.body.classList.contains('studio-dashboard-open'))");
+    await until("Boolean(window.BratBoot && !window.BratBoot.isVisible())");
     assert.equal(await evaluate("getComputedStyle(document.getElementById('studioDashboard')).display !== 'none'"),true);
     assert.equal(await evaluate("getComputedStyle(document.querySelector('.studio-classic-window')).display !== 'none'"),true);
     assert.equal(await evaluate("Boolean(document.querySelector('#studioDashboard.win7 .window .title-bar .title-bar-text'))"),true);

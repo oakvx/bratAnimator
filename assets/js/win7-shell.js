@@ -58,6 +58,30 @@
         $("studioTaskbarApp").addEventListener("click", taskbarAction);
         // Start button is now owned by win7-start-menu.js; the taskbar icon still restores the window.
         $("studioDesktopLauncher").addEventListener("click", restore);
+        // Additional desktop shortcuts remain local: no filesystem access.
+        document.querySelectorAll("[data-desktop-view]").forEach(button => {
+            button.addEventListener("click", () => {
+                restore();
+                win.BratStudio?.show(button.dataset.desktopView);
+            });
+        });
+        $("studioShowDesktop")?.addEventListener("click", taskbarAction);
+        $("studioEditorMinimize")?.addEventListener("click", () => {
+            win.BratStudio?.show("home");
+            minimize();
+        });
+        $("studioEditorClose")?.addEventListener("click", () => {
+            win.BratStudio?.show("home");
+            close();
+        });
+        $("studioEditorMaximize")?.addEventListener("click", () => {
+            // Editor's "maximize" expands the preview by toggling its inspector.
+            const toggle = $("togglePanelBtn");
+            toggle?.click();
+            const expanded = document.body.classList.contains("panel-closed");
+            $("studioEditorMaximize")?.setAttribute("aria-label", expanded ? "Restore" : "Maximize");
+            $("studioEditorMaximize")?.setAttribute("title", expanded ? "Ripristina pannello" : "Espandi editor");
+        });
         document.querySelectorAll("[data-click-target]").forEach(button => {
             button.addEventListener("click", () => {
                 $(button.dataset.clickTarget)?.click();
@@ -67,7 +91,15 @@
             const target = $("studioTaskbarClock");
             if (!target) return;
             const time = new Date();
-            target.textContent = new Intl.DateTimeFormat("it-IT", {hour:"2-digit",minute:"2-digit"}).format(time);
+            const hour = new Intl.DateTimeFormat("it-IT", {hour:"2-digit",minute:"2-digit"}).format(time);
+            const date = new Intl.DateTimeFormat("it-IT", {day:"2-digit",month:"2-digit",year:"numeric"}).format(time);
+            target.replaceChildren();
+            const clockTime = document.createElement("time");
+            clockTime.dateTime = time.toISOString();
+            clockTime.textContent = hour;
+            const clockDate = document.createElement("small");
+            clockDate.textContent = date;
+            target.append(clockTime, clockDate);
             target.title = new Intl.DateTimeFormat("it-IT",{dateStyle:"full",timeStyle:"short"}).format(time);
         }
         clock();

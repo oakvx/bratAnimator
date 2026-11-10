@@ -39,7 +39,6 @@
         }
         function isOpen() { return !menu.hidden; }
         function open() {
-            if (document.body.classList.contains("studio-editor-open")) return;
             menu.hidden = false;
             start.setAttribute("aria-expanded", "true");
             search.value = "";
@@ -66,6 +65,7 @@
             if (view) win.BratStudio?.show(view);
             else if (action === "new") $("studioNewProject")?.click();
             else if (action === "account") $("studioNavAccount")?.click();
+            else if (action === "help") $("studioAddressHelp")?.click();
         }
 
         start.addEventListener("click", event => {
@@ -98,7 +98,10 @@
         });
         win.addEventListener?.("brat:studio-view", () => close());
         document.addEventListener("keydown", event => {
-            if (event.key === "Escape" && isOpen()) close(true);
+            if (event.ctrlKey && event.key === "Escape" && !event.repeat) {
+                event.preventDefault();
+                toggle();
+            } else if (event.key === "Escape" && isOpen()) close(true);
         });
         start.setAttribute("aria-expanded", "false");
         filter();

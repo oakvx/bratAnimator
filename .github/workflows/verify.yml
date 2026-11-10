@@ -27,6 +27,8 @@ jobs:
           node --check assets/js/sound-hub-ui.js
           node --check assets/js/win7-shell.js
           node --check assets/js/win7-start-menu.js
+          node --check assets/js/win7-window-menu.js
+          node --check assets/js/win7-boot.js
           node --check assets/js/export-preflight.js
           node --check assets/js/export-plan.js
           node --check assets/js/export-engine.js
