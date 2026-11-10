@@ -20,7 +20,7 @@
         return Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0");
     };
     function updatePlayerbar() {
-        const active = Boolean(audio.currentSrc || audio.getAttribute("src"));
+        const active = Boolean(previewUrl && previewId);
         playerbar.hidden = !active;
         if (!active) return;
         const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
