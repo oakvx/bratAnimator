@@ -1,5 +1,13 @@
 /* Phase 17 — layout information architecture. 7.css continues to own window UI. */
 body.studio-editor-open .panel { --inspector-edge: #d7e0d2; }
+body.studio-editor-open .topbar .menu-brand { display:inline-flex; align-items:center; gap:8px; }
+body.studio-editor-open .editor-menu-icon { display:block; width:23px; height:23px; flex:0 0 23px; border-radius:4px; }
+@media(max-width:440px) {
+    body.studio-editor-open .menu-brand-copy strong { display:none; }
+    body.studio-editor-open .menu-brand-copy { display:none; }
+    body.studio-editor-open .menu-brand { min-width:23px; }
+}
+
 body.studio-editor-open .panel-header {
     padding: 14px 18px 8px;
     align-items: center;
