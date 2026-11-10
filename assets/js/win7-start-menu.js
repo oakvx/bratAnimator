@@ -26,13 +26,22 @@
         const empty = $("studioStartEmpty");
         const results = $("studioStartResults");
         if (!menu || !start || !search || !results || !empty) return null;
+        const programs = $("studioStartPrograms");
         const entries = Array.from(results.querySelectorAll("button[data-start-view],button[data-start-action]"));
         const visibleEntries = () => entries.filter(button => !button.hidden && !button.disabled);
+        let allPrograms = false;
 
         function filter() {
-            const query = search.value;
+            const query = normalize(search.value);
             for (const button of entries) {
-                button.hidden = !matchesQuery(button.dataset.startKeywords || button.textContent, query);
+                button.hidden = query
+                    ? !matchesQuery(button.dataset.startKeywords || button.textContent, query)
+                    : !allPrograms && button.hasAttribute("data-start-all-only");
+            }
+            if (programs) {
+                programs.hidden = Boolean(query);
+                programs.setAttribute("aria-expanded", String(allPrograms));
+                programs.textContent = allPrograms ? "Indietro" : "Tutti i programmi";
             }
             empty.hidden = visibleEntries().length > 0;
             return visibleEntries();
@@ -42,6 +51,7 @@
             menu.hidden = false;
             start.setAttribute("aria-expanded", "true");
             search.value = "";
+            allPrograms = false;
             filter();
             search.focus();
         }
@@ -77,6 +87,11 @@
             if (button && menu.contains(button) && !button.hidden && !button.disabled) invoke(button);
         });
         search.addEventListener("input", filter);
+        programs?.addEventListener("click", () => {
+            allPrograms = !allPrograms;
+            results.scrollTop = 0;
+            filter();
+        });
         menu.addEventListener("keydown", event => {
             if (event.key === "Escape") {
                 event.preventDefault();
@@ -91,6 +106,11 @@
             } else if (event.key === "Enter" && event.target === search) {
                 const first = visibleEntries()[0];
                 if (first) { event.preventDefault(); invoke(first); }
+            } else if (results.contains(event.target) && ["ArrowUp", "ArrowDown"].includes(event.key)) {
+                const visible = visibleEntries();
+                const offset = event.key === "ArrowDown" ? 1 : -1;
+                const next = visible[visible.indexOf(event.target) + offset];
+                if (next) { event.preventDefault(); next.focus(); }
             }
         });
         document.addEventListener("pointerdown", event => {

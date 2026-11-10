@@ -6,25 +6,12 @@
   --brat-explorer-line: #bdd3e1;
   --brat-explorer-text: #244863;
 }
-body.studio-dashboard-open {
-  background-color: #287cae;
-  background-image:
-    radial-gradient(ellipse 65% 55% at 85% 15%, rgba(255,255,255,.35), transparent 72%),
-    radial-gradient(ellipse 100% 46% at 22% 110%, rgba(81,175,105,.38), transparent 78%),
-    linear-gradient(155deg,#0b629f 0%,#4eabd8 43%,#93d1e6 76%,#4a95b8 100%);
-}
 #studioDashboard .studio-dashboard-inner {
   width: min(100%, 1540px);
   padding: 15px clamp(9px,1.8vw,25px) 25px;
 }
 #studioDashboard #studioMainWindow.window.glass.active {
   min-height: min(850px, calc(100dvh - 77px));
-  border: 1px solid rgba(238,251,255,.95);
-  box-shadow:
-    0 0 0 1px rgba(27,81,118,.66),
-    0 0 0 5px rgba(255,255,255,.17),
-    0 15px 42px rgba(7,37,75,.42),
-    0 3px 6px rgba(11,48,89,.22);
 }
 #studioDashboard #studioMainWindow > .title-bar {
   min-height: 35px;

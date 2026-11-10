@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v29-win7-desktop-boot";
+const CACHE_NAME = "brat-animator-v30-win7-local-assets";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -56,6 +56,7 @@ const APP_ASSETS = [
   "./assets/js/tiktok-link.js",
   "./assets/js/sound-hub-ui.js",
   "./assets/js/win7-sound-pack.js",
+  "./assets/js/win7-assets.js",
   "./assets/js/dashboard-audio.js",
   "./assets/js/export-preflight.js",
   "./assets/js/editor-templates.js",
