@@ -113,6 +113,12 @@ I suoni di sistema di Windows 7 non sono inclusi nel repository. L'interfaccia h
 
 **[Guida per aggiungere i WAV con Codex, tabella dei file e TODO](assets/sounds/windows7/README.md)** — basta copiare i file autorizzati in `assets/sounds/windows7/` e impostare `installed = true` in `assets/js/win7-sound-pack.js`. I WAV sono esclusi da Git per evitare pubblicazioni accidentali; i test di regressione non richiedono alcun file proprietario.
 
+## Windows 7 Desktop Edition — avvio, desktop e finestre
+
+All'apertura viene visualizzata una **sequenza di avvio in stile Windows 7**, con quattro elementi luminosi, barra di caricamento e tasto `Esc` per saltarla. Il desktop utilizza la **vera libreria 7.css** per il chrome delle finestre e dei menu. Il menu Start a due colonne, la taskbar con orologio e pulsante Mostra desktop, le icone e il menu File/Modifica/Visualizza/Strumenti/Guida sono tutti collegati a comandi esistenti. Anche l'editor usa una titlebar Aero 7.css sui desktop, senza modificare i progetti e l'export.
+
+**[Architettura, comandi e verifiche Windows 7](docs/windows7-desktop-edition.md).** I file WAV opzionali rimangono descritti nella [guida audio](assets/sounds/windows7/README.md).
+
 ## Windows 7 Aero workspace & guided onboarding
 
 The dashboard is an Explorer-style window built with the vendored **7.css** framework. Sound Hub displays a two-column file manager with collection navigation, drop-to-import audio, keyboard/double-click preview and a compact audio transport that appears only after selecting a track. The large promotional home banner was removed; **Brat Animator** remains the visible product name.
