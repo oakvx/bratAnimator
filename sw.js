@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v23-phase16-audio-mixer";
+const CACHE_NAME = "brat-animator-v24-phase17-layout-audit";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,7 @@ const APP_ASSETS = [
   "./assets/css/editor-v5.css",
   "./vendor/7css/7.scoped.css",
   "./assets/css/studio-win7.css",
+  "./assets/css/editor-layout.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -30,6 +31,7 @@ const APP_ASSETS = [
   "./assets/js/lyrics-case.js",
   "./assets/js/project-assets.js",
   "./assets/js/editor-v5.js",
+  "./assets/js/editor-layout.js",
   "./assets/js/italian-ui.js",
   "./assets/js/studio-shell.js",
 "./assets/js/supabase-config.js",
