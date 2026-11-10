@@ -7,7 +7,7 @@
  * conflicting theme files. No CSS blur is applied to readable content.
  */
 :root {
-  --brat-taskbar-height: 46px;
+  --brat-taskbar-height: 40px;
   --brat-sidebar-width: 184px;
   --brat-win7-text: #243a4c;
   --brat-win7-muted: #64798a;
@@ -15,15 +15,7 @@
   --brat-win7-selection: #d7ecff;
 }
 body.studio-active {
-  background: linear-gradient(160deg,#0c77be 0%,#5bb5e5 40%,#b3e2ea 65%,#579851 100%);
-}
-body.studio-dashboard-open {
-  background-color:#167fc3;
-  background-image:
-    radial-gradient(ellipse 66% 48% at 71% 18%,rgba(255,255,255,.42),transparent 70%),
-    radial-gradient(ellipse 92% 40% at 10% 110%,rgba(75,172,87,.69),transparent 74%),
-    linear-gradient(145deg,#1371b4,#5bb6e4 60%,#c4eaf0 100%);
-  background-attachment:fixed;
+  background:#0b5c91 var(--win7-wallpaper,none) center / cover no-repeat fixed;
 }
 /* The editor stays mounted but is visually independent from the dashboard. */
 body.studio-dashboard-open .topbar,
@@ -56,11 +48,9 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   display:block;
   width:100%;
   min-height:min(780px,calc(100dvh - 94px));
-  border-radius:7px;
   filter:none;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
-  box-shadow:0 18px 43px rgba(14,49,78,.46),0 3px 9px rgba(10,35,75,.28);
 }
 #studioDashboard #studioMainWindow > .title-bar {
   display:flex;
@@ -130,7 +120,7 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   background:transparent;border:1px solid transparent;
   border-radius:2px;box-shadow:none;color:#2c536e;text-shadow:none;
 }
-#studioDashboard .studio-nav-link span {font-size:17px;min-width:19px;text-align:center;}
+#studioDashboard :is(.studio-nav-link,.studio-classic-shortcuts button) img {object-fit:contain;}
 #studioDashboard .studio-nav-link:hover,
 #studioDashboard .studio-nav-account:hover {
   border-color:#b1d4ea;background:#e9f5ff;color:#163e5f;
@@ -223,7 +213,6 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   color:#356487;
 }
 #studioDashboard .studio-classic-shortcuts button:hover {background:#e3f0fc;border-color:#bfd8ee;}
-#studioDashboard .studio-classic-shortcuts button span {font-size:18px;width:21px;text-align:center;}
 #studioDashboard .studio-project-grid {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(225px,1fr));
@@ -444,44 +433,57 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   cursor:pointer;
   flex-shrink:0;
 }
-/* Windows 7-inspired taskbar / reopenable desktop. */
-.studio-desktop {position:fixed;inset:0 0 var(--brat-taskbar-height);padding:24px 23px;z-index:2;}
+/* Desktop and taskbar layout. Windows artwork is loaded by win7-assets.js. */
+.studio-desktop {position:fixed;inset:0 0 var(--brat-taskbar-height);padding:7px;z-index:2;overflow:auto;}
 .studio-desktop[hidden] {display:none !important;}
+.studio-desktop-icons {display:flex;flex-direction:column;align-items:flex-start;gap:5px;}
 .studio-desktop-shortcut {
-  display:grid;justify-items:center;gap:6px;width:101px;
-  padding:10px 4px;
+  display:grid;align-content:center;justify-items:center;gap:4px;
+  width:85px;min-height:77px;padding:5px 2px;
   background:transparent;border:1px solid transparent;color:#fff;
-  font:12px "Segoe UI",Tahoma,sans-serif;text-shadow:0 1px 3px #123f65;
+  border-radius:2px;font:12px "Segoe UI",Tahoma,sans-serif;text-shadow:0 1px 3px #000;
 }
-.studio-desktop-shortcut:hover {border-color:#d5efffab;background:#ffffff27;}
-.studio-desktop-shortcut img {border-radius:5px;}
+.studio-desktop-shortcut:is(:hover,:focus) {border-color:#d5efffab;background:#ffffff27;}
+.studio-desktop-shortcut img {object-fit:contain;}
 .studio-taskbar {
   display:none;position:fixed;bottom:0;left:0;right:0;
   z-index:1100;height:var(--brat-taskbar-height);
-  padding:4px 12px;align-items:center;gap:7px;
-  border-top:1px solid #c6ecff;
-  background:linear-gradient(#d7f1ffed 0%,#a6d6f0eb 42%,#5a9bc7f0 49%,#87b9d5f0 100%);
-  box-shadow:inset 0 1px #fff,0 -2px 10px #124c7775;
+  padding:0 0 0 5px;align-items:center;gap:4px;
+  background:#153955de var(--win7-taskbar,none) left bottom / auto 100% repeat-x;
+  border-top:1px solid #c6ecff80;
 }
 body.studio-dashboard-open .studio-taskbar {display:flex;}
 .studio-taskbar button {cursor:pointer;display:grid;place-items:center;}
 .studio-taskbar .studio-start-orb {
-  background:radial-gradient(circle at 34% 18%,#f0ffce,#8bcd4c 54%,#27834b 80%);
-  border:1px solid #defff8;box-shadow:0 1px 4px #2e5e8b;
-  border-radius:50%;width:36px;height:36px;padding:4px;
+  min-width:55px;
+  min-height:29px;
 }
+body.win7-has-orb .studio-taskbar .studio-start-orb {
+  flex:none;
+  width:54px;height:54px;min-width:0;padding:0;
+  border:0;box-shadow:none;
+  background:var(--win7-orb) center top / 100% 300% no-repeat;
+}
+.win7-has-orb .studio-start-orb span {display:none;}
+body.win7-has-orb .studio-taskbar .studio-start-orb:is(:hover,:focus-visible) {background-position:center 50%;}
+body.win7-has-orb .studio-taskbar .studio-start-orb[aria-expanded="true"] {background-position:center bottom;}
+.win7-has-orb .studio-taskbar .studio-start-orb::before,
+.win7-has-orb .studio-taskbar .studio-start-orb::after {display:none;}
 .studio-taskbar .studio-taskbar-app {
-  border:1px solid #9ccde6;
-  background:linear-gradient(#edfaff,#b3daf0 45%,#79b6df 49%,#bedef0);
-  min-width:51px;height:37px;padding:5px 12px;
+  min-width:56px;height:calc(100% - 2px);padding:0;
 }
-.studio-taskbar-app[aria-pressed="false"] {background:transparent;border-color:transparent;}
+.studio-taskbar .studio-taskbar-app[data-running="false"]:not(:hover,:focus-visible) {
+  background:none;border-color:transparent;box-shadow:none;
+}
+.studio-taskbar .studio-taskbar-app[data-running="false"]:not(:hover,:focus-visible)::after {opacity:0;}
+.studio-taskbar .studio-taskbar-app[data-running="true"][aria-pressed="false"] {opacity:.8;}
+.studio-taskbar .studio-show-desktop {
+  width:15px;min-width:15px;height:100%;min-height:0;
+  padding:0;border-radius:0;
+}
 .studio-taskbar-spacer {flex:1;}
-.studio-legal-links {display:flex;gap:12px;align-items:center;margin-right:12px;font:11px/1.2 "Segoe UI",Tahoma,sans-serif;white-space:nowrap;}
-.studio-legal-links a {color:#173d59;text-decoration:underline;text-underline-offset:2px;}
-.studio-legal-links a:focus-visible {outline:2px solid #173d59;outline-offset:3px;}
-@media(max-width:480px){.studio-legal-links{gap:7px;margin-right:3px;font-size:10px}.studio-taskbar-clock{display:none}}
-.studio-taskbar-clock {font:11px "Segoe UI",Tahoma,sans-serif;color:#184569;text-shadow:0 1px #fff;padding:0 9px;}
+.studio-taskbar-clock {font:12px/1.2 "Segoe UI",Tahoma,sans-serif;color:#fff;text-align:center;padding:0 8px;text-shadow:0 1px 2px #000;}
+.studio-taskbar-clock :is(time,small) {display:block;font:inherit;}
 body.studio-window-minimized #studioMainWindow,
 body.studio-window-closed #studioMainWindow {display:none !important;}
 body.studio-window-minimized #studioDashboard,
@@ -489,7 +491,7 @@ body.studio-window-closed #studioDashboard {pointer-events:none;}
 body.studio-window-minimized .studio-taskbar,
 body.studio-window-closed .studio-taskbar {pointer-events:auto;}
 body.studio-window-maximized #studioDashboard .studio-dashboard-inner {width:100%;max-width:none;padding:0;}
-body.studio-window-maximized #studioMainWindow {min-height:calc(100dvh - var(--brat-taskbar-height));border-radius:0;}
+body.studio-window-maximized #studioDashboard #studioMainWindow.window.glass.active {min-height:calc(100dvh - var(--brat-taskbar-height));border-radius:0;}
 body.studio-window-maximized #studioDashboard .studio-classic-body-grid {min-height:calc(100dvh - 84px);}
 /* Start menu: the native 7.css glass window remains responsible for the frame.
  * App CSS handles Explorer-style launcher rows, columns, and placement only. */
@@ -497,28 +499,28 @@ body.studio-window-maximized #studioDashboard .studio-classic-body-grid {min-hei
   display:block;
   position:fixed;
   bottom:calc(var(--brat-taskbar-height) - 1px);
-  left:10px;
+  left:0;
   z-index:1099;
-  width:min(494px,calc(100vw - 20px));
+  width:min(410px,100vw);
   max-height:calc(100dvh - var(--brat-taskbar-height) - 10px);
   padding:5px;
   margin:0;
-  border-radius:7px 7px 0 0;
   overflow:auto;
   filter:none;
-  box-shadow:0 0 0 1px #2b658b88,0 11px 36px #102f4d85;
+  background-color:#c4ddefd9;
+  backdrop-filter:blur(14px);
   font:13px/1.4 "Segoe UI",Tahoma,Arial,sans-serif;
 }
 #studioStartMenu[hidden] {display:none !important;}
 body.studio-editor-open #studioStartMenu {display:none !important;}
 #studioStartMenu .studio-start-surface.window-body {
   display:grid;
-  grid-template-columns:minmax(0,1fr) 163px;
+  grid-template-columns:minmax(0,1fr) 143px;
   gap:0;
   padding:0;
   margin:0;
   min-height:361px;
-  background:#fff;
+  background:transparent;
   color:#18364d;
 }
 #studioStartMenu .studio-start-main {
@@ -526,18 +528,8 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
   display:flex;
   flex-direction:column;
   padding:7px 5px 7px 7px;
-  background:linear-gradient(#fff,#f9fcff);
+  background:#fff;
 }
-#studioStartMenu .studio-start-heading {
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:4px 8px 10px;
-  font-weight:600;
-  color:#294e6b;
-  border-bottom:1px solid #d6e4ed;
-}
-#studioStartMenu .studio-start-heading img {border-radius:3px;}
 #studioStartMenu .studio-start-results {flex:1;max-height:365px;overflow-y:auto;padding:6px 0;}
 #studioStartMenu .studio-start-entry {
   display:flex;align-items:center;gap:10px;
@@ -547,33 +539,24 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
   background:transparent;box-shadow:none;text-shadow:none;
   color:#17394e;font:13px/1.35 "Segoe UI",Tahoma,Arial,sans-serif;
 }
-#studioStartMenu .studio-start-entry[hidden] {display:none !important;}
+#studioStartMenu [hidden] {display:none !important;}
 #studioStartMenu .studio-start-entry:hover,
 #studioStartMenu .studio-start-entry:focus-visible {
   border-color:#a3c7e2;
   background:linear-gradient(#ebf7ff,#d2eaff);
   outline:1px solid #9ac4e0;outline-offset:-2px;
 }
-#studioStartMenu .studio-start-glyph {
-  display:grid;place-items:center;flex:0 0 30px;
-  width:30px;height:30px;color:#2d688f;font-size:23px;
-}
-#studioStartMenu .studio-start-entry strong,
-#studioStartMenu .studio-start-entry small {display:block;overflow:hidden;text-overflow:ellipsis;}
-#studioStartMenu .studio-start-entry strong {font-weight:500;font-size:13px;}
-#studioStartMenu .studio-start-entry small {color:#6a7f8f;font-size:11px;}
+#studioStartMenu .studio-start-entry img {object-fit:contain;}
+#studioStartPrograms {text-align:left;min-height:28px;margin-inline:4px;}
 #studioStartMenu .studio-start-empty {margin:14px 8px;color:#677b89;}
-#studioStartMenu .studio-start-search-label {display:block;margin-top:auto;padding:7px 4px 2px;}
-#studioStartMenu #studioStartSearch {width:100%;max-width:none;height:29px;}
+#studioStartMenu #studioStartSearch {width:100%;min-width:0;min-height:24px;height:24px;margin-top:7px;}
 #studioStartMenu .studio-start-side {
   display:flex;flex-direction:column;align-items:stretch;
   gap:3px;padding:16px 9px 9px;
-  background:linear-gradient(150deg,#e4f3ff,#b8d9ed 72%,#91c5e0);
   border-left:1px solid #a7c7dd;
 }
 #studioStartMenu .studio-start-user-image {
-  align-self:center;border-radius:7px;margin:0 0 18px;
-  border:2px solid #fff;box-shadow:0 2px 5px #275b8299;
+  align-self:center;object-fit:contain;margin:0 0 14px;
 }
 #studioStartMenu .studio-start-side button:not(.studio-start-shutdown) {
   width:100%;text-align:left;min-height:33px;
@@ -588,7 +571,6 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
 }
 #studioStartMenu .studio-start-side-spacer {flex:1;min-height:28px;}
 #studioStartMenu .studio-start-shutdown {align-self:flex-end;min-height:29px;max-width:100%;white-space:normal;}
-.studio-taskbar .studio-start-orb[aria-expanded="true"] {outline:2px solid #e4f3ff;outline-offset:1px;}
 @media(max-width:520px) {
   #studioStartMenu.studio-start-menu.window.glass.active {left:4px;width:calc(100vw - 8px);}
   #studioStartMenu .studio-start-surface.window-body {grid-template-columns:minmax(0,1fr) 120px;}
@@ -620,7 +602,6 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
     flex-direction:column;justify-content:center;gap:2px;
     text-align:center;font-size:10px;padding:3px 2px;
   }
-  #studioDashboard .studio-nav-link span {font-size:16px;}
   #studioDashboard .studio-main-content {padding-bottom:55px;}
   #studioDashboard .studio-classic-home {grid-template-columns:1fr;}
   #studioDashboard .studio-classic-shortcuts {display:none;}

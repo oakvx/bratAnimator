@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, "..");
 const packSource = fs.readFileSync(path.join(root, "assets/js/win7-sound-pack.js"), "utf8");
 const audioSource = fs.readFileSync(path.join(root, "assets/js/dashboard-audio.js"), "utf8");
 
-function createPage(activated = false) {
+function createPage(activated = false, imported = {}) {
     const requested = [];
     const listeners = {};
     const audioEvents = [];
@@ -22,6 +22,8 @@ function createPage(activated = false) {
     const page = {
         URL,
         Audio,
+        BratWin7Assets: { getUrl: key => imported[key] },
+        AudioContext: class { constructor() { throw new Error("Synthetic UI audio was requested."); } },
         document: {
             baseURI: "https://example.test/bratAnimator/index.html",
             readyState: "complete",
@@ -54,7 +56,7 @@ test("15 stable optional WAV names are mapped without shipping binary recordings
     assert.equal(pack.resolve("../secret"), null);
     assert.equal(pack.resolve("missing"), null);
 });
-test("default dashboard sound works without installed third-party samples", () => {
+test("the shell is silent without an installed recording", () => {
     const { page, requested } = createPage();
     assert.equal(page.BratDashboardAudio.isEnabled(), true);
     page.BratDashboardAudio.play("menu");
@@ -66,6 +68,11 @@ test("enabled pack selects correct local assets and volume without external orig
     assert.equal(page.BratDashboardAudio.packStatus().installed, true);
     page.BratDashboardAudio.play("navigation");
     assert.deepEqual(requested, ["https://example.test/bratAnimator/assets/sounds/windows7/navigation-start.wav"]);
+});
+test("a locally imported WAV takes priority over the hosted mapping", () => {
+    const { page, requested } = createPage(true, { "sound:navigation": "blob:https://example.test/recording" });
+    page.BratDashboardAudio.play("navigation");
+    assert.deepEqual(requested, ["blob:https://example.test/recording"]);
 });
 test("window and Start events route to their intended Windows 7 placeholders", () => {
     const { page } = createPage();

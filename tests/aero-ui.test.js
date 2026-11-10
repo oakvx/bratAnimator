@@ -40,13 +40,13 @@ test("native 7.css modal wrappers are visible without URL :target", () => {
     assert.match(html,/class="title-bar"/);
     assert.match(html,/class="window-body"/);
 });
-test("optional synthesized sounds are a dashboard-only user preference", () => {
+test("optional shell sounds use recordings and a user preference", () => {
     const html = file("index.html");
     const source = file("assets/js/dashboard-audio.js");
     assert.match(html, /id="studioSoundToggle"/);
     assert.match(html, /id="studioSettingsSound"/);
-    assert.match(source, /AudioContextClass/);
+    assert.match(source, /BratWin7Assets/);
     assert.match(source, /addEventListener\("click", handleClick, \{ capture: true \}\)/);
-    assert.match(source, /studio-editor-open/);
-    assert.doesNotMatch(source, /\.mp3|\.wav|fetch\(/);
+    assert.match(source, /#studioEditorChrome/);
+    assert.doesNotMatch(source, /AudioContext|createOscillator|fetch\(/);
 });

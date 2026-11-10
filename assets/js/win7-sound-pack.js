@@ -28,9 +28,8 @@
         restore: "restore.wav",
         close: "close.wav"
     });
-    // TODO(WIN7-SOUNDS): Switch to true ONLY when the corresponding WAV
-    // recordings have been placed under basePath. Missing files fall back
-    // to the current synthetic UI tone, and never block navigation.
+    // Optional self-hosted files. Browser imports take priority; absent
+    // recordings leave their events silent.
     const installed = false;
     const basePath = "assets/sounds/windows7/";
     function resolve(kind) {

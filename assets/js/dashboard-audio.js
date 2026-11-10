@@ -1,16 +1,14 @@
-/* Brat Animator — optional Windows 7 UI sound pack with local fallback.
+/* Brat Animator — optional Windows 7 UI sound pack.
  * No Microsoft audio is shipped. See assets/sounds/windows7/README.md.
  * The editor/video export audio pipeline is deliberately not affected.
  */
 (function (root) {
     "use strict";
     const KEY = "bratAnimator.dashboardSound.v1";
-    const AudioContextClass = root.AudioContext || root.webkitAudioContext;
     const pack = root.BratWindows7SoundPack;
     const activeSamples = new Set();
-    const missing = new Set();
+    const missing = new Map();
     let enabled = true;
-    let context = null;
     let lastSound = 0;
     try { enabled = root.localStorage.getItem(KEY) !== "off"; } catch (_) {}
 
@@ -19,91 +17,50 @@
             button.setAttribute("aria-pressed", String(enabled));
             button.setAttribute("aria-label", enabled ? "Disattiva suoni della dashboard" : "Attiva suoni della dashboard");
             button.title = enabled ? "Suoni interfaccia attivi" : "Suoni interfaccia disattivati";
-            button.textContent = enabled ? "♪ Suoni on" : "♪ Suoni off";
+            button.textContent = enabled ? "Suoni attivi" : "Suoni disattivati";
         });
     }
     function setEnabled(next) {
         enabled = Boolean(next);
         try { root.localStorage.setItem(KEY, enabled ? "on" : "off"); } catch (_) {}
+        if (!enabled) {
+            for (const audio of activeSamples) audio.pause();
+            activeSamples.clear();
+        }
         syncButtons();
     }
 
-    function fallbackTone(kind) {
-        if (!AudioContextClass) return;
-        try {
-            context ||= new AudioContextClass({ latencyHint: "interactive" });
-            if (context.state === "suspended") context.resume().catch(() => {});
-            const t = context.currentTime;
-            const oscillator = context.createOscillator();
-            const gain = context.createGain();
-            const filter = context.createBiquadFilter();
-            const alert = kind === "error" || kind === "warning";
-            oscillator.type = alert ? "triangle" : kind === "open" || kind === "startup" ? "sine" : "triangle";
-            filter.type = "lowpass";
-            filter.frequency.value = alert ? 1400 : 2100;
-            const start = alert ? 390 : kind === "open" ? 880 : kind === "confirm" ? 670 : 590;
-            oscillator.frequency.setValueAtTime(start, t);
-            oscillator.frequency.exponentialRampToValueAtTime(start * (alert ? .55 : .72), t + .105);
-            gain.gain.setValueAtTime(.0001, t);
-            gain.gain.exponentialRampToValueAtTime(kind === "confirm" ? .032 : .024, t + .007);
-            gain.gain.exponentialRampToValueAtTime(.0001, t + .123);
-            oscillator.connect(filter);
-            filter.connect(gain);
-            gain.connect(context.destination);
-            oscillator.start(t);
-            oscillator.stop(t + .132);
-            oscillator.onended = () => {
-                oscillator.disconnect();
-                filter.disconnect();
-                gain.disconnect();
-            };
-        } catch (_) { /* Optional sound never blocks the interface. */ }
+    function sampleUrl(kind) {
+        return root.BratWin7Assets?.getUrl("sound:" + kind) || (pack?.installed ? pack.resolve(kind) : null);
     }
-
-    function trySample(kind) {
-        const url = pack?.installed && pack.resolve(kind);
-        if (!url || missing.has(kind) || typeof root.Audio !== "function") return false;
+    function play(kind = "click") {
+        if (!enabled || typeof root.Audio !== "function") return;
+        const url = sampleUrl(kind);
+        const now = Date.now();
+        if (!url || missing.get(kind) === url || now - lastSound < 35) return;
+        lastSound = now;
         try {
             const audio = new root.Audio(new URL(url, root.document.baseURI).href);
             audio.volume = .42;
             audio.preload = "auto";
             activeSamples.add(audio);
-            let failed = false;
             const cleanup = () => activeSamples.delete(audio);
-            const failedSample = () => {
-                if (failed) return;
-                failed = true;
-                missing.add(kind);
-                cleanup();
-                fallbackTone(kind);
-            };
             audio.addEventListener("ended", cleanup, { once: true });
-            audio.addEventListener("error", failedSample, { once: true });
-            const attempt = audio.play();
-            if (attempt?.catch) attempt.catch(failedSample);
-            return true;
-        } catch (_) {
-            missing.add(kind);
-            return false;
-        }
-    }
-
-    function play(kind = "click") {
-        if (!enabled) return;
-        const now = Date.now();
-        if (now - lastSound < 35) return;
-        lastSound = now;
-        if (!trySample(kind)) fallbackTone(kind);
+            audio.addEventListener("error", () => {
+                missing.set(kind, url);
+                cleanup();
+            }, { once: true });
+            // A blocked autoplay attempt may succeed after the next gesture.
+            audio.play()?.catch(cleanup);
+        } catch (_) { /* Optional sound must not interrupt the UI. */ }
     }
     function isDashboardInteraction(target) {
-        if (!target?.closest || !root.document?.body) return false;
-        if (root.document.body.classList.contains("studio-editor-open")) return false;
-        return Boolean(target.closest(".studio-nav, .studio-dashboard, .studio-modal, .studio-taskbar, .studio-start-menu, .studio-desktop"));
+        return Boolean(target?.closest?.(".studio-dashboard, .studio-modal, .studio-taskbar, .studio-start-menu, .studio-desktop, #studioEditorChrome"));
     }
     function soundForButton(button) {
-        if (button.id === "studioWindowClose") return "close";
-        if (button.id === "studioWindowMinimize") return "minimize";
-        if (button.id === "studioWindowMaximize") return "maximize";
+        if (["studioWindowClose", "studioEditorClose"].includes(button.id)) return "close";
+        if (["studioWindowMinimize", "studioEditorMinimize"].includes(button.id)) return "minimize";
+        if (["studioWindowMaximize", "studioEditorMaximize"].includes(button.id)) return "maximize";
         if (button.id === "studioTaskbarApp" || button.id === "studioDesktopLauncher") return "restore";
         if (button.id === "studioStartButton") return "menu";
         if (button.dataset.startAction === "close") return "logoff";
@@ -130,7 +87,7 @@
         if (root.document.readyState === "loading") root.document.addEventListener("DOMContentLoaded", syncButtons, { once: true });
         else syncButtons();
     }
-    // Future boot animation can emit these semantic events. Startup playback
+    // Startup playback
     // may be blocked before the first gesture by browser autoplay policy.
     root.addEventListener?.("brat:studio-boot-finished", () => play("startup"));
     root.addEventListener?.("brat:studio-logon", () => play("logon"));
@@ -144,9 +101,9 @@
         play,
         soundForButton,
         packStatus: () => Object.freeze({
-            installed: Boolean(pack?.installed),
+            installed: Object.keys(pack?.files || {}).some(kind => Boolean(sampleUrl(kind))),
             availableEvents: pack ? Object.keys(pack.files) : [],
-            unavailableEvents: [...missing]
+            unavailableEvents: [...missing].filter(([kind, url]) => sampleUrl(kind) === url).map(([kind]) => kind)
         })
     });
 })(typeof window !== "undefined" ? window : globalThis);

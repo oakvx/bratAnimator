@@ -1,209 +1,178 @@
-/* Native Windows 7 desktop details; basic controls and glass frames come
-   from vendor/7css/7.scoped.css. This file only handles app-specific placement. */
+/* App placement for the window chrome and menu from the bundled 7.css. */
 #studioDashboard .studio-win7-menubar[role=menubar] {
-  position:relative;z-index:35;
-  display:flex;min-height:29px;
-  padding:0 5px;
-  border-bottom:1px solid #a8bdd1;
-  font:12px/1.3 "Segoe UI",Tahoma,sans-serif;
-}
-#studioDashboard .studio-win7-menubar > li[role=menuitem] {
-  cursor:default;min-height:28px;padding:6px 11px;
-  outline-offset:-2px;
-}
-#studioDashboard .studio-win7-menubar > li[aria-expanded=true] {
-  color:white;background:linear-gradient(#70b9ea,#2f83c2);
+  position: relative;
+  z-index: 35;
+  border-bottom: 1px solid #a8bdd1;
 }
 #studioDashboard .studio-win7-menubar > li > [role=menu] {
-  min-width:235px;max-width:min(330px,95vw);
-  border-color:#6c849d;
+  min-width: 210px;
+  max-width: min(330px, 95vw);
 }
-#studioDashboard .studio-win7-menubar > li[aria-expanded=true] > [role=menu],
-#studioDashboard .studio-win7-menubar > li:focus-within > [role=menu] {display:block;}
+#studioDashboard .studio-win7-menubar > li[aria-expanded="true"] > [role=menu] {
+  display: block;
+}
 #studioDashboard .studio-win7-menubar [role=menu] button {
-  justify-content:space-between;gap:18px;cursor:default;
+  justify-content: space-between;
+  gap: 18px;
 }
-#studioDashboard .studio-win7-menubar [role=menu] button span {
-  opacity:.7;font-size:10px;
-}
-#studioDashboard .studio-desktop-icons {
-  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
-}
-#studioDashboard .studio-desktop-shortcut, .studio-desktop-shortcut {
-  width:104px;min-height:103px;
-  padding:8px 5px;
-  line-height:1.3;
-  border:1px solid transparent;
-  border-radius:4px;
-}
-.studio-desktop-shortcut:focus-visible,.studio-desktop-shortcut:hover {
-  border-color:#d3e7ffcb;
-  background:linear-gradient(#d8f2ff43,#7abaff45);
-  outline:1px solid #fff7;
-}
-.studio-desktop-icon {
-  display:grid;place-items:center;
-  width:61px;height:61px;
-  border-radius:9px;
-  font-size:36px;color:#e7faff;
-  background:linear-gradient(140deg,#9bd5fa,#3a86bd 57%,#16548e);
-  box-shadow:inset 0 2px 4px #fff6,0 4px 8px #1742688c;
-  text-shadow:0 2px 3px #174268;
-}
-.studio-desktop-hint {
-  position:fixed;bottom:calc(var(--brat-taskbar-height) + 14px);left:24px;
-  color:#e5f6ff;text-shadow:0 1px 3px #0b3f66;font-size:11px;
-  pointer-events:none;
-}
-.studio-taskbar .studio-start-orb {
-  position:relative;overflow:visible;
-  border:1px solid #d5e3eb;
-  background:radial-gradient(circle at 37% 23%,#83d7ff,#256eb1 48%,#143b69 74%,#0b2747 93%);
-  box-shadow:inset 0 0 0 2px #c4f8ff33,inset 0 1px 3px #fff8,0 0 5px #2f7090;
-}
-.studio-taskbar .studio-start-orb:hover,
-.studio-taskbar .studio-start-orb[aria-expanded=true] {
-  background:radial-gradient(circle at 34% 20%,#bdfff8,#46aaec 42%,#27669a 73%,#153d67);
-  box-shadow:0 0 10px #b2f8ff88,inset 0 1px 4px #fff9;
-}
-.studio-start-windowmark {
-  display:grid;grid-template-columns:repeat(2,9px);grid-template-rows:repeat(2,9px);
-  gap:1px;transform:skewY(-8deg) rotate(-5deg);
-  filter:drop-shadow(0 1px 2px #072e4d);
-}
-.studio-start-windowmark i {display:block;border:1px solid #f9fffdbb;box-shadow:inset 0 2px 2px #fff8;}
-.studio-start-windowmark i:nth-child(1){background:linear-gradient(135deg,#fcb96b,#da5136);}
-.studio-start-windowmark i:nth-child(2){background:linear-gradient(135deg,#dcf893,#57b74d);}
-.studio-start-windowmark i:nth-child(3){background:linear-gradient(135deg,#83d4fb,#267bd3);}
-.studio-start-windowmark i:nth-child(4){background:linear-gradient(135deg,#fff8a2,#e4aa34);}
-.studio-taskbar .studio-show-desktop {
-  width:15px;min-width:15px;height:100%;
-  margin:-4px -10px -4px 2px;padding:0;
-  border:1px solid #c7e6f9b0;border-radius:0;
-  background:linear-gradient(90deg,#80b9e255,#e8f7ff66);
-}
-.studio-taskbar .studio-show-desktop:hover {
-  background:linear-gradient(#ffffff9c,#8bccfbb0);border-color:#fff;
-}
-.studio-taskbar-clock {
-  display:grid;gap:0;text-align:center;
-  font-size:10px;line-height:1.25;min-width:75px;
-}
-.studio-taskbar-clock time {display:block;font:11px/1.2 "Segoe UI",Tahoma,sans-serif;}
-.studio-taskbar-clock small {display:block;font:10px/1.2 "Segoe UI",Tahoma,sans-serif;}
-#studioStartMenu .studio-start-side {background:linear-gradient(110deg,#f5fdffcd,#b2d2e7e6 70%,#86afcc);}
-#studioStartMenu.studio-start-menu.window.glass.active {
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  border:1px solid #daedffd9;
-  box-shadow:0 0 0 1px #2e5f8eb3,0 12px 38px #07294a99;
-}
-body.studio-window-minimized #studioDashboard .studio-dashboard-inner,
-body.studio-window-closed #studioDashboard .studio-dashboard-inner {visibility:hidden;}
-@media (max-width:580px){
- #studioDashboard .studio-win7-menubar {overflow:visible;padding:0 2px;font-size:11px;}
- #studioDashboard .studio-win7-menubar > li[role=menuitem] {padding:7px 6px;}
- #studioDashboard .studio-desktop-hint{display:none;}
- .studio-taskbar .studio-show-desktop {margin-right:-6px;}
- .studio-taskbar-clock{display:none;}
-}
+#studioDashboard .studio-win7-menubar [role=menu] button span { opacity: .7; }
 
-.studio-modal-backdrop.win7 #studioAboutDialog {box-sizing:border-box;}
-.studio-modal-backdrop.win7 .studio-about-brand {display:flex;align-items:center;gap:13px;margin-bottom:13px;}
-.studio-modal-backdrop.win7 .studio-about-brand h2 {margin:0 0 3px;font-size:20px;}
-.studio-modal-backdrop.win7 .studio-about-brand p {margin:0;color:#607a8f;font-size:11px;}
-.studio-modal-backdrop.win7 #studioAboutDialog p {line-height:1.55;}
-body.studio-dashboard-open #studioMainWindow.window.glass.active {
-  transform-origin:center 18%;
-  animation:brat-win7-window-reveal .24s cubic-bezier(.2,.8,.2,1) both;
+.studio-modal-backdrop.win7 .studio-about-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 13px;
 }
-body.studio-window-maximized #studioMainWindow.window.glass.active {animation:none;}
-@keyframes brat-win7-window-reveal {
-  0% {opacity:.78;transform:translateY(9px) scale(.993);}
-  100% {opacity:1;transform:translateY(0) scale(1);}
-}
-@media(prefers-reduced-motion:reduce) {
-  body.studio-dashboard-open #studioMainWindow.window.glass.active {animation:none;}
-}
+.studio-modal-backdrop.win7 .studio-about-brand h2 { margin: 0 0 3px; }
+.studio-modal-backdrop.win7 .studio-about-brand p { margin: 0; }
 
-/* Window chrome for the actual video editor. 7.css draws the titlebar,
-   caption icons and glass border; these rules only position it in the UI. */
-#studioEditorChrome.studio-editor-chrome {display:none !important;}
-#studioEditorChrome .window.glass.active {filter:none;}
-@media(min-width:981px) {
-  body.studio-editor-open #studioEditorChrome.studio-editor-chrome {
-    display:block !important;
-    position:fixed;top:0;left:0;right:0;height:34px;
-    z-index:70;pointer-events:none;
+/* The editor workspace uses the same surface and controls as the shell. */
+body.studio-editor-open {
+  --font-ui: "Segoe UI", Tahoma, sans-serif;
+  --font-display: var(--font-ui);
+  --paper: #f0f0f0;
+  --ink: #222;
+  --ink-soft: #454545;
+  --line: #cdd7db;
+  --line-strong: #aeb9c2;
+  --accent: #b9def7;
+  --accent-strong: #327db1;
+  --accent-soft: #e5f3ff;
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+}
+body.studio-editor-open .panel { --inspector-edge: var(--line); box-shadow: none; }
+body.studio-editor-open .editor-tab-strip { flex-shrink: 0; }
+body.studio-editor-open .editor-tab-strip .editor-tabs {
+  display: grid;
+  margin: 0;
+  background: var(--paper);
+}
+body.studio-editor-open .editor-tab-strip .editor-tab {
+  min-height: 27px;
+  font-weight: 400;
+  text-transform: none;
+}
+body.studio-editor-open .editor-tab-strip .editor-tab[aria-selected="true"] { margin: 0; }
+body.studio-editor-open .editor-tab-strip .editor-tab span { display: none; }
+body.studio-editor-open :is(.project-status-bar,.inspector-group) { border-radius: 2px; box-shadow: none; }
+body.studio-editor-open .panel .label {
+  font: 12px "Segoe UI", Tahoma, sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
+}
+body.studio-editor-open #editor :is(.stage-wrap,.studio-timeline) {
+  border: 1px solid #a8b2ba;
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: none;
+  color: #222;
+}
+body.studio-editor-open #editor :is(.stage-toolbar,.stage-transport,.studio-tl-toolbar,.studio-tl-ruler) {
+  border-color: var(--line-strong);
+  border-radius: 0;
+  background: var(--w7-surface, #f0f0f0);
+  color: #222;
+}
+body.studio-editor-open #editor :is(.stage-title span,.stage-zoom-controls output,.transport-time,.hint,
+    .studio-tl-title,.studio-tl-clock,.studio-tl-tick,#studioTlZoomValue,.studio-tl-status) { color: #353535; }
+body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport button,.studio-tl-toolbar button) {
+  min-height: 26px;
+  padding-block: 4px;
+  border: 1px solid var(--w7-el-bd);
+  border-radius: 3px;
+  background: var(--w7-el-grad);
+  color: #222;
+  font: 12px "Segoe UI", Tahoma, sans-serif;
+}
+body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport button,.studio-tl-toolbar button):hover {
+  border-color: var(--w7-el-bd-h);
+  background: var(--w7-el-grad-h);
+}
+body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport .transport-icon) { min-width: 0; }
+body.studio-editor-open #editor .studio-tl-viewport { background: #fff; scrollbar-color: auto; }
+body.studio-editor-open #editor .studio-tl-lane { background: #fff; border-color: var(--line); }
+body.studio-editor-open #editor .studio-tl-label { background: #f0f0f0; color: #222; border-color: var(--line-strong); }
+body.studio-editor-open #editor .studio-tl-label[aria-pressed="true"] { background: var(--accent-soft); }
+body.studio-editor-open #editor .studio-tl-label:hover { background: var(--accent); }
+body.studio-editor-open #editor .studio-tl-status { background: var(--paper); border-color: var(--line-strong); }
+body.studio-editor-open #editor .studio-tl-status[data-error="true"] { color: #a4251b; }
+body.studio-editor-open #studioTlZoom { accent-color: var(--accent-strong); }
+
+#studioEditorChrome { display: none; }
+@media (max-width: 980px) {
+  body.studio-editor-open .editor-tab-strip { position: sticky; top: var(--topbar-height); z-index: 15; }
+  body.studio-editor-open .editor-tab-strip .editor-tabs { position: static; }
+}
+@media (min-width: 981px) {
+  body.studio-editor-open {
+    --brat-editor-side: clamp(8px, 1.5vw, 24px);
+    --brat-editor-top: 10px;
+    --brat-editor-caption: 34px;
+    --brat-editor-content-top: calc(var(--brat-editor-top) + var(--brat-editor-caption));
   }
-  body.studio-editor-open #studioEditorChrome .window.glass.active {
-    display:block;
-    position:absolute;inset:0;
-    width:100%;min-height:34px;height:34px;
-    margin:0;padding:2px 6px;border-radius:0;
-    border:1px solid #a5d2ed;
-    box-shadow:inset 0 1px 0 #fff8;
-    background:linear-gradient(#e3f7ffb5,#78b9e8c4);
-    pointer-events:auto;
+  body.studio-editor-maximized {
+    --brat-editor-side: 0px;
+    --brat-editor-top: 0px;
   }
-  body.studio-editor-open #studioEditorChrome .title-bar {
-    display:flex;align-items:center;justify-content:space-between;
-    height:29px;min-height:29px;
-    padding:0 3px 0 8px;
+  body.studio-editor-open #studioEditorChrome {
+    display: block;
+    position: fixed;
+    inset: var(--brat-editor-top) var(--brat-editor-side) auto;
+    z-index: 70;
   }
-  body.studio-editor-open #studioEditorChrome .title-bar-text {
-    color:#17405d;font:600 12px "Segoe UI",Tahoma,sans-serif;
-    text-shadow:0 1px #fff;
+  #studioEditorChrome .window.glass.active {
+    display: block;
+    height: var(--brat-editor-caption);
+    box-sizing: border-box;
+    margin: 0;
   }
-  body.studio-editor-open #studioEditorChrome .title-bar-controls button {cursor:pointer;}
+  body.studio-editor-maximized #studioEditorChrome .window { border-radius: 0; }
+  #studioEditorChrome .title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #studioEditorChrome .title-bar-text img { vertical-align: middle; }
   body.studio-editor-open .topbar.main-menu-v4 {
-    inset:34px 0 auto;
-    top:34px;
-    z-index:45;
-    color:#173d58;
-    border-bottom:1px solid #9abed8;
-    background:linear-gradient(#fcfeff,#e1f0fb 45%,#c6dff0 46%,#e6f4ff);
-    -webkit-backdrop-filter:none;backdrop-filter:none;
+    inset: var(--brat-editor-content-top) var(--brat-editor-side) auto;
+    color: #222;
+    border-bottom: 1px solid #a0a0a0;
+    background: #f0f0f0;
+    backdrop-filter: none;
   }
-  body.studio-editor-open .topbar.win7 :where(button,.chip) {
-    color:#254560;border:1px solid #9ebcce;border-radius:3px;
-    background:var(--w7-el-grad);
-    box-shadow:var(--w7-el-sd);
-    text-shadow:0 1px #fff;
+  body.studio-editor-open .topbar.win7 :is(button,.chip) {
+    color: #222;
+    border: 1px solid var(--w7-el-bd);
+    border-radius: 3px;
+    background: var(--w7-el-grad);
+    box-shadow: var(--w7-el-sd);
   }
-  body.studio-editor-open .topbar.win7 :where(button,.chip):hover {
-    color:#173f5b;border-color:#4996c8;background:var(--w7-el-grad-h);
-  }
-  body.studio-editor-open .topbar.win7 :where(button,.chip):active,
-  body.studio-editor-open .topbar.win7 .lang-btn[aria-pressed=true] {
-    color:#193c52;background:var(--w7-el-grad-a);
+  body.studio-editor-open .topbar.win7 :is(button,.chip):hover { background: var(--w7-el-grad-h); }
+  body.studio-editor-open .topbar.win7 :is(button,.chip):is(:active,[aria-pressed="true"],.active) {
+    background: var(--w7-el-grad-a);
   }
   body.studio-editor-open .topbar .menu-brand-copy strong {
-    color:#184a6a;font-family:"Segoe UI",Tahoma,sans-serif;font-size:17px;
+    color: #222;
+    font: 600 15px "Segoe UI", Tahoma, sans-serif;
   }
-  body.studio-editor-open .topbar .menu-brand-copy span {color:#4d7287;}
-  body.studio-editor-open .topbar .theme-switch {
-    border-color:#b2cadb;background:#e8f4fa;border-radius:4px;
-  }
-  body.studio-editor-open .topbar .lang-switch {border-color:#b2cadb;}
+  body.studio-editor-open .topbar .menu-brand-copy span { color: #555; }
+  body.studio-editor-open .topbar :is(.theme-switch,.lang-switch) { border-color: #ccc; }
   body.studio-editor-open .panel {
-    top:calc(var(--topbar-height) + 34px);
-    bottom:var(--brat-taskbar-height);
-    border-right-color:#a9cadd;
-    box-shadow:0 6px 14px #1b52741a;
+    top: calc(var(--topbar-height) + var(--brat-editor-content-top));
+    left: var(--brat-editor-side);
+    bottom: var(--brat-taskbar-height);
   }
   body.studio-editor-open .page-shell {
-    padding-top:calc(var(--topbar-height) + 34px);
-    padding-bottom:var(--brat-taskbar-height);
+    margin-inline: calc(var(--brat-editor-side) + var(--panel-width)) var(--brat-editor-side);
+    padding-top: calc(var(--topbar-height) + var(--brat-editor-content-top));
+    padding-bottom: var(--brat-taskbar-height);
   }
+  body.studio-editor-open.panel-closed .page-shell { margin-left: var(--brat-editor-side); }
   body.studio-editor-open #editor.app {
-    height:calc(100dvh - var(--topbar-height) - 34px - var(--brat-taskbar-height));
+    height: calc(100dvh - var(--topbar-height) - var(--brat-editor-content-top) - var(--brat-taskbar-height));
+    background: var(--paper);
   }
-  body.studio-editor-open .studio-taskbar {display:flex;}
+  body.studio-editor-open .studio-taskbar { display: flex; }
 }
-
-/* Start remains accessible from the taskbar while the editor is active. */
-body.studio-editor-open #studioStartMenu.studio-start-menu:not([hidden]) {
-  display:block !important;
-  z-index:1099;
-}
+body.studio-editor-open #studioStartMenu.studio-start-menu:not([hidden]) { display: block !important; }

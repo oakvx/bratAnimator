@@ -30,11 +30,6 @@
     <link rel="stylesheet" href="assets/css/studio-aero-polish.css" />
     <link rel="stylesheet" href="assets/css/win7-boot.css" />
     <link rel="stylesheet" href="assets/css/win7-desktop-polish.css" />
-    <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
-    <!-- 7.css is imported by win7-app.css after application styles. -->
-    <!-- Former theme assets/css/aero-theme.css retired. -->
-    <!-- Former theme assets/css/classic-desktop.css retired. -->
-    <!-- Former theme assets/css/win7-app.css retired. -->
     <script>
         window.BratStudioShellEnabled = true;
         try {
@@ -328,6 +323,7 @@
     <script src="assets/js/tiktok-link.js" defer></script>
     <script src="assets/js/sound-hub-ui.js" defer></script>
     <script src="assets/js/win7-sound-pack.js" defer></script>
+    <script src="assets/js/win7-assets.js" defer></script>
     <script src="assets/js/dashboard-audio.js" defer></script>
     <script src="assets/js/export-preflight.js" defer></script>
     <script src="assets/js/editor-templates.js" defer></script>
@@ -336,18 +332,13 @@
 </head>
 
 <body>
-    <section id="studioBoot" class="win7-boot" role="status" aria-label="Avvio di Brat Animator" aria-live="polite">
+    <dialog id="studioBoot" class="win7-boot win7" aria-labelledby="studioBootCaption" hidden>
         <div class="win7-boot-stage">
-            <p class="win7-boot-caption">Avvio di Windows</p>
-            <div class="win7-boot-emblem" aria-hidden="true">
-                <span class="win7-boot-pane red"></span><span class="win7-boot-pane green"></span>
-                <span class="win7-boot-pane blue"></span><span class="win7-boot-pane yellow"></span>
-            </div>
-            <p class="win7-boot-brand">Brat Animator · Desktop Edition</p>
-            <progress id="studioBootProgress" class="win7-boot-progress" max="100" value="0" aria-label="Caricamento applicazione"></progress>
+            <canvas id="studioBootFrames" width="200" height="200" aria-hidden="true"></canvas>
+            <p id="studioBootCaption">Avvio di Windows</p>
         </div>
         <button id="studioBootSkip" type="button" aria-label="Salta animazione di avvio">Salta avvio <span aria-hidden="true">Esc</span></button>
-    </section>
+    </dialog>
     <a class="skip-link" href="#editor">skip to editor</a>
     <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
 
@@ -403,14 +394,14 @@
     <aside id="studioNav" class="studio-nav win7" aria-label="Navigazione Brat Animator">
         <div class="studio-nav-brand"><img class="studio-original-logo" src="favicon.svg" alt="" width="38" height="38" decoding="async"><span>brat animator</span></div>
         <div class="studio-nav-links">
-            <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page"><span aria-hidden="true">⌂</span> Home</button>
-            <button type="button" data-studio-view="editor" class="studio-nav-link"><span aria-hidden="true">✎</span> Editor</button>
-            <button type="button" data-studio-view="projects" class="studio-nav-link"><span aria-hidden="true">▦</span> Progetti</button>
-            <button type="button" data-studio-view="sounds" class="studio-nav-link"><span aria-hidden="true">♫</span> Sound Hub</button>
-            <button type="button" data-studio-view="share" class="studio-nav-link"><span aria-hidden="true">↗</span> BRATCODE</button>
+            <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page">Home</button>
+            <button type="button" data-studio-view="editor" class="studio-nav-link"><img src="favicon.svg" alt="" width="16" height="16"> Editor</button>
+            <button type="button" data-studio-view="projects" class="studio-nav-link"><img data-win7-image="folder" alt="" width="16" height="16" hidden> Progetti</button>
+            <button type="button" data-studio-view="sounds" class="studio-nav-link"><img data-win7-image="music" alt="" width="16" height="16" hidden> Sound Hub</button>
+            <button type="button" data-studio-view="share" class="studio-nav-link">BRATCODE</button>
         </div>
         <div class="studio-nav-bottom">
-            <button type="button" data-studio-view="settings" class="studio-nav-link"><span aria-hidden="true">⚙</span> Impostazioni</button>
+            <button type="button" data-studio-view="settings" class="studio-nav-link">Impostazioni</button>
             <button id="studioNavAccount" type="button" class="studio-nav-account"><span id="studioAvatar" class="studio-avatar">G</span><span id="studioNavIdentity">Accedi / Registrati</span></button>
         </div>
     </aside>
@@ -418,10 +409,10 @@
                   <main class="studio-main-content" id="studioMainContent">
             <header class="studio-dashboard-head">
                 <div><h1 id="studioTitle">Home</h1><p id="studioGreeting">I progetti sono salvati su questo dispositivo.</p></div>
-                <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
+                <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">Suoni attivi</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
             </header>
             <nav class="studio-addressbar" aria-label="Percorso dell'applicazione">
-                <button id="studioAddressHome" type="button" title="Vai alla home">⌂</button>
+                <button id="studioAddressHome" type="button" title="Vai alla home">Home</button>
                 <div class="studio-address-path"><span>Brat Animator</span><span class="studio-address-separator" aria-hidden="true">›</span><strong id="studioAddressCurrent">Home</strong></div>
                 <button id="studioAddressHelp" type="button" title="Apri il tutorial interattivo (F1)">? Guida</button>
             </nav>
@@ -440,11 +431,11 @@
                     </section>
                     <section class="studio-classic-shortcuts" aria-label="Accesso rapido">
                         <h2>Apri</h2>
-                        <button type="button" data-studio-view="projects"><span aria-hidden="true">▣</span> Progetti</button>
-                        <button type="button" data-studio-view="sounds"><span aria-hidden="true">♫</span> Sound Hub</button>
-                        <button type="button" data-studio-view="share"><span aria-hidden="true">⇄</span> BRATCODE</button>
-                        <button type="button" data-studio-view="settings"><span aria-hidden="true">⚙</span> Impostazioni</button>
-                        <button id="studioGuideShortcut" type="button"><span aria-hidden="true">?</span> Guida interattiva</button>
+                        <button type="button" data-studio-view="projects"><img data-win7-image="folder" alt="" width="16" height="16" hidden> Progetti</button>
+                        <button type="button" data-studio-view="sounds"><img data-win7-image="music" alt="" width="16" height="16" hidden> Sound Hub</button>
+                        <button type="button" data-studio-view="share">BRATCODE</button>
+                        <button type="button" data-studio-view="settings">Impostazioni</button>
+                        <button id="studioGuideShortcut" type="button">Guida interattiva</button>
                     </section>
                 </div>
                 <section class="studio-welcome-panel" aria-label="Operazioni rapide">
@@ -528,7 +519,18 @@
                 <div class="studio-settings-card"><h3>Account</h3><p id="studioAccountDescription">Stai utilizzando Brat Animator come ospite.</p>
                     <div class="studio-settings-actions"><button id="studioSettingsLogin" class="studio-accent-button" type="button">Accedi / Registrati</button><button id="studioSettingsLogout" type="button" hidden>Esci dall'account</button></div>
                 </div>
-                <div class="studio-settings-card"><h3>Suoni dell’interfaccia</h3><p>I suoni dell’interfaccia utilizzano un pacchetto WAV locale opzionale, con fallback sintetico. Non vengono aggiunti all’audio dei video esportati. Vedi la guida nel repository per installare il pacchetto.</p><button id="studioSettingsSound" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button></div>
+                <div class="studio-settings-card">
+                    <h3>Personalizzazione di Windows 7</h3>
+                    <p>Importa l’animazione di avvio, lo sfondo, il pulsante Start, le icone e i WAV originali. I file vengono salvati in questo browser. L’animazione parte alla prossima apertura.</p>
+                    <p><a href="https://github.com/oakvx/bratAnimator/blob/main/docs/windows7-desktop-edition.md#file-del-tema" target="_blank" rel="noopener">Guida ai file del tema</a></p>
+                    <label for="studioWin7Files">File del tema</label>
+                    <input id="studioWin7Files" type="file" accept=".bmp,.png,.jpg,.ico,.wav" multiple>
+                    <p id="studioWin7AssetsStatus" role="status">Caricamento dei file locali…</p>
+                    <div class="studio-settings-actions">
+                        <button id="studioWin7RemoveAssets" type="button" disabled>Rimuovi file del tema</button>
+                        <button id="studioSettingsSound" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">Suoni attivi</button>
+                    </div>
+                </div>
                 <div class="studio-settings-card"><h3>Archiviazione locale</h3><p>I progetti restano in questo browser. Se cancelli i dati del sito o cambi dispositivo, non saranno sincronizzati automaticamente.</p><p id="studioStorageUsage" class="studio-storage-usage">Spazio occupato: in verifica…</p></div>
                 <div id="studioGuestTransfer" class="studio-settings-card" hidden><h3>Progetto ospite</h3><p>Puoi copiare il progetto ospite in questo account. L'originale rimane disponibile come ospite.</p><button id="studioTransferGuest" type="button">Copia il progetto ospite</button></div>
                 <div class="studio-settings-card" id="studioTikTokSettings">
@@ -557,60 +559,58 @@
     <section id="studioDesktop" class="studio-desktop" aria-label="Desktop" hidden>
         <div class="studio-desktop-icons">
             <button id="studioDesktopLauncher" type="button" class="studio-desktop-shortcut">
-                <img src="favicon.svg" alt="" width="65" height="65">
+                <img src="favicon.svg" alt="" width="48" height="48">
                 <span>Brat Animator</span>
             </button>
             <button type="button" data-desktop-view="projects" class="studio-desktop-shortcut" title="Apri i tuoi progetti">
-                <span class="studio-desktop-icon" aria-hidden="true">▣</span><span>Progetti</span>
+                <img data-win7-image="folder" alt="" width="48" height="48" hidden><span>Progetti</span>
             </button>
             <button type="button" data-desktop-view="sounds" class="studio-desktop-shortcut" title="Apri Sound Hub">
-                <span class="studio-desktop-icon" aria-hidden="true">♫</span><span>Sound Hub</span>
+                <img data-win7-image="music" alt="" width="48" height="48" hidden><span>Sound Hub</span>
             </button>
         </div>
-        <p class="studio-desktop-hint">Brat Animator · Fai doppio clic sull'icona per aprire il programma</p>
     </section>
     <!-- Phase 6: searchable Start menu, built on the actual 7.css glass window. -->
-    <nav id="studioStartMenu" class="studio-start-menu window glass active win7" aria-label="Menu Start" hidden>
+    <div class="win7">
+    <nav id="studioStartMenu" class="studio-start-menu window glass active" aria-label="Menu Start" hidden>
       <div class="window-body studio-start-surface">
         <div class="studio-start-main">
-          <div class="studio-start-heading"><img src="favicon.svg" alt="" width="23" height="23"> Brat Animator</div>
           <div id="studioStartResults" class="studio-start-results" role="group" aria-label="Programmi">
-            <button type="button" data-start-action="new" data-start-keywords="nuovo progetto crea video crea nuovo" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">＋</span><span><strong>Nuovo progetto</strong><small>Crea un video</small></span></button>
-            <button type="button" data-start-view="editor" data-start-keywords="editor montaggio timeline modifica testo lyrics" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">✎</span><span><strong>Editor</strong><small>Apri l'area di lavoro</small></span></button>
-            <button type="button" data-start-view="projects" data-start-keywords="progetti archivio file documenti cartella ricerca backup" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">▦</span><span><strong>Progetti</strong><small>Archivio locale</small></span></button>
-            <button type="button" data-start-view="sounds" data-start-keywords="sound hub musica audio raccolte playlist suoni" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">♫</span><span><strong>Sound Hub</strong><small>Audio e raccolte</small></span></button>
-            <button type="button" data-start-view="share" data-start-keywords="bratcode condivisione importa codice condividi" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">↗</span><span><strong>BRATCODE</strong><small>Condividi un progetto</small></span></button>
-            <button type="button" data-start-view="home" data-start-keywords="home inizio pagina principale dashboard" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">⌂</span><span><strong>Home</strong><small>Pagina iniziale</small></span></button>
-            <button type="button" data-start-view="settings" data-start-keywords="impostazioni configurazione account spazio storage" class="studio-start-entry"><span class="studio-start-glyph" aria-hidden="true">⚙</span><span><strong>Impostazioni</strong><small>Preferenze e account</small></span></button>
+            <button type="button" data-start-view="editor" data-start-keywords="brat animator editor montaggio timeline modifica testo lyrics" class="studio-start-entry"><img src="favicon.svg" alt="" width="32" height="32"> Brat Animator</button>
+            <button type="button" data-start-view="projects" data-start-keywords="progetti archivio file documenti cartella ricerca backup" class="studio-start-entry"><img data-win7-image="folder" alt="" width="32" height="32" hidden> Progetti</button>
+            <button type="button" data-start-view="sounds" data-start-keywords="sound hub musica audio raccolte playlist suoni" class="studio-start-entry"><img data-win7-image="music" alt="" width="32" height="32" hidden> Sound Hub</button>
+            <button type="button" data-start-action="new" data-start-keywords="nuovo progetto crea video" class="studio-start-entry" data-start-all-only>Nuovo progetto</button>
+            <button type="button" data-start-view="share" data-start-keywords="bratcode condivisione importa codice condividi" class="studio-start-entry" data-start-all-only>BRATCODE</button>
+            <button type="button" data-start-view="home" data-start-keywords="home inizio pagina principale dashboard" class="studio-start-entry" data-start-all-only>Home</button>
+            <button type="button" data-start-view="settings" data-start-keywords="impostazioni personalizzazione tema configurazione account" class="studio-start-entry" data-start-all-only>Impostazioni</button>
           </div>
           <p id="studioStartEmpty" class="studio-start-empty" role="status" hidden>Nessun risultato.</p>
-          <label class="studio-start-search-label" for="studioStartSearch"><span class="sr-only">Cerca nel menu Start</span>
-            <input id="studioStartSearch" type="search" autocomplete="off" placeholder="Cerca programmi e file">
-          </label>
+          <button id="studioStartPrograms" type="button" aria-controls="studioStartResults" aria-expanded="false">Tutti i programmi</button>
+          <input id="studioStartSearch" type="search" autocomplete="off" aria-label="Cerca nel menu Start" placeholder="Cerca programmi e file">
         </div>
         <div class="studio-start-side">
-          <img src="favicon.svg" alt="Brat Animator" width="60" height="60" class="studio-start-user-image">
+          <img data-win7-image="user" alt="" width="48" height="48" class="studio-start-user-image" hidden>
           <button type="button" data-start-view="projects">Documenti</button>
           <button type="button" data-start-view="sounds">Musica</button>
           <button type="button" data-start-action="account">Account</button>
-           <button type="button" data-start-action="help">Guida</button>
+          <button type="button" data-start-action="help">Guida</button>
           <button type="button" data-start-view="settings">Pannello di controllo</button>
           <div class="studio-start-side-spacer"></div>
           <button type="button" data-start-action="close" class="studio-start-shutdown" title="Chiude solo la finestra simulata; i progetti locali restano salvati">Chiudi finestra</button>
         </div>
       </div>
     </nav>
-    <div id="studioTaskbar" class="studio-taskbar" aria-label="Barra delle applicazioni">
+    </div>
+    <div id="studioTaskbar" class="studio-taskbar win7" aria-label="Barra delle applicazioni">
       <button id="studioStartButton" class="studio-start-orb" type="button" aria-label="Menu Start" title="Menu Start" aria-controls="studioStartMenu" aria-expanded="false">
-        <span class="studio-start-windowmark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>Start</span>
       </button>
       <button id="studioTaskbarApp" class="studio-taskbar-app" type="button" aria-label="Mostra Brat Animator" title="Brat Animator">
         <img src="favicon.svg" alt="" width="27" height="27">
       </button>
       <span class="studio-taskbar-spacer"></span>
-      <nav class="studio-legal-links" aria-label="Legal information"><a href="terms.html" target="_blank" rel="noopener">Terms of Service</a><a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></nav>
       <span id="studioTaskbarClock" class="studio-taskbar-clock" aria-label="Ora locale"></span>
-      <button id="studioShowDesktop" class="studio-show-desktop" type="button" aria-label="Mostra desktop" title="Mostra desktop (Aero Peek)"></button>
+      <button id="studioShowDesktop" class="studio-show-desktop" type="button" aria-label="Mostra desktop" title="Mostra desktop"></button>
     </div>
 
     <div id="studioAboutDialog" class="studio-modal-backdrop win7" role="dialog" aria-modal="true" aria-labelledby="studioAboutTitle" hidden>
@@ -756,7 +756,7 @@
             <div class="title-bar-text"><img src="favicon.svg" alt="" width="18" height="18" class="studio-title-icon"> Brat Animator — Editor</div>
             <div class="title-bar-controls">
                 <button id="studioEditorMinimize" type="button" aria-label="Minimize" title="Riduci l'editor sul desktop"></button>
-                <button id="studioEditorMaximize" type="button" aria-label="Maximize" title="Espandi l'area di lavoro"></button>
+                <button id="studioEditorMaximize" type="button" aria-label="Maximize" title="Ingrandisci"></button>
                 <button id="studioEditorClose" type="button" aria-label="Close" title="Chiudi l'editor e torna al desktop"></button>
             </div>
         </div>
@@ -816,7 +816,8 @@
             <div><span>lines</span><strong id="statusLines">0</strong></div>
         </div>
 
-        <nav class="editor-tabs" aria-label="editor sections" role="tablist">
+        <div class="win7 editor-tab-strip">
+        <menu class="editor-tabs" aria-label="editor sections" role="tablist">
             <button id="tab-lyrics" class="editor-tab active" data-open-tab="lyrics" type="button" role="tab" aria-selected="true" aria-controls="section-lyrics"><span>1</span> lyrics</button>
             <button id="tab-timing" class="editor-tab" data-open-tab="timing" type="button" role="tab" aria-selected="false" aria-controls="section-timing"><span>2</span> timing</button>
             <button id="tab-design" class="editor-tab" data-open-tab="design" type="button" role="tab" aria-selected="false" aria-controls="section-design"><span>3</span> design</button>
@@ -824,7 +825,8 @@
             <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export"><span>5</span> export</button>
             <button id="tab-project" class="editor-tab" data-open-tab="project" type="button" role="tab" aria-selected="false" aria-controls="section-project"><span>6</span> project</button>
             <button id="tab-tracks" class="editor-tab" data-open-tab="tracks" type="button" role="tab" aria-selected="false" aria-controls="section-tracks"><span>7</span> tracks</button>
-        </nav>
+        </menu>
+        </div>
 
         <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
             <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
@@ -1522,7 +1524,7 @@
     <main class="page-shell">
         <div class="app" id="editor">
             <div class="stage-wrap">
-                <div class="stage-toolbar" aria-label="preview tools">
+                <div class="stage-toolbar win7" aria-label="preview tools">
                     <div class="stage-title">
                         <div><strong>preview</strong><span id="stageFormatLabel">1080 × 1080</span></div>
                     </div>
@@ -1540,7 +1542,7 @@
                         <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
                     </div>
                 </div>
-                <div class="stage-transport" aria-label="preview playback">
+                <div class="stage-transport win7" aria-label="preview playback">
                     <button id="stageRestartBtn" class="transport-icon" type="button" aria-label="restart preview">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v5h5M5.6 17a8 8 0 1 0 .2-10.2L4 8" /></svg>
                     </button>
