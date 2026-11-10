@@ -66,6 +66,22 @@
             });
         });
         $("studioShowDesktop")?.addEventListener("click", taskbarAction);
+        $("studioEditorMinimize")?.addEventListener("click", () => {
+            win.BratStudio?.show("home");
+            minimize();
+        });
+        $("studioEditorClose")?.addEventListener("click", () => {
+            win.BratStudio?.show("home");
+            close();
+        });
+        $("studioEditorMaximize")?.addEventListener("click", () => {
+            // Editor's "maximize" expands the preview by toggling its inspector.
+            const toggle = $("togglePanelBtn");
+            toggle?.click();
+            const expanded = document.body.classList.contains("panel-closed");
+            $("studioEditorMaximize")?.setAttribute("aria-label", expanded ? "Restore" : "Maximize");
+            $("studioEditorMaximize")?.setAttribute("title", expanded ? "Ripristina pannello" : "Espandi editor");
+        });
         document.querySelectorAll("[data-click-target]").forEach(button => {
             button.addEventListener("click", () => {
                 $(button.dataset.clickTarget)?.click();
