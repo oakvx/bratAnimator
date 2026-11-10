@@ -107,6 +107,14 @@ Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`.
 
 `export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
 
+## Windows 7 Aero workspace & guided onboarding
+
+The dashboard is an Explorer-style window built with the vendored **7.css** framework. Sound Hub displays a two-column file manager with collection navigation, drop-to-import audio, keyboard/double-click preview and a compact audio transport that appears only after selecting a track. The large promotional home banner was removed; **Brat Animator** remains the visible product name.
+
+A **nine-step interactive tutorial** can be launched from **? Guida** (dashboard/home) or the editor's **Help** button, or by pressing **F1**. The guide navigates the actual editor, introduces audio and project backup, and includes optional actions that add example lyrics or a sample text layer (undoable). It uses native Aero window controls and progress navigation.
+
+The **Free Brat Video Editor** and **Editor Video Brat Gratis** queries remain in title/description/schema metadata for SEO; marketing-style Free labels are intentionally absent from the visible app and localized guide headings.
+
 ## Professional timeline & editor (phase 17)
 
 The inspector follows **Find → Lyrics → Timeline → Style → Canvas → Export → Project**, with related controls grouped and preserved element IDs. Properties are contextual to selected clip types, optional expert panels are collapsible, and mobile navigation uses the original Brat logo.
