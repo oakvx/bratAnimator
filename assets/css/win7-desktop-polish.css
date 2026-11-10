@@ -107,3 +107,21 @@ body.studio-window-closed #studioDashboard .studio-dashboard-inner {visibility:h
  .studio-taskbar .studio-show-desktop {margin-right:-6px;}
  .studio-taskbar-clock{display:none;}
 }
+
+.studio-modal-backdrop.win7 #studioAboutDialog {box-sizing:border-box;}
+.studio-modal-backdrop.win7 .studio-about-brand {display:flex;align-items:center;gap:13px;margin-bottom:13px;}
+.studio-modal-backdrop.win7 .studio-about-brand h2 {margin:0 0 3px;font-size:20px;}
+.studio-modal-backdrop.win7 .studio-about-brand p {margin:0;color:#607a8f;font-size:11px;}
+.studio-modal-backdrop.win7 #studioAboutDialog p {line-height:1.55;}
+body.studio-dashboard-open #studioMainWindow.window.glass.active {
+  transform-origin:center 18%;
+  animation:brat-win7-window-reveal .24s cubic-bezier(.2,.8,.2,1) both;
+}
+body.studio-window-maximized #studioMainWindow.window.glass.active {animation:none;}
+@keyframes brat-win7-window-reveal {
+  0% {opacity:.78;transform:translateY(9px) scale(.993);}
+  100% {opacity:1;transform:translateY(0) scale(1);}
+}
+@media(prefers-reduced-motion:reduce) {
+  body.studio-dashboard-open #studioMainWindow.window.glass.active {animation:none;}
+}
