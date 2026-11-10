@@ -73,7 +73,21 @@ try {
             'Sound Hub must not show its player until an audio track is selected');
         await page.locator('#tutorialWindowClose').click();
         assert.equal(await page.locator('#tutorialOverlay').isVisible(), false);
+        // Explorer-style empty state must have working, discoverable controls.
+        const emptyImport = page.locator('.studio-sound-empty-primary');
+        await page.waitForSelector('.studio-sound-empty-workspace');
+        assert.equal(await emptyImport.textContent(), 'Importa il primo audio');
+        const chooserPromise = page.waitForEvent('filechooser');
+        await emptyImport.click();
+        const chooser = await chooserPromise;
+        assert.equal(chooser.isMultiple(), true);
+        await page.keyboard.press('Escape');
         await page.screenshot({ path: path.join(output, viewport.name + '-aero-sound-hub.png'), fullPage: true });
+        // F1 is the Windows Help convention and must reopen the tour.
+        await page.keyboard.press('F1');
+        await page.waitForSelector('#tutorialOverlay:not(.hidden)');
+        await page.keyboard.press('Escape');
+        assert.equal(await page.locator('#tutorialOverlay').isVisible(), false);
         await page.evaluate(() => window.BratStudio.show('editor'));
         await page.waitForSelector('#panel', { state: 'visible' });
         const architecture = await page.evaluate(() => ({
