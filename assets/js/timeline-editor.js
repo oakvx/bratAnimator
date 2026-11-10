@@ -40,7 +40,7 @@
     let drag = null;
     let repaintScheduled = false;
     let currentWorldWidth = 0;
-    let lastRange = "";
+    let lastScrollBucket = -1;
     zoomSlider.value = String(scale);
     snapCheckbox.checked = snapping;
 
@@ -142,7 +142,7 @@
         undoBtn.disabled = !host.history().undo;
         redoBtn.disabled = !host.history().redo;
         redrawPlayhead();
-        lastRange = [graph.tracks.length, visibleStart.toFixed(1), visibleEnd.toFixed(1)].join("|");
+        lastScrollBucket = Math.floor(viewport.scrollLeft / Math.max(100, scale * 2));
     }
 
     function applyZoom(nextScale) {
@@ -345,7 +345,7 @@
     viewport.addEventListener("scroll", () => {
         if (drag) return;
         const key = Math.floor(viewport.scrollLeft / Math.max(100, scale * 2));
-        if (key !== lastRange.split("|")[1]) requestRender();
+        if (key !== lastScrollBucket) requestRender();
     }, { passive: true });
     window.addEventListener("brat:multitrack-changed", requestRender);
     window.addEventListener("resize", requestRender);
