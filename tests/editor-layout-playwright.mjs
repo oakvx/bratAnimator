@@ -76,6 +76,20 @@ try {
     await bootPage.locator('[data-desktop-view="projects"]').click();
     assert.equal(await bootPage.evaluate(() => window.BratStudio.getView()), 'projects');
     assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), false);
+    await bootPage.evaluate(() => window.BratStudio.show('editor'));
+    assert.equal(await bootPage.locator('#studioEditorChrome .window.glass.active').isVisible(), true,
+        'The editor must also use a real 7.css window caption');
+    await bootPage.screenshot({ path: path.join(output, 'win7-video-editor-titlebar.png'), fullPage: true });
+    await bootPage.locator('#studioEditorMaximize').click();
+    assert.equal(await bootPage.locator('#studioEditorMaximize').getAttribute('aria-label'), 'Restore');
+    assert.equal(await bootPage.evaluate(() => document.body.classList.contains('panel-closed')), true);
+    await bootPage.locator('#studioStartButton').click();
+    assert.equal(await bootPage.locator('#studioStartMenu').isVisible(), true,
+        'Start must remain accessible from the active editor');
+    await bootPage.keyboard.press('Escape');
+    await bootPage.locator('#studioEditorMinimize').click();
+    assert.equal(await bootPage.evaluate(() => window.BratWin7ShellInstance.state().minimized), true);
+    assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
     await bootContext.close();
     console.log('WINDOWS 7 SHELL PASS: animated boot, real 7.css menus, Start, About, taskbar and desktop shortcuts.');
     const tabs = ['lyrics', 'timing', 'tracks', 'design', 'canvas', 'export', 'project'];
