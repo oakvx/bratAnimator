@@ -16,12 +16,12 @@
         return [1, 2, 5, 10].map(multiplier => multiplier * power).find(step => step >= target) || power * 10;
     }
     function secondsToLabel(value) {
-        const secs = Math.max(0, value);
-        const mins = Math.floor(secs / 60);
-        const whole = Math.floor(secs % 60);
-        const fraction = Math.round((secs % 1) * 10);
-        return mins + ":" + String(whole + (fraction === 10 ? 1 : 0)).padStart(2, "0") +
-            (fraction && fraction !== 10 ? "." + fraction : "");
+        const tenths = Math.max(0, Math.round(finite(value) * 10));
+        const mins = Math.floor(tenths / 600);
+        const whole = Math.floor((tenths % 600) / 10);
+        const fraction = tenths % 10;
+        return mins + ":" + String(whole).padStart(2, "0") +
+            (fraction ? "." + fraction : "");
     }
     function markers(graph, excludeClipId, playhead = null) {
         const markers = [{ at: 0, kind: "origin" }];
