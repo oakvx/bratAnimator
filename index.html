@@ -5,8 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="google-site-verification" content="VvUmY6lMxWNTWM75UUbpV-3Clw2QV2BKi-MjCoJvTzc" />
-    <title>Brat Animator - Brat-Style LRC Lyric Video Generator</title>
-    <meta name="description" content="Create brat-style lyric videos from synced LRC lyrics. Time lyrics with local audio, customize the canvas, and export MP4/WebM in your browser." />
+    <title>Brat Animator – Free Brat Video Editor Online</title>
+    <meta name="description" content="Create Brat-style videos for free in your browser. Edit lyrics, video clips, images and audio on a multitrack timeline, then export MP4 or WebM." />
     <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
     <meta name="theme-color" content="#8ACE00" />
     <meta name="author" content="oakvx" />
@@ -16,6 +16,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="canonical" href="https://oakvx.github.io/bratAnimator/" />
     <link rel="alternate" hreflang="en" href="https://oakvx.github.io/bratAnimator/en/" />
+    <link rel="alternate" hreflang="it" href="https://oakvx.github.io/bratAnimator/it/" />
     <link rel="alternate" hreflang="ru" href="https://oakvx.github.io/bratAnimator/ru/" />
     <link rel="alternate" hreflang="zh-CN" href="https://oakvx.github.io/bratAnimator/zh/" />
     <link rel="alternate" hreflang="x-default" href="https://oakvx.github.io/bratAnimator/" />
@@ -24,6 +25,8 @@
     <!-- 7.css v0.21.0 upstream CSS, vendored in full for offline/PWA use. -->
     <link rel="stylesheet" href="vendor/7css/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/studio-win7.css" />
+<link rel="stylesheet" href="assets/css/editor-layout.css" />
+<link rel="stylesheet" href="assets/css/timeline-editor.css" />
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <!-- 7.css is imported by win7-app.css after application styles. -->
     <!-- Former theme assets/css/aero-theme.css retired. -->
@@ -47,8 +50,8 @@
     <meta property="og:locale:alternate" content="ru_RU" />
     <meta property="og:locale:alternate" content="zh_CN" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Brat Animator - LRC Lyric Video Generator" />
-    <meta property="og:description" content="Create brat-style lyric videos from synced LRC lyrics, refine timing with local media, customize the canvas, and export MP4/WebM with optional loaded audio." />
+    <meta property="og:title" content="Brat Animator – Free Brat Video Editor Online" />
+    <meta property="og:description" content="Create Brat-style videos for free in your browser. Edit lyrics, video clips, images and audio on a multitrack timeline, then export MP4 or WebM." />
     <meta property="og:url" content="https://oakvx.github.io/bratAnimator/" />
     <meta property="og:site_name" content="Brat Animator" />
     <meta property="og:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
@@ -56,197 +59,230 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Brat Animator preview showing a green brat-style lyric video canvas." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Brat Animator - LRC Lyric Video Generator" />
-    <meta name="twitter:description" content="Create brat-style lyric videos from synced LRC lyrics, customize the canvas, and export MP4/WebM with optional loaded audio in your browser." />
+    <meta name="twitter:title" content="Brat Animator – Free Brat Video Editor Online" />
+    <meta name="twitter:description" content="Create Brat-style videos for free in your browser. Edit lyrics, video clips, images and audio on a multitrack timeline, then export MP4 or WebM." />
     <meta name="twitter:image" content="https://oakvx.github.io/bratAnimator/social-preview.png" />
     <meta name="twitter:image:alt" content="Brat Animator preview showing a green brat-style lyric video canvas." />
     <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@graph": [
         {
-            "@context": "https://schema.org",
-            "@graph": [{
-                    "@type": "Person",
-                    "@id": "https://oakvx.github.io/bratAnimator/#creator",
-                    "name": "oakvx"
-                },
+            "@type": "Person",
+            "@id": "https://oakvx.github.io/bratAnimator/#creator",
+            "name": "oakvx"
+        },
+        {
+            "@type": "WebSite",
+            "@id": "https://oakvx.github.io/bratAnimator/#website",
+            "name": "Brat Animator",
+            "url": "https://oakvx.github.io/bratAnimator/",
+            "publisher": {
+                "@id": "https://oakvx.github.io/bratAnimator/#creator"
+            },
+            "inLanguage": [
+                "en",
+                "it",
+                "ru",
+                "zh-CN"
+            ],
+            "alternateName": [
+                "Free Brat Video Editor",
+                "Brat video maker online"
+            ]
+        },
+        {
+            "@type": "ImageObject",
+            "@id": "https://oakvx.github.io/bratAnimator/#primaryimage",
+            "url": "https://oakvx.github.io/bratAnimator/social-preview.png",
+            "width": 1200,
+            "height": 630,
+            "caption": "Brat Animator preview showing a green brat-style lyric video canvas."
+        },
+        {
+            "@type": "BreadcrumbList",
+            "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb",
+            "itemListElement": [
                 {
-                    "@type": "WebSite",
-                    "@id": "https://oakvx.github.io/bratAnimator/#website",
+                    "@type": "ListItem",
+                    "position": 1,
                     "name": "Brat Animator",
-                    "url": "https://oakvx.github.io/bratAnimator/",
-                    "publisher": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#creator"
-                    },
-                    "inLanguage": [
-                        "en",
-                        "ru",
-                        "zh-CN"
-                    ]
+                    "item": "https://oakvx.github.io/bratAnimator/"
+                }
+            ]
+        },
+        {
+            "@type": "WebPage",
+            "@id": "https://oakvx.github.io/bratAnimator/#webpage",
+            "url": "https://oakvx.github.io/bratAnimator/",
+            "name": "Brat Animator – Free Brat Video Editor Online",
+            "description": "Create Brat-style videos for free in your browser. Edit lyrics, video clips, images and audio on a multitrack timeline, then export MP4 or WebM.",
+            "isPartOf": {
+                "@id": "https://oakvx.github.io/bratAnimator/#website"
+            },
+            "about": {
+                "@id": "https://oakvx.github.io/bratAnimator/#app"
+            },
+            "primaryImageOfPage": {
+                "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
+            },
+            "breadcrumb": {
+                "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb"
+            },
+            "inLanguage": [
+                "en",
+                "it",
+                "ru",
+                "zh-CN"
+            ]
+        },
+        {
+            "@type": "WebApplication",
+            "@id": "https://oakvx.github.io/bratAnimator/#app",
+            "name": "Brat Animator",
+            "alternateName": [
+                "Free Brat Video Editor",
+                "Brat Video Maker Online",
+                "Brat Lyric Video Maker",
+                "Editor video Brat gratis"
+            ],
+            "url": "https://oakvx.github.io/bratAnimator/",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Web",
+            "isAccessibleForFree": true,
+            "creator": {
+                "@id": "https://oakvx.github.io/bratAnimator/#creator"
+            },
+            "image": {
+                "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
+            },
+            "screenshot": "https://oakvx.github.io/bratAnimator/social-preview.png",
+            "inLanguage": [
+                "en",
+                "it",
+                "ru",
+                "zh-CN"
+            ],
+            "browserRequirements": "Modern browser with JavaScript, Canvas, MediaRecorder or WebCodecs support for export",
+            "featureList": [
+                "Create Brat-style lyric videos with synced LRC text",
+                "Edit video, image, text and audio clips on a multitrack timeline",
+                "Trim, split, move and layer clips with local media",
+                "Mix audio from videos and supported audio files",
+                "Export MP4, WebM or PNG using supported browser codecs",
+                "Save locally and export complete project backups"
+            ],
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "EUR",
+                "availability": "https://schema.org/InStock",
+                "description": "Free to use in your browser; permissions required for publishing and redistribution under the terms."
+            },
+            "description": "Free to use Brat-style video editor in the browser with lyrics, image and video overlays, local audio mixing, a multitrack timeline, and MP4/WebM export. Publishing or redistributing content requires permission under the site terms."
+        },
+        {
+            "@type": "HowTo",
+            "@id": "https://oakvx.github.io/bratAnimator/#howto",
+            "name": "How to create a Brat-style video with a free online editor",
+            "description": "Make a Brat-style lyric video or multitrack edit with Brat Animator, and export MP4 or WebM in your browser.",
+            "tool": [
+                {
+                    "@type": "HowToTool",
+                    "name": "Synced LRC lyrics"
                 },
                 {
-                    "@type": "ImageObject",
-                    "@id": "https://oakvx.github.io/bratAnimator/#primaryimage",
-                    "url": "https://oakvx.github.io/bratAnimator/social-preview.png",
-                    "width": 1200,
-                    "height": 630,
-                    "caption": "Brat Animator preview showing a green brat-style lyric video canvas."
+                    "@type": "HowToTool",
+                    "name": "Optional local audio/video file for timing assistance"
+                }
+            ],
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "Add media and lyrics",
+                    "text": "Paste timestamped lyrics or import video, images and audio files from your device."
                 },
                 {
-                    "@type": "BreadcrumbList",
-                    "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb",
-                    "itemListElement": [{
-                        "@type": "ListItem",
-                        "position": 1,
-                        "name": "Brat Animator",
-                        "item": "https://oakvx.github.io/bratAnimator/"
-                    }]
+                    "@type": "HowToStep",
+                    "name": "Arrange the timeline",
+                    "text": "Split, trim and move video, image, text and audio clips between compatible tracks."
                 },
                 {
-                    "@type": "WebPage",
-                    "@id": "https://oakvx.github.io/bratAnimator/#webpage",
-                    "url": "https://oakvx.github.io/bratAnimator/",
-                    "name": "Brat Animator - Brat-Style LRC Lyric Video Generator",
-                    "description": "Create brat-style lyric videos from synced LRC lyrics with local audio timing, canvas customization, and MP4/WebM export in your browser.",
-                    "isPartOf": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#website"
-                    },
-                    "about": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#app"
-                    },
-                    "primaryImageOfPage": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
-                    },
-                    "breadcrumb": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#breadcrumb"
-                    },
-                    "inLanguage": [
-                        "en",
-                        "ru",
-                        "zh-CN"
-                    ]
+                    "@type": "HowToStep",
+                    "name": "Choose the Brat look",
+                    "text": "Customize typography, background color, text effects and video format."
                 },
                 {
-                    "@type": "WebApplication",
-                    "@id": "https://oakvx.github.io/bratAnimator/#app",
-                    "name": "Brat Animator",
-                    "alternateName": [
-                        "Brat lyric video maker",
-                        "LRC lyric video generator"
-                    ],
-                    "url": "https://oakvx.github.io/bratAnimator/",
-                    "applicationCategory": "MultimediaApplication",
-                    "operatingSystem": "Web",
-                    "isAccessibleForFree": true,
-                    "creator": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#creator"
-                    },
-                    "image": {
-                        "@id": "https://oakvx.github.io/bratAnimator/#primaryimage"
-                    },
-                    "screenshot": "https://oakvx.github.io/bratAnimator/social-preview.png",
-                    "inLanguage": [
-                        "en",
-                        "ru",
-                        "zh-CN"
-                    ],
-                    "browserRequirements": "Modern browser with JavaScript, Canvas, MediaRecorder or WebCodecs support for export",
-                    "featureList": [
-                        "Search synced lyrics from LRCLIB",
-                        "Paste or import timestamped LRC lyric files",
-                        "Refine lyric timing with optional local audio assistance",
-                        "Customize square lyric video typography, color, motion, and canvas settings",
-                        "Export fast video-only MP4/WebM or real-time exports with loaded audio",
-                        "Save snapshots and copy shareable project links"
-                    ],
-                    "offers": {
-                        "@type": "Offer",
-                        "price": "0",
-                        "priceCurrency": "EUR"
-                    },
-                    "description": "Static browser app for creating brat-style LRC lyric videos with local audio/video timing, browser preview, project snapshots, canvas customization, and MP4/WebM export with optional loaded audio."
+                    "@type": "HowToStep",
+                    "name": "Export locally",
+                    "text": "Render MP4, WebM or image frames using the formats supported by your browser."
+                }
+            ]
+        },
+        {
+            "@type": "FAQPage",
+            "@id": "https://oakvx.github.io/bratAnimator/#faq",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Is Brat Animator a free video editor?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. You can use Brat Animator for free in your browser, without installing video editing software. Publishing or publicly sharing content requires permission under the site's terms."
+                    }
                 },
                 {
-                    "@type": "HowTo",
-                    "@id": "https://oakvx.github.io/bratAnimator/#howto",
-                    "name": "How to create a brat-style LRC lyric video",
-                    "description": "Use Brat Animator to turn synced LRC lyrics into a square MP4 or WebM export with optional loaded audio.",
-                    "tool": [{
-                            "@type": "HowToTool",
-                            "name": "Synced LRC lyrics"
-                        },
-                        {
-                            "@type": "HowToTool",
-                            "name": "Optional local audio/video file for timing assistance"
-                        }
-                    ],
-                    "step": [{
-                            "@type": "HowToStep",
-                            "name": "Add lyrics",
-                            "text": "Search for a song on LRCLIB or paste timestamped LRC lyrics into the editor."
-                        },
-                        {
-                            "@type": "HowToStep",
-                            "name": "Refine timing",
-                            "text": "Optionally load an audio or video file in the browser to decode audio, check timing, and export with loaded audio."
-                        },
-                        {
-                            "@type": "HowToStep",
-                            "name": "Customize the design",
-                            "text": "Adjust typography, color, motion, canvas size, and layout before exporting."
-                        },
-                        {
-                            "@type": "HowToStep",
-                            "name": "Export the video",
-                            "text": "Render MP4/WebM with or without loaded media audio in compatible browsers."
-                        }
-                    ]
+                    "@type": "Question",
+                    "name": "Does Brat Animator export audio?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, when enabled and when you load permitted local or direct CORS-enabled media audio. YouTube preview links are not downloaded or extracted."
+                    }
                 },
                 {
-                    "@type": "FAQPage",
-                    "@id": "https://oakvx.github.io/bratAnimator/#faq",
-                    "mainEntity": [{
-                            "@type": "Question",
-                            "name": "Does Brat Animator export audio?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "Yes, when enabled and when you load permitted local or direct CORS-enabled media audio. YouTube preview links are not downloaded or extracted."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "Is audio uploaded to a server?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "No. Local files stay in the browser. Direct media URLs are fetched by the browser only when you choose to load them."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "Can I save or share a project?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "Yes. Project snapshots can be saved in the current browser, and project JSON or share links can be copied from the project tools."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "Can I use or redistribute this project?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "You can use Brat Animator freely. Publishing, public sharing, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author."
-                            }
-                        },
-                        {
-                            "@type": "Question",
-                            "name": "Does it work on GitHub Pages?",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "Yes. The project is fully static and can run on GitHub Pages without a custom backend."
-                            }
-                        }
-                    ]
+                    "@type": "Question",
+                    "name": "Is audio uploaded to a server?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No. Local files stay in the browser. Direct media URLs are fetched by the browser only when you choose to load them."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I save or share a project?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. Project snapshots can be saved in the current browser, and project JSON or share links can be copied from the project tools."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I use or redistribute this project?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "You can use Brat Animator freely. Publishing, public sharing, redistribution, self-hosting, commercial use, or integration requires explicit written permission from the author."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Does it work on GitHub Pages?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. The project is fully static and can run on GitHub Pages without a custom backend."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I edit more than just lyric videos?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes. Brat Animator includes a multitrack editor for video clips, image overlays, text and audio, while keeping Brat-style lyric videos as its main focus."
+                    }
                 }
             ]
         }
+    ]
+}
     </script>
     <script src="assets/js/core.js" defer></script>
     <script src="vendor/js-yaml.min.js" defer></script>
@@ -255,6 +291,12 @@
     <script src="assets/js/timing.js" defer></script>
     <script src="assets/js/media.js" defer></script>
     <script src="assets/js/export.js" defer></script>
+    <script src="assets/js/export-plan.js" defer></script>
+    <script src="assets/js/export-engine.js" defer></script>
+    <script src="assets/js/multitrack.js" defer></script>
+    <script src="assets/js/video-composer.js" defer></script>
+    <script src="assets/js/audio-mixer.js" defer></script>
+<script src="assets/js/timeline-core.js" defer></script>
     <script src="assets/js/i18n.js" defer></script>
     <script src="assets/js/motion.js" defer></script>
     <script src="assets/js/kinetic.js" defer></script>
@@ -263,7 +305,10 @@
     <script src="assets/js/project-assets.js" defer></script>
     <script src="assets/js/local-workspace.js" defer></script>
     <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/multitrack-ui.js" defer></script>
     <script src="assets/js/editor-v5.js" defer></script>
+<script src="assets/js/editor-layout.js" defer></script>
+<script src="assets/js/timeline-editor.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
     <script src="assets/js/studio-shell.js" defer></script>
     <script src="assets/js/supabase-config.js" defer></script>
@@ -342,6 +387,11 @@
                         <button type="button" data-studio-view="settings"><span aria-hidden="true">⚙</span> Impostazioni</button>
                     </section>
                 </div>
+                <section class="studio-seo-intro" aria-label="About the free Brat video editor">
+                    <h2>Free Brat Video Editor Online</h2>
+                    <p>Make Brat-style lyric videos for free, or arrange your own clips, images and audio on a multitrack timeline. Edit and export MP4 or WebM directly in your browser, with local project storage. <a href="en/">Explore the English guide</a> or <a href="it/" hreflang="it">leggi la guida in italiano</a>.</p>
+                    <p class="studio-seo-note">Free to use; publishing and redistribution require permission under the <a href="terms.html">terms</a>.</p>
+                </section>
             </div>
 
             <div id="studioProjectsView" class="studio-view" hidden>
@@ -606,6 +656,7 @@
 
     <header class="topbar main-menu-v4" aria-label="main menu">
         <a class="menu-brand" href="#editor" aria-label="Brat Animator editor">
+            <img class="editor-menu-icon" src="favicon.svg" alt="" width="23" height="23" decoding="async">
             <span class="menu-brand-copy">
                 <strong>brat animator</strong>
                 <span>5.0</span>
@@ -636,10 +687,9 @@
     <div id="panel" class="panel" aria-label="editor controls">
         <div class="panel-header">
             <div>
-                <h1 data-i18n="panelTitle">brat lyric video editor</h1>
+                <h1 data-i18n="panelTitle">brat studio</h1>
                 <p data-i18n="panelIntro">
-                    Search a song on LRCLIB or lrc.red, paste or import lyrics, use cleared audio/video for timing,
-                    and optionally merge extracted audio into the final export.
+                    Edit lyrics, organize media tracks and export videos or still frames using the timeline.
                 </p>
             </div>
             <span class="autosave-pill" id="autosaveBadge" aria-live="polite">loading local save…</span>
@@ -665,6 +715,7 @@
             <button id="tab-canvas" class="editor-tab" data-open-tab="canvas" type="button" role="tab" aria-selected="false" aria-controls="section-canvas"><span>4</span> canvas</button>
             <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export"><span>5</span> export</button>
             <button id="tab-project" class="editor-tab" data-open-tab="project" type="button" role="tab" aria-selected="false" aria-controls="section-project"><span>6</span> project</button>
+            <button id="tab-tracks" class="editor-tab" data-open-tab="tracks" type="button" role="tab" aria-selected="false" aria-controls="section-tracks"><span>7</span> tracks</button>
         </nav>
 
         <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
@@ -1208,6 +1259,73 @@
             <div class="pill-note" data-i18n="exportNote">video-only by default; loaded local audio can be merged when enabled</div>
         </div>
 
+        <div id="section-tracks" class="section editor-section" data-editor-tab="tracks" role="tabpanel" aria-labelledby="tab-tracks">
+            <div class="section-title">Timeline & tracks</div>
+            <p class="mini-copy">Organize media and layers, edit visual properties, and mix audio without leaving this browser.</p>
+            <div class="row">
+                <label class="file-button" for="mtImportMediaInput">import video / image / audio
+                    <input id="mtImportMediaInput" type="file" accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,audio/ogg,audio/webm,audio/flac" multiple hidden>
+                </label>
+                <span class="mini-copy">Up to 512 MiB per file · stored locally</span>
+            </div>
+            <div class="row mt-control-bar">
+                <label for="mtTrackType">track type</label>
+                <select id="mtTrackType"><option value="video">Video</option><option value="overlay">Overlay</option><option value="lyrics">Lyrics</option><option value="audio">Audio</option></select>
+                <button id="mtAddTrack" type="button">add track</button>
+            </div>
+            <div id="mtTrackList" class="mt-track-list" role="group" aria-label="Multitrack tracks"></div>
+            <div class="row">
+                <label for="mtTrackName">selected track</label>
+                <input id="mtTrackName" type="text" maxlength="100" placeholder="track name">
+                <button id="mtRenameTrack" type="button">rename</button>
+                <button id="mtMoveTrackUp" type="button">move up</button>
+                <button id="mtMoveTrackDown" type="button">move down</button>
+                <button id="mtDeleteTrack" type="button">delete track</button>
+            </div>
+            <div class="section-title">clips</div>
+            <div id="mtClipList" class="mt-clip-list" role="group" aria-label="Clips in selected track"></div>
+            <div class="mt-clip-form">
+                <label for="mtClipKind">type <select id="mtClipKind"></select></label>
+                <label for="mtClipSource">imported media <select id="mtClipSource"></select></label>
+                <label for="mtClipName">name <input id="mtClipName" maxlength="180" placeholder="clip name"></label>
+                <label for="mtClipStart">start (seconds) <input id="mtClipStart" type="number" min="0" max="86400" step="0.01" value="0"></label>
+                <label for="mtClipDuration">duration (seconds) <input id="mtClipDuration" type="number" min="0.01" max="86400" step="0.01" value="5"></label>
+                <label for="mtClipRate">playback speed <input id="mtClipRate" type="number" min="0.1" max="8" step="0.1" value="1"></label>
+            </div>
+            <div class="mt-audio-form">
+                <label for="mtTrackVolume">track volume (%) <input id="mtTrackVolume" type="number" min="0" max="200" step="1" value="100"></label>
+                <button id="mtApplyTrackVolume" type="button">set track volume</button>
+                <label for="mtClipVolume">clip volume (%) <input id="mtClipVolume" type="number" min="0" max="200" step="1" value="100"></label>
+                <label for="mtClipFadeIn">fade in (s) <input id="mtClipFadeIn" type="number" min="0" max="86400" step="0.01" value="0"></label>
+                <label for="mtClipFadeOut">fade out (s) <input id="mtClipFadeOut" type="number" min="0" max="86400" step="0.01" value="0"></label>
+                <button id="mtApplyAudio" type="button">apply clip audio</button>
+            </div>
+            <p id="mtAudioStatus" class="mini-copy" role="status" aria-live="polite">Clip soundtracks and audio tracks are mixed during playback and export when decodable. Legacy Timing audio is included only once.</p>
+            <div class="mt-visual-form">
+                <label for="mtClipText">overlay text <input id="mtClipText" type="text" maxlength="4000" placeholder="Title or sticker text"></label>
+                <label for="mtClipX">center X (0–100%) <input id="mtClipX" type="number" step="1" min="0" max="100" value="50"></label>
+                <label for="mtClipY">center Y (0–100%) <input id="mtClipY" type="number" step="1" min="0" max="100" value="50"></label>
+                <label for="mtClipWidth">width (%) <input id="mtClipWidth" type="number" step="1" min="1" max="400" value="100"></label>
+                <label for="mtClipHeight">height (%) <input id="mtClipHeight" type="number" step="1" min="1" max="400" value="100"></label>
+                <label for="mtClipRotation">rotation (°) <input id="mtClipRotation" type="number" step="1" min="-360" max="360" value="0"></label>
+                <label for="mtClipOpacity">opacity (%) <input id="mtClipOpacity" type="number" step="1" min="0" max="100" value="100"></label>
+                <label for="mtClipFit">fit <select id="mtClipFit"><option value="cover">cover</option><option value="contain">contain</option></select></label>
+                <button id="mtApplyVisual" type="button">apply visual settings</button>
+            </div>
+            <div class="row mt-control-bar">
+                <button id="mtAddClip" type="button">add clip</button>
+                <button id="mtApplyClip" type="button">apply start / duration</button>
+                <button id="mtDuplicateClip" type="button">duplicate</button>
+                <button id="mtDeleteClip" type="button">delete clip</button>
+            </div>
+            <div class="row">
+                <label for="mtSplitAt">split at (seconds)</label>
+                <input id="mtSplitAt" type="number" min="0" max="86400" step="0.01" value="2.5">
+                <button id="mtSplitClip" type="button">split selected clip</button>
+            </div>
+            <p id="mtStatus" class="meta muted" aria-live="polite">Multitrack metadata is saved with this project.</p>
+        </div>
+
         <div id="section-project" class="section editor-section" data-editor-tab="project" role="tabpanel" aria-labelledby="tab-project">
             <div class="section-title" data-i18n="externalPreview">external video preview</div>
             <label class="label" data-i18n="videoSelection">video selection</label>
@@ -1317,6 +1435,34 @@
                 <div class="hint"><span data-i18n="hint">export a frame or render the video</span><kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> seek</div>
                 <p id="stageSourceCredit" class="mini-copy" hidden></p>
             </div>
+            <section id="studioTimelineDock" class="studio-timeline" aria-label="Multitrack video editing timeline">
+                <div class="studio-tl-toolbar">
+                    <strong class="studio-tl-title">timeline</strong>
+                    <span id="studioTlCurrent" class="studio-tl-clock" aria-label="Current playhead">0:00</span>
+                    <div class="studio-tl-tools" aria-label="Timeline editing tools">
+                        <button id="studioTlUndo" type="button" title="Undo timeline edit (Ctrl+Z)" aria-label="Undo timeline edit" disabled>↶</button>
+                        <button id="studioTlRedo" type="button" title="Redo timeline edit (Ctrl+Shift+Z)" aria-label="Redo timeline edit" disabled>↷</button>
+                        <button id="studioTlSplit" type="button" title="Split selected clip at playhead">split</button>
+                        <label class="studio-tl-snap"><input id="studioTlSnap" type="checkbox" checked> snap</label>
+                        <button id="studioTlZoomOut" type="button" aria-label="Zoom timeline out">−</button>
+                        <label class="studio-tl-zoom-label" for="studioTlZoom">zoom
+                            <input id="studioTlZoom" type="range" min="12" max="240" step="1" value="48" />
+                        </label>
+                        <output id="studioTlZoomValue" for="studioTlZoom">48 px/s</output>
+                        <button id="studioTlZoomIn" type="button" aria-label="Zoom timeline in">+</button>
+                        <button id="studioTlFit" type="button" title="Fit timeline to project">fit</button>
+                    </div>
+                </div>
+                <div id="studioTlViewport" class="studio-tl-viewport" tabindex="0" role="region" aria-label="Scrollable multitrack timeline. Drag clips to move, drag edges to trim, drop local media onto a compatible track.">
+                    <div id="studioTlWorld" class="studio-tl-world">
+                        <div id="studioTlRuler" class="studio-tl-ruler" aria-label="Click to seek"></div>
+                        <div id="studioTlLanes" class="studio-tl-lanes"></div>
+                        <div id="studioTlPlayhead" class="studio-tl-playhead" aria-label="Playhead"></div>
+                        <div id="studioTlSnapGuide" class="studio-tl-snap-guide" hidden></div>
+                    </div>
+                </div>
+                <p id="studioTlStatus" class="studio-tl-status" role="status" aria-live="polite">Drag clips to move or trim · scroll horizontally to navigate · drop local media onto a track</p>
+            </section>
         </div>
     </main>
 </body>

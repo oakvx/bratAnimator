@@ -21,8 +21,10 @@
         } catch (_) { lines = []; }
         const count = Array.isArray(lines) ? lines.length : 0;
         const checks = [];
-        if (!lyrics.trim()) {
-            checks.push({ status: "error", text: "No lyrics yet. Add timed LRC lyrics before exporting.", action: "timing" });
+        if (!lyrics.trim() && !settings.hasVisualClips) {
+            checks.push({ status: "error", text: "Add timed lyrics or a visual clip before exporting.", action: "timing" });
+        } else if (!lyrics.trim() && settings.hasVisualClips) {
+            checks.push({ status: "ok", text: "Visual clips ready: video-only export does not require lyrics." });
         } else if (!count) {
             checks.push({ status: "error", text: "No valid timed lyric lines. Check [MM:SS.xx] timestamps in Timing.", action: "timing" });
         } else {
@@ -35,12 +37,14 @@
         } else {
             checks.push({ status: "ok", text: hasRecorder ? "Browser recording is available." : "Fast video encoding is available (codec support is checked when exporting)." });
         }
-        if (settings.audioSelected && settings.audioLoaded && !hasRecorder) {
-            checks.push({ status: "error", text: "Audio export requires browser MediaRecorder support." });
-        } else if (settings.audioSelected && !settings.audioLoaded) {
+        if (settings.audioSelected && settings.audioLoaded && !hasRecorder && !canFast) {
+            checks.push({ status: "error", text: "Audio export requires compatible AAC encoding or MediaRecorder support." });
+        } else if (settings.audioSelected && !settings.audioLoaded && !settings.hasTrackAudio) {
             checks.push({ status: "warning", text: "No audio is loaded. Export will be silent unless you import an audio/video file.", action: "timing" });
         } else if (settings.audioSelected && settings.audioLoaded) {
-            checks.push({ status: "ok", text: "Local audio is ready; merging audio may require real-time export." });
+            checks.push({ status: "ok", text: "Legacy audio is ready; audio codec support will be verified during export." });
+        } else if (settings.hasTrackAudio) {
+            checks.push({ status: "ok", text: "Multitrack audio and embedded video soundtracks are selected; codec decoding is verified at export." });
         } else {
             checks.push({ status: "ok", text: "Video-only export selected." });
         }
@@ -68,6 +72,8 @@
         function readSettings() {
             return {
                 lyrics: $("lyricsInput")?.value || "",
+                hasVisualClips: Boolean(win.BratComposer?.hasVisualClips(win.BratMultitrackHost?.snapshot?.())),
+                hasTrackAudio: Boolean(win.BratAudioMixer?.audible(win.BratMultitrackHost?.snapshot?.()).length),
                 startFromZero: $("startFromZeroCheckbox")?.checked,
                 hasRecorder: typeof win.MediaRecorder !== "undefined",
                 canFast: Boolean(win.BratExport?.canAttemptFastExport?.(win)),
@@ -104,6 +110,7 @@
             if (scheduled != null) win.clearTimeout(scheduled);
             scheduled = win.setTimeout(() => { scheduled = null; refresh(); }, 120);
         }
+        win.addEventListener?.("brat:multitrack-changed", schedule);
         refreshButton.addEventListener("click", refresh);
         fixButton.addEventListener("click", () => {
             document.querySelector('[data-open-tab="timing"]')?.click();

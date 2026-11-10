@@ -27,6 +27,7 @@ await once(server, 'listening');
 const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = spawn(chrome, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
+    '--autoplay-policy=no-user-gesture-required',
     '--disable-background-networking', '--remote-debugging-port=0',
     `--user-data-dir=${path.join(artifacts, 'profile')}`, 'about:blank'
 ], { windowsHide: true, stdio: 'ignore' });
@@ -128,7 +129,9 @@ try {
             });
             const operation = kind === 'png' ? exportCurrentFramePng() : kind === 'preview' ? exportPreviewClip() : exportVideo();
             await operation;
-            const result = await auditDecode(await captured);
+            const actualDownload = await captured;
+            window.auditLastExportBlob = actualDownload.blob;
+            const result = await auditDecode(actualDownload);
             auditAssert(!state.exportInProgress, 'export flag not reset');
             return result;
         };
@@ -205,6 +208,170 @@ try {
         auditAssert(output.width === 3000 && output.height === 3000, JSON.stringify(output));
         return output;
     }));
+    await test('phase 13 exports a real audio track alongside composited frames', () => evaluate(async () => {
+        auditSelect('square', 720);
+        lyricsInput.value = '[00:00.00] exported audio\n[00:00.20] synchronized video';
+        rebuildTimelineFromCurrentInputs();
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = ctx.createBuffer(2, 48000, 48000);
+        for (let channel = 0; channel < 2; channel++) {
+            const data = buffer.getChannelData(channel);
+            for (let index = 0; index < data.length; index++) {
+                data[index] = Math.sin(index * 2 * Math.PI * 440 / 48000) * 0.1;
+            }
+        }
+        await ctx.close();
+        state.audioBuffer = buffer;
+        includeAudioInExportCheckbox.checked = true;
+        const plan = BratExportPlan.create({ width: 720, height: 720, fps: 24, start: 0, end: 1 });
+        const support = await BratExportEngine.probe({
+            plan, audioClips: [{ buffer }], loadMuxer: () => BratExport.loadMp4MuxerModule()
+        });
+        try {
+            const output = await auditExport('video');
+            auditAssert(output.width === 720 && output.height === 720, 'unexpected output dimensions');
+            auditAssert(['video/mp4', 'video/webm'].some(type => output.type.startsWith(type)), output.type);
+            const bytes = await auditLastExportBlob.arrayBuffer();
+            const content = new TextDecoder('latin1').decode(bytes);
+            auditAssert(content.includes('soun') || content.includes('A_OPUS') || content.includes('A_AAC'), 'missing encoded audio track');
+            if (support.fast) auditAssert(output.filename.endsWith('.mp4'), 'fast AAC path did not produce MP4');
+            return { type: output.type, width: output.width, height: output.height, encoder: support.fast ? 'webcodecs' : 'recording' };
+        } finally {
+            state.audioBuffer = null;
+            includeAudioInExportCheckbox.checked = false;
+        }
+    }));
+    await test('phase 15 composites two independent MP4s plus PNG overlay without LRC', () => evaluate(async () => {
+        auditSelect('square', 720);
+        includeAudioInExportCheckbox.checked = false;
+        state.audioBuffer = null;
+        lyricsInput.value = '[00:00.00] source video\n[00:00.15] end';
+        rebuildTimelineFromCurrentInputs();
+        await auditExport('video');
+        const source = new File([auditLastExportBlob], 'video-source.mp4', { type: 'video/mp4' });
+        const imported = await BratMultitrackHost.importMedia(source, 'main-video');
+        auditAssert(imported.kind === 'video', 'video file was not accepted');
+        // Encode a second, independently seekable blue video layer with the same engine.
+        const blueCanvas = document.createElement('canvas');
+        blueCanvas.width = blueCanvas.height = 96;
+        const blueCtx = blueCanvas.getContext('2d');
+        const bluePlan = BratExportPlan.create({ width: 96, height: 96, fps: 12, start: 0, end: .5 });
+        const blueVideo = await BratExportEngine.exportTimeline({
+            plan: bluePlan, canvas: blueCanvas, context: blueCtx,
+            audioClips: [], loadMuxer: () => BratExport.loadMp4MuxerModule(),
+            renderFrame(context) { context.fillStyle = '#00bbff'; context.fillRect(0, 0, 96, 96); }
+        });
+        auditAssert(blueVideo.extension === 'mp4', 'secondary video must use MP4 in this browser');
+        await BratMultitrackHost.importMedia(new File([blueVideo.blob], 'second-layer.mp4', { type: 'video/mp4' }), 'main-overlay');
+        const blueId = BratMultitrackHost.snapshot().selectedClipId;
+        BratMultitrackHost.apply('set-clip', { clipId: blueId,
+            transform: { x: .25, y: .25, width: .3, height: .3, fit: 'cover' } });
+
+        const overlayCanvas = document.createElement('canvas');
+        overlayCanvas.width = 64; overlayCanvas.height = 64;
+        const overlayCtx = overlayCanvas.getContext('2d');
+        overlayCtx.fillStyle = '#fa1241';
+        overlayCtx.fillRect(0, 0, 64, 64);
+        const png = await new Promise(resolve => overlayCanvas.toBlob(resolve, 'image/png'));
+        const sticker = await BratMultitrackHost.importMedia(new File([png], 'sticker.png', { type: 'image/png' }), 'main-overlay');
+        auditAssert(sticker.kind === 'image', 'image overlay was not accepted');
+        const stickerId = BratMultitrackHost.snapshot().selectedClipId;
+        BratMultitrackHost.apply('set-clip', { clipId: stickerId,
+            transform: { x: 0.5, y: 0.5, width: .4, height: .4, fit: 'contain' }, opacity: 1 });
+        lyricsInput.value = '';
+        rebuildTimelineFromCurrentInputs();
+        await BratMultitrackHost.composer().prepare(BratMultitrackHost.snapshot(), .1);
+        renderPreviewAt(.1);
+        const ctx = previewCanvas.getContext('2d');
+        const center = [...ctx.getImageData(previewCanvas.width / 2, previewCanvas.height / 2, 1, 1).data];
+        auditAssert(center[0] > 225 && center[1] < 80 && center[2] < 110, 'PNG overlay missing from video composite: ' + center);
+        const blue = [...ctx.getImageData(180, 180, 1, 1).data];
+        auditAssert(blue[0] < 70 && blue[1] > 140 && blue[2] > 180, 'second video layer not composited: ' + blue);
+
+        const snapshot = await auditExport('png');
+        auditAssert(snapshot.width === 720 && snapshot.height === 720, 'wrong PNG output');
+        const movie = await auditExport('video');
+        auditAssert(movie.width === 720 && movie.height === 720, 'wrong video output');
+        const trackGraph = BratMultitrackHost.snapshot();
+        auditAssert(trackGraph.tracks[0].clips.length === 1 && trackGraph.tracks[1].clips.length === 2,
+            'visual clips not retained');
+        BratMultitrackHost.replace(BratTracks.empty());
+        lyricsInput.value = '[00:00.00] restored';
+        rebuildTimelineFromCurrentInputs();
+        return { video: movie.type, center, blue, clips: trackGraph.tracks[1].clips.length };
+    }));
+    await test('phase 16 exports sound from a video clip plus an independent audio track', () => evaluate(async () => {
+        auditSelect('square', 720);
+        state.audioBuffer = null;
+        includeAudioInExportCheckbox.checked = false;
+        BratMultitrackHost.replace(BratTracks.empty());
+        lyricsInput.value = '';
+        rebuildTimelineFromCurrentInputs();
+
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        const sampleRate = 48000, frames = sampleRate;
+        const embedded = context.createBuffer(2, frames, sampleRate);
+        for (let channel = 0; channel < 2; channel++) {
+            const samples = embedded.getChannelData(channel);
+            for (let index = 0; index < frames; index++) {
+                samples[index] = Math.sin(index * 2 * Math.PI * 440 / sampleRate) * 0.16;
+            }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 96;
+        const videoWithSound = await BratExportEngine.exportTimeline({
+            plan: BratExportPlan.create({ width: 96, height: 96, fps: 12, start: 0, end: 1 }),
+            canvas, context: canvas.getContext('2d'),
+            audioClips: [{ buffer: embedded, start: 0, duration: 1, volume: 1 }],
+            loadMuxer: () => BratExport.loadMp4MuxerModule(),
+            renderFrame(ctx) { ctx.fillStyle = '#4275ef'; ctx.fillRect(0, 0, 96, 96); }
+        });
+        await context.close();
+
+        await BratMultitrackHost.importMedia(new File([videoWithSound.blob], 'dialogue.' +
+            videoWithSound.extension, { type: videoWithSound.blob.type }), 'main-video');
+        const videoClipId = BratMultitrackHost.snapshot().selectedClipId;
+        BratMultitrackHost.apply('set-clip', { clipId: videoClipId, volume: .65, fadeIn: .05, fadeOut: .1 });
+
+        const bytes = new ArrayBuffer(44 + frames * 2), view = new DataView(bytes);
+        function write(offset, value) { for (let index = 0; index < value.length; index++) view.setUint8(offset + index, value.charCodeAt(index)); }
+        write(0, 'RIFF'); view.setUint32(4, bytes.byteLength - 8, true);
+        write(8, 'WAVE'); write(12, 'fmt '); view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+        write(36, 'data'); view.setUint32(40, frames * 2, true);
+        for (let index = 0; index < frames; index++) {
+            view.setInt16(44 + index * 2, Math.sin(index * 2 * Math.PI * 880 / sampleRate) * 6000, true);
+        }
+        await BratMultitrackHost.importMedia(new File([bytes], 'sfx.wav', { type: 'audio/wav' }), 'main-audio');
+        const audioClipId = BratMultitrackHost.snapshot().selectedClipId;
+        BratMultitrackHost.apply('set-track', { trackId: 'main-audio', volume: .6 });
+        BratMultitrackHost.apply('set-clip', { clipId: audioClipId, volume: .4, fadeIn: .06, fadeOut: .08 });
+
+        const preflight = await BratMultitrackHost.mixer().prepare(BratMultitrackHost.snapshot());
+        auditAssert(preflight.clips.length === 2,
+            'expected embedded video audio + SFX; found ' + preflight.clips.length + '; warnings: ' + preflight.warnings.join('; '));
+        const preview = await BratMultitrackHost.mixer().play(BratMultitrackHost.snapshot(), () => 0);
+        auditAssert(preview.clips.length === 2, 'preview mixer did not schedule both sound sources');
+        BratMultitrackHost.mixer().stop();
+        const movie = await auditExport('video');
+        const encoded = new TextDecoder('latin1').decode(await auditLastExportBlob.arrayBuffer());
+        auditAssert(encoded.includes('A_OPUS') || encoded.includes('A_AAC') || encoded.includes('soun'),
+            'exported movie lacks an audio track');
+        const graph = BratMultitrackHost.snapshot();
+        auditAssert(graph.tracks[0].clips.length === 1 && graph.tracks[3].clips.length === 1,
+            'two audio-bearing clips were not persisted');
+
+        BratMultitrackHost.apply('set-track', { trackId: 'main-video', muted: true });
+        const muted = await BratMultitrackHost.mixer().prepare(BratMultitrackHost.snapshot());
+        auditAssert(muted.clips.length === 1, 'muted video track still contributes audio');
+        BratMultitrackHost.replace(BratTracks.empty());
+        lyricsInput.value = '[00:00.00] restored';
+        rebuildTimelineFromCurrentInputs();
+        return { container: movie.type, sourceVideo: videoWithSound.extension, soundtracks: preflight.clips.length };
+    }));
+
     await test('no uncaught JavaScript errors', async () => { assert.deepEqual(runtimeErrors, []); return runtimeErrors; });
 } catch (error) {
     failures += 1;

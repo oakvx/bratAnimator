@@ -13,6 +13,9 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const BratMedia = window.BratMedia || {};
         const BratExport = window.BratExport || {};
         const BratKinetic = window.BratKinetic;
+        const BratTracks = window.BratTracks;
+        const BratComposer = window.BratComposer;
+        const BratAudioMixer = window.BratAudioMixer;
         const PROJECT_VERSION = BratCore.PROJECT_VERSION || 5;
 
         const previewCanvas = document.getElementById("previewCanvas");
@@ -347,6 +350,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         const state = {
+            multitrack: BratTracks.empty(),
             lyricRows: [],
             seed: 1337,
             fonts: [],
@@ -596,6 +600,8 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const entry = state.undoStack.pop();
             state.redoStack.push({ label: entry.label, payload: current });
             restoreProjectSettings(entry.payload, { skipHistory: true });
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            saveProjectSettings();
             setProjectFeatureStatus(`undid ${entry.label}`);
             updateUndoRedoState();
         }
@@ -606,6 +612,8 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const entry = state.redoStack.pop();
             state.undoStack.push({ label: entry.label, payload: current });
             restoreProjectSettings(entry.payload, { skipHistory: true });
+            renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+            saveProjectSettings();
             setProjectFeatureStatus(`redid ${entry.label}`);
             updateUndoRedoState();
         }
@@ -861,8 +869,24 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             return Math.max(0, (state.audioBuffer?.duration || 0) - getAudioTimelineOffset(timeline));
         }
 
+        function legacyAudioTracked() {
+            const id = state.audio?.assetId;
+            return Boolean(id && state.multitrack?.tracks.some(track =>
+                track.clips.some(clip => ["audio", "video"].includes(clip.kind) && clip.source?.assetId === id)));
+        }
+
         function startPreviewAudio() {
-            if (!syncAudio || state.exportInProgress || state.tapSync?.active) return;
+            if (state.exportInProgress || state.tapSync?.active) return;
+            // New audio clips (including video soundtracks) share the same
+            // absolute timeline clock as the visual compositor.
+            trackAudioMixer.play(state.multitrack, () => state.isPlaying ? getElapsedSeconds() : NaN)
+                .then(result => { if (result.warnings.length) updateTrackAudioStatus(result.warnings.join(" ")); })
+                .catch(error => updateTrackAudioStatus(error.message, true));
+            if (!syncAudio) return;
+            if (legacyAudioTracked()) {
+                syncAudio.pause();
+                return;
+            }
             const target = state.pausedElapsedSec + getAudioTimelineOffset();
             if (!Number.isFinite(syncAudio.duration) || target >= syncAudio.duration) return;
             syncAudio.currentTime = Math.max(0, target);
@@ -883,7 +907,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function getPlaybackDuration() {
             const mediaDuration = state.audioBuffer?.duration || state.audioAnalysis?.duration || (Number.isFinite(syncAudio?.duration) ? syncAudio.duration : 0);
-            return Math.max(getTimelineDuration(), mediaDuration - getAudioTimelineOffset(), 0);
+            return Math.max(getTimelineDuration(), mediaDuration - getAudioTimelineOffset(), BratTracks.endTime(state.multitrack), 0);
         }
 
         function getVisibleTextAt(timeSec) {
@@ -2084,7 +2108,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         const textMaskCanvas = document.createElement("canvas");
         const textMaskCtx = textMaskCanvas.getContext("2d");
 
-        function drawScene(ctx, width, height, timeSec, options = {}) {
+        function drawLegacyScene(ctx, width, height, timeSec, options = {}) {
             const visible = state.style.lyricsMode === "brat" ? getVisibleTextAt(timeSec) : null;
             const theme = getFrameTheme(timeSec, visible);
             const mediaText = Boolean(state.backgroundElement && ["text", "both"].includes(state.background.target));
@@ -2122,7 +2146,64 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (options.guides) drawSafeZones(ctx, width, height);
         }
 
+        function updateTrackAudioStatus(message, error = false) {
+            const note = document.getElementById("mtAudioStatus");
+            if (!note) return;
+            note.textContent = message;
+            note.classList.toggle("is-error", error);
+        }
+        const trackAudioMixer = BratAudioMixer.createController({
+            loadAsset: loadMediaBlob,
+            onStatus: text => updateTrackAudioStatus(text, true)
+        });
+        const visualComposer = BratComposer.createController({
+            loadAsset: loadMediaBlob,
+            onReady: () => {
+                if (!state.exportInProgress && !state.isPlaying) {
+                    renderPreviewAt(state.pausedElapsedSec);
+                }
+            }
+        });
+        const lyricOverlayCanvas = document.createElement("canvas");
+        const lyricOverlayCtx = lyricOverlayCanvas.getContext("2d");
+        function drawScene(ctx, width, height, timeSec, options = {}) {
+            if (!BratComposer.hasVisualClips(state.multitrack)) {
+                drawLegacyScene(ctx, width, height, timeSec, options);
+                return;
+            }
+            const hasLyrics = Boolean(state.timeline.length);
+            if (hasLyrics) {
+                drawLegacyScene(ctx, width, height, timeSec, { ...options, guides: false });
+            } else {
+                ctx.save();
+                ctx.clearRect(0, 0, width, height);
+                drawConfiguredBackground(ctx, width, height, getFrameTheme(timeSec));
+                if (state.background.target !== "text") drawBackgroundMedia(ctx, width, height, timeSec);
+                ctx.restore();
+            }
+            const underneath = BratComposer.visualClips(state.multitrack, timeSec, "below");
+            visualComposer.draw(ctx, width, height, state.multitrack, timeSec, "below");
+            if (underneath.length && hasLyrics) {
+                if (lyricOverlayCanvas.width !== width || lyricOverlayCanvas.height !== height) {
+                    lyricOverlayCanvas.width = width;
+                    lyricOverlayCanvas.height = height;
+                }
+                drawSceneContent(lyricOverlayCtx, width, height, timeSec, { textOnly: true, guides: false });
+                ctx.drawImage(lyricOverlayCanvas, 0, 0);
+            }
+            visualComposer.draw(ctx, width, height, state.multitrack, timeSec, "above");
+            if (options.guides) drawSafeZones(ctx, width, height);
+        }
+        async function prepareComposerFrame(timeSec) {
+            await prepareBackgroundFrame(timeSec);
+            if (BratComposer.hasVisualClips(state.multitrack)) {
+                await visualComposer.prepare(state.multitrack, timeSec);
+            }
+        }
         function renderPreviewAt(timeSec = 0) {
+            if (!state.exportInProgress && BratComposer.hasVisualClips(state.multitrack)) {
+                visualComposer.preview(state.multitrack, timeSec, state.isPlaying);
+            }
             drawScene(previewCtx, previewCanvas.width, previewCanvas.height, timeSec, { guides: true });
             drawWaveform();
             renderTimeline();
@@ -2139,7 +2220,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             renderPreviewAt(now);
 
             const audioEnd = Number.isFinite(syncAudio?.duration) ? Math.max(0, syncAudio.duration - getAudioTimelineOffset()) : 0;
-            const endTime = Math.max(getTimelineDuration() + 0.08, audioEnd);
+            const endTime = Math.max(getTimelineDuration() + 0.08, audioEnd, BratTracks.endTime(state.multitrack));
 
             if (now > endTime) {
                 stopPlayback(false);
@@ -2151,7 +2232,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function startFromBeginning() {
-            if (!state.timeline.length) return;
+            if (!state.timeline.length && !BratComposer.hasVisualClips(state.multitrack)) return;
 
             cancelAnimation();
             state.pausedElapsedSec = 0;
@@ -2240,6 +2321,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function stopPlayback(keepCurrentTime = true) {
+            trackAudioMixer.stop();
             if (keepCurrentTime) {
                 state.pausedElapsedSec = getElapsedSeconds();
             } else {
@@ -3651,7 +3733,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function seekTo(seconds) {
             stopPlayback(true);
-            state.pausedElapsedSec = clamp(seconds, 0, Math.max(getTimelineDuration(), (state.audioAnalysis?.duration || 0) - getAudioTimelineOffset()));
+            state.pausedElapsedSec = clamp(seconds, 0, getPlaybackDuration());
             if (syncAudio && Number.isFinite(syncAudio.duration)) syncAudio.currentTime = clamp(state.pausedElapsedSec + getAudioTimelineOffset(), 0, syncAudio.duration);
             renderPreviewAt(state.pausedElapsedSec);
             drawWaveform();
@@ -4149,6 +4231,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             getBackgroundSettingsFromControls();
             return {
                 version: PROJECT_VERSION,
+                multitrack: BratTracks.normalize(state.multitrack),
                 lyricRows: getLrcLineObjects(),
                 seed: state.seed,
                 fonts: state.fonts,
@@ -4177,13 +4260,13 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         async function exportPreviewFrames() {
             const dims = getExportDimensions();
-            const duration = Math.max(getTimelineDuration(), 1);
+            const duration = Math.max(getPlaybackDuration(), 1);
             for (const [index, ratio] of [0.15, 0.5, 0.85].entries()) {
                 const frameCanvas = document.createElement("canvas");
                 frameCanvas.width = dims.width;
                 frameCanvas.height = dims.height;
                 const frameCtx = frameCanvas.getContext("2d", { alpha: false });
-                await prepareBackgroundFrame(duration * ratio);
+                await prepareComposerFrame(duration * ratio);
                 drawScene(frameCtx, dims.width, dims.height, duration * ratio, { guides: false });
                 frameCanvas.toBlob((blob) => {
                     if (blob) downloadBlob(blob, `${buildExportFileBase()}-frame-${index + 1}.png`);
@@ -4199,7 +4282,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             }
             const dims = getExportDimensions();
             const fps = Math.min(Number(exportFpsSelect.value) || 30, 30);
-            const duration = Math.min(5, Math.max(getTimelineDuration(), 1));
+            const duration = Math.min(5, Math.max(getPlaybackDuration(), 1));
             const clipCanvas = document.createElement("canvas");
             clipCanvas.width = dims.width;
             clipCanvas.height = dims.height;
@@ -4211,7 +4294,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             const done = new Promise(resolve => recorder.onstop = resolve);
             recorder.start();
             for (let frame = 0; frame <= duration * fps; frame += 1) {
-                await prepareBackgroundFrame(frame / fps);
+                await prepareComposerFrame(frame / fps);
                 drawScene(clipCtx, dims.width, dims.height, frame / fps, { guides: false });
                 await wait(1000 / fps);
             }
@@ -4234,35 +4317,26 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         async function updateCompatibilityPanel() {
             if (!compatFastMp4 || !compatMediaRecorder || !compatRecommendation) return;
-
             const dims = getExportDimensions();
             const fps = Number(exportFpsSelect.value) || 30;
-            const canRecord = typeof MediaRecorder !== "undefined";
             const includeAudio = shouldIncludeAudioInExport();
-            const videoBackground = usesVideoBackground();
-            let fastMp4 = false;
-
-            if (!includeAudio && !videoBackground) {
-                try {
-                    fastMp4 = await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule();
-                } catch (error) {
-                    fastMp4 = false;
-                }
+            let status;
+            try {
+                const plan = BratExportPlan.create({
+                    width: dims.width, height: dims.height, fps, start: 0, end: 1
+                });
+                status = await BratExportEngine.probe({
+                    plan, audioClips: includeAudio ? [{ buffer: state.audioBuffer }] : [],
+                    loadMuxer: loadMp4MuxerModule
+                });
+            } catch (error) {
+                status = { fast: false, fallback: typeof MediaRecorder !== "undefined", reason: error.message };
             }
-
-            compatFastMp4.textContent = includeAudio
-                ? "disabled with audio"
-                : videoBackground
-                    ? "realtime for video background"
-                    : (fastMp4 ? "supported" : "not supported");
-            compatMediaRecorder.textContent = canRecord ? "supported" : "not supported";
-            compatRecommendation.textContent = includeAudio
-                ? `${dims.width}×${dims.height} · ${fps} fps · audio uses real-time export`
-                : videoBackground
-                    ? `${dims.width}×${dims.height} · ${fps} fps · background video uses real-time export`
-                    : Math.max(dims.width, dims.height) >= 1920 || fps >= 60
-                        ? `${dims.width}×${dims.height} works, but 1080 base · 30 fps is safer`
-                        : `${dims.width}×${dims.height} · ${fps} fps`;
+            compatFastMp4.textContent = status.fast ? "supported" : (status.reason || "not supported");
+            compatMediaRecorder.textContent = status.fallback ? "supported" : "not supported";
+            compatRecommendation.textContent = status.fast
+                ? dims.width + "×" + dims.height + " · " + fps + " fps · accelerated MP4" + (includeAudio ? " + AAC" : "")
+                : dims.width + "×" + dims.height + " · " + fps + " fps · real-time fallback" + (includeAudio ? " with audio" : "");
         }
 
         function saveProjectSettings() {
@@ -4304,6 +4378,10 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (!payload || typeof payload !== "object") return false;
             cancelLyricsRequest();
             payload = migrateProjectPayload(payload);
+            state.multitrack = BratTracks.normalize(payload.multitrack);
+            trackAudioMixer.resetSources();
+            visualComposer.sync(state.multitrack).catch(console.warn);
+            window.dispatchEvent(new CustomEvent('brat:multitrack-changed', { detail: { source: 'restore' } }));
 
             state.lyricRows = payload.lyricRows || [];
             state.seed = payload.seed ?? 1337;
@@ -4367,6 +4445,10 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function resetProjectView() {
+            state.multitrack = BratTracks.empty();
+            trackAudioMixer.resetSources();
+            visualComposer.sync(state.multitrack).catch(console.warn);
+            window.dispatchEvent(new CustomEvent('brat:multitrack-changed', { detail: { source: 'reset' } }));
             state.lyricRows = [];
             state.fonts = [];
             state.seed = 1337;
@@ -4649,7 +4731,7 @@ async function updateExportEstimate() {
                 getActiveAudioAnalysis()
             );
 
-            if (!parsed.length) {
+            if (!parsed.length && !BratComposer.hasVisualClips(state.multitrack)) {
                 exportEstimate.textContent = "estimated export time: n/a";
                 return;
             }
@@ -4659,25 +4741,22 @@ async function updateExportEstimate() {
             const fps = Number(exportFpsSelect.value) || 30;
             const includeAudio = shouldIncludeAudioInExport();
             const baseDuration = Math.max(1, parsed.reduce((end, line) => Math.max(end, line.displayEnd), 0) + 0.6);
-            const duration = includeAudio ? Math.max(baseDuration, getAudioExportDuration(parsed)) : baseDuration;
+            const duration = Math.max(baseDuration, BratTracks.endTime(state.multitrack), includeAudio ? getAudioExportDuration(parsed) : 0);
 
-            if (includeAudio) {
-                const estimated = estimateExportSeconds(duration, size, fps, false);
-                exportEstimate.textContent = `estimated export time: about ${formatClock(estimated)} - audio export records in real time (${formatClock(duration)})`;
-                return;
-            }
+            let fast = false;
+            try {
+                const plan = BratExportPlan.create({ width: dims.width, height: dims.height, fps, start: 0, end: duration });
+                const capability = await BratExportEngine.probe({
+                    plan, audioClips: includeAudio ? [{ buffer: state.audioBuffer }] : [],
+                    loadMuxer: loadMp4MuxerModule
+                });
+                fast = capability.fast;
+            } catch (_) {}
+            const estimated = estimateExportSeconds(duration, size, fps, fast);
+            exportEstimate.textContent = fast
+                ? "estimated time: about " + formatClock(estimated) + " • accelerated MP4" + (includeAudio ? " with AAC" : "") + " (depends on decoding workload)"
+                : "estimated time: about " + formatClock(Math.max(estimated, duration)) + " • real-time compatibility recording";
 
-            if (!usesVideoBackground() && await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
-                const estimated = estimateExportSeconds(duration, size, fps, true);
-                exportEstimate.textContent = `estimated export time: about ${formatClock(estimated)} • fast export, no need to wait for the full lyric duration`;
-                return;
-            }
-
-            const estimated = estimateExportSeconds(duration, size, fps, false);
-            const minimum = Math.max(duration, 1);
-            exportEstimate.textContent = usesVideoBackground()
-                ? `estimated export time: about ${formatClock(estimated)} • video background uses real-time export (${formatClock(minimum)})`
-                : `estimated export time: about ${formatClock(estimated)} • traditional fallback, browser can approach real duration (${formatClock(minimum)})`;
         }
 
         function setPlayerOpenState(isOpen) {
@@ -4686,7 +4765,7 @@ async function updateExportEstimate() {
 
         async function exportVideo() {
             if (state.exportInProgress) return;
-            if (window.BratEditor && !await window.BratEditor.prepareExport()) return;
+            if (window.BratEditor && (lyricsInput.value.trim() || !BratComposer.hasVisualClips(state.multitrack)) && !await window.BratEditor.prepareExport()) return;
 
             const parsed = parseLRC(
                 lyricsInput.value,
@@ -4694,12 +4773,12 @@ async function updateExportEstimate() {
                 getActiveAudioAnalysis()
             );
 
-            if (!lyricsInput.value.trim()) {
-                alert("Paste LRC lyrics first.");
+            if (!lyricsInput.value.trim() && !BratComposer.hasVisualClips(state.multitrack)) {
+                alert("Paste LRC lyrics or add a visual clip first.");
                 return;
             }
 
-            if (!parsed.length) {
+            if (lyricsInput.value.trim() && !parsed.length) {
                 alert("Invalid format. Use [MM:SS.xx] text.");
                 return;
             }
@@ -4708,11 +4787,6 @@ async function updateExportEstimate() {
 
             if (state.background?.kind !== "none" && state.backgroundExportSafe === false) {
                 alert("The selected remote background is not CORS-enabled, so the browser cannot export it. Use a local upload or another permitted URL.");
-                return;
-            }
-
-            if (includeAudio && typeof MediaRecorder === "undefined") {
-                alert("Audio export requires MediaRecorder support in this browser.");
                 return;
             }
 
@@ -4725,7 +4799,7 @@ async function updateExportEstimate() {
             const dims = getExportDimensions();
             const size = Math.max(dims.width, dims.height);
             const fps = Number(exportFpsSelect.value) || 30;
-            const baseDuration = Math.max(1, getTimelineDuration() + 0.6);
+            const baseDuration = Math.max(1, getTimelineDuration() + 0.6, BratTracks.endTime(state.multitrack));
             const fullDuration = includeAudio ? Math.max(baseDuration, getAudioExportDuration(parsed)) : baseDuration;
             let exportWindow;
             try {
@@ -4774,182 +4848,55 @@ async function updateExportEstimate() {
                 }
             };
 
-            let activeAudioExport = null;
-
             try {
-                if (!includeAudio && !usesVideoBackground() && await canUseFastMp4Export(dims.width, fps, dims.height) && await hasMp4MuxerModule()) {
-                    exportStatus.textContent = "preparing fast MP4 export...";
-                    const {
-                        Muxer,
-                        ArrayBufferTarget
-                    } = await loadMp4MuxerModule();
-                    const bitrate = Math.max(4_500_000, Math.round(dims.width * dims.height * Math.max(24, fps) * 0.095));
-                    const encoderConfig = {
-                        codec: "avc1.42001f",
-                        width: dims.width,
-                        height: dims.height,
-                        bitrate,
-                        bitrateMode: "variable",
-                        framerate: fps,
-                        avc: {
-                            format: "annexb"
-                        }
-                    };
-
-                    const target = new ArrayBufferTarget();
-                    const muxer = new Muxer({
-                        target,
-                        fastStart: "in-memory",
-                        firstTimestampBehavior: "offset",
-                        video: {
-                            codec: "avc",
-                            width: dims.width,
-                            height: dims.height
-                        }
-                    });
-
-                    const perfStart = performance.now();
-                    let encodedFrames = 0;
-
-                    const encoder = new VideoEncoder({
-                        output: (chunk, meta) => {
-                            muxer.addVideoChunk(chunk, meta);
-                        },
-                        error: (error) => {
-                            throw error;
-                        }
-                    });
-
-                    encoder.configure(encoderConfig);
-
-                    for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
-                        const timeSec = exportWindow.start + frameIndex / fps;
-                        drawScene(exportCtx, exportCanvas.width, exportCanvas.height, timeSec, { guides: false });
-
-                        const frame = new VideoFrame(exportCanvas, {
-                            timestamp: Math.round((frameIndex / fps) * 1_000_000),
-                            duration: Math.round(Math.min(1 / fps, duration - frameIndex / fps) * 1_000_000)
-                        });
-
-                        encoder.encode(frame, {
-                            keyFrame: frameIndex === 0 || frameIndex % Math.max(fps * 2, 1) === 0
-                        });
-                        frame.close();
-                        encodedFrames += 1;
-
-                        if (frameIndex === 0 || frameIndex === totalFrames - 1 || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
-                            const progress = (frameIndex + 1) / totalFrames;
-                            const elapsedRealSec = (performance.now() - perfStart) / 1000;
-                            const remainingSec = progress > 0 ? Math.max(0, (elapsedRealSec / progress) - elapsedRealSec) : 0;
-                            exportStatus.textContent = `fast MP4 export: ${Math.round(progress * 100)}% • estimated remaining ${formatClock(remainingSec)}`;
-                            setExportProgress(progress * 100, true);
-                            await wait(0);
-                        }
-                    }
-
-                    await encoder.flush();
-                    encoder.close();
-                    muxer.finalize();
-
-                    const buffer = target.buffer;
-                    downloadBlob(new Blob([buffer], {
-                        type: "video/mp4"
-                    }), `${buildExportFileBase()}.mp4`);
-                    exportStatus.textContent = "export complete: video-only MP4 generated with fast mode";
-                    restoreUIState();
-                    return;
-                }
-
-                if (typeof MediaRecorder === "undefined") {
-                    throw new Error("no video encoder available in this browser");
-                }
-
-                exportStatus.textContent = "preparing fallback export...";
-                const stream = exportCanvas.captureStream(fps);
-                activeAudioExport = includeAudio ? await createAudioExportSource(exportWindow) : null;
-                activeAudioExport?.stream.getAudioTracks().forEach(track => stream.addTrack(track));
-                const chunks = [];
-                let recorder;
-
-                const videoMimeType = pickVideoMimeType(includeAudio);
-                try {
-                    recorder = videoMimeType ? new MediaRecorder(stream, {
-                        mimeType: videoMimeType,
-                        videoBitsPerSecond: 8_000_000,
-                        audioBitsPerSecond: includeAudio ? 192_000 : undefined
-                    }) : new MediaRecorder(stream);
-                } catch (error) {
-                    recorder = new MediaRecorder(stream);
-                }
-
-                const actualMimeType = recorder.mimeType || videoMimeType || "video/webm";
-                const extension = actualMimeType.includes("mp4") ? "mp4" : "webm";
-
-                recorder.ondataavailable = (event) => {
-                    if (event.data && event.data.size > 0) {
-                        chunks.push(event.data);
-                    }
-                };
-
-                const stopPromise = new Promise((resolve, reject) => {
-                    recorder.onerror = () => reject(new Error("video recording failed"));
-                    recorder.onstop = () => resolve();
+                const plan = BratExportPlan.create({
+                    width: dims.width, height: dims.height, fps, start: exportWindow.start, end: exportWindow.end
                 });
-
-                await prepareBackgroundFrame(exportWindow.start);
-                drawScene(exportCtx, exportCanvas.width, exportCanvas.height, exportWindow.start, { guides: false });
-                recorder.start();
-                await activeAudioExport?.start();
-                exportStatus.textContent = `fallback export: ${extension.toUpperCase()} - ${fps} fps - ${includeAudio ? "with loaded audio" : "no audio"}`;
-                const exportPerfStart = performance.now();
-
-                for (let frameIndex = 0; frameIndex < totalFrames; frameIndex += 1) {
-                    const timeSec = exportWindow.start + frameIndex / fps;
-                    if (usesVideoBackground()) await prepareBackgroundFrame(timeSec);
-                    drawScene(exportCtx, exportCanvas.width, exportCanvas.height, timeSec, { guides: false });
-
-                    if (frameIndex === 0 || frameIndex === totalFrames - 1 || frameIndex % Math.max(1, Math.floor(fps / 2)) === 0) {
-                        const progress = (frameIndex + 1) / totalFrames;
-                        if (progress > 0) {
-                            const elapsedRealSec = (performance.now() - exportPerfStart) / 1000;
-                            const remainingSec = Math.max(0, (elapsedRealSec / progress) - elapsedRealSec);
-                            exportStatus.textContent = `fallback export: ${extension.toUpperCase()} • ${Math.round(progress * 100)}% • estimated remaining ${formatClock(remainingSec)}`;
-                            setExportProgress(progress * 100, true);
-                        }
-                    }
-
-                    await wait(Math.max(0, exportPerfStart + Math.min(duration, (frameIndex + 1) / fps) * 1000 - performance.now()));
+                const audio = includeAudio ? getAudioSettingsFromControls() : null;
+                exportStatus.textContent = "preparing multitrack audio…";
+                const mix = await trackAudioMixer.prepare(state.multitrack, exportWindow);
+                const audioClips = [...mix.clips];
+                // A file added through the legacy Timing panel must be merged only
+                // once when it also appears on an explicit audio/video track.
+                if (includeAudio && !legacyAudioTracked()) {
+                    audioClips.push({
+                        buffer: state.audioBuffer,
+                        start: 0,
+                        offset: getAudioTimelineOffset(),
+                        duration: getAudioExportDuration(),
+                        volume: audio.volume,
+                        fadeIn: audio.fadeIn,
+                        fadeOut: audio.fadeOut
+                    });
                 }
-
-                await wait(120);
-                recorder.stop();
-                await stopPromise;
-                stream.getTracks().forEach(track => track.stop());
-                activeAudioExport?.stop();
-                activeAudioExport = null;
-
-                const blob = new Blob(chunks, {
-                    type: actualMimeType || "video/webm"
+                if (mix.warnings.length) updateTrackAudioStatus(mix.warnings.join(" "), true);
+                let warning = "";
+                const output = await BratExportEngine.exportTimeline({
+                    plan, canvas: exportCanvas, context: exportCtx, audioClips,
+                    loadMuxer: loadMp4MuxerModule,
+                    prepareFrame: (time) => prepareComposerFrame(time),
+                    renderFrame: (ctx, width, height, time) => drawScene(ctx, width, height, time, { guides: false }),
+                    onWarning: message => {
+                        warning = String(message || "");
+                        if (warning) exportStatus.textContent = warning;
+                    },
+                    onProgress: ({ mode, stage, percent }) => {
+                        exportStatus.textContent = (mode === "fast" ? "fast MP4" : "real-time") + " export • " + stage + " • " + Math.round(percent) + "%";
+                        setExportProgress(percent, true);
+                    }
                 });
-                const filename = `${buildExportFileBase()}.${extension}`;
-                downloadBlob(blob, filename);
-
-                exportStatus.textContent =
-                    extension === "mp4" ?
-                    `export complete: ${includeAudio ? "MP4 with loaded audio" : "video-only MP4"} generated with fallback mode` :
-                    `export complete: browser generated ${includeAudio ? "WebM with loaded audio" : "video-only WebM fallback"}`;
-
-                restoreUIState();
+                downloadBlob(output.blob, buildExportFileBase() + "." + output.extension);
+                exportStatus.textContent = "export complete: " + output.extension.toUpperCase() + " (" + output.mode + ")" + (warning && output.mode === "realtime" ? " • compatibility fallback" : "") + (mix.warnings.length ? " • " + mix.warnings.length + " audio warning(s) in Tracks" : "");
             } catch (error) {
                 console.error(error);
-                activeAudioExport?.stop();
                 exportStatus.textContent = error?.message || "export failed";
+            } finally {
                 restoreUIState();
             }
         }
 
         async function exportCurrentFramePng() {
-            if (window.BratEditor && !await window.BratEditor.prepareExport(false)) return;
+            if (window.BratEditor && (lyricsInput.value.trim() || !BratComposer.hasVisualClips(state.multitrack)) && !await window.BratEditor.prepareExport(false)) return;
             const dims = getExportDimensions();
             const frameCanvas = document.createElement("canvas");
             frameCanvas.width = dims.width;
@@ -4959,7 +4906,7 @@ async function updateExportEstimate() {
             });
             const timeSec = state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec;
 
-            await prepareBackgroundFrame(timeSec);
+            await prepareComposerFrame(timeSec);
             drawScene(frameCtx, frameCanvas.width, frameCanvas.height, timeSec, { guides: false });
 
             frameCanvas.toBlob((blob) => {
@@ -5102,7 +5049,7 @@ async function updateExportEstimate() {
         });
 
         playPauseBtn.addEventListener("click", () => {
-            if (!state.timeline.length) return;
+            if (!state.timeline.length && !BratComposer.hasVisualClips(state.multitrack)) return;
 
             if (state.isPlaying) {
                 stopPlayback(true);
@@ -5453,11 +5400,178 @@ async function updateExportEstimate() {
         updateExportEstimate();
         updateCompatibilityPanel();
         window.addEventListener("beforeunload", () => {
+            visualComposer.dispose();
+            trackAudioMixer.dispose();
             if (state.audioObjectUrl) URL.revokeObjectURL(state.audioObjectUrl);
             releaseBackgroundObjectUrl();
         });
         registerServiceWorker();
         renderPreviewAt(0);
+        window.BratMultitrackHost = {
+            snapshot: () => BratTracks.normalize(state.multitrack),
+            composer: () => visualComposer,
+            mixer: () => trackAudioMixer,
+            currentTime: () => state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec,
+            duration: () => getPlaybackDuration(),
+            seek: seconds => seekTo(seconds),
+            undo: () => undoProjectChange(),
+            redo: () => redoProjectChange(),
+            history: () => ({ undo: state.undoStack.length, redo: state.redoStack.length }),
+            apply(operation, args) {
+                if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
+                if (operation === "select-track" || operation === "select-clip") {
+                    state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                } else {
+                    // Use the same bounded project history as lyric editing.
+                    // A complete drag is committed once, on pointerup.
+                    commitProjectChange("multitrack " + operation, () => {
+                        state.multitrack = BratTracks.apply(state.multitrack, operation, args);
+                    });
+                }
+                trackAudioMixer.stop();
+                trackAudioMixer.prune(state.multitrack);
+                if (state.isPlaying) startPreviewAudio();
+                visualComposer.sync(state.multitrack).catch(console.warn);
+                renderPreviewAt(state.isPlaying ? getElapsedSeconds() : state.pausedElapsedSec);
+                updateExportEstimate();
+                saveProjectSettings();
+                window.dispatchEvent(new CustomEvent("brat:multitrack-changed", { detail: { source: "edit" } }));
+                return BratTracks.normalize(state.multitrack);
+            },
+            replace(graph) {
+                if (state.exportInProgress) throw new Error("Wait for the current export to finish.");
+                state.multitrack = BratTracks.normalize(graph);
+                trackAudioMixer.resetSources();
+                if (state.isPlaying) startPreviewAudio();
+                visualComposer.sync(state.multitrack).catch(console.warn);
+                renderPreviewAt(state.pausedElapsedSec);
+                updateExportEstimate();
+                saveProjectSettings();
+                window.dispatchEvent(new CustomEvent("brat:multitrack-changed", { detail: { source: "replace" } }));
+                return BratTracks.normalize(state.multitrack);
+            },
+            // Phase 14 offers references to assets already imported by the original editor;
+            // actual per-clip decoding/rendering will land in phase 15.
+            sources() {
+                const result = [];
+                if (state.audio?.assetId) {
+                    result.push({ kind: "audio", assetId: state.audio.assetId, name: state.audio.name || "Audio imported",
+                        duration: Number(state.audioBuffer?.duration || state.metadata?.duration || 0) });
+                }
+                if (state.background?.assetId && ["image", "video"].includes(state.background.kind)) {
+                    result.push({ kind: state.background.kind, assetId: state.background.assetId,
+                        name: state.background.name || "Background imported",
+                        duration: Number(state.backgroundElement?.duration || 0) });
+                }
+                const ids = new Set(result.map(item => item.assetId));
+                for (const track of state.multitrack.tracks) {
+                    for (const clip of track.clips) {
+                        if (!clip.source?.assetId || ids.has(clip.source.assetId)) continue;
+                        ids.add(clip.source.assetId);
+                        result.push({ kind: clip.kind, assetId: clip.source.assetId,
+                            name: clip.source.name || clip.name, duration: clip.duration });
+                    }
+                }
+                return result;
+            },
+            async importMedia(file, trackId) {
+                if (!file || state.exportInProgress) throw new Error("Cannot import media while exporting.");
+                const isAudio = file.type.startsWith("audio/") || /\.(mp3|wav|m4a|aac|ogg|oga|flac|opus)$/i.test(file.name);
+                const isVideo = !isAudio && (file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v)$/i.test(file.name));
+                const isImage = file.type.startsWith("image/") || /\.(png|jpe?g|webp|gif)$/i.test(file.name);
+                if (!isVideo && !isImage && !isAudio) throw new Error("Choose a supported local video, image or audio file.");
+                if (!file.size || file.size > 512 * 1024 * 1024) throw new Error("Media file must be smaller than 512 MiB.");
+                const kind = isAudio ? "audio" : isVideo ? "video" : "image";
+                const track = state.multitrack.tracks.find(item => item.id === trackId);
+                if (!track || !BratTracks.accepts(track.kind, kind)) throw new Error("Select a compatible video or overlay track.");
+                let duration = 5;
+                let durationKnown = !isVideo;
+                if (isVideo) {
+                    const url = URL.createObjectURL(file);
+                    const video = document.createElement("video");
+                    try {
+                        duration = await new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => reject(new Error("Video metadata loading timed out.")), 12000);
+                            const finish = (value, error) => {
+                                clearTimeout(timeout);
+                                video.onloadedmetadata = null;
+                                video.onerror = null;
+                                error ? reject(error) : resolve(value);
+                            };
+                            video.onloadedmetadata = () => finish(video.duration);
+                            video.onerror = () => finish(null, new Error("Unsupported video file."));
+                            video.preload = "metadata";
+                            video.muted = true;
+                            video.src = url;
+                        });
+                        durationKnown = Number.isFinite(duration) && duration > 0;
+                        if (!durationKnown) {
+                            // Browser-recorded WebM often reports Infinity despite
+                            // containing valid timed frames. Seeking near EOF can
+                            // recover the real duration on Chromium.
+                            try {
+                                const recovered = await new Promise(resolve => {
+                                    const timer = setTimeout(() => finish(null), 1800);
+                                    function finish(value) {
+                                        clearTimeout(timer);
+                                        video.removeEventListener("seeked", onSeek);
+                                        video.removeEventListener("timeupdate", onSeek);
+                                        resolve(value);
+                                    }
+                                    function onSeek() {
+                                        const value = video.currentTime;
+                                        if (Number.isFinite(value) && value > 0 && value < 86400) finish(value);
+                                    }
+                                    video.addEventListener("seeked", onSeek);
+                                    video.addEventListener("timeupdate", onSeek);
+                                    try { video.currentTime = 10000000; } catch (_) { finish(null); }
+                                });
+                                if (Number.isFinite(recovered) && recovered > 0) {
+                                    duration = recovered;
+                                    durationKnown = true;
+                                }
+                            } catch (_) {}
+                        }
+                    } finally {
+                        video.pause();
+                        video.removeAttribute("src");
+                        video.load();
+                        URL.revokeObjectURL(url);
+                    }
+                }
+                const assetId = await storeMediaBlob(file, file.name, kind);
+                if (isAudio) {
+                    const decoded = await trackAudioMixer.getBuffer(assetId, "audio");
+                    duration = decoded.buffer.duration;
+                } else if (isVideo && !durationKnown) {
+                    const decoded = await trackAudioMixer.getBuffer(assetId, "video");
+                    if (decoded.buffer?.duration > 0) {
+                        duration = decoded.buffer.duration;
+                        durationKnown = true;
+                    }
+                    if (!durationKnown) updateTrackAudioStatus("Video duration not detectable; set the clip length manually (default 5 s).", true);
+                }
+                const stored = await loadMediaBlob(assetId);
+                if (!stored?.blob) throw new Error("IndexedDB did not persist the selected media.");
+                const start = Math.max(0, Math.min(state.pausedElapsedSec, 86399));
+                commitProjectChange("import multitrack media", () => {
+                    state.multitrack = BratTracks.apply(state.multitrack, "add-clip", {
+                    trackId, clip: {
+                        kind, name: file.name, start,
+                        duration: Math.max(0.01, Math.min(duration, 86400 - start)),
+                        source: { kind, assetId, name: file.name }
+                    }
+                });
+                });
+                await visualComposer.sync(state.multitrack);
+                if (state.isPlaying) startPreviewAudio();
+                renderPreviewAt(state.pausedElapsedSec);
+                updateExportEstimate();
+                saveProjectSettings();
+                window.dispatchEvent(new CustomEvent("brat:multitrack-changed", { detail: { source: "import" } }));
+                return { assetId, kind, duration };
+            }
+        };
         window.BratEditorWorkspace = {
             whenReady: () => workspaceBootPromise || Promise.resolve(),
             owner: () => workspaceOwner,
@@ -6281,7 +6395,7 @@ async function updateExportEstimate() {
     }
 
     function ensureTimeline() {
-        if (state.timeline.length) return true;
+        if (state.timeline.length || BratComposer.hasVisualClips(state.multitrack)) return true;
         if (!lyricsInput?.value.trim()) return false;
         rebuildTimelineFromCurrentInputs();
         return state.timeline.length > 0;

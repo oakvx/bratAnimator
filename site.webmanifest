@@ -1,8 +1,8 @@
 {
-  "name": "Brat Animator",
+  "name": "Brat Animator – Free Brat Video Editor",
   "short_name": "Brat Animator",
   "id": "/bratAnimator/",
-  "description": "Create square brat-style LRC lyric videos in the browser with local timing tools and MP4/WebM export with optional loaded audio.",
+  "description": "Free browser-based Brat video editor: create lyric videos, arrange local video and audio tracks, and export MP4 or WebM.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,8 +10,8 @@
   "background_color": "#e9e9e9",
   "theme_color": "#8ACE00",
   "categories": [
-    "music",
     "video",
+    "music",
     "productivity"
   ],
   "icons": [
@@ -32,7 +32,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Brat Animator lyric video editor preview"
+      "label": "Free Brat video editor and lyric video maker"
     }
   ]
 }

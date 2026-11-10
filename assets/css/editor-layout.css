@@ -1,0 +1,231 @@
+/* Phase 17 — layout information architecture. 7.css continues to own window UI. */
+body.studio-editor-open .panel { --inspector-edge: #d7e0d2; }
+body.studio-editor-open .topbar .menu-brand { display:inline-flex; align-items:center; gap:8px; }
+body.studio-editor-open .editor-menu-icon { display:block; width:23px; height:23px; flex:0 0 23px; border-radius:4px; }
+@media(max-width:440px) {
+    body.studio-editor-open .menu-brand-copy strong { display:none; }
+    body.studio-editor-open .menu-brand-copy { display:none; }
+    body.studio-editor-open .menu-brand { min-width:23px; }
+}
+
+body.studio-editor-open .panel-header {
+    padding: 14px 18px 8px;
+    align-items: center;
+    gap: 10px;
+}
+body.studio-editor-open .panel-header h1 { font-size: 21px; line-height: 1.06; }
+body.studio-editor-open .panel-header p { display: none; }
+body.studio-editor-open .project-status-bar {
+    margin: 0 16px 8px;
+    border-radius: 8px;
+}
+body.studio-editor-open .project-status-bar > div { padding: 7px 8px; }
+body.studio-editor-open .v5-preferences {
+    padding: 6px 17px 8px; align-items: center; gap: 9px;
+}
+body.studio-editor-open .v5-preferences .v5-field { flex-basis: 168px; }
+body.studio-editor-open .v5-preferences .v5-field label { margin-bottom: 3px; }
+body.studio-editor-open .v5-preferences select { min-height: 34px; padding-block: 5px; }
+body.studio-editor-open .editor-tabs {
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 5px; padding: 9px 16px;
+}
+body.studio-editor-open .editor-tab {
+    justify-content: center; min-height: 36px; gap: 5px;
+    padding: 6px 5px; font-size: 11px; text-align: center;
+}
+body.studio-editor-open .editor-tab span { width: 17px; height: 17px; font-size: 9px; }
+body.studio-editor-open .editor-section,
+body.studio-editor-open .editor-section.active:not([hidden]) {
+    padding: 16px 17px 96px;
+    scrollbar-gutter: stable;
+}
+body.studio-editor-open .editor-section > .section-title {
+    margin-bottom: 10px; font-size: 22px;
+}
+body.studio-editor-open .editor-section > p { margin: 5px 0 12px; }
+body.studio-editor-open .sidebar-action-dock {
+    padding: 9px 16px;
+    gap: 8px;
+}
+body.studio-editor-open .sidebar-action-dock button { min-height: 39px; }
+body.studio-editor-open .inspector-group {
+    width: 100%; min-width: 0; padding: 13px 14px 14px;
+    margin: 0 0 11px;
+    border: 1px solid var(--inspector-edge, #d7e0d2);
+    border-radius: 11px; background: #fff;
+    box-shadow: 0 1px 2px rgba(23,42,22,.035);
+}
+body.studio-editor-open .inspector-group-heading {
+    display: block; min-width: 0; margin: 0 0 10px;
+    color: var(--ink, #182019);
+    font: 750 14px/1.3 var(--font-ui, "Segoe UI", sans-serif);
+    letter-spacing: -.01em;
+}
+/* Secondary panels are disclosures rather than always-open walls of controls. */
+body.studio-editor-open details.inspector-group { display:block; }
+body.studio-editor-open details.inspector-group > summary.inspector-group-heading {
+    position:relative;
+    display:block;
+    padding-right:31px;
+    margin:0;
+    min-height:22px;
+    cursor:pointer;
+    list-style:none;
+    user-select:none;
+}
+body.studio-editor-open details.inspector-group > summary::-webkit-details-marker { display:none; }
+body.studio-editor-open details.inspector-group > summary::after {
+    position:absolute; right:0; top:-2px;
+    display:grid; place-items:center;
+    width:24px; height:24px;
+    border:1px solid var(--inspector-edge,#d7e0d2);
+    border-radius:6px; background:#f0f5eb;
+    content:"+";
+    font:750 17px/1 var(--font-ui, "Segoe UI",sans-serif);
+}
+body.studio-editor-open details.inspector-group[open] > summary::after { content:"−"; }
+body.studio-editor-open details.inspector-group[open] > summary.inspector-group-heading {
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--inspector-edge,#d7e0d2);
+}
+body.studio-editor-open .inspector-group-description {
+    margin: -5px 0 10px; color: var(--ink-muted, #69766a);
+    font-size: 11px; line-height: 1.5;
+}
+body.studio-editor-open .inspector-group > :first-child:not(.inspector-group-heading) { margin-top: 0; }
+body.studio-editor-open .inspector-group > :last-child { margin-bottom: 0; }
+body.studio-editor-open .inspector-group .label { margin-top: 11px; }
+body.studio-editor-open .inspector-group :where(.row,.tool-strip,.editor-toolbar,.project-actions-inline) {
+    margin-top: 9px;
+}
+body.studio-editor-open .inspector-group .text-settings,
+body.studio-editor-open .inspector-group .advanced-block,
+body.studio-editor-open .inspector-group .v5-block,
+body.studio-editor-open .inspector-group .effect-setting {
+    max-width: 100%; min-width: 0;
+    margin: 7px 0 0; border-radius: 8px;
+}
+body.studio-editor-open .inspector-group .text-settings { padding: 12px; }
+body.studio-editor-open .inspector-group .range-grid { gap: 8px; }
+body.studio-editor-open .inspector-group :where(input,select,textarea) { max-width: 100%; }
+body.studio-editor-open .inspector-group .mt-clip-form,
+body.studio-editor-open .inspector-group .mt-audio-form,
+body.studio-editor-open .inspector-group .mt-visual-form {
+    padding: 0; margin: 9px 0 0; border: 0;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 9px;
+}
+body.studio-editor-open .inspector-group .mt-audio-form input,
+body.studio-editor-open .inspector-group .mt-visual-form input,
+body.studio-editor-open .inspector-group .mt-clip-form input {
+    min-height: 35px; padding: 6px 9px;
+}
+body.studio-editor-open .inspector-group .mt-audio-form label,
+body.studio-editor-open .inspector-group .mt-visual-form label,
+body.studio-editor-open .inspector-group .mt-clip-form label {
+    color: var(--ink-soft, #485448); font-size: 11px; font-weight: 650;
+}
+body.studio-editor-open .inspector-group .mt-audio-form button,
+body.studio-editor-open .inspector-group .mt-visual-form button {
+    min-height: 35px; align-self: end;
+}
+body.studio-editor-open .inspector-group .mt-track-list,
+body.studio-editor-open .inspector-group .mt-clip-list { margin: 9px 0; gap: 5px; }
+body.studio-editor-open .inspector-group .mt-track-row,
+body.studio-editor-open .inspector-group .mt-clip-row {
+    gap: 5px; padding: 5px; border-radius: 7px; flex-wrap: wrap;
+}
+body.studio-editor-open .inspector-group .mt-track-row button:not(.mt-select) {
+    min-height: 30px; padding: 5px 7px; font-size: 10px;
+}
+body.studio-editor-open .inspector-group .mt-select { min-height: 33px; padding: 6px; font-size: 11px; }
+body.studio-editor-open .inspector-group[data-layout-group="track-audio"],
+body.studio-editor-open .inspector-group[data-layout-group="track-visual"] {
+    background: #f9fbf6;
+}
+body.studio-editor-open .inspector-group[data-layout-group="export-actions"] {
+    border-color: #aacd8b;
+    background: #f3fbe9;
+}
+body.studio-editor-open .inspector-group[data-layout-group="export-actions"] .row {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+}
+body.studio-editor-open .inspector-group[data-layout-group="export-actions"] .row > button {
+    min-width: 0; white-space: normal;
+}
+body.studio-editor-open .inspector-group[data-layout-group="project-backup"] .row {
+    display: flex; flex-wrap: wrap;
+}
+body.studio-editor-open .inspector-group[data-layout-group="canvas-guides"] > .inline-check {
+    display: flex; margin: 0 0 9px;
+}
+body.studio-editor-open .inspector-group[data-layout-group="style-motion"] .advanced-block {
+    background: #fbfcf9;
+}
+body.studio-editor-open .inspector-group .editor-template-gallery { min-width: 0; }
+body.studio-editor-open .inspector-group .editor-template-gallery > button { min-width: 0; }
+body.studio-editor-open .inspector-group :where(.drop-zone,.meta,.pill-note) { margin-top: 9px; }
+body.studio-editor-open .inspector-group .v5-block.advanced-only { margin-top: 9px; }
+body.studio-editor-open .inspector-group .row > div,
+body.studio-editor-open .inspector-group .row > label,
+body.studio-editor-open .inspector-group .tool-strip > * { min-width: 0; }
+body.studio-editor-open .editor-tabs button:focus-visible,
+body.studio-editor-open .inspector-group :where(input,button,select,textarea):focus-visible {
+    outline: 2px solid var(--accent-strong, #6d9d1d);
+    outline-offset: 1px;
+}
+@media (min-width: 1321px) {
+    :root { --panel-width: 488px; }
+}
+@media (max-width: 700px) {
+    body.studio-editor-open .editor-tabs {
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 4px; padding: 8px 12px;
+    }
+    body.studio-editor-open .editor-tab { padding: 6px 3px; min-height: 35px; font-size: 11px; }
+    body.studio-editor-open .editor-tab span { display: none; }
+    body.studio-editor-open .editor-section,
+    body.studio-editor-open .editor-section.active:not([hidden]) { padding: 14px 12px 92px; }
+    body.studio-editor-open .inspector-group { padding: 12px; margin-bottom: 9px; }
+    body.studio-editor-open .panel-header { padding: 12px 13px 6px; }
+    body.studio-editor-open .panel-header h1 { font-size: 19px; }
+    body.studio-editor-open .project-status-bar { margin: 0 12px 6px; }
+    body.studio-editor-open .v5-preferences { padding: 5px 12px 8px; }
+    body.studio-editor-open .inspector-group .mt-track-row .mt-select { flex-basis: 100%; }
+}
+@media(max-width: 359px) {
+    body.studio-editor-open .editor-tab { font-size: 10px; }
+    body.studio-editor-open .inspector-group .mt-clip-form,
+    body.studio-editor-open .inspector-group .mt-audio-form,
+    body.studio-editor-open .inspector-group .mt-visual-form { grid-template-columns: 1fr; }
+}
+
+/* Public, indexable description on the actual editor homepage, compact enough
+   to preserve the original Windows 7 dashboard composition. */
+.studio-seo-intro {
+    padding: 13px 15px;
+    margin: 10px 0 13px;
+    border: 1px solid #c9d8bc;
+    border-radius: 8px;
+    background: #f4faee;
+    color: #263324;
+}
+.studio-seo-intro h2 {
+    margin: 0 0 5px;
+    color: #284122;
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.3;
+}
+.studio-seo-intro p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.studio-seo-intro a { color: #356d19; text-decoration: underline; }
+.studio-seo-intro .studio-seo-note { margin-top: 5px; font-size: 10px; color: #657261; }
+@media(max-width:500px) {
+    .studio-seo-intro { padding: 11px 12px; margin: 8px 0 11px; }
+}

@@ -33,6 +33,14 @@ test("no lyrics and invalid timestamps are blocking without changing export stat
     }
 });
 
+test("visual-only projects can export without LRC while empty projects remain blocked", () => {
+    const result = assess({ ...base, lyrics: "", hasVisualClips: true }, parse);
+    assert.equal(result.state, "ready");
+    assert.equal(result.errors, 0);
+    assert.ok(result.checks.some(check => check.text.includes("video-only")));
+    assert.equal(assess({ ...base, lyrics: "", hasVisualClips: false }, parse).state, "blocked");
+});
+
 test("no browser video-encoding pipeline is reported as blocking", () => {
     const result = assess({ ...base, hasRecorder: false, canFast: false }, parse);
     assert.equal(result.state, "blocked");
@@ -49,10 +57,16 @@ test("missing audio is a warning and does not pretend to render a soundtrack", (
     assert.match(result.checks.find(check => check.status === "warning").text, /silent/);
 });
 
-test("audio recording requires MediaRecorder even if fast video is available", () => {
+test("audio readiness does not block browsers with a potential fast AAC path", () => {
     const result = assess({ ...base, hasRecorder: false, canFast: true, audioSelected: true, audioLoaded: true }, parse);
-    assert.equal(result.state, "blocked");
-    assert.ok(result.checks.some(check => check.status === "error" && check.text.includes("MediaRecorder")));
+    assert.equal(result.state, "ready");
+    assert.ok(result.checks.some(check => check.text.includes("codec support")));
+});
+
+test("phase 16 recognizes sound from video and audio tracks even without legacy Timing audio", () => {
+    const result = assess({ ...base, audioSelected: false, hasTrackAudio: true }, parse);
+    assert.equal(result.state, "ready");
+    assert.ok(result.checks.some(check => check.text.includes("Multitrack audio")));
 });
 
 test("performance warnings are advisory and do not disable export", () => {

@@ -208,6 +208,28 @@ try {
     await evaluate("document.getElementById('lyricsInput').value = '[00:01.00] SMOKE Test LYRIC'; document.getElementById('lyricsInput').dispatchEvent(new Event('input', { bubbles: true })); document.getElementById('lowercaseLyricsBtn').click()");
     assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
     assert.equal(await evaluate("Boolean(window.BratLyricsCase && window.BratLyricsCase.lowercaseLyrics)"),true);
+    // Phase 14: real UI operations must persist the graph through IndexedDB.
+    await until("Boolean(window.BratMultitrackHost && window.BratMultitrackUI)");
+    assert.equal(await evaluate("window.BratEditorWorkspace.snapshot().multitrack.tracks.length"),4);
+    await evaluate("document.querySelector('[data-open-tab=\"tracks\"]').click()");
+    assert.equal(await evaluate("document.getElementById('section-tracks').classList.contains('active')"),true);
+    await evaluate("document.getElementById('mtTrackType').value='overlay';document.getElementById('mtAddTrack').click()");
+    assert.equal(await evaluate("window.BratMultitrackHost.snapshot().tracks.length"),5);
+    await evaluate("document.getElementById('mtTrackName').value='Upper thirds';document.getElementById('mtRenameTrack').click()");
+    await evaluate("document.getElementById('mtClipKind').value='text';document.getElementById('mtClipKind').dispatchEvent(new Event('change'))");
+    await evaluate("document.getElementById('mtClipName').value='opening';document.getElementById('mtClipStart').value='3';document.getElementById('mtClipDuration').value='4';document.getElementById('mtAddClip').click()");
+    assert.equal(await evaluate("window.BratMultitrackHost.snapshot().tracks.at(-1).clips.length"),1);
+    await evaluate("document.getElementById('mtSplitAt').value='5';document.getElementById('mtSplitClip').click()");
+    assert.deepEqual(await evaluate("window.BratMultitrackHost.snapshot().tracks.at(-1).clips.map(c=>[c.start,c.duration])"),[[3,2],[5,2]]);
+    await evaluate("document.getElementById('mtDuplicateClip').click()");
+    assert.equal(await evaluate("window.BratMultitrackHost.snapshot().tracks.at(-1).clips.length"),3);
+    await evaluate("window.BratEditorWorkspace.flush()");
+    assert.equal(await evaluate("window.BratEditorWorkspace.store.getActive('guest').then(p=>p.payload.multitrack.tracks.at(-1).clips.length)"),3);
+    await evaluate("window.BratEditorWorkspace.reloadActive()");
+    assert.equal(await evaluate("window.BratMultitrackHost.snapshot().tracks.at(-1).name"),"Upper thirds");
+    assert.equal(await evaluate("window.BratMultitrackHost.snapshot().tracks.at(-1).clips.length"),3);
+    // Legacy lyric video must remain intact while phase-14 clip metadata is edited.
+    assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
     // Phase 12: real DOM template controls drive the existing editor engine.
     await evaluate("document.querySelector('[data-open-tab=design]').click();document.querySelector('[data-template=kinetic-reels]').click()");
     assert.equal(await evaluate("document.getElementById('formatPresetSelect').value"),"vertical");

@@ -1,0 +1,180 @@
+/* Phase 17 — full-width multitrack timeline. Scoped; does not override 7.css. */
+body.studio-editor-open #editor.app {
+    display:flex; flex-direction:column; gap:12px;
+    height:calc(100dvh - var(--topbar-height)); min-height:630px;
+    padding:12px clamp(10px,1.5vw,22px) 13px;
+}
+body.studio-editor-open #editor > .stage-wrap {
+    flex:1 1 auto; min-height:220px; margin:0 auto; width:100%;
+    overflow:hidden; border-radius:10px;
+}
+body.studio-editor-open #editor .stage-canvas-zone { min-height:110px; }
+body.studio-editor-open #editor .stage { width:min(100%,calc(100dvh - 520px),620px); }
+body.studio-editor-open #editor .stage-wrap[data-format="vertical"] .stage { width:min(100%,calc((100dvh - 520px) / 1.7778),360px); }
+body.studio-editor-open #editor .stage-wrap[data-format="landscape"] .stage { width:min(100%,calc((100dvh - 520px) * 1.7778),720px); }
+body.studio-editor-open .studio-timeline {
+    display:flex; flex-direction:column; flex:0 0 clamp(220px,32dvh,360px);
+    min-width:0; max-width:1240px; width:100%; margin:0 auto;
+    overflow:hidden; border:1px solid #4b5946; border-radius:10px;
+    background:#1b211d; color:#ecf3e9;
+    font:12px/1.35 "Segoe UI",Tahoma,sans-serif;
+}
+body.studio-editor-open .studio-tl-toolbar {
+    display:flex; align-items:center; gap:12px; flex:0 0 auto; flex-wrap:wrap;
+    padding:7px 10px; border-bottom:1px solid #3d4a39;
+    background:#283229;
+}
+body.studio-editor-open .studio-tl-title {
+    color:#eaf5e0; font-size:13px; letter-spacing:.01em;
+}
+body.studio-editor-open .studio-tl-clock {
+    flex:0 0 auto; color:#c9f097; font:700 12px Consolas,monospace;
+}
+body.studio-editor-open .studio-tl-tools {
+    display:flex; align-items:center; gap:5px; flex:1 1 auto; justify-content:flex-end;
+    min-width:0; flex-wrap:wrap;
+}
+body.studio-editor-open .studio-tl-toolbar button {
+    color:#eef9e8; border:1px solid #52624b; border-radius:5px;
+    background:#3a4935; min-height:29px; min-width:29px;
+    padding:4px 8px; font-size:11px;
+}
+body.studio-editor-open .studio-tl-toolbar button:hover { background:#526748; }
+body.studio-editor-open .studio-tl-toolbar button:disabled { opacity:.42; }
+body.studio-editor-open .studio-tl-snap {
+    display:inline-flex; align-items:center; gap:5px; padding:3px 5px;
+    font-size:11px; white-space:nowrap;
+}
+body.studio-editor-open .studio-tl-snap input { width:14px; height:14px; }
+body.studio-editor-open .studio-tl-zoom-label {
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+}
+body.studio-editor-open #studioTlZoom {
+    width:90px; height:22px; margin:0; accent-color:#bbf07a;
+}
+body.studio-editor-open #studioTlZoomValue {
+    min-width:55px; font:10px Consolas,monospace; color:#bdcbb6; text-align:center;
+}
+body.studio-editor-open .studio-tl-viewport {
+    position:relative; flex:1 1 auto; min-height:90px; min-width:0;
+    overflow:auto; overscroll-behavior:contain;
+    scrollbar-color:#81987a #29342a; background:#151b16;
+}
+body.studio-editor-open .studio-tl-world {
+    position:relative; min-height:100%;
+    --tl-label-width:116px;
+    background:repeating-linear-gradient(to right, transparent 0, transparent 89px,
+        rgba(194,214,183,.04) 90px);
+}
+body.studio-editor-open .studio-tl-ruler {
+    position:relative; height:26px; border-bottom:1px solid #42503e;
+    cursor:crosshair; background:#262e27;
+}
+body.studio-editor-open .studio-tl-tick {
+    position:absolute; top:3px; color:#b5c1b0;
+    font:10px Consolas,monospace; white-space:nowrap;
+}
+body.studio-editor-open .studio-tl-tick::before {
+    content:""; position:absolute; left:0; top:14px; height:8px;
+    width:1px; background:#7c9173;
+}
+body.studio-editor-open .studio-tl-lanes { position:relative; }
+body.studio-editor-open .studio-tl-lane {
+    position:relative; display:flex; height:51px; min-width:0;
+    border-bottom:1px solid #303c31;
+    background:repeating-linear-gradient(0deg,#1d251e 0,#1d251e 50px,#1a211b 51px);
+}
+body.studio-editor-open .studio-tl-lane.is-locked { opacity:.60; }
+body.studio-editor-open .studio-tl-label {
+    position:sticky; left:0; top:0; z-index:4; display:block;
+    flex:0 0 116px; width:116px; min-width:116px; height:50px;
+    padding:8px; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; text-align:left;
+    border:0; border-right:1px solid #465542; border-radius:0;
+    background:#303d30; color:#e2edda; font-size:11px;
+}
+body.studio-editor-open .studio-tl-label[aria-pressed="true"] {
+    background:#3b5835; color:#d4ffa8;
+}
+body.studio-editor-open .studio-tl-label:hover { background:#435a3d; }
+body.studio-editor-open .studio-tl-lane-clips {
+    position:relative; flex:0 0 auto; height:50px; min-width:0;
+}
+body.studio-editor-open .studio-tl-clip {
+    position:absolute; top:6px; height:38px;
+    display:flex; align-items:center; min-width:3px;
+    overflow:hidden; white-space:nowrap; border:1px solid rgba(235,255,225,.45);
+    border-radius:5px; background:#5586a6; color:white;
+    cursor:grab; touch-action:pan-y; user-select:none;
+}
+body.studio-editor-open .studio-tl-clip.is-dragging { z-index:10; cursor:grabbing; opacity:.8; }
+body.studio-editor-open .studio-tl-clip.is-selected {
+    outline:2px solid #d0ff6b; outline-offset:-2px; z-index:3;
+}
+body.studio-editor-open .studio-tl-image { background:#8667af; }
+body.studio-editor-open .studio-tl-video { background:#397e8a; }
+body.studio-editor-open .studio-tl-text { background:#8e7850; }
+body.studio-editor-open .studio-tl-audio { background:#4f8a56; }
+body.studio-editor-open .studio-tl-clip-name {
+    min-width:0; overflow:hidden; text-overflow:ellipsis; flex:1 1 auto;
+    padding:0 5px; font-size:11px; pointer-events:none;
+}
+body.studio-editor-open .studio-tl-handle {
+    display:block; height:100%; width:9px; flex:0 0 9px;
+    background:rgba(255,255,255,.24); cursor:ew-resize;
+    touch-action:none; border-inline:1px solid rgba(255,255,255,.35);
+}
+body.studio-editor-open .studio-tl-clip:hover .studio-tl-handle,
+body.studio-editor-open .studio-tl-clip.is-selected .studio-tl-handle {
+    background:rgba(255,255,255,.52);
+}
+body.studio-editor-open .studio-tl-playhead {
+    position:absolute; top:0; bottom:0; width:2px; z-index:6;
+    background:#f4a44d; pointer-events:none;
+}
+body.studio-editor-open .studio-tl-playhead::before {
+    content:""; display:block; width:10px; height:11px;
+    background:#f4a44d; clip-path:polygon(0 0,100% 0,50% 100%);
+    transform:translateX(-4px);
+}
+body.studio-editor-open .studio-tl-snap-guide {
+    position:absolute; top:0; bottom:0; width:1px; z-index:7;
+    background:#c5f987; pointer-events:none;
+}
+body.studio-editor-open .studio-tl-status {
+    display:block; flex:0 0 auto; margin:0; padding:6px 10px;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+    border-top:1px solid #364437; color:#9dae99; background:#202a22; font-size:10px;
+}
+body.studio-editor-open .studio-tl-status[data-error="true"] { color:#ffa6a6; }
+body.studio-editor-open .studio-tl-empty { padding:16px; margin:0; }
+@media(max-width:980px) {
+    body.studio-editor-open #editor.app {
+        height:auto; min-height:0; padding:0 9px 14px;
+    }
+    body.studio-editor-open #editor > .stage-wrap {
+        flex:0 0 auto; max-width:800px; min-height:0; overflow:visible;
+    }
+    body.studio-editor-open #editor .stage-canvas-zone {
+        height:clamp(220px,40dvh,480px);
+    }
+    body.studio-editor-open #editor .stage { width:min(100%,calc(40dvh - 40px),400px); }
+    body.studio-editor-open #editor .stage-wrap[data-format="vertical"] .stage { width:min(100%,22dvh,240px); }
+    body.studio-editor-open #editor .stage-wrap[data-format="landscape"] .stage { width:min(100%,72dvh,600px); }
+    body.studio-editor-open .studio-timeline {
+        height:288px; flex:0 0 auto; max-width:800px;
+    }
+}
+@media(max-width:500px) {
+    body.studio-editor-open .studio-tl-toolbar { gap:4px; padding:6px 7px; }
+    body.studio-editor-open .studio-tl-title { font-size:12px; }
+    body.studio-editor-open .studio-tl-tools { gap:3px; justify-content:flex-start; }
+    body.studio-editor-open .studio-tl-toolbar button { min-height:28px; padding:3px 6px; }
+    body.studio-editor-open #studioTlZoom { width:56px; }
+    body.studio-editor-open #studioTlZoomValue { display:none; }
+    body.studio-editor-open .studio-tl-snap { font-size:10px; }
+    body.studio-editor-open .studio-timeline { height:306px; }
+}
+@media(prefers-reduced-motion:reduce) {
+    body.studio-editor-open .studio-tl-clip { transition:none; }
+}

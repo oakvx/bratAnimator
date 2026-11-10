@@ -140,6 +140,17 @@
             references.push({ target: background, kind: background.kind, name: background.name || "background" });
         }
         for (const font of project.fonts || []) references.push({ target: font, kind: "font", name: font.name || "font" });
+        // Phase 14 graph references are additional to the classic audio/background
+        // fields. Reused assetIds are deduplicated by exportPackage's records map.
+        for (const track of project.multitrack?.tracks || []) {
+            for (const clip of track.clips || []) {
+                const source = clip?.source;
+                if (!source || !["audio", "video", "image"].includes(clip.kind)) continue;
+                if (source.assetId || source.url) {
+                    references.push({ target: source, kind: clip.kind, name: source.name || clip.name || "clip" });
+                }
+            }
+        }
         return references;
     }
 
@@ -159,7 +170,14 @@
             if (!font || typeof font !== "object" || Array.isArray(font) || typeof font.id !== "string" || !font.id || font.id.length > 256 || fontIds.has(font.id) || (font.family != null && !/^[a-zA-Z0-9 _-]{1,100}$/.test(font.family))) throw new PackageError("The project contains invalid font metadata.");
             fontIds.add(font.id);
         }
-        for (const target of [project.audio, project.background, ...(project.fonts || [])]) {
+        if (project.multitrack != null && (!project.multitrack || typeof project.multitrack !== "object" || !Array.isArray(project.multitrack.tracks) || project.multitrack.tracks.length > 32)) {
+            throw new PackageError("The multitrack graph is invalid.");
+        }
+        for (const track of project.multitrack?.tracks || []) {
+            if (!track || !Array.isArray(track.clips) || track.clips.length > 256) throw new PackageError("Invalid multitrack clips.");
+        }
+        for (const target of [project.audio, project.background, ...(project.fonts || []),
+            ...(project.multitrack?.tracks || []).flatMap(track => track.clips.map(clip => clip?.source).filter(source => source?.assetId || source?.url))]) {
             if (target == null) continue;
             if (typeof target !== "object" || Array.isArray(target)) throw new PackageError("The project contains invalid media metadata.");
             for (const field of ["assetId", "url", "name"]) {
