@@ -51,6 +51,11 @@ try {
         await page.waitForFunction(() => Boolean(window.BratStudio?.show && window.BratMultitrackHost && window.BratGuidedTour));
         assert.equal(await page.locator('#studioMainWindow.window.glass.active').isVisible(), true);
         assert.equal(await page.locator('#studioAddressCurrent').textContent(), 'Home');
+        assert.equal(await page.locator('[data-studio-quick-tab]').count(), 2);
+        await page.locator('[data-studio-quick-tab="tracks"]').click();
+        assert.equal(await page.evaluate(() => window.BratStudio.getView()), 'editor');
+        assert.equal(await page.locator('#section-tracks').isVisible(), true);
+        await page.evaluate(() => window.BratStudio.show('home'));
         assert.equal(await page.locator('.studio-seo-intro').count(), 0, 'Promotional free editor banner must not return');
         assert.ok(!(await page.locator('#studioHomeView').innerText()).includes('Free Brat Video Editor Online'));
         await page.screenshot({ path: path.join(output, viewport.name + '-aero-home.png'), fullPage: true });
@@ -77,12 +82,51 @@ try {
         const emptyImport = page.locator('.studio-sound-empty-primary');
         await page.waitForSelector('.studio-sound-empty-workspace');
         assert.equal(await emptyImport.textContent(), 'Importa il primo audio');
+        await page.screenshot({ path: path.join(output, viewport.name + '-aero-sound-hub.png'), fullPage: true });
         const chooserPromise = page.waitForEvent('filechooser');
         await emptyImport.click();
         const chooser = await chooserPromise;
         assert.equal(chooser.isMultiple(), true);
-        await page.keyboard.press('Escape');
-        await page.screenshot({ path: path.join(output, viewport.name + '-aero-sound-hub.png'), fullPage: true });
+        function makeWav(frequency) {
+            const sampleRate = 22050;
+            const samples = sampleRate;
+            const wav = Buffer.alloc(44 + samples * 2);
+            wav.write('RIFF', 0);
+            wav.writeUInt32LE(wav.length - 8, 4);
+            wav.write('WAVE', 8);
+            wav.write('fmt ', 12);
+            wav.writeUInt32LE(16, 16);
+            wav.writeUInt16LE(1, 20);
+            wav.writeUInt16LE(1, 22);
+            wav.writeUInt32LE(sampleRate, 24);
+            wav.writeUInt32LE(sampleRate * 2, 28);
+            wav.writeUInt16LE(2, 32);
+            wav.writeUInt16LE(16, 34);
+            wav.write('data', 36);
+            wav.writeUInt32LE(samples * 2, 40);
+            for (let i = 0; i < samples; i++) {
+                wav.writeInt16LE(Math.round(Math.sin(2 * Math.PI * frequency * i / sampleRate) * 3200), 44 + i * 2);
+            }
+            return wav;
+        }
+        await chooser.setFiles([
+            { name: 'Brat sample 440.wav', mimeType: 'audio/wav', buffer: makeWav(440) },
+            { name: 'Brat sample 220.wav', mimeType: 'audio/wav', buffer: makeWav(220) }
+        ]);
+        await page.waitForFunction(() => document.querySelectorAll('#studioSoundList .studio-sound-row').length === 2);
+        assert.equal(await page.locator('#studioSoundPlayerbar').isVisible(), false);
+        await page.locator('#studioSoundList .studio-sound-row button[title^="Ascolta"]').first().click();
+        await page.waitForFunction(() => !document.getElementById('studioSoundPlayerbar').hidden);
+        assert.equal(await page.locator('#studioSoundPlayerbar').isVisible(), true);
+        assert.match(await page.locator('#studioSoundNowPlaying').textContent(), /Brat sample/);
+        if (viewport.name === 'mobile') {
+            const top = await page.locator('.studio-sound-searchbar').evaluate(node => node.getBoundingClientRect().top);
+            const bottom = await page.locator('.studio-sound-tree').evaluate(node => node.getBoundingClientRect().bottom);
+            assert.ok(Math.abs(top - bottom) <= 5, 'Mobile Sound Hub leaves a gap before search: ' + (top - bottom));
+        }
+        await page.screenshot({ path: path.join(output, viewport.name + '-aero-sound-hub-playing.png'), fullPage: true });
+        await page.locator('#studioSoundStop').click();
+        assert.equal(await page.locator('#studioSoundPlayerbar').isVisible(), false);
         // F1 is the Windows Help convention and must reopen the tour.
         await page.keyboard.press('F1');
         await page.waitForSelector('#tutorialOverlay:not(.hidden)');
@@ -277,7 +321,7 @@ try {
         await seoPage.screenshot({ path: path.join(output, 'seo-' + item.locale + '.png'), fullPage: true });
     }
     await seoContext.close();
-    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 16) +
+    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 18) +
         ' screenshots, Aero dashboard and onboarding, 180-clip virtualization, localized SEO, no horizontal clipping and functional tabs.');
 } finally {
     await browser?.close();
