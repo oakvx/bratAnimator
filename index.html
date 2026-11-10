@@ -28,6 +28,8 @@
 <link rel="stylesheet" href="assets/css/editor-layout.css" />
 <link rel="stylesheet" href="assets/css/timeline-editor.css" />
     <link rel="stylesheet" href="assets/css/studio-aero-polish.css" />
+    <link rel="stylesheet" href="assets/css/win7-boot.css" />
+    <link rel="stylesheet" href="assets/css/win7-desktop-polish.css" />
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <!-- 7.css is imported by win7-app.css after application styles. -->
     <!-- Former theme assets/css/aero-theme.css retired. -->
@@ -329,9 +331,23 @@
     <script src="assets/js/dashboard-audio.js" defer></script>
     <script src="assets/js/export-preflight.js" defer></script>
     <script src="assets/js/editor-templates.js" defer></script>
+    <script src="assets/js/win7-window-menu.js" defer></script>
+    <script src="assets/js/win7-boot.js" defer></script>
 </head>
 
 <body>
+    <section id="studioBoot" class="win7-boot" role="status" aria-label="Avvio di Brat Animator" aria-live="polite">
+        <div class="win7-boot-stage">
+            <p class="win7-boot-caption">Avvio di Windows</p>
+            <div class="win7-boot-emblem" aria-hidden="true">
+                <span class="win7-boot-pane red"></span><span class="win7-boot-pane green"></span>
+                <span class="win7-boot-pane blue"></span><span class="win7-boot-pane yellow"></span>
+            </div>
+            <p class="win7-boot-brand">Brat Animator · Desktop Edition</p>
+            <progress id="studioBootProgress" class="win7-boot-progress" max="100" value="0" aria-label="Caricamento applicazione"></progress>
+        </div>
+        <button id="studioBootSkip" type="button" aria-label="Salta animazione di avvio">Salta avvio <span aria-hidden="true">Esc</span></button>
+    </section>
     <a class="skip-link" href="#editor">skip to editor</a>
     <noscript>This app requires JavaScript to parse LRC lyrics and export videos.</noscript>
 
@@ -348,6 +364,41 @@
                     </div>
                 </div>
                 <div class="window-body">
+                  <ul class="studio-win7-menubar" id="studioWin7MenuBar" role="menubar" aria-label="Menu Brat Animator">
+                    <li role="menuitem" tabindex="0" aria-haspopup="true" aria-expanded="false">File
+                      <ul role="menu" aria-label="File">
+                        <li role="menuitem"><button data-win7-command="new" type="button">Nuovo progetto <span>Ctrl+N</span></button></li>
+                        <li role="menuitem"><button data-win7-command="projects" type="button">Apri progetti</button></li>
+                        <li role="menuitem"><button data-win7-command="sounds" type="button">Importa audio</button></li>
+                        <li role="menuitem"><button data-win7-command="close" type="button">Chiudi finestra <span>Alt+F4</span></button></li>
+                      </ul>
+                    </li>
+                    <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false">Modifica
+                      <ul role="menu" aria-label="Modifica">
+                        <li role="menuitem"><button data-win7-command="editor" type="button">Apri editor</button></li>
+                        <li role="menuitem"><button data-win7-command="timeline" type="button">Timeline multitraccia</button></li>
+                      </ul>
+                    </li>
+                    <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false">Visualizza
+                      <ul role="menu" aria-label="Visualizza">
+                        <li role="menuitem"><button data-win7-command="home" type="button">Home</button></li>
+                        <li role="menuitem"><button data-win7-command="maximize" type="button">Ingrandisci finestra</button></li>
+                        <li role="menuitem"><button data-win7-command="minimize" type="button">Riduci a icona</button></li>
+                      </ul>
+                    </li>
+                    <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false">Strumenti
+                      <ul role="menu" aria-label="Strumenti">
+                        <li role="menuitem"><button data-win7-command="settings" type="button">Impostazioni</button></li>
+                        <li role="menuitem"><button data-win7-command="share" type="button">BRATCODE</button></li>
+                      </ul>
+                    </li>
+                    <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false">?
+                      <ul role="menu" aria-label="Guida">
+                        <li role="menuitem"><button data-win7-command="help" type="button">Guida interattiva <span>F1</span></button></li>
+                        <li role="menuitem"><button data-win7-command="about" type="button">Informazioni su Brat Animator</button></li>
+                      </ul>
+                    </li>
+                  </ul>
                   <div class="studio-classic-body-grid">
     <aside id="studioNav" class="studio-nav win7" aria-label="Navigazione Brat Animator">
         <div class="studio-nav-brand"><img class="studio-original-logo" src="favicon.svg" alt="" width="38" height="38" decoding="async"><span>brat animator</span></div>
@@ -504,10 +555,19 @@
     </section>
 
     <section id="studioDesktop" class="studio-desktop" aria-label="Desktop" hidden>
-        <button id="studioDesktopLauncher" type="button" class="studio-desktop-shortcut">
-          <img src="favicon.svg" alt="" width="65" height="65">
-          <span>Brat Animator</span>
-        </button>
+        <div class="studio-desktop-icons">
+            <button id="studioDesktopLauncher" type="button" class="studio-desktop-shortcut">
+                <img src="favicon.svg" alt="" width="65" height="65">
+                <span>Brat Animator</span>
+            </button>
+            <button type="button" data-desktop-view="projects" class="studio-desktop-shortcut" title="Apri i tuoi progetti">
+                <span class="studio-desktop-icon" aria-hidden="true">▣</span><span>Progetti</span>
+            </button>
+            <button type="button" data-desktop-view="sounds" class="studio-desktop-shortcut" title="Apri Sound Hub">
+                <span class="studio-desktop-icon" aria-hidden="true">♫</span><span>Sound Hub</span>
+            </button>
+        </div>
+        <p class="studio-desktop-hint">Brat Animator · Fai doppio clic sull'icona per aprire il programma</p>
     </section>
     <!-- Phase 6: searchable Start menu, built on the actual 7.css glass window. -->
     <nav id="studioStartMenu" class="studio-start-menu window glass active win7" aria-label="Menu Start" hidden>
@@ -541,7 +601,7 @@
     </nav>
     <div id="studioTaskbar" class="studio-taskbar" aria-label="Barra delle applicazioni">
       <button id="studioStartButton" class="studio-start-orb" type="button" aria-label="Menu Start" title="Menu Start" aria-controls="studioStartMenu" aria-expanded="false">
-        <img src="favicon.svg" alt="" width="27" height="27">
+        <span class="studio-start-windowmark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       </button>
       <button id="studioTaskbarApp" class="studio-taskbar-app" type="button" aria-label="Mostra Brat Animator" title="Brat Animator">
         <img src="favicon.svg" alt="" width="27" height="27">
@@ -549,6 +609,7 @@
       <span class="studio-taskbar-spacer"></span>
       <nav class="studio-legal-links" aria-label="Legal information"><a href="terms.html" target="_blank" rel="noopener">Terms of Service</a><a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></nav>
       <span id="studioTaskbarClock" class="studio-taskbar-clock" aria-label="Ora locale"></span>
+      <button id="studioShowDesktop" class="studio-show-desktop" type="button" aria-label="Mostra desktop" title="Mostra desktop (Aero Peek)"></button>
     </div>
 
     <div id="studioSoundCollectionDialog" class="studio-modal-backdrop win7" role="dialog" aria-modal="true" aria-labelledby="studioSoundCollectionTitle" hidden>
