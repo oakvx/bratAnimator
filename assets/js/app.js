@@ -5833,6 +5833,9 @@ async function updateExportEstimate() {
     const tutorialBackBtn = document.getElementById('tutorialBackBtn');
     const tutorialNextBtn = document.getElementById('tutorialNextBtn');
     const tutorialActionBtn = document.getElementById('tutorialActionBtn');
+    const tutorialBar = document.getElementById('tutorialBar');
+    const tutorialStepNav = document.getElementById('tutorialStepNav');
+    const tutorialWindowClose = document.getElementById('tutorialWindowClose');
     const TUTORIAL_STORAGE_KEY = 'bratAnimator.tutorial.seen.v1';
     const permissionNotice = document.getElementById('permissionNotice');
     const permissionNoticeAckBtn = document.getElementById('permissionNoticeAckBtn');
@@ -5841,48 +5844,82 @@ async function updateExportEstimate() {
 
     const tutorialSteps = [
         {
-            title: 'start with the preview',
-            body: 'The canvas is the video you will export. Every lyric, timing, style, and format change updates this preview.',
+            title: 'The video preview',
+            body: 'This is what your audience will see. Editing text, clips or effects updates the preview without uploading your media.',
             target: '.stage-wrap',
-            placement: 'bottom',
-            tip: 'Use the controls panel for editing. Collapse it when you want a larger preview.'
+            tip: 'The timeline sits directly below the preview. Your media files remain local.'
         },
         {
-            title: 'find lyrics',
-            body: 'Search by artist and title. Choose LRCLIB or lrc.red to load lyrics and their available word timing.',
+            title: 'Find or write lyrics',
+            body: 'Search for synchronized lyrics, or write your own. You do not need LRC lyrics to create a regular video edit.',
             tab: 'lyrics',
             target: '#searchQueryInput',
-            tip: 'You can also skip search and paste your own LRC in the Timing tab.'
+            tip: 'Select a lyrics provider, enter a title and review the result before importing.'
         },
         {
-            title: 'add timed lines',
-            body: 'LRC lines need timestamps like [00:01.20]. Use starter LRC for a quick working example, then edit the rows.',
+            title: 'Try the timing editor',
+            body: 'Create an LRC example with timestamps, then edit the text and individual timings in this panel.',
             tab: 'timing',
             target: '#starterLrcBtn',
-            actionLabel: 'generate starter',
+            actionLabel: 'Insert example lyrics',
+            action() { starterLrcBtn?.click(); },
+            tip: 'This changes the current project. You can undo it or skip the example.'
+        },
+        {
+            title: 'Arrange clips on the timeline',
+            body: 'Move clips, trim them by their handles, zoom in and out, and snap clip boundaries together. Try creating a short title clip.',
+            tab: 'tracks',
+            target: '#studioTimelineDock',
+            actionLabel: 'Add a demo title',
             action() {
-                starterLrcBtn?.click();
-            }
+                const host = window.BratMultitrackHost;
+                if (!host) return;
+                host.apply('add-clip', { trackId: 'main-overlay', clip: {
+                    kind: 'text', name: 'Brat demo title', start: Math.min(host.currentTime(), 86400 - 3),
+                    duration: 3, source: { kind: 'text', text: 'BRAT DEMO' }
+                } });
+                window.BratTimelineUI?.render();
+            },
+            tip: 'Drag the sample on the timeline. Ctrl+Z reverses the change.'
         },
         {
-            title: 'adjust the look',
-            body: 'Choose a preset, animation mode, colors, and typography. Keep checking the canvas as you tune it.',
+            title: 'Design your Brat look',
+            body: 'Choose typography, colors and animation. The controls have been grouped so the common settings are visible first.',
             tab: 'design',
-            target: '#themePresetSelect'
+            target: '#themePresetSelect',
+            tip: 'The advanced sections can be expanded only when you need them.'
         },
         {
-            title: 'choose the format',
-            body: 'Pick square, vertical, landscape, or cover output before exporting. Safe zones help with social layouts.',
+            title: 'Choose your format',
+            body: 'Switch between square, vertical and landscape output. Safe zones show where social-platform interfaces may cover text.',
             tab: 'canvas',
             target: '[data-preset-quick="vertical"]',
-            tip: 'The Export tab still controls final size and FPS.'
+            actionLabel: 'Try vertical video',
+            action() { document.querySelector('[data-preset-quick="vertical"]')?.click(); },
+            tip: 'Use the same Canvas tab to return to square format.'
         },
         {
-            title: 'export or save',
-            body: 'Export the video, save a project snapshot, or copy a share link so you can return to the edit later.',
+            title: 'Explore Sound Hub',
+            body: 'Organize audio into collections, preview tracks and add local files to your project. There is no need to upload audio to an external service.',
+            studioView: 'sounds',
+            target: '#studioSoundImport',
+            actionLabel: 'Select a local audio file',
+            action() { document.getElementById('studioSoundImport')?.click(); },
+            tip: 'The compact preview player appears only after selecting a track.'
+        },
+        {
+            title: 'Export your edit',
+            body: 'Choose MP4, WebM or a still image. Use the readiness checks to confirm your browser supports the selected codecs.',
             tab: 'export',
             target: '#exportVideoBtn',
-            tip: 'Audio can be embedded only from a local upload or a direct CORS-enabled URL you have permission to use.'
+            tip: 'Export runs on your device. Avoid very long projects when device memory is limited.'
+        },
+        {
+            title: 'Save and return',
+            body: 'Keep named project snapshots in your browser and export a portable backup to preserve the media files.',
+            studioView: 'projects',
+            target: '#studioBackupActive',
+            tip: 'JSON only includes settings; the complete .brat.zip backup includes locally available media.'
         }
     ];
 
@@ -6022,14 +6059,39 @@ async function updateExportEstimate() {
         const step = tutorialSteps[tutorialIndex];
         if (!step) return;
 
-        if (panel.classList.contains('hidden')) {
-            panel.classList.remove('hidden');
-            syncPanelState();
+        if (step.studioView) {
+            window.BratStudio?.show(step.studioView);
+        } else {
+            window.BratStudio?.show('editor');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                syncPanelState();
+            }
+            if (step.tab) openEditorTab(step.tab);
         }
 
-        if (step.tab) openEditorTab(step.tab);
-
-        tutorialProgress.textContent = `step ${tutorialIndex + 1} of ${tutorialSteps.length}`;
+        tutorialProgress.textContent = `${tutorialIndex + 1} / ${tutorialSteps.length}`;
+        if (tutorialBar) {
+            tutorialBar.max = tutorialSteps.length;
+            tutorialBar.value = tutorialIndex + 1;
+        }
+        if (tutorialStepNav) {
+            tutorialStepNav.replaceChildren();
+            tutorialSteps.forEach((item, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'tutorial-step-dot';
+                button.textContent = String(index + 1);
+                button.title = item.title;
+                button.setAttribute('aria-label', `Go to step ${index + 1}: ${item.title}`);
+                button.setAttribute('aria-current', String(index === tutorialIndex));
+                button.onclick = () => {
+                    tutorialIndex = index;
+                    renderTutorialStep();
+                };
+                tutorialStepNav.append(button);
+            });
+        }
         tutorialOverlay.dataset.placement = step.placement || 'top';
         tutorialTitle.textContent = step.title;
         tutorialBody.textContent = step.body;
@@ -6043,7 +6105,7 @@ async function updateExportEstimate() {
         }
 
         tutorialBackBtn.disabled = tutorialIndex === 0;
-        tutorialNextBtn.textContent = tutorialIndex === tutorialSteps.length - 1 ? 'finish' : 'next';
+        tutorialNextBtn.textContent = tutorialIndex === tutorialSteps.length - 1 ? 'Finish tour' : 'Next step';
 
         if (step.actionLabel && typeof step.action === 'function') {
             tutorialActionBtn.classList.remove('hidden');
@@ -6073,6 +6135,7 @@ async function updateExportEstimate() {
     }
 
     function startTutorial(startIndex = 0) {
+        window.BratStudio?.show('editor');
         tutorialActive = true;
         tutorialIndex = clamp(startIndex, 0, tutorialSteps.length - 1);
         tutorialOverlay?.classList.remove('hidden');
@@ -6170,6 +6233,12 @@ async function updateExportEstimate() {
     commandDefinitions.push({ name: 'text settings', run: openTextSettings });
 
     tutorialBtn?.addEventListener('click', () => startTutorial(0));
+    tutorialWindowClose?.addEventListener('click', () => closeTutorial(true));
+    window.BratGuidedTour = Object.freeze({
+        start: (index = 0) => startTutorial(index),
+        close: () => closeTutorial(true),
+        get state() { return { active: tutorialActive, step: tutorialIndex, total: tutorialSteps.length }; }
+    });
     tutorialSkipBtn?.addEventListener('click', () => closeTutorial(true));
     tutorialBackBtn?.addEventListener('click', goToPreviousTutorialStep);
     tutorialNextBtn?.addEventListener('click', goToNextTutorialStep);
