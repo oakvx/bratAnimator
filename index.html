@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="assets/css/studio-win7.css" />
 <link rel="stylesheet" href="assets/css/editor-layout.css" />
 <link rel="stylesheet" href="assets/css/timeline-editor.css" />
+    <link rel="stylesheet" href="assets/css/studio-aero-polish.css" />
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <!-- 7.css is imported by win7-app.css after application styles. -->
     <!-- Former theme assets/css/aero-theme.css retired. -->
@@ -319,6 +320,7 @@
     <script src="assets/js/backup-reminders.js" defer></script>
     <script src="assets/js/sound-hub.js" defer></script>
     <script src="assets/js/studio-dashboard.js" defer></script>
+    <script src="assets/js/studio-help.js" defer></script>
     <script src="assets/js/win7-shell.js" defer></script>
     <script src="assets/js/win7-start-menu.js" defer></script>
     <script src="assets/js/tiktok-link.js" defer></script>
@@ -366,6 +368,11 @@
                 <div><h1 id="studioTitle">Home</h1><p id="studioGreeting">I progetti sono salvati su questo dispositivo.</p></div>
                 <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
             </header>
+            <nav class="studio-addressbar" aria-label="Percorso dell'applicazione">
+                <button id="studioAddressHome" type="button" title="Vai alla home">⌂</button>
+                <div class="studio-address-path"><span>Brat Animator</span><span class="studio-address-separator" aria-hidden="true">›</span><strong id="studioAddressCurrent">Home</strong></div>
+                <button id="studioAddressHelp" type="button" title="Apri il tutorial interattivo (F1)">? Guida</button>
+            </nav>
             <div id="studioNotice" class="studio-notice" role="status" hidden></div>
 
             <div id="studioHomeView" class="studio-view">
@@ -385,12 +392,16 @@
                         <button type="button" data-studio-view="sounds"><span aria-hidden="true">♫</span> Sound Hub</button>
                         <button type="button" data-studio-view="share"><span aria-hidden="true">⇄</span> BRATCODE</button>
                         <button type="button" data-studio-view="settings"><span aria-hidden="true">⚙</span> Impostazioni</button>
+                        <button id="studioGuideShortcut" type="button"><span aria-hidden="true">?</span> Guida interattiva</button>
                     </section>
                 </div>
-                <section class="studio-seo-intro" aria-label="About the free Brat video editor">
-                    <h2>Free Brat Video Editor Online</h2>
-                    <p>Make Brat-style lyric videos for free, or arrange your own clips, images and audio on a multitrack timeline. Edit and export MP4 or WebM directly in your browser, with local project storage. <a href="en/">Explore the English guide</a> or <a href="it/" hreflang="it">leggi la guida in italiano</a>.</p>
-                    <p class="studio-seo-note">Free to use; publishing and redistribution require permission under the <a href="terms.html">terms</a>.</p>
+                <section class="studio-welcome-panel" aria-label="Operazioni rapide">
+                    <h2>Comincia da qui</h2>
+                    <div class="studio-welcome-grid">
+                        <button type="button" data-studio-quick-tab="tracks"><span aria-hidden="true">▦</span><strong>Monta un video</strong><small>Importa clip, immagini e audio nella timeline.</small></button>
+                        <button type="button" data-studio-quick-tab="timing"><span aria-hidden="true">¶</span><strong>Crea un lyric video</strong><small>Sincronizza il testo e anima le frasi.</small></button>
+                        <button type="button" data-studio-quick-view="sounds"><span aria-hidden="true">♫</span><strong>Gestisci i suoni</strong><small>Ascolta e organizza i tuoi file audio.</small></button>
+                    </div>
                 </section>
             </div>
 
@@ -430,11 +441,16 @@
                         </div>
                         <div id="studioSoundNotice" class="studio-sound-notice" role="status" hidden></div>
                         <div id="studioSoundList" class="studio-sound-list" aria-live="polite"></div>
-                        <div class="studio-sound-playerbar">
-                            <div class="studio-sound-now"><span aria-hidden="true">♫</span><span id="studioSoundNowPlaying">Nessun audio selezionato</span></div>
-                            <audio id="studioSoundPlayer" controls preload="none" aria-label="Anteprima audio"></audio>
+                        <div class="studio-sound-playerbar" id="studioSoundPlayerbar" hidden aria-label="Anteprima audio selezionata">
+                            <button id="studioSoundPlayPause" type="button" aria-label="Riproduci o metti in pausa" title="Play / pausa">▶</button>
+                            <div class="studio-sound-now"><span class="studio-sound-status-led" aria-hidden="true"></span><span id="studioSoundNowPlaying">Nessun audio selezionato</span></div>
+                            <label class="studio-sound-seek-label" for="studioSoundSeek">Posizione</label>
+                            <input id="studioSoundSeek" type="range" min="0" max="1000" value="0" step="1" aria-label="Posizione di riproduzione" />
+                            <output id="studioSoundTime">0:00 / 0:00</output>
+                            <button id="studioSoundStop" type="button" title="Ferma anteprima" aria-label="Ferma anteprima">■</button>
+                            <audio id="studioSoundPlayer" preload="none" aria-label="Anteprima audio" hidden></audio>
                         </div>
-                        <p class="studio-sound-help">Gli audio rimangono in questo browser. Per inserirne uno nell'editor, premi «Usa nel progetto».</p>
+                        <p class="studio-sound-help">File salvati localmente. Scegli ▶ per l'anteprima o «Usa nel progetto» per montare l'audio nella timeline.</p>
                     </div>
                 </div>
             </div>
@@ -593,7 +609,7 @@
             
             
             <h2 id="studioAuthTitle">Accedi a Brat Animator</h2>
-            <p>Accedi per avere una libreria locale associata al tuo account. Puoi continuare a usare l'editor gratuitamente anche senza registrarti.</p>
+            <p>Accedi per avere una libreria locale associata al tuo account. Puoi continuare a usare l'editor anche senza registrarti.</p>
             <div id="studioAuthSetup" class="studio-auth-setup" role="status" hidden>Autenticazione non ancora collegata. Un amministratore deve configurare Supabase; per ora puoi usare l'editor come ospite.</div>
             <section class="studio-auth-tab-layout tabs">
               <menu class="studio-auth-tabs" role="tablist" aria-label="Modalità di accesso">
@@ -1359,9 +1375,9 @@
     <div id="permissionNotice" class="permission-notice-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
         <div class="permission-notice-card" tabindex="-1">
             <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">usage note</p>
-            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">use it freely. ask before publishing.</h2>
+            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">usage and publishing permissions</h2>
             <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
-                You are free to use Brat Animator as much as you want. To publish, share publicly, redistribute,
+                You can use Brat Animator without creating an account. To publish, share publicly, redistribute,
                 self-host, commercialize, or integrate anything made with it, please ask permission first.
             </p>
             <div class="permission-notice-actions">
@@ -1371,17 +1387,26 @@
         </div>
     </div>
 
-    <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
-        <div class="tutorial-card">
-            <div id="tutorialProgress" class="tutorial-progress">step 1 of 6</div>
-            <h2 id="tutorialTitle">start with the preview</h2>
-            <p id="tutorialBody">The green canvas is the video you will export. The controls panel changes what appears here.</p>
-            <div id="tutorialTip" class="tutorial-tip" hidden></div>
-            <div class="tutorial-actions">
-                <button id="tutorialSkipBtn" type="button">skip</button>
-                <button id="tutorialBackBtn" type="button">back</button>
-                <button id="tutorialActionBtn" type="button" class="hidden">try it</button>
-                <button id="tutorialNextBtn" type="button" class="primary">next</button>
+    <div id="tutorialOverlay" class="tutorial-overlay win7 hidden" role="dialog" aria-modal="false" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
+        <div class="tutorial-card window glass active win7">
+            <div class="title-bar">
+                <div class="title-bar-text"><img src="favicon.svg" width="16" height="16" alt=""> Guida introduttiva — Brat Animator</div>
+                <div class="title-bar-controls"><button id="tutorialWindowClose" type="button" aria-label="Chiudi guida" title="Chiudi"></button></div>
+            </div>
+            <div class="window-body">
+                <div class="tutorial-heading"><span class="tutorial-kicker">BRAT STUDIO / GUIDED TOUR</span><span id="tutorialProgress" class="tutorial-progress">1 / 8</span></div>
+                <progress id="tutorialBar" class="tutorial-bar" value="1" max="8" aria-label="Progresso guida"></progress>
+                <h2 id="tutorialTitle">Discover your workspace</h2>
+                <p id="tutorialBody">Learn the editor with real interactions.</p>
+                <div id="tutorialTip" class="tutorial-tip" hidden></div>
+                <div id="tutorialStepNav" class="tutorial-step-nav" aria-label="Passaggi della guida"></div>
+                <div class="tutorial-actions">
+                    <button id="tutorialSkipBtn" type="button">Chiudi</button>
+                    <button id="tutorialBackBtn" type="button">Indietro</button>
+                    <button id="tutorialActionBtn" type="button" class="hidden">Prova</button>
+                    <button id="tutorialNextBtn" type="button" class="primary">Avanti</button>
+                </div>
+                <p class="tutorial-keyboard">← → per navigare · Esc per uscire · F1 per riaprire</p>
             </div>
         </div>
     </div>

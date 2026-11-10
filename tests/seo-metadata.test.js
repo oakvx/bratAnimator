@@ -21,18 +21,18 @@ test("home targets Free Brat Video Editor with real, readable copy", () => {
     assert.match(meta(html, "description"), /Brat-style videos for free/i);
     assert.match(meta(html, "og:title", "property"), /Free Brat Video Editor/);
     assert.match(meta(html, "twitter:title"), /Free Brat Video Editor/);
-    assert.match(html, /<h2>Free Brat Video Editor Online<\/h2>/);
-    assert.match(html, /Free to use; publishing and redistribution require permission/);
+    assert.doesNotMatch(html, /class="studio-seo-intro"/);
+    assert.match(html, /<div id="studioHomeView"/);
     assert.match(html, /<link rel="canonical" href="https:\/\/oakvx.github.io\/bratAnimator\/"/);
 });
 test("indexed English and Italian pages have distinct meaningful descriptions", () => {
     const en = read("en/index.html");
     const it = read("it/index.html");
-    assert.match(en, /<h1>Free Brat Video Editor Online/);
-    assert.match(it, /<h1>Editor video Brat gratis online/);
+    assert.match(en, /<h1>Brat Animator — Brat Video Studio/);
+    assert.match(it, /<h1>Brat Animator — Studio Video Brat/);
     assert.match(meta(en, "description"), /multitrack timeline/);
     assert.match(meta(it, "description"), /editor video gratuito/);
-    assert.match(en, /Free to use in your browser/);
+    assert.doesNotMatch(en.slice(en.indexOf("<body>")), /Free Brat Video Editor|Free to use in your browser/);
     assert.match(it, /condizioni di utilizzo/);
     assert.match(it, /href="\.\.\/\?lang=it"/);
     assert.notEqual(meta(en, "description"), meta(it, "description"));
@@ -70,4 +70,17 @@ test("PWA description remains truthful to supported output formats", () => {
     const manifest = JSON.parse(read("site.webmanifest"));
     assert.match(manifest.description, /Free browser-based Brat video editor/);
     assert.match(manifest.description, /MP4 or WebM/);
+});
+
+test("free keywords stay searchable but not in visible English or Italian headings", () => {
+    const en = read("en/index.html");
+    const it = read("it/index.html");
+    const home = read("index.html");
+    assert.match(en, /<title>[^<]*Free Brat Video Editor/);
+    assert.match(it, /<title>[^<]*Editor Video Brat Gratis/);
+    for (const page of [en, it]) {
+        const body = page.slice(page.indexOf("<body>"));
+        assert.doesNotMatch(body, /<h[1-6][^>]*>[^<]*(?:Free|gratis|gratuito)/i);
+    }
+    assert.doesNotMatch(home, /<section class="studio-seo-intro"/);
 });

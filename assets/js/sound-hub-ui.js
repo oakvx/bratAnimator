@@ -11,6 +11,26 @@
 
     const library = api.createLibrary();
     const audio = $("studioSoundPlayer");
+    const playerbar = $("studioSoundPlayerbar");
+    const seekInput = $("studioSoundSeek");
+    const timeOutput = $("studioSoundTime");
+    const playPause = $("studioSoundPlayPause");
+    const formatTime = value => {
+        const seconds = Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+        return Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0");
+    };
+    function updatePlayerbar() {
+        const active = Boolean(previewUrl && previewId);
+        playerbar.hidden = !active;
+        if (!active) return;
+        const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+        seekInput.disabled = duration <= 0;
+        seekInput.value = String(duration > 0 ? Math.round(audio.currentTime / duration * 1000) : 0);
+        timeOutput.textContent = formatTime(audio.currentTime) + " / " + formatTime(duration);
+        playPause.textContent = audio.paused ? "▶" : "Ⅱ";
+        playPause.setAttribute("aria-label", audio.paused ? "Riproduci" : "Pausa");
+        playerbar.classList.toggle("is-playing", !audio.paused);
+    }
     let view = "home";
     let filter = "all";
     let selectedCollection = "";
@@ -56,6 +76,7 @@
         previewId = null;
         previewOwner = null;
         $("studioSoundNowPlaying").textContent = "Nessun audio selezionato";
+        updatePlayerbar();
     }
     async function preview(track) {
         try {
@@ -72,6 +93,7 @@
             previewOwner = owner;
             audio.src = previewUrl;
             $("studioSoundNowPlaying").textContent = track.name;
+            updatePlayerbar();
             try { await audio.play(); }
             catch (_) { setNotice("Premi Play nel lettore per ascoltare questo audio."); }
         } catch (error) {
@@ -223,6 +245,17 @@
     }
     async function renderTrack(track, collections) {
         const row = node("div", "studio-sound-row");
+        row.tabIndex = 0;
+        row.setAttribute("role", "group");
+        row.setAttribute("aria-label", "Audio: " + track.name);
+        row.addEventListener("dblclick", event => {
+            if (!event.target.closest("button, select")) preview(track);
+        });
+        row.addEventListener("keydown", event => {
+            if (event.target !== row || !["Enter", " "].includes(event.key)) return;
+            event.preventDefault();
+            preview(track);
+        });
         const icon = node("span", "studio-sound-disc");
         icon.setAttribute("aria-hidden", "true");
         const main = node("div", "studio-sound-row-main");
@@ -296,13 +329,33 @@
         const list = $("studioSoundList");
         list.replaceChildren();
         if (!tracks.length) {
-            const empty = node("div", "studio-sound-blank");
-            empty.append(
-                node("strong", "", allTracks.length ? "Nessun risultato" : "La libreria è vuota"),
-                node("span", "", allTracks.length
-                    ? "Cambia filtro o ricerca."
-                    : "Importa un file audio dal tuo dispositivo.")
-            );
+            const empty = node("div", "studio-sound-blank studio-sound-empty-workspace");
+            const icon = node("div", "studio-sound-empty-icon", allTracks.length ? "⌕" : "♫");
+            icon.setAttribute("aria-hidden", "true");
+            const title = node("strong", "studio-sound-empty-title",
+                allTracks.length ? "Nessun audio trovato" : "La tua libreria audio");
+            const message = node("p", "studio-sound-empty-description",
+                allTracks.length
+                    ? "Nessuna traccia corrisponde a questa ricerca. Puoi cambiare filtro o tornare a tutti gli audio."
+                    : "Importa MP3, WAV o altri file compatibili dal dispositivo. Organizzali in raccolte, ascoltali qui e aggiungili ai tuoi progetti.");
+            const actions = node("div", "studio-sound-empty-actions");
+            if (allTracks.length) {
+                actions.append(button("Mostra tutti gli audio", "Rimuovi i filtri e la ricerca", () => {
+                    filter = "all";
+                    selectedCollection = "";
+                    $("studioSoundSearch").value = "";
+                    refresh().catch(error => setNotice(error.message, true));
+                }, "studio-sound-empty-primary"));
+            } else {
+                actions.append(button("Importa il primo audio", "Seleziona uno o più file locali", () =>
+                    $("studioSoundFileInput").click(), "studio-sound-empty-primary"));
+                actions.append(button("Crea una raccolta", "Organizza la libreria audio", () =>
+                    collectionDialog("create"), "studio-sound-empty-secondary"));
+            }
+            empty.append(icon, title, message, actions);
+            const note = node("p", "studio-sound-empty-footnote",
+                "I file restano nel browser: nessun caricamento necessario per montare i tuoi video.");
+            empty.append(note);
             list.append(empty);
             return;
         }
@@ -319,6 +372,54 @@
         refresh().catch(error => setNotice(error.message, true));
     }
 
+    for (const event of ["loadedmetadata", "durationchange", "timeupdate", "play", "pause", "ended", "emptied"]) {
+        audio.addEventListener(event, updatePlayerbar);
+    }
+    playPause.addEventListener("click", () => {
+        if (!audio.getAttribute("src")) return;
+        if (audio.paused) audio.play().catch(error => setNotice(error.message, true));
+        else audio.pause();
+    });
+    $("studioSoundStop").addEventListener("click", clearPreview);
+    seekInput.addEventListener("input", () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+            audio.currentTime = audio.duration * Number(seekInput.value) / 1000;
+        }
+    });
+    const browserPane = $("studioSoundsView").querySelector(".studio-sound-browser");
+    let dropDepth = 0;
+    browserPane.addEventListener("dragenter", event => {
+        if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+        event.preventDefault();
+        dropDepth++;
+        browserPane.classList.add("is-file-drop");
+    });
+    browserPane.addEventListener("dragover", event => {
+        if (![...(event.dataTransfer?.types || [])].includes("Files")) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+    });
+    browserPane.addEventListener("dragleave", () => {
+        dropDepth = Math.max(0, dropDepth - 1);
+        if (!dropDepth) browserPane.classList.remove("is-file-drop");
+    });
+    browserPane.addEventListener("drop", event => {
+        event.preventDefault();
+        dropDepth = 0;
+        browserPane.classList.remove("is-file-drop");
+        if (!event.dataTransfer?.files?.length) return;
+        const audioFiles = [...event.dataTransfer.files].filter(file =>
+            file.type.startsWith("audio/") || /\.(mp3|wav|m4a|aac|ogg|flac|webm)$/i.test(file.name));
+        if (!audioFiles.length) {
+            setNotice("Trascina file audio MP3, WAV, M4A, OGG o FLAC.", true);
+            return;
+        }
+        const fileInput = $("studioSoundFileInput");
+        const transfer = new DataTransfer();
+        audioFiles.forEach(file => transfer.items.add(file));
+        fileInput.files = transfer.files;
+        fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
     $("studioSoundImport").addEventListener("click", () => $("studioSoundFileInput").click());
     $("studioSoundFileInput").addEventListener("change", () =>
         importFiles().catch(error => setNotice(error.message, true)));
