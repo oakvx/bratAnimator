@@ -200,7 +200,7 @@
     const diagnosticsTitle = diagnostics?.querySelector(".inspector-group-heading");
     if (diagnostics && report && diagnosticsTitle) {
         const refreshReport = () => {
-            const text = report.textContent.trim().replace(/\\s+/g, " ");
+            const text = report.textContent.trim().replace(/\s+/g, " ");
             diagnosticsTitle.textContent = text
                 ? "Preflight checks · " + (text.length > 54 ? text.slice(0, 51) + "…" : text)
                 : "Preflight checks";
