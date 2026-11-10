@@ -89,6 +89,7 @@ body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport
   border-color: var(--w7-el-bd-h);
   background: var(--w7-el-grad-h);
 }
+body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport .transport-icon) { min-width: 0; }
 body.studio-editor-open #editor .studio-tl-viewport { background: #fff; scrollbar-color: auto; }
 body.studio-editor-open #editor .studio-tl-lane { background: #fff; border-color: var(--line); }
 body.studio-editor-open #editor .studio-tl-label { background: #f0f0f0; color: #222; border-color: var(--line-strong); }
