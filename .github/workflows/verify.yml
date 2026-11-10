@@ -34,6 +34,8 @@ jobs:
           node --check assets/js/video-composer.js
           node --check assets/js/audio-mixer.js
           node --check assets/js/multitrack-ui.js
+          node --check assets/js/timeline-core.js
+          node --check assets/js/timeline-editor.js
           node --check assets/js/editor-templates.js
           node --check assets/js/tiktok-link.js
           node --check assets/js/tiktok-login.js
