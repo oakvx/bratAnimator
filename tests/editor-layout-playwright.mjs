@@ -305,8 +305,8 @@ try {
     const seoContext = await browser.newContext({ viewport: { width: 1080, height: 800 } });
     const seoPage = await seoContext.newPage();
     for (const item of [
-        { locale: 'en', title: 'Free Brat Video Editor Online', term: 'multitrack timeline' },
-        { locale: 'it', title: 'Editor Video Brat Gratis Online', term: 'editor video gratuito' }
+        { locale: 'en', title: 'Brat Video Editor Online', term: 'multitrack timeline' },
+        { locale: 'it', title: 'Studio Video Brat Online', term: 'editor video gratuito' }
     ]) {
         await seoPage.goto('http://127.0.0.1:' + server.address().port + '/' + item.locale + '/',
             { waitUntil: 'load' });
