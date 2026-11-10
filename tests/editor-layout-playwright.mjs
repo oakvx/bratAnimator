@@ -134,10 +134,66 @@ try {
         assert.equal(await page.locator('#entranceSettings').isVisible(), true);
         assert.equal(await page.locator('#textSettings').isVisible(), true);
         await page.screenshot({ path: path.join(output, viewport.name + '-advanced-design.png'), fullPage: true });
+        // Real drag, undo/redo, zoom and trim on the same live canvas editor.
+        await page.evaluate(() => {
+            const host = window.BratMultitrackHost;
+            host.replace(window.BratTracks.empty());
+            host.apply('add-clip', { trackId: 'main-video', clip: {
+                kind: 'image', name: 'Timeline test image', start: 1, duration: 3
+            } });
+            window.__timelineImageId = host.snapshot().selectedClipId;
+            host.apply('add-clip', { trackId: 'main-overlay', clip: {
+                kind: 'text', name: 'Timeline marker', start: 8, duration: 2,
+                source: { kind: 'text', text: 'Hello' }
+            } });
+        });
+        await page.locator('#studioTlViewport').scrollIntoViewIfNeeded();
+        await page.locator('#studioTlSnap').uncheck();
+        await page.waitForFunction(() =>
+            document.querySelectorAll('#studioTlLanes .studio-tl-clip').length >= 2);
+        const imageId = await page.evaluate(() => window.__timelineImageId);
+        const image = page.locator('.studio-tl-clip[data-clip-id="' + imageId + '"]');
+        const firstBounds = await image.boundingBox();
+        assert.ok(firstBounds && firstBounds.width > 50, 'Timeline clip is too small to drag');
+        const centerX = firstBounds.x + firstBounds.width / 2;
+        const centerY = firstBounds.y + firstBounds.height / 2;
+        await page.mouse.move(centerX, centerY);
+        await page.mouse.down();
+        await page.mouse.move(centerX + 96, centerY, { steps: 8 });
+        await page.mouse.up();
+        const at = () => page.evaluate(id => window.BratMultitrackHost.snapshot().tracks
+            .flatMap(track => track.clips).find(clip => clip.id === id)?.start, imageId);
+        assert.ok(Math.abs((await at()) - 3) < .08, 'Drag did not move clip from 1s to 3s');
+        await page.locator('#studioTlUndo').click();
+        assert.equal(await at(), 1, 'Undo failed to restore timeline clip');
+        await page.locator('#studioTlRedo').click();
+        assert.ok(Math.abs((await at()) - 3) < .08, 'Redo failed to replay drag');
+        const zoomBefore = Number(await page.locator('#studioTlZoom').inputValue());
+        await page.locator('#studioTlZoomIn').click();
+        assert.ok(Number(await page.locator('#studioTlZoom').inputValue()) > zoomBefore);
+        await page.locator('#studioTlFit').click();
+        assert.ok(Number(await page.locator('#studioTlZoom').inputValue()) >= 12);
+        await page.screenshot({
+            path: path.join(output, viewport.name + '-professional-timeline.png'),
+            fullPage: true
+        });
+        // Save a copy of the original timeline graph and verify bounded changes.
+        const timelineState = await page.evaluate(() => ({
+            graph: window.BratMultitrackHost.snapshot(),
+            history: window.BratMultitrackHost.history(),
+            width: document.documentElement.scrollWidth
+        }));
+        assert.ok(timelineState.history.undo > 0, 'Clip edits are missing from undo history');
+        assert.ok(timelineState.width <= viewport.width + 3, 'Timeline caused body horizontal overflow');
+        console.log('TIMELINE ' + viewport.name + ': ' + JSON.stringify({
+            initialDrag: 3, undoRedo: true, zoomBefore,
+            zoomAfter: Number(await page.locator('#studioTlZoom').inputValue()),
+            undoDepth: timelineState.history.undo, tracks: timelineState.graph.tracks.length
+        }));
         assert.deepEqual(errors, [], viewport.name + ' runtime page errors');
         await context.close();
     }
-    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 6) + ' screenshots, no horizontal clipping, correct grouping and functional tabs.');
+    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 8) + ' screenshots, no horizontal clipping, correct grouping and functional tabs.');
 } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
