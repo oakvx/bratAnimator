@@ -28,7 +28,7 @@ test("moving between compatible lanes is a single deterministic graph operation"
     const after = Tracks.apply(graph, proposed.operation, proposed.args);
     assert.equal(after.tracks[0].clips.length, 0);
     assert.equal(after.tracks[1].clips.length, 2);
-    assert.equal(after.tracks[1].clips[0].sourceIn, 2);
+    assert.equal(after.tracks[1].clips.find(c => c.id === first).sourceIn, 2);
 });
 test("snap aligns either the leading or trailing clip edge to nearest marker", () => {
     const { graph, first } = seed();
