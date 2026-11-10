@@ -24,6 +24,7 @@
     <!-- 7.css v0.21.0 upstream CSS, vendored in full for offline/PWA use. -->
     <link rel="stylesheet" href="vendor/7css/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/studio-win7.css" />
+<link rel="stylesheet" href="assets/css/editor-layout.css" />
     <!-- Scoped Windows 7 Aero details; editor styles are not affected. -->
     <!-- 7.css is imported by win7-app.css after application styles. -->
     <!-- Former theme assets/css/aero-theme.css retired. -->
@@ -270,6 +271,7 @@
     <script src="assets/js/app.js" defer></script>
     <script src="assets/js/multitrack-ui.js" defer></script>
     <script src="assets/js/editor-v5.js" defer></script>
+<script src="assets/js/editor-layout.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
     <script src="assets/js/studio-shell.js" defer></script>
     <script src="assets/js/supabase-config.js" defer></script>
@@ -644,8 +646,7 @@
             <div>
                 <h1 data-i18n="panelTitle">brat lyric video editor</h1>
                 <p data-i18n="panelIntro">
-                    Search a song on LRCLIB or lrc.red, paste or import lyrics, use cleared audio/video for timing,
-                    and optionally merge extracted audio into the final export.
+                    Edit lyrics, organize media tracks and export videos or still frames using the timeline.
                 </p>
             </div>
             <span class="autosave-pill" id="autosaveBadge" aria-live="polite">loading local save…</span>
@@ -1216,8 +1217,8 @@
         </div>
 
         <div id="section-tracks" class="section editor-section" data-editor-tab="tracks" role="tabpanel" aria-labelledby="tab-tracks">
-            <div class="section-title">multitrack project • phase 14</div>
-            <p class="mini-copy">Add local videos and images as independent layers. Preview and export render visible layers; audio embedded in imported clips is planned for phase 16.</p>
+            <div class="section-title">Timeline & tracks</div>
+            <p class="mini-copy">Organize media and layers, edit visual properties, and mix audio without leaving this browser.</p>
             <div class="row">
                 <label class="file-button" for="mtImportMediaInput">import video / image / audio
                     <input id="mtImportMediaInput" type="file" accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,audio/ogg,audio/webm,audio/flac" multiple hidden>
