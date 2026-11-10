@@ -185,6 +185,29 @@ try {
         }));
         assert.ok(timelineState.history.undo > 0, 'Clip edits are missing from undo history');
         assert.ok(timelineState.width <= viewport.width + 3, 'Timeline caused body horizontal overflow');
+
+        // Virtualization must render only clips near the current viewport,
+        // even if a project contains hundreds of clips.
+        await page.evaluate(() => {
+            const Tracks = window.BratTracks;
+            let graph = Tracks.empty();
+            const lane = graph.tracks.find(track => track.id === 'main-overlay');
+            for (let i = 0; i < 180; i++) {
+                lane.clips.push({
+                    id: 'stress-' + i, kind: 'text', name: 'Text ' + i,
+                    start: 2 * i, duration: 1.5,
+                    source: { kind: 'text', text: 'Sample' }
+                });
+            }
+            window.BratMultitrackHost.replace(graph);
+            document.getElementById('studioTlViewport').scrollLeft = 0;
+            window.BratTimelineUI.render();
+        });
+        const visibleClipNodes = await page.locator('#studioTlLanes .studio-tl-clip').count();
+        assert.ok(visibleClipNodes < 45,
+            'Timeline virtualization rendered ' + visibleClipNodes + ' nodes from a 180-clip project');
+        console.log('TIMELINE STRESS ' + viewport.name + ': 180 clips; ' +
+            visibleClipNodes + ' visible DOM nodes');
         console.log('TIMELINE ' + viewport.name + ': ' + JSON.stringify({
             initialDrag: 3, undoRedo: true, zoomBefore,
             zoomAfter: Number(await page.locator('#studioTlZoom').inputValue()),
@@ -193,7 +216,29 @@ try {
         assert.deepEqual(errors, [], viewport.name + ' runtime page errors');
         await context.close();
     }
-    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 8) + ' screenshots, no horizontal clipping, correct grouping and functional tabs.');
+    // Localized SEO landing pages must be indexable, readable and consistent
+    // with the actual free-to-use editor and publishing conditions.
+    const seoContext = await browser.newContext({ viewport: { width: 1080, height: 800 } });
+    const seoPage = await seoContext.newPage();
+    for (const item of [
+        { locale: 'en', title: 'Free Brat Video Editor Online', term: 'multitrack timeline' },
+        { locale: 'it', title: 'Editor Video Brat Gratis Online', term: 'editor video gratuito' }
+    ]) {
+        await seoPage.goto('http://127.0.0.1:' + server.address().port + '/' + item.locale + '/',
+            { waitUntil: 'load' });
+        assert.ok((await seoPage.title()).includes(item.title), 'SEO title missing in ' + item.locale);
+        assert.equal(await seoPage.locator('h1').isVisible(), true);
+        assert.ok((await seoPage.locator('meta[name="description"]').getAttribute('content'))
+            .includes(item.term), 'SEO description not in localized language');
+        assert.ok((await seoPage.locator('link[rel="canonical"]').getAttribute('href'))
+            .endsWith('/' + item.locale + '/'));
+        const overflow = await seoPage.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+        assert.ok(overflow <= 3, item.locale + ' SEO landing page exceeds viewport by ' + overflow);
+        await seoPage.screenshot({ path: path.join(output, 'seo-' + item.locale + '.png'), fullPage: true });
+    }
+    await seoContext.close();
+    console.log('LAYOUT AUDIT PASS: ' + (summary.length + 10) +
+        ' screenshots, 180-clip virtualization, localized SEO, no horizontal clipping and functional tabs.');
 } finally {
     await browser?.close();
     await new Promise(resolve => server.close(resolve));
