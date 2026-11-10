@@ -18,6 +18,8 @@ test("phase17 timeline ruler and labels use readable adaptive units", () => {
     assert.equal(Timeline.rulerStep(48), 2);
     assert.equal(Timeline.rulerStep(12), 10);
     assert.equal(Timeline.secondsToLabel(70.2), "1:10.2");
+    assert.equal(Timeline.secondsToLabel(59.99), "1:00");
+    assert.equal(Timeline.secondsToLabel(119.99), "2:00");
 });
 test("moving between compatible lanes is a single deterministic graph operation", () => {
     const { graph, first } = seed();
