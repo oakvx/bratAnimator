@@ -107,6 +107,12 @@ Phase 13 introduces `assets/js/export-plan.js` and `assets/js/export-engine.js`.
 
 `export-preflight.js` adds a non-blocking readiness checklist built from the real LRC parser and the current media and browser settings. It flags missing or malformed timestamps, absent encoding capability, audio-recording limits and heavy settings (1440p+ at 60 fps). It does not replace the exporter's final codec and CORS validation.
 
+## Suoni di Windows 7 — segnaposto predisposti
+
+I suoni di sistema di Windows 7 non sono inclusi nel repository. L'interfaccia ha già i **15 segnaposto WAV**, un mapping per Start, finestre, notifiche e avvisi, oltre a un fallback sintetico quando manca un file.
+
+**[Guida per aggiungere i WAV con Codex, tabella dei file e TODO](assets/sounds/windows7/README.md)** — basta copiare i file autorizzati in `assets/sounds/windows7/` e impostare `installed = true` in `assets/js/win7-sound-pack.js`. I WAV sono esclusi da Git per evitare pubblicazioni accidentali; i test di regressione non richiedono alcun file proprietario.
+
 ## Windows 7 Aero workspace & guided onboarding
 
 The dashboard is an Explorer-style window built with the vendored **7.css** framework. Sound Hub displays a two-column file manager with collection navigation, drop-to-import audio, keyboard/double-click preview and a compact audio transport that appears only after selecting a track. The large promotional home banner was removed; **Brat Animator** remains the visible product name.
