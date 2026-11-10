@@ -19,7 +19,8 @@ const server = createServer(async (request, response) => {
     const target = path.resolve(root, '.' + decodeURIComponent(new URL(request.url, 'http://localhost').pathname));
     if (target !== root && !target.startsWith(root + path.sep)) return void response.writeHead(403).end();
     try {
-        const file = target === root ? path.join(root, 'index.html') : target;
+        const file = target === root || new URL(request.url, 'http://localhost').pathname.endsWith('/')
+            ? path.join(target, 'index.html') : target;
         response.writeHead(200, { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
         response.end(await readFile(file));
     } catch { response.writeHead(404).end(); }
