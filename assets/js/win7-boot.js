@@ -25,6 +25,7 @@
         let ended = false;
         let skipped = false;
         let timer;
+        let progressTimer;
         let resolveReady;
         const ready = new Promise(resolve => { resolveReady = resolve; });
 
@@ -33,6 +34,8 @@
             ended = true;
             skipped = reason === "skipped";
             win.clearTimeout?.(timer);
+            win.clearInterval?.(progressTimer);
+            if (progress) progress.value = 100;
             overlay.classList.add("is-finishing");
             overlay.hidden = true;
             overlay.setAttribute("aria-hidden", "true");
@@ -59,7 +62,20 @@
         document.body?.classList.add("studio-booting");
         document.addEventListener("keydown", onKey);
         skipButton?.addEventListener("click", skip);
-        progress?.setAttribute("aria-valuenow", "0");
+        if (progress) {
+            progress.value = 0;
+            progress.setAttribute("aria-valuenow", "0");
+        }
+        const startedAt = Date.now();
+        if (duration > 0 && progress) {
+            progressTimer = win.setInterval?.(() => {
+                const ratio = Math.min(1, (Date.now() - startedAt) / duration);
+                // The final 10% is reserved for the transition to the editor.
+                const value = Math.round(ratio * 90);
+                progress.value = value;
+                progress.setAttribute("aria-valuenow", String(value));
+            }, 70);
+        }
         timer = win.setTimeout?.(() => finish(), duration);
         return Object.freeze({
             ready, skip, finish,
