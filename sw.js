@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v25-phase17-timeline";
+const CACHE_NAME = "brat-animator-v26-aero-guided-tour";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const APP_ASSETS = [
   "./assets/css/studio-win7.css",
   "./assets/css/editor-layout.css",
   "./assets/css/timeline-editor.css",
+  "./assets/css/studio-aero-polish.css",
   "./assets/js/core.js",
   "./vendor/js-yaml.min.js",
   "./assets/js/lyrics.js",
@@ -43,6 +44,7 @@ const APP_ASSETS = [
   "./assets/js/backup-reminders.js",
 "./assets/js/sound-hub.js",
   "./assets/js/studio-dashboard.js",
+  "./assets/js/studio-help.js",
   "./assets/js/win7-shell.js",
   "./assets/js/win7-start-menu.js",
   "./assets/js/tiktok-config.js",
