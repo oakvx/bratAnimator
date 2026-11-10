@@ -6060,9 +6060,9 @@ async function updateExportEstimate() {
         if (!step) return;
 
         if (step.studioView) {
-            window.BratStudio?.show(step.studioView);
+            if (window.BratStudio?.getView() !== step.studioView) window.BratStudio?.show(step.studioView);
         } else {
-            window.BratStudio?.show('editor');
+            if (window.BratStudio?.getView() !== 'editor') window.BratStudio?.show('editor');
             if (panel.classList.contains('hidden')) {
                 panel.classList.remove('hidden');
                 syncPanelState();
@@ -6122,8 +6122,11 @@ async function updateExportEstimate() {
         clearTutorialFocus();
 
         window.setTimeout(() => {
+            if (!tutorialActive || tutorialSteps[tutorialIndex] !== step) return;
             const target = getTutorialTarget(step.target);
             if (!target) return;
+            const bounds = target.getBoundingClientRect();
+            tutorialOverlay.dataset.side = bounds.left + bounds.width / 2 > window.innerWidth * 0.56 ? 'left' : 'right';
             target.classList.add('tutorial-focus');
             target.setAttribute('data-tutorial-active', 'true');
             target.scrollIntoView({
@@ -6135,7 +6138,7 @@ async function updateExportEstimate() {
     }
 
     function startTutorial(startIndex = 0) {
-        window.BratStudio?.show('editor');
+        if (window.BratStudio?.getView() !== 'editor') window.BratStudio?.show('editor');
         tutorialActive = true;
         tutorialIndex = clamp(startIndex, 0, tutorialSteps.length - 1);
         tutorialOverlay?.classList.remove('hidden');
