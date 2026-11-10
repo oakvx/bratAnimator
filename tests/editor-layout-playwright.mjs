@@ -76,15 +76,21 @@ try {
         name: 'activity.bmp', mimeType: 'image/bmp', buffer: Buffer.from('invalid')
     });
     await bootPage.waitForFunction(() => document.getElementById('studioWin7AssetsStatus').textContent.includes('non validi'));
-    const orb = await bootPage.evaluate(() => {
+    const fixtureImages = await bootPage.evaluate(() => {
         const canvas = document.createElement('canvas');
         canvas.width = 54;
         canvas.height = 162;
-        return canvas.toDataURL('image/png').split(',')[1];
+        const orb = canvas.toDataURL('image/png').split(',')[1];
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#286791';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const wallpaper = canvas.toDataURL('image/jpeg').split(',')[1];
+        return { orb, wallpaper };
     });
     await bootPage.locator('#studioWin7Files').setInputFiles([
         bootFixture(),
-        { name: 'start-orb.png', mimeType: 'image/png', buffer: Buffer.from(orb, 'base64') }
+        { name: 'start-orb.png', mimeType: 'image/png', buffer: Buffer.from(fixtureImages.orb, 'base64') },
+        { name: 'img0.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(fixtureImages.wallpaper, 'base64') }
     ]);
     await bootPage.waitForFunction(() => document.body.classList.contains('win7-has-orb'));
     await bootPage.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
@@ -98,6 +104,7 @@ try {
     assert.equal(await bootPage.locator('#studioBoot').isVisible(), false);
     assert.equal(await bootPage.locator('#studioDesktop').isVisible(), true);
     assert.equal(await bootPage.locator('#studioStartButton').evaluate(button => getComputedStyle(button).backgroundImage.includes('blob:')), true);
+    assert.equal(await bootPage.evaluate(() => getComputedStyle(document.body).backgroundImage.includes('blob:')), true);
     await bootContext.setOffline(false);
     await bootPage.locator('#studioDesktopLauncher').dblclick();
     await bootPage.locator('#studioWin7MenuBar > li').first().click();
@@ -112,6 +119,7 @@ try {
     await bootPage.locator('#studioAboutClose').click();
     await bootPage.locator('#studioStartButton').click();
     assert.equal(await bootPage.locator('#studioStartMenu').isVisible(), true);
+    assert.equal(await bootPage.locator('#studioStartMenu').evaluate(menu => getComputedStyle(menu, '::before').content), '""');
     assert.equal(await bootPage.locator('#studioStartButton').evaluate(button => getComputedStyle(button).backgroundPositionY), '100%');
     const allPrograms = bootPage.locator('#studioStartPrograms');
     const settingsEntry = bootPage.locator('#studioStartResults [data-start-view="settings"]');

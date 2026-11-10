@@ -394,14 +394,14 @@
     <aside id="studioNav" class="studio-nav win7" aria-label="Navigazione Brat Animator">
         <div class="studio-nav-brand"><img class="studio-original-logo" src="favicon.svg" alt="" width="38" height="38" decoding="async"><span>brat animator</span></div>
         <div class="studio-nav-links">
-            <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page"><span aria-hidden="true">⌂</span> Home</button>
-            <button type="button" data-studio-view="editor" class="studio-nav-link"><span aria-hidden="true">✎</span> Editor</button>
-            <button type="button" data-studio-view="projects" class="studio-nav-link"><span aria-hidden="true">▦</span> Progetti</button>
-            <button type="button" data-studio-view="sounds" class="studio-nav-link"><span aria-hidden="true">♫</span> Sound Hub</button>
-            <button type="button" data-studio-view="share" class="studio-nav-link"><span aria-hidden="true">↗</span> BRATCODE</button>
+            <button type="button" data-studio-view="home" class="studio-nav-link is-active" aria-current="page">Home</button>
+            <button type="button" data-studio-view="editor" class="studio-nav-link"><img src="favicon.svg" alt="" width="16" height="16"> Editor</button>
+            <button type="button" data-studio-view="projects" class="studio-nav-link"><img data-win7-image="folder" alt="" width="16" height="16" hidden> Progetti</button>
+            <button type="button" data-studio-view="sounds" class="studio-nav-link"><img data-win7-image="music" alt="" width="16" height="16" hidden> Sound Hub</button>
+            <button type="button" data-studio-view="share" class="studio-nav-link">BRATCODE</button>
         </div>
         <div class="studio-nav-bottom">
-            <button type="button" data-studio-view="settings" class="studio-nav-link"><span aria-hidden="true">⚙</span> Impostazioni</button>
+            <button type="button" data-studio-view="settings" class="studio-nav-link">Impostazioni</button>
             <button id="studioNavAccount" type="button" class="studio-nav-account"><span id="studioAvatar" class="studio-avatar">G</span><span id="studioNavIdentity">Accedi / Registrati</span></button>
         </div>
     </aside>
@@ -409,10 +409,10 @@
                   <main class="studio-main-content" id="studioMainContent">
             <header class="studio-dashboard-head">
                 <div><h1 id="studioTitle">Home</h1><p id="studioGreeting">I progetti sono salvati su questo dispositivo.</p></div>
-                <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">♪ Suoni on</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
+                <div class="studio-head-actions"><button id="studioSoundToggle" class="studio-audio-toggle" data-dashboard-sound-toggle type="button" aria-pressed="true">Suoni attivi</button><button id="studioAccountButton" class="studio-account-button" type="button">Accedi / Registrati</button></div>
             </header>
             <nav class="studio-addressbar" aria-label="Percorso dell'applicazione">
-                <button id="studioAddressHome" type="button" title="Vai alla home">⌂</button>
+                <button id="studioAddressHome" type="button" title="Vai alla home">Home</button>
                 <div class="studio-address-path"><span>Brat Animator</span><span class="studio-address-separator" aria-hidden="true">›</span><strong id="studioAddressCurrent">Home</strong></div>
                 <button id="studioAddressHelp" type="button" title="Apri il tutorial interattivo (F1)">? Guida</button>
             </nav>
@@ -431,11 +431,11 @@
                     </section>
                     <section class="studio-classic-shortcuts" aria-label="Accesso rapido">
                         <h2>Apri</h2>
-                        <button type="button" data-studio-view="projects"><span aria-hidden="true">▣</span> Progetti</button>
-                        <button type="button" data-studio-view="sounds"><span aria-hidden="true">♫</span> Sound Hub</button>
-                        <button type="button" data-studio-view="share"><span aria-hidden="true">⇄</span> BRATCODE</button>
-                        <button type="button" data-studio-view="settings"><span aria-hidden="true">⚙</span> Impostazioni</button>
-                        <button id="studioGuideShortcut" type="button"><span aria-hidden="true">?</span> Guida interattiva</button>
+                        <button type="button" data-studio-view="projects"><img data-win7-image="folder" alt="" width="16" height="16" hidden> Progetti</button>
+                        <button type="button" data-studio-view="sounds"><img data-win7-image="music" alt="" width="16" height="16" hidden> Sound Hub</button>
+                        <button type="button" data-studio-view="share">BRATCODE</button>
+                        <button type="button" data-studio-view="settings">Impostazioni</button>
+                        <button id="studioGuideShortcut" type="button">Guida interattiva</button>
                     </section>
                 </div>
                 <section class="studio-welcome-panel" aria-label="Operazioni rapide">
@@ -571,7 +571,8 @@
         </div>
     </section>
     <!-- Phase 6: searchable Start menu, built on the actual 7.css glass window. -->
-    <nav id="studioStartMenu" class="studio-start-menu window glass active win7" aria-label="Menu Start" hidden>
+    <div class="win7">
+    <nav id="studioStartMenu" class="studio-start-menu window glass active" aria-label="Menu Start" hidden>
       <div class="window-body studio-start-surface">
         <div class="studio-start-main">
           <div id="studioStartResults" class="studio-start-results" role="group" aria-label="Programmi">
@@ -585,9 +586,7 @@
           </div>
           <p id="studioStartEmpty" class="studio-start-empty" role="status" hidden>Nessun risultato.</p>
           <button id="studioStartPrograms" type="button" aria-controls="studioStartResults" aria-expanded="false">Tutti i programmi</button>
-          <label class="studio-start-search-label" for="studioStartSearch"><span class="sr-only">Cerca nel menu Start</span>
-            <input id="studioStartSearch" type="search" autocomplete="off" placeholder="Cerca programmi e file">
-          </label>
+          <input id="studioStartSearch" type="search" autocomplete="off" aria-label="Cerca nel menu Start" placeholder="Cerca programmi e file">
         </div>
         <div class="studio-start-side">
           <img data-win7-image="user" alt="" width="48" height="48" class="studio-start-user-image" hidden>
@@ -601,6 +600,7 @@
         </div>
       </div>
     </nav>
+    </div>
     <div id="studioTaskbar" class="studio-taskbar win7" aria-label="Barra delle applicazioni">
       <button id="studioStartButton" class="studio-start-orb" type="button" aria-label="Menu Start" title="Menu Start" aria-controls="studioStartMenu" aria-expanded="false">
         <span>Start</span>
@@ -816,7 +816,8 @@
             <div><span>lines</span><strong id="statusLines">0</strong></div>
         </div>
 
-        <nav class="editor-tabs" aria-label="editor sections" role="tablist">
+        <div class="win7 editor-tab-strip">
+        <menu class="editor-tabs" aria-label="editor sections" role="tablist">
             <button id="tab-lyrics" class="editor-tab active" data-open-tab="lyrics" type="button" role="tab" aria-selected="true" aria-controls="section-lyrics"><span>1</span> lyrics</button>
             <button id="tab-timing" class="editor-tab" data-open-tab="timing" type="button" role="tab" aria-selected="false" aria-controls="section-timing"><span>2</span> timing</button>
             <button id="tab-design" class="editor-tab" data-open-tab="design" type="button" role="tab" aria-selected="false" aria-controls="section-design"><span>3</span> design</button>
@@ -824,7 +825,8 @@
             <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export"><span>5</span> export</button>
             <button id="tab-project" class="editor-tab" data-open-tab="project" type="button" role="tab" aria-selected="false" aria-controls="section-project"><span>6</span> project</button>
             <button id="tab-tracks" class="editor-tab" data-open-tab="tracks" type="button" role="tab" aria-selected="false" aria-controls="section-tracks"><span>7</span> tracks</button>
-        </nav>
+        </menu>
+        </div>
 
         <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
             <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
@@ -1522,7 +1524,7 @@
     <main class="page-shell">
         <div class="app" id="editor">
             <div class="stage-wrap">
-                <div class="stage-toolbar" aria-label="preview tools">
+                <div class="stage-toolbar win7" aria-label="preview tools">
                     <div class="stage-title">
                         <div><strong>preview</strong><span id="stageFormatLabel">1080 × 1080</span></div>
                     </div>
@@ -1540,7 +1542,7 @@
                         <canvas id="previewCanvas" width="1080" height="1080" aria-label="lyric video preview"></canvas>
                     </div>
                 </div>
-                <div class="stage-transport" aria-label="preview playback">
+                <div class="stage-transport win7" aria-label="preview playback">
                     <button id="stageRestartBtn" class="transport-icon" type="button" aria-label="restart preview">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v5h5M5.6 17a8 8 0 1 0 .2-10.2L4 8" /></svg>
                     </button>

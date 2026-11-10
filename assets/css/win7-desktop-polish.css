@@ -26,7 +26,83 @@
 .studio-modal-backdrop.win7 .studio-about-brand h2 { margin: 0 0 3px; }
 .studio-modal-backdrop.win7 .studio-about-brand p { margin: 0; }
 
+/* The editor workspace uses the same surface and controls as the shell. */
+body.studio-editor-open {
+  --font-ui: "Segoe UI", Tahoma, sans-serif;
+  --font-display: var(--font-ui);
+  --paper: #f0f0f0;
+  --ink: #222;
+  --ink-soft: #454545;
+  --line: #cdd7db;
+  --line-strong: #aeb9c2;
+  --accent: #b9def7;
+  --accent-strong: #327db1;
+  --accent-soft: #e5f3ff;
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+}
+body.studio-editor-open .panel { --inspector-edge: var(--line); box-shadow: none; }
+body.studio-editor-open .editor-tab-strip { flex-shrink: 0; }
+body.studio-editor-open .editor-tab-strip .editor-tabs {
+  display: grid;
+  margin: 0;
+  background: var(--paper);
+}
+body.studio-editor-open .editor-tab-strip .editor-tab {
+  min-height: 27px;
+  font-weight: 400;
+  text-transform: none;
+}
+body.studio-editor-open .editor-tab-strip .editor-tab[aria-selected="true"] { margin: 0; }
+body.studio-editor-open .editor-tab-strip .editor-tab span { display: none; }
+body.studio-editor-open :is(.project-status-bar,.inspector-group) { border-radius: 2px; box-shadow: none; }
+body.studio-editor-open .panel .label {
+  font: 12px "Segoe UI", Tahoma, sans-serif;
+  letter-spacing: normal;
+  text-transform: none;
+}
+body.studio-editor-open #editor :is(.stage-wrap,.studio-timeline) {
+  border: 1px solid #a8b2ba;
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: none;
+  color: #222;
+}
+body.studio-editor-open #editor :is(.stage-toolbar,.stage-transport,.studio-tl-toolbar,.studio-tl-ruler) {
+  border-color: var(--line-strong);
+  border-radius: 0;
+  background: var(--w7-surface, #f0f0f0);
+  color: #222;
+}
+body.studio-editor-open #editor :is(.stage-title span,.stage-zoom-controls output,.transport-time,.hint,
+    .studio-tl-title,.studio-tl-clock,.studio-tl-tick,#studioTlZoomValue,.studio-tl-status) { color: #353535; }
+body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport button,.studio-tl-toolbar button) {
+  min-height: 26px;
+  padding-block: 4px;
+  border: 1px solid var(--w7-el-bd);
+  border-radius: 3px;
+  background: var(--w7-el-grad);
+  color: #222;
+  font: 12px "Segoe UI", Tahoma, sans-serif;
+}
+body.studio-editor-open #editor :is(.stage-zoom-controls button,.stage-transport button,.studio-tl-toolbar button):hover {
+  border-color: var(--w7-el-bd-h);
+  background: var(--w7-el-grad-h);
+}
+body.studio-editor-open #editor .studio-tl-viewport { background: #fff; scrollbar-color: auto; }
+body.studio-editor-open #editor .studio-tl-lane { background: #fff; border-color: var(--line); }
+body.studio-editor-open #editor .studio-tl-label { background: #f0f0f0; color: #222; border-color: var(--line-strong); }
+body.studio-editor-open #editor .studio-tl-label[aria-pressed="true"] { background: var(--accent-soft); }
+body.studio-editor-open #editor .studio-tl-label:hover { background: var(--accent); }
+body.studio-editor-open #editor .studio-tl-status { background: var(--paper); border-color: var(--line-strong); }
+body.studio-editor-open #editor .studio-tl-status[data-error="true"] { color: #a4251b; }
+body.studio-editor-open #studioTlZoom { accent-color: var(--accent-strong); }
+
 #studioEditorChrome { display: none; }
+@media (max-width: 980px) {
+  body.studio-editor-open .editor-tab-strip { position: sticky; top: var(--topbar-height); z-index: 15; }
+  body.studio-editor-open .editor-tab-strip .editor-tabs { position: static; }
+}
 @media (min-width: 981px) {
   body.studio-editor-open {
     --brat-editor-side: clamp(8px, 1.5vw, 24px);

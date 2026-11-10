@@ -401,18 +401,6 @@
   .tutorial-overlay *,#studioDashboard .studio-nav-link,#studioDashboard .studio-sound-row {transition:none !important;}
 }
 
-/* Original Aero-inspired desktop wallpaper: luminous blue glass, soft green
-   aurora and light beams, rather than a flat webpage background. */
-body.studio-dashboard-open {
-  background-color:#12618e;
-  background-image:
-    radial-gradient(ellipse 36% 60% at 79% 36%,rgba(219,252,255,.54) 0%,rgba(98,204,231,.18) 48%,transparent 85%),
-    conic-gradient(from 193deg at 70% 54%,transparent 0deg,rgba(215,255,255,.20) 15deg,transparent 36deg,rgba(219,255,248,.20) 44deg,transparent 66deg),
-    radial-gradient(ellipse 70% 38% at 21% 103%,rgba(81,178,91,.86) 0%,rgba(51,151,109,.28) 50%,transparent 100%),
-    radial-gradient(ellipse 80% 40% at 40% 5%,rgba(10,108,178,.82),transparent 100%),
-    linear-gradient(155deg,#073e79 0%,#168cc4 42%,#77d0ec 69%,#2f91b6 100%);
-  background-attachment:fixed;
-}
 #studioDashboard .studio-dashboard-inner {position:relative;}
 #studioDashboard .studio-sound-empty-workspace {
   display:flex;

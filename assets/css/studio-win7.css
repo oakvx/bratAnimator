@@ -120,7 +120,7 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   background:transparent;border:1px solid transparent;
   border-radius:2px;box-shadow:none;color:#2c536e;text-shadow:none;
 }
-#studioDashboard .studio-nav-link span {font-size:17px;min-width:19px;text-align:center;}
+#studioDashboard :is(.studio-nav-link,.studio-classic-shortcuts button) img {object-fit:contain;}
 #studioDashboard .studio-nav-link:hover,
 #studioDashboard .studio-nav-account:hover {
   border-color:#b1d4ea;background:#e9f5ff;color:#163e5f;
@@ -213,7 +213,6 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   color:#356487;
 }
 #studioDashboard .studio-classic-shortcuts button:hover {background:#e3f0fc;border-color:#bfd8ee;}
-#studioDashboard .studio-classic-shortcuts button span {font-size:18px;width:21px;text-align:center;}
 #studioDashboard .studio-project-grid {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(225px,1fr));
@@ -508,6 +507,8 @@ body.studio-window-maximized #studioDashboard .studio-classic-body-grid {min-hei
   margin:0;
   overflow:auto;
   filter:none;
+  background-color:#c4ddefd9;
+  backdrop-filter:blur(14px);
   font:13px/1.4 "Segoe UI",Tahoma,Arial,sans-serif;
 }
 #studioStartMenu[hidden] {display:none !important;}
@@ -548,8 +549,7 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
 #studioStartMenu .studio-start-entry img {object-fit:contain;}
 #studioStartPrograms {text-align:left;min-height:28px;margin-inline:4px;}
 #studioStartMenu .studio-start-empty {margin:14px 8px;color:#677b89;}
-#studioStartMenu .studio-start-search-label {display:block;margin-top:auto;padding:7px 4px 2px;}
-#studioStartMenu #studioStartSearch {width:100%;max-width:none;height:29px;}
+#studioStartMenu #studioStartSearch {width:100%;min-width:0;min-height:24px;height:24px;margin-top:7px;}
 #studioStartMenu .studio-start-side {
   display:flex;flex-direction:column;align-items:stretch;
   gap:3px;padding:16px 9px 9px;
@@ -602,7 +602,6 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
     flex-direction:column;justify-content:center;gap:2px;
     text-align:center;font-size:10px;padding:3px 2px;
   }
-  #studioDashboard .studio-nav-link span {font-size:16px;}
   #studioDashboard .studio-main-content {padding-bottom:55px;}
   #studioDashboard .studio-classic-home {grid-template-columns:1fr;}
   #studioDashboard .studio-classic-shortcuts {display:none;}
