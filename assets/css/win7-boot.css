@@ -1,0 +1,88 @@
+/* Brat Animator startup — original CSS artwork informed by Windows 7.
+   No Microsoft image assets or recorded startup sounds are distributed. */
+#studioBoot.win7-boot {
+  position:fixed;inset:0;z-index:2147483000;
+  display:grid;place-items:center;
+  min-height:100dvh;padding:20px;
+  overflow:hidden;
+  color:#f4f7ff;
+  font:15px/1.4 "Segoe UI",Tahoma,sans-serif;
+  text-align:center;
+  background:
+    radial-gradient(ellipse 42% 29% at 51% 49%,rgba(16,36,71,.38),transparent 95%),
+    linear-gradient(165deg,#05070c 0%,#040a16 48%,#000105 100%);
+}
+#studioBoot.win7-boot[hidden] {display:none !important;}
+#studioBoot .win7-boot-stage {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:370px;width:min(480px,100%);}
+#studioBoot .win7-boot-caption {
+  margin:0; letter-spacing:.015em;
+  font:350 clamp(17px,2vw,23px)/1.45 "Segoe UI",Tahoma,sans-serif;
+  color:#e6eaf1;text-shadow:0 0 13px #9bb7ff22;
+}
+#studioBoot .win7-boot-emblem {
+  position:relative;width:138px;height:124px;margin:18px 0 29px;
+  filter:drop-shadow(0 0 17px rgba(96,157,253,.37));
+  perspective:300px;
+}
+#studioBoot .win7-boot-emblem::after {
+  content:"";position:absolute;inset:20px -22px 2px;
+  background:radial-gradient(ellipse,rgba(102,171,245,.29),transparent 75%);
+  filter:blur(14px);pointer-events:none;
+  animation:win7-boot-aura 2s ease-in-out both;
+}
+#studioBoot .win7-boot-pane {
+  position:absolute;display:block;
+  width:53px;height:46px;border-radius:20% 7% 23% 8%;
+  opacity:.07;transform:scale(.14) rotate(-20deg);
+  box-shadow:inset 0 5px 9px #fff5,inset 0 -7px 12px #1114,0 0 18px currentColor;
+  animation:win7-boot-panes 1.55s cubic-bezier(.18,.67,.14,1.09) forwards;
+}
+#studioBoot .win7-boot-pane::before {
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(125deg,#ffffff7a,transparent 50%);
+  border-radius:inherit;
+}
+#studioBoot .win7-boot-pane.red {
+  top:15px;left:14px;background:linear-gradient(138deg,#ffca83,#ee5d35 48%,#bd361f);
+  color:#ee7549;--tx:-45px;--ty:45px;--rot:-50deg;
+  animation-delay:.18s;
+}
+#studioBoot .win7-boot-pane.green {
+  top:13px;right:14px;background:linear-gradient(130deg,#d6ff70,#8bd344 49%,#3a9228);
+  color:#8ce659;--tx:43px;--ty:42px;--rot:65deg;
+  animation-delay:.29s;
+}
+#studioBoot .win7-boot-pane.blue {
+  bottom:14px;left:13px;background:linear-gradient(120deg,#bef6ff,#5eaff4 40%,#246fcb);
+  color:#5aaef7;--tx:-42px;--ty:-45px;--rot:43deg;
+  animation-delay:.41s;
+}
+#studioBoot .win7-boot-pane.yellow {
+  bottom:16px;right:13px;background:linear-gradient(130deg,#fff8ac,#ffd151 42%,#e59425);
+  color:#ffcf58;--tx:43px;--ty:-42px;--rot:-35deg;
+  animation-delay:.53s;
+}
+#studioBoot .win7-boot-progress {width:180px;height:6px;margin:28px 0 20px;appearance:none;}
+#studioBoot .win7-boot-progress::-webkit-progress-bar {background:#1b2943;border:1px solid #40516c;border-radius:5px;}
+#studioBoot .win7-boot-progress::-webkit-progress-value {background:linear-gradient(90deg,#366aaf,#8ad3ff);}
+#studioBoot .win7-boot-progress::-moz-progress-bar {background:#6fa7f2;}
+#studioBoot .win7-boot-brand {font-size:11px;color:#a1b3ce;margin:0;}
+#studioBoot #studioBootSkip {
+  position:absolute;right:clamp(15px,3vw,37px);bottom:clamp(20px,4vh,40px);
+  padding:7px 13px;min-height:33px;
+  background:linear-gradient(#435772,#1b2b47);border:1px solid #7e92b6;
+  color:#edf5ff;border-radius:4px;cursor:pointer;
+}
+#studioBoot #studioBootSkip:hover,
+#studioBoot #studioBootSkip:focus-visible {background:linear-gradient(#5b769a,#304d78);outline:2px solid #c1ddff;}
+@keyframes win7-boot-panes {
+  0% {opacity:0;transform:translate(var(--tx),var(--ty)) scale(.15) rotate(var(--rot));filter:blur(6px);}
+  30% {opacity:1;filter:blur(3px);}
+  75% {opacity:1;filter:blur(0);}
+  100% {opacity:1;transform:translate(0,0) scale(1) rotate(-4deg);filter:blur(0);}
+}
+@keyframes win7-boot-aura {0% {opacity:0;transform:scale(.6);}65%{opacity:1;}100%{opacity:.7;transform:scale(1.2);}}
+@media(prefers-reduced-motion:reduce){
+  #studioBoot .win7-boot-pane {animation:none;opacity:1;transform:rotate(-4deg);filter:none;}
+  #studioBoot .win7-boot-emblem::after {animation:none;opacity:.7;}
+}
