@@ -1,0 +1,109 @@
+/* Native Windows 7 desktop details; basic controls and glass frames come
+   from vendor/7css/7.scoped.css. This file only handles app-specific placement. */
+#studioDashboard .studio-win7-menubar[role=menubar] {
+  position:relative;z-index:35;
+  display:flex;min-height:29px;
+  padding:0 5px;
+  border-bottom:1px solid #a8bdd1;
+  font:12px/1.3 "Segoe UI",Tahoma,sans-serif;
+}
+#studioDashboard .studio-win7-menubar > li[role=menuitem] {
+  cursor:default;min-height:28px;padding:6px 11px;
+  outline-offset:-2px;
+}
+#studioDashboard .studio-win7-menubar > li[aria-expanded=true] {
+  color:white;background:linear-gradient(#70b9ea,#2f83c2);
+}
+#studioDashboard .studio-win7-menubar > li > [role=menu] {
+  min-width:235px;max-width:min(330px,95vw);
+  border-color:#6c849d;
+}
+#studioDashboard .studio-win7-menubar > li[aria-expanded=true] > [role=menu],
+#studioDashboard .studio-win7-menubar > li:focus-within > [role=menu] {display:block;}
+#studioDashboard .studio-win7-menubar [role=menu] button {
+  justify-content:space-between;gap:18px;cursor:default;
+}
+#studioDashboard .studio-win7-menubar [role=menu] button span {
+  opacity:.7;font-size:10px;
+}
+#studioDashboard .studio-desktop-icons {
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+}
+#studioDashboard .studio-desktop-shortcut, .studio-desktop-shortcut {
+  width:104px;min-height:103px;
+  padding:8px 5px;
+  line-height:1.3;
+  border:1px solid transparent;
+  border-radius:4px;
+}
+.studio-desktop-shortcut:focus-visible,.studio-desktop-shortcut:hover {
+  border-color:#d3e7ffcb;
+  background:linear-gradient(#d8f2ff43,#7abaff45);
+  outline:1px solid #fff7;
+}
+.studio-desktop-icon {
+  display:grid;place-items:center;
+  width:61px;height:61px;
+  border-radius:9px;
+  font-size:36px;color:#e7faff;
+  background:linear-gradient(140deg,#9bd5fa,#3a86bd 57%,#16548e);
+  box-shadow:inset 0 2px 4px #fff6,0 4px 8px #1742688c;
+  text-shadow:0 2px 3px #174268;
+}
+.studio-desktop-hint {
+  position:fixed;bottom:calc(var(--brat-taskbar-height) + 14px);left:24px;
+  color:#e5f6ff;text-shadow:0 1px 3px #0b3f66;font-size:11px;
+  pointer-events:none;
+}
+.studio-taskbar .studio-start-orb {
+  position:relative;overflow:visible;
+  border:1px solid #d5e3eb;
+  background:radial-gradient(circle at 37% 23%,#83d7ff,#256eb1 48%,#143b69 74%,#0b2747 93%);
+  box-shadow:inset 0 0 0 2px #c4f8ff33,inset 0 1px 3px #fff8,0 0 5px #2f7090;
+}
+.studio-taskbar .studio-start-orb:hover,
+.studio-taskbar .studio-start-orb[aria-expanded=true] {
+  background:radial-gradient(circle at 34% 20%,#bdfff8,#46aaec 42%,#27669a 73%,#153d67);
+  box-shadow:0 0 10px #b2f8ff88,inset 0 1px 4px #fff9;
+}
+.studio-start-windowmark {
+  display:grid;grid-template-columns:repeat(2,9px);grid-template-rows:repeat(2,9px);
+  gap:1px;transform:skewY(-8deg) rotate(-5deg);
+  filter:drop-shadow(0 1px 2px #072e4d);
+}
+.studio-start-windowmark i {display:block;border:1px solid #f9fffdbb;box-shadow:inset 0 2px 2px #fff8;}
+.studio-start-windowmark i:nth-child(1){background:linear-gradient(135deg,#fcb96b,#da5136);}
+.studio-start-windowmark i:nth-child(2){background:linear-gradient(135deg,#dcf893,#57b74d);}
+.studio-start-windowmark i:nth-child(3){background:linear-gradient(135deg,#83d4fb,#267bd3);}
+.studio-start-windowmark i:nth-child(4){background:linear-gradient(135deg,#fff8a2,#e4aa34);}
+.studio-taskbar .studio-show-desktop {
+  width:15px;min-width:15px;height:100%;
+  margin:-4px -10px -4px 2px;padding:0;
+  border:1px solid #c7e6f9b0;border-radius:0;
+  background:linear-gradient(90deg,#80b9e255,#e8f7ff66);
+}
+.studio-taskbar .studio-show-desktop:hover {
+  background:linear-gradient(#ffffff9c,#8bccfbb0);border-color:#fff;
+}
+.studio-taskbar-clock {
+  display:grid;gap:0;text-align:center;
+  font-size:10px;line-height:1.25;min-width:75px;
+}
+.studio-taskbar-clock time {display:block;font:11px/1.2 "Segoe UI",Tahoma,sans-serif;}
+.studio-taskbar-clock small {display:block;font:10px/1.2 "Segoe UI",Tahoma,sans-serif;}
+#studioStartMenu .studio-start-side {background:linear-gradient(110deg,#f5fdffcd,#b2d2e7e6 70%,#86afcc);}
+#studioStartMenu.studio-start-menu.window.glass.active {
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid #daedffd9;
+  box-shadow:0 0 0 1px #2e5f8eb3,0 12px 38px #07294a99;
+}
+body.studio-window-minimized #studioDashboard .studio-dashboard-inner,
+body.studio-window-closed #studioDashboard .studio-dashboard-inner {visibility:hidden;}
+@media (max-width:580px){
+ #studioDashboard .studio-win7-menubar {overflow:visible;padding:0 2px;font-size:11px;}
+ #studioDashboard .studio-win7-menubar > li[role=menuitem] {padding:7px 6px;}
+ #studioDashboard .studio-desktop-hint{display:none;}
+ .studio-taskbar .studio-show-desktop {margin-right:-6px;}
+ .studio-taskbar-clock{display:none;}
+}
