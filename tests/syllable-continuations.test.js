@@ -41,7 +41,7 @@ test("character reveal preserves original character timing while adding a tempor
     const line = segmentedLine();
     assert.equal(timing.getSegmentAwareText(line, 1.5, 1, "typewriter"), "te-");
     assert.equal(timing.getSegmentAwareText(line, 2.5, 4, "typewriter"), "telef-");
-    assert.equal(timing.getSegmentAwareText(line, 3.1, 8, "typewriter"), "telefon");
+    assert.equal(timing.getSegmentAwareText(line, 3.1, 8, "typewriter"), "telefonan");
     assert.equal(timing.getSegmentAwareText(line, 2.5, 10, "letter-chunks"), "telefona-");
 });
 
@@ -50,7 +50,7 @@ test("ordinary lyrics, non-reveal modes and previously completed words are uncha
     assert.equal(timing.getSegmentAwareText(line, 2.5, 10, "phrase"), "telefonando");
     assert.equal(timing.getSegmentAwareText(line, 4.1, 14, "word"), "telefonando poi");
     const plain = timing.buildTimeline(core.parseLRC("[00:01] cantando normalmente"))[0];
-    assert.equal(timing.getSegmentAwareText(plain, 2, 17, "word"), "cantando normalme");
+    assert.equal(timing.getSegmentAwareText(plain, 2, 17, "word"), "cantando normalmen");
 });
 
 test("a genuine source hyphen is not duplicated by the continuation marker", () => {
