@@ -288,7 +288,7 @@
                 cursor = part.endChar + 1;
             }
             if (cursor < word.endChar + 1 &&
-                !/^\\p{Punctuation}+$/u.test(sourceChars.slice(cursor, word.endChar + 1).join(""))) return;
+                !/^\p{Punctuation}+$/u.test(sourceChars.slice(cursor, word.endChar + 1).join(""))) return;
             const last = parts.at(-1);
             if (word.end < last.start) {
                 const nextWordStart = scheduled[index + 1]?.start ?? limit;
