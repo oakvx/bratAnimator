@@ -375,5 +375,35 @@
         return line?.timedTokens || [];
     }
 
-    return { graphemes, tokenize, wordWeight, analyzeAudioEnergy, buildTimeline, getTimedWordTokens };
+    // Decorate a partially revealed, natively segmented word without changing
+    // lyric text, native timestamps or the serialized project.
+    // The marker disappears when the final timed segment starts.
+    function getSegmentAwareText(line, timeSec, revealUntil, mode = "typewriter") {
+        const source = Array.from(String(line?.text || ""));
+        const index = Number(revealUntil);
+        let cutoff = Number.isFinite(index) ? clamp(Math.trunc(index), -1, source.length - 1) : -1;
+        const plain = () => source.slice(0, cutoff + 1).join("");
+        if (!["typewriter", "word", "letter-chunks"].includes(mode) || !Number.isFinite(timeSec)) return plain();
+
+        const active = (line?.timedWords || []).find(word =>
+            timeSec >= word.start && timeSec < word.end && Array.isArray(word.nativeSegments) && word.nativeSegments.length > 1
+        );
+        if (!active) return plain();
+
+        const segments = active.nativeSegments
+            .filter(segment => Number.isFinite(segment.start) && Number.isInteger(segment.endChar))
+            .sort((a, b) => a.start - b.start || a.startChar - b.startChar);
+        if (segments.length < 2) return plain();
+        const next = segments.findIndex(segment => timeSec < segment.start);
+        if (next <= 0) return plain();
+
+        // Whole-word and chunk animations must not disclose later syllables.
+        // Typewriter timing already respects the original per-character anchors.
+        if (mode !== "typewriter") cutoff = Math.min(cutoff, segments[next - 1].endChar);
+        const text = plain();
+        if (cutoff < active.startChar || cutoff >= active.endChar || /[-‐‑–—]$/u.test(text)) return text;
+        return text + "-";
+    }
+
+    return { graphemes, tokenize, wordWeight, analyzeAudioEnergy, buildTimeline, getTimedWordTokens, getSegmentAwareText };
 });
