@@ -129,6 +129,8 @@ Four text modes: **Brat**, **Music**, **Cinematic** and **Kinetic Collage**.
 
 Kinetic Collage uses resolution-independent 2D word packing: variable font sizes, adjacency constraints and safe canvas margins. Each stanza gets its own stable, isolated canvas; stanzas are separated by blank LRC lines or `[Verse]` / `[Chorus]` headings. Words appear at their timestamps with no fade, scale or automatic palette swap — the whole stanza is auto-fitted rather than split after a fixed word count. Preview and export share the same compositor and cached geometry.
 
+**Timed syllable continuations:** In Brat typewriter/word/chunk animation, imported TTML or Enhanced LRC can split one word into several timed fragments. An incomplete fragment receives a temporary trailing hyphen, removed when the final segment starts. Original lyrics and timestamps stay untouched. See [timed syllable continuations](docs/syllable-continuations.md).
+
 The *lowercase lyrics* tool (Timing) rewrites lyric text without touching LRC markers or imported word timing. Details: [docs/kinetic-stanzas-lowercase.md](docs/kinetic-stanzas-lowercase.md).
 
 Canvas layout and source timestamps are independent of dashboard effects. Dashboard click sounds are synthesized with Web Audio and are **never mixed into exports**.

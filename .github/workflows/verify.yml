@@ -46,6 +46,7 @@ jobs:
           node --check assets/js/backup-reminders.js
           node --check assets/js/win7-sound-pack.js
           node --check assets/js/dashboard-audio.js
+          node --check assets/js/timing.js
           node --check assets/js/app.js
           node --check assets/js/editor-v5.js
           node --check assets/js/project-assets.js

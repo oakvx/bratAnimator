@@ -29,6 +29,9 @@ Run these checks before tagging a release or pushing to GitHub Pages.
 - Confirm blocked YouTube embeds show the fallback link instead of breaking the layout.
 - Upload LRC, edit timestamps/text, split at caret, merge, move, duplicate, delete, and undo/redo.
 - Multi-select lyric rows, shift the selected timing, replay a selected lyric, and drag lyric markers on the waveform/timeline.
+- In Brat word reveal, import TTML or Enhanced LRC with multiple timed syllables in one word. Check a temporary `-` after nonfinal fragments and its removal at the last fragment's onset.
+- Repeat in Brat typewriter and letter-chunks modes, scrub backward/forward across boundaries, and compare exported PNG and video frames with the preview.
+- Confirm native timing and lyric text are not modified, that normal single-segment words are untouched, and that existing literal hyphens are not duplicated.
 
 ## Media
 

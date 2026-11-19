@@ -165,6 +165,7 @@
         const words = tokens.filter(token => !token.isSpace);
         const anchors = new Map([[0, line.timestamp]]);
         const nativeSegments = [];
+        const allTimedSegments = [];
         const seenWords = new Set();
         let searchCursor = 0;
         let previous = line.timestamp;
@@ -181,12 +182,14 @@
             if (start !== marker.timestamp) warnings.push("Word timestamp outside its line or out of order");
             // Several native syllables can belong to one displayed word. Its
             // onset is the first syllable, never the final one.
-            if (!isNative || !seenWords.has(wordIndex)) anchors.set(wordIndex, start);
+            if (!seenWords.has(wordIndex)) anchors.set(wordIndex, start);
             seenWords.add(wordIndex);
-            if (isNative && marker.endTimestamp >= marker.timestamp) nativeSegments.push({
+            const timedPart = {
                 startChar: point, endChar: point + Array.from(markerText).length - 1,
-                start: marker.timestamp, end: marker.endTimestamp
-            });
+                start, end: isNative && marker.endTimestamp >= marker.timestamp ? marker.endTimestamp : undefined
+            };
+            allTimedSegments.push(timedPart);
+            if (Number.isFinite(timedPart.end)) nativeSegments.push({ ...timedPart });
             previous = start;
             searchCursor = position + markerText.length;
         }
@@ -271,6 +274,36 @@
                 sustainDuration: 0, pauseDuration: 0, nativeSegments: segments
             };
         });
+        // Enhanced LRC can mark multiple fragments of a single word without
+        // explicit end times. Preserve each onset for display and character
+        // reveal, without promoting estimated ends to native timing.
+        scheduled.forEach((word, index) => {
+            const parts = allTimedSegments
+                .filter(part => part.startChar >= word.startChar && part.endChar <= word.endChar)
+                .sort((a, b) => a.startChar - b.startChar);
+            if (parts.length < 2) return;
+            let cursor = word.startChar;
+            for (const part of parts) {
+                if (part.startChar !== cursor) return;
+                cursor = part.endChar + 1;
+            }
+            if (cursor < word.endChar + 1 &&
+                !/^\p{Punctuation}+$/u.test(sourceChars.slice(cursor, word.endChar + 1).join(""))) return;
+            const last = parts.at(-1);
+            if (word.end < last.start) {
+                const nextWordStart = scheduled[index + 1]?.start ?? limit;
+                const estimated = last.start + Math.min(0.35, Math.max(0.10, (last.endChar - last.startChar + 1) * 0.07));
+                word.end = Math.max(word.end, Number.isFinite(nextWordStart)
+                    ? Math.min(estimated, Math.max(nextWordStart, last.start))
+                    : estimated);
+                word.revealEnd = Math.min(word.end, Math.max(word.revealEnd, last.start));
+                word.sustainDuration = Math.max(0, word.end - word.revealEnd);
+            }
+            word.continuationSegments = parts.map((part, partIndex) => ({
+                ...part,
+                end: Number.isFinite(part.end) ? part.end : parts[partIndex + 1]?.start ?? word.end
+            }));
+        });
         return scheduled;
     }
 
@@ -333,7 +366,7 @@
                 const revealDuration = word.revealEnd - word.start;
                 letters.forEach((letter, index) => {
                     const startChar = word.startChar + letter.startChar;
-                    const segment = word.nativeSegments?.find(segment => startChar >= segment.startChar && startChar <= segment.endChar);
+                    const segment = (word.continuationSegments || word.nativeSegments)?.find(segment => startChar >= segment.startChar && startChar <= segment.endChar);
                     const duration = segment ? (segment.end - segment.start) / Math.max(1, segment.endChar - segment.startChar + 1) : revealDuration / Math.max(1, letters.length);
                     const timestamp = segment ? segment.start + duration * (startChar - segment.startChar) : word.start + revealDuration * index / Math.max(1, letters.length);
                     chars.push({ ...letter, startChar, endChar: word.startChar + letter.endChar, timestamp, duration, lineIndex, wordIndex: word.wordIndex });
@@ -375,5 +408,35 @@
         return line?.timedTokens || [];
     }
 
-    return { graphemes, tokenize, wordWeight, analyzeAudioEnergy, buildTimeline, getTimedWordTokens };
+    // Decorate a partially revealed, natively segmented word without changing
+    // lyric text, native timestamps or the serialized project.
+    // The marker disappears when the final timed segment starts.
+    function getSegmentAwareText(line, timeSec, revealUntil, mode = "typewriter") {
+        const source = Array.from(String(line?.text || ""));
+        const index = Number(revealUntil);
+        let cutoff = Number.isFinite(index) ? clamp(Math.trunc(index), -1, source.length - 1) : -1;
+        const plain = () => source.slice(0, cutoff + 1).join("");
+        if (!["typewriter", "word", "letter-chunks"].includes(mode) || !Number.isFinite(timeSec)) return plain();
+
+        const active = (line?.timedWords || []).find(word =>
+            timeSec >= word.start && timeSec < word.end && (word.continuationSegments || word.nativeSegments)?.length > 1
+        );
+        if (!active) return plain();
+
+        const segments = (active.continuationSegments || active.nativeSegments)
+            .filter(segment => Number.isFinite(segment.start) && Number.isInteger(segment.endChar))
+            .sort((a, b) => a.start - b.start || a.startChar - b.startChar);
+        if (segments.length < 2) return plain();
+        const next = segments.findIndex(segment => timeSec < segment.start);
+        if (next <= 0) return plain();
+
+        // Whole-word and chunk animations must not disclose later syllables.
+        // Typewriter timing already respects the original per-character anchors.
+        if (mode !== "typewriter") cutoff = Math.min(cutoff, segments[next - 1].endChar);
+        const text = plain();
+        if (cutoff < active.startChar || cutoff >= active.endChar || /[-‐‑–—]$/u.test(text)) return text;
+        return text + "-";
+    }
+
+    return { graphemes, tokenize, wordWeight, analyzeAudioEnergy, buildTimeline, getTimedWordTokens, getSegmentAwareText };
 });
