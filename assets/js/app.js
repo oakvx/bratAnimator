@@ -941,7 +941,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                     revealUntil = wordChars[chunkEnd]?.endChar ?? revealUntil;
                 }
             }
-            return { ...result, text: Array.from(line.text).slice(0, revealUntil + 1).join("") };
+            return { ...result, text: BratTiming.getSegmentAwareText(line, timeSec, revealUntil, mode) };
         }
 
         function measureWrappedLines(ctx, text, maxWidth) {
