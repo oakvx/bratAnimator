@@ -66,3 +66,25 @@ test("a genuine source hyphen is not duplicated by the continuation marker", () 
     };
     assert.equal(timing.getSegmentAwareText(line, 2, 12, "word"), "tele-");
 });
+
+test("Enhanced LRC subword anchors do not overwrite the first syllable onset", () => {
+    const lrc = "[00:01.00] <00:01.00>tele<00:02.00>fona<00:03.00>ndo<00:03.50>";
+    const line = timing.buildTimeline(core.parseLRC(lrc))[0];
+    assert.equal(line.timedWords.length, 1);
+    assert.equal(line.timedWords[0].start, 1);
+    assert.equal(line.timedWords[0].continuationSegments.length, 3);
+    assert.equal(line.chars.find(char => char.startChar === 4).timestamp, 2);
+    assert.equal(line.chars.find(char => char.startChar === 8).timestamp, 3);
+    assert.equal(timing.getSegmentAwareText(line, 1.5, 10, "word"), "tele-");
+    assert.equal(timing.getSegmentAwareText(line, 2.5, 10, "word"), "telefona-");
+    assert.equal(timing.getSegmentAwareText(line, 3.2, 10, "word"), "telefonando");
+});
+
+test("Enhanced LRC final fragment without an end marker stays visible", () => {
+    const lrc = "[00:01.00] <00:01.00>tele<00:02.00>fona<00:03.00>ndo\n[00:04.00] dopo";
+    const [line] = timing.buildTimeline(core.parseLRC(lrc));
+    assert.equal(line.timedWords[0].start, 1);
+    assert.ok(line.timedWords[0].end >= 3);
+    assert.equal(timing.getSegmentAwareText(line, 2.5, 10, "word"), "telefona-");
+    assert.equal(timing.getSegmentAwareText(line, 3.01, 10, "word"), "telefonando");
+});
