@@ -680,16 +680,6 @@
         if (!$("studioProjectDialog").hidden) closeProjectDialog();
     });
 
-    // Mobile editor has no persistent sidebar; provide a one-click return.
-    const backButton = document.createElement("button");
-    backButton.id = "studioBackToHome";
-    backButton.type = "button";
-    backButton.className = "studio-editor-back";
-    backButton.textContent = "← Studio";
-    backButton.setAttribute("aria-label", "Torna alla dashboard");
-    backButton.addEventListener("click", () => viewSwitch("home"));
-    document.querySelector(".topbar")?.prepend(backButton);
-
     document.body.classList.add("studio-active");
     // Preserve existing portable project links: they must open the editor.
     // BRATCODE links prefill the import field; importing always requires

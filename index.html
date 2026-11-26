@@ -329,6 +329,7 @@
     <script src="assets/js/export-preflight.js" defer></script>
     <script src="assets/js/editor-templates.js" defer></script>
     <script src="assets/js/win7-window-menu.js" defer></script>
+    <script src="assets/js/editor-window.js" defer></script>
     <script src="assets/js/win7-boot.js" defer></script>
 </head>
 
@@ -751,70 +752,77 @@
         </section>
     </div>
 
-    <div id="studioEditorChrome" class="studio-editor-chrome win7" role="region" aria-label="Brat Animator editor window">
-        <div class="window glass active">
+    <div id="studioEditorChrome" class="studio-editor-window win7" role="region" aria-label="Brat Animator — Editor">
+      <div class="window glass active">
         <div class="title-bar">
-            <div class="title-bar-text"><img src="favicon.svg" alt="" width="18" height="18" class="studio-title-icon"> Brat Animator — Editor</div>
+            <div class="title-bar-text"><img src="favicon.svg" alt="" width="16" height="16" class="studio-title-icon"> Brat Animator — Editor</div>
             <div class="title-bar-controls">
                 <button id="studioEditorMinimize" type="button" aria-label="Minimize" title="Riduci l'editor sul desktop"></button>
                 <button id="studioEditorMaximize" type="button" aria-label="Maximize" title="Ingrandisci"></button>
                 <button id="studioEditorClose" type="button" aria-label="Close" title="Chiudi l'editor e torna al desktop"></button>
             </div>
         </div>
+        <button id="editorMenuToggle" class="editor-menu-toggle" type="button" aria-controls="editorMenuBar" aria-expanded="false" data-i18n="menuToggle">Menu</button>
+        <ul id="editorMenuBar" class="editor-menubar" role="menubar" aria-label="Menu editor">
+            <li role="menuitem" tabindex="0" aria-haspopup="true" aria-expanded="false"><span data-i18n="menuFile">File</span>
+                <ul role="menu">
+                    <li role="menuitem"><button type="button" data-win7-command="new" data-i18n="menuNew">Nuovo progetto</button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="projects" data-i18n="menuProjects">Apri progetti</button></li>
+                    <li role="menuitem"><button id="loadDemoBtn" type="button" data-i18n="loadDemo">Carica esempio</button></li>
+                    <li role="menuitem" class="has-divider"><button type="button" data-win7-command="snapshot" data-i18n="menuSnapshot">Salva snapshot…</button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="bundle" data-i18n="menuBundle">Progetto completo…</button></li>
+                    <li role="menuitem" class="has-divider"><button type="button" data-win7-command="close-editor" data-i18n="menuCloseEditor">Chiudi editor</button></li>
+                </ul>
+            </li>
+            <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false"><span data-i18n="menuEdit">Modifica</span>
+                <ul role="menu">
+                    <li role="menuitem"><button type="button" data-win7-command="undo-text"><span data-i18n="menuUndoText">Annulla testo e stile</span> <kbd>Ctrl+Z</kbd></button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="redo-text"><span data-i18n="menuRedoText">Ripeti testo e stile</span> <kbd>Ctrl+Y</kbd></button></li>
+                    <li role="menuitem" class="has-divider"><button type="button" data-win7-command="undo-timeline" data-i18n="menuUndoTimeline">Annulla timeline</button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="redo-timeline" data-i18n="menuRedoTimeline">Ripeti timeline</button></li>
+                    <li role="menuitem" class="has-divider"><button id="commandPaletteBtn" type="button" aria-haspopup="dialog" aria-controls="commandPalette"><span data-i18n="menuCommands">Comandi…</span> <kbd>Ctrl+K</kbd></button></li>
+                </ul>
+            </li>
+            <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false"><span data-i18n="menuView">Visualizza</span>
+                <ul role="menu">
+                    <li role="menuitem"><button id="togglePanelBtn" type="button" role="menuitemcheckbox" aria-checked="true" aria-controls="panel" aria-expanded="true" data-i18n="panelToggle">Pannello laterale</button></li>
+                    <li role="menuitem"><button id="textSettingsBtn" type="button" data-open-text-settings aria-controls="textSettings" data-i18n="textSettings">Impostazioni testo</button></li>
+                    <li role="menuitem" class="has-divider"><button type="button" data-win7-command="fit" data-i18n="menuFit">Adatta anteprima</button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="fullscreen" data-i18n="menuFullscreen">Schermo intero</button></li>
+                    <li role="menuitem" class="has-divider"><button id="bgBtn" type="button" role="menuitemradio" data-i18n="menuGreen">Sfondo verde</button></li>
+                    <li role="menuitem"><button id="darkBtn" type="button" role="menuitemradio" data-i18n="menuDark">Sfondo scuro</button></li>
+                </ul>
+            </li>
+            <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false"><span data-i18n="menuLanguage">Lingua</span>
+                <ul role="menu">
+                    <li role="menuitem"><button class="lang-btn" type="button" role="menuitemradio" data-lang="it" lang="it">Italiano</button></li>
+                    <li role="menuitem"><button class="lang-btn" type="button" role="menuitemradio" data-lang="en" lang="en">English</button></li>
+                    <li role="menuitem"><button class="lang-btn" type="button" role="menuitemradio" data-lang="ru" lang="ru">Русский</button></li>
+                    <li role="menuitem"><button class="lang-btn" type="button" role="menuitemradio" data-lang="zh" lang="zh-CN">中文</button></li>
+                </ul>
+            </li>
+            <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false"><span>?</span>
+                <ul role="menu">
+                    <li role="menuitem"><button id="tutorialBtn" type="button"><span data-i18n="menuTour">Guida introduttiva</span> <kbd>F1</kbd></button></li>
+                    <li role="menuitem"><a id="permissionLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&amp;body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">Richiedi autorizzazione</a></li>
+                    <li role="menuitem" class="has-divider"><button type="button" data-win7-command="about" data-i18n="menuAbout">Informazioni su Brat Animator</button></li>
+                </ul>
+            </li>
+        </ul>
+        <div id="editorToolbar" class="editor-toolbar" role="toolbar" aria-label="Strumenti editor">
+            <button id="studioBackToHome" type="button" data-editor-action="studio" aria-label="Torna allo studio" data-i18n="toolStudio">Studio</button>
+            <button id="toolbarPlayBtn" type="button" data-editor-action="play" aria-pressed="false" data-i18n="toolPlay">Riproduci</button>
+            <button type="button" data-editor-action="split" data-i18n="toolSplit">Dividi clip</button>
+            <button type="button" class="default" data-editor-action="export" data-i18n="toolExport">Esporta…</button>
+            <span class="editor-toolbar-spacer"></span>
+            <span class="autosave-pill" id="autosaveBadge" aria-live="polite">caricamento…</span>
         </div>
-    </div>
-    <header class="topbar main-menu-v4 win7" aria-label="main menu">
-        <a class="menu-brand" href="#editor" aria-label="Brat Animator editor">
-            <img class="editor-menu-icon" src="favicon.svg" alt="" width="23" height="23" decoding="async">
-            <span class="menu-brand-copy">
-                <strong>brat animator</strong>
-                <span>5.0</span>
-            </span>
-        </a>
-
-        <nav class="menu-command-group" aria-label="editor commands">
-            <button id="togglePanelBtn" class="chip" data-i18n="controls" aria-controls="panel" aria-expanded="true">controls</button>
-            <button id="textSettingsBtn" class="chip settings-trigger" type="button" data-open-text-settings aria-controls="textSettings" data-i18n="settings">settings</button>
-            <button id="loadDemoBtn" class="chip" data-i18n="loadDemo">load demo</button>
-            <button id="commandPaletteBtn" class="chip command-trigger" type="button" aria-haspopup="dialog" aria-controls="commandPalette">commands <kbd>Ctrl K</kbd></button>
-            <button id="tutorialBtn" class="chip" type="button">help</button>
-        </nav>
-        <div class="menu-spacer" aria-hidden="true"></div>
-        <div class="footer-controls menu-command-group theme-switch" aria-label="theme controls">
-            <button id="bgBtn">green</button>
-            <button id="darkBtn">dark</button>
-        </div>
-        <div class="lang-switch menu-command-group" aria-label="language selector">
-            <button class="chip lang-btn" data-lang="it" aria-label="Italiano">IT</button>
-            <button class="chip lang-btn" data-lang="en" aria-label="English">EN</button>
-            <button class="chip lang-btn" data-lang="ru" aria-label="Русский">RU</button>
-            <button class="chip lang-btn" data-lang="zh" aria-label="中文">ZH</button>
-        </div>
-        <a id="permissionLink" class="chip link-chip" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="requestPermission">request permission</a>
-    </header>
-
+        <div class="window-body editor-body">
     <div id="panel" class="panel" aria-label="editor controls">
-        <div class="panel-header">
-            <div>
-                <h1 data-i18n="panelTitle">brat studio</h1>
-                <p data-i18n="panelIntro">
-                    Edit lyrics, organize media tracks and export videos or still frames using the timeline.
-                </p>
-            </div>
-            <span class="autosave-pill" id="autosaveBadge" aria-live="polite">loading local save…</span>
-        </div>
-
         <div id="recoveryBanner" class="recovery-banner hidden" role="status">
             <span data-i18n="recoveryText">autosaved project restored in this browser</span>
             <button id="recoveryKeepBtn" type="button" data-i18n="recoveryKeep">keep</button>
             <button id="recoveryDiscardBtn" type="button" data-i18n="recoveryDiscard">discard</button>
-        </div>
-
-        <div class="project-status-bar" aria-label="project status">
-            <div><span>duration</span><strong id="statusDuration">0.00s</strong></div>
-            <div><span>format</span><strong id="statusFormat">1080×1080</strong></div>
-            <div><span>fps</span><strong id="statusFps">30</strong></div>
-            <div><span>lines</span><strong id="statusLines">0</strong></div>
         </div>
 
         <div class="win7 editor-tab-strip">
@@ -1458,67 +1466,7 @@
             </div>
         </div>
 
-        <div class="sidebar-action-dock">
-            <button id="dockPreviewBtn" type="button">preview</button>
-            <button id="dockExportBtn" class="primary" type="button">export</button>
-        </div>
     </div>
-
-    <div id="permissionNotice" class="permission-notice-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
-        <div class="permission-notice-card" tabindex="-1">
-            <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">usage note</p>
-            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">usage and publishing permissions</h2>
-            <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
-                You can use Brat Animator without creating an account. To publish, share publicly, redistribute,
-                self-host, commercialize, or integrate anything made with it, please ask permission first.
-            </p>
-            <div class="permission-notice-actions">
-                <button id="permissionNoticeAckBtn" type="button" class="primary" data-i18n="permissionNoticeAcknowledge">i understand</button>
-                <a id="permissionNoticeRequestLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="permissionNoticePermission">ask permission</a>
-            </div>
-        </div>
-    </div>
-
-    <div id="tutorialOverlay" class="tutorial-overlay win7 hidden" role="dialog" aria-modal="false" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
-        <div class="tutorial-card window glass active win7">
-            <div class="title-bar">
-                <div class="title-bar-text"><img src="favicon.svg" width="16" height="16" alt=""> Guida introduttiva — Brat Animator</div>
-                <div class="title-bar-controls"><button id="tutorialWindowClose" type="button" aria-label="Chiudi guida" title="Chiudi"></button></div>
-            </div>
-            <div class="window-body">
-                <div class="tutorial-heading"><span class="tutorial-kicker">BRAT STUDIO / GUIDED TOUR</span><span id="tutorialProgress" class="tutorial-progress">1 / 8</span></div>
-                <progress id="tutorialBar" class="tutorial-bar" value="1" max="8" aria-label="Progresso guida"></progress>
-                <h2 id="tutorialTitle">Discover your workspace</h2>
-                <p id="tutorialBody">Learn the editor with real interactions.</p>
-                <div id="tutorialTip" class="tutorial-tip" hidden></div>
-                <div id="tutorialStepNav" class="tutorial-step-nav" aria-label="Passaggi della guida"></div>
-                <div class="tutorial-actions">
-                    <button id="tutorialSkipBtn" type="button">Chiudi</button>
-                    <button id="tutorialBackBtn" type="button">Indietro</button>
-                    <button id="tutorialActionBtn" type="button" class="hidden">Prova</button>
-                    <button id="tutorialNextBtn" type="button" class="primary">Avanti</button>
-                </div>
-                <p class="tutorial-keyboard">← → per navigare · Esc per uscire · F1 per riaprire</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
-        <div class="command-palette-card">
-            <h2 id="commandPaletteTitle">commands</h2>
-            <input id="commandPaletteInput" type="search" placeholder="type a command" aria-label="command search" />
-            <div id="commandPaletteList" class="command-palette-list"></div>
-        </div>
-    </div>
-
-    <div id="playerWrap" class="player-wrap hidden">
-        <div class="player-head">
-            <strong data-i18n="videoPreview">video preview</strong>
-            <button id="closePlayerBtn" data-i18n="closePreview">close preview</button>
-        </div>
-        <div id="playerBox" class="player-box"></div>
-    </div>
-
     <main class="page-shell">
         <div class="app" id="editor">
             <div class="stage-wrap">
@@ -1582,6 +1530,71 @@
             </section>
         </div>
     </main>
+        </div>
+        <div class="status-bar">
+            <p class="status-bar-field"><span data-i18n="duration">durata</span> <strong id="statusDuration">0.00s</strong></p>
+            <p class="status-bar-field"><span data-i18n="format">formato</span> <strong id="statusFormat">1080×1080</strong></p>
+            <p class="status-bar-field"><span>fps</span> <strong id="statusFps">30</strong></p>
+            <p class="status-bar-field"><span data-i18n="lines">righe</span> <strong id="statusLines">0</strong></p>
+            <p class="status-bar-field" id="editorStorageStatus" data-i18n="storageLocal">archivio locale</p>
+        </div>
+      </div>
+    </div>
+    <div id="permissionNotice" class="permission-notice-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
+        <div class="permission-notice-card" tabindex="-1">
+            <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">usage note</p>
+            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">usage and publishing permissions</h2>
+            <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
+                You can use Brat Animator without creating an account. To publish, share publicly, redistribute,
+                self-host, commercialize, or integrate anything made with it, please ask permission first.
+            </p>
+            <div class="permission-notice-actions">
+                <button id="permissionNoticeAckBtn" type="button" class="primary" data-i18n="permissionNoticeAcknowledge">i understand</button>
+                <a id="permissionNoticeRequestLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="permissionNoticePermission">ask permission</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="tutorialOverlay" class="tutorial-overlay win7 hidden" role="dialog" aria-modal="false" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
+        <div class="tutorial-card window glass active win7">
+            <div class="title-bar">
+                <div class="title-bar-text"><img src="favicon.svg" width="16" height="16" alt=""> Guida introduttiva — Brat Animator</div>
+                <div class="title-bar-controls"><button id="tutorialWindowClose" type="button" aria-label="Close" title="Chiudi guida"></button></div>
+            </div>
+            <div class="window-body">
+                <div class="tutorial-heading"><span class="tutorial-kicker">BRAT STUDIO / GUIDED TOUR</span><span id="tutorialProgress" class="tutorial-progress">1 / 8</span></div>
+                <progress id="tutorialBar" class="tutorial-bar" value="1" max="8" aria-label="Progresso guida"></progress>
+                <h2 id="tutorialTitle">Discover your workspace</h2>
+                <p id="tutorialBody">Learn the editor with real interactions.</p>
+                <div id="tutorialTip" class="tutorial-tip" hidden></div>
+                <div id="tutorialStepNav" class="tutorial-step-nav" aria-label="Passaggi della guida"></div>
+                <div class="tutorial-actions">
+                    <button id="tutorialSkipBtn" type="button">Chiudi</button>
+                    <button id="tutorialBackBtn" type="button">Indietro</button>
+                    <button id="tutorialActionBtn" type="button" class="hidden">Prova</button>
+                    <button id="tutorialNextBtn" type="button" class="primary">Avanti</button>
+                </div>
+                <p class="tutorial-keyboard">← → per navigare · Esc per uscire · F1 per riaprire</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+        <div class="command-palette-card">
+            <h2 id="commandPaletteTitle">commands</h2>
+            <input id="commandPaletteInput" type="search" placeholder="type a command" aria-label="command search" />
+            <div id="commandPaletteList" class="command-palette-list"></div>
+        </div>
+    </div>
+
+    <div id="playerWrap" class="player-wrap hidden">
+        <div class="player-head">
+            <strong data-i18n="videoPreview">video preview</strong>
+            <button id="closePlayerBtn" data-i18n="closePreview">close preview</button>
+        </div>
+        <div id="playerBox" class="player-box"></div>
+    </div>
+
 </body>
 
 </html>

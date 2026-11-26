@@ -60,6 +60,26 @@ try {
         BratEditorNav.openTab('lyrics');
         return tab.dataset.openTab;
     }));
+    await test('menu commands reopen a hidden panel on the right tab', () => evaluate(() => {
+        if (!panel.classList.contains('hidden')) togglePanelBtn.click();
+        auditAssert(panel.classList.contains('hidden'), 'panel did not hide');
+        auditAssert(togglePanelBtn.getAttribute('aria-checked') === 'false', 'panel menu check stale');
+        const view = [...document.querySelectorAll('#editorMenuBar > [aria-haspopup="true"]')][2];
+        view.click();
+        auditAssert(view.getAttribute('aria-expanded') === 'true', 'view menu did not open');
+        document.getElementById('textSettingsBtn').click();
+        auditAssert(view.getAttribute('aria-expanded') === 'false', 'menu stayed open');
+        auditAssert(!panel.classList.contains('hidden'), 'panel still hidden');
+        auditAssert(document.querySelector('.editor-tab[aria-selected="true"]').dataset.openTab === 'style', 'wrong tab');
+        document.querySelector('#editorMenuBar [data-win7-command="snapshot"]').click();
+        auditAssert(document.querySelector('.editor-tab[aria-selected="true"]').dataset.openTab === 'export', 'snapshot did not open export tab');
+        document.querySelector('#editorMenuBar .lang-btn[data-lang="it"]').click();
+        auditAssert(document.documentElement.lang === 'it', 'language menu failed');
+        auditAssert(document.querySelector('#editorMenuBar .lang-btn[data-lang="it"]').getAttribute('aria-checked') === 'true', 'language check stale');
+        document.querySelector('#editorMenuBar .lang-btn[data-lang="en"]').click();
+        BratEditorNav.openTab('lyrics');
+        return 'ok';
+    }));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
         const select = document.getElementById('editorModeSelect'); select.value = 'advanced'; select.dispatchEvent(new Event('change', { bubbles: true }));

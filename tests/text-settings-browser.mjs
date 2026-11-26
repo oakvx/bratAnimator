@@ -275,7 +275,7 @@ try {
                 document.querySelector(`[data-lang="${language}"]`).click();
                 // On 320px screens the topbar intentionally hides its
                 // settings control; the stage retains a visible equivalent.
-                const visibleSettingsTrigger = innerWidth <= 360 ? 'stageTextSettingsBtn' : 'textSettingsBtn';
+                const visibleSettingsTrigger = 'stageTextSettingsBtn';
                 if (visibleSettingsTrigger === 'stageTextSettingsBtn') {
                     const stageButton = document.getElementById(visibleSettingsTrigger);
                     stageButton.scrollIntoView({ behavior: 'instant', block: 'center' });
@@ -285,7 +285,7 @@ try {
                 document.getElementById(visibleSettingsTrigger).click();
                 window.dispatchEvent(new Event('resize'));
                 await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-                auditAssert(document.getElementById('textSettingsBtn').textContent === expected.settings, 'header translation missing');
+                auditAssert(document.getElementById('textSettingsBtn').textContent === expected.textSettings, 'menu translation missing');
                 auditAssert(document.getElementById('stageTextSettingsBtn').textContent === expected.textSettings, 'stage translation missing');
                 auditAssert(document.querySelector('#textSettings legend').textContent === expected.textSettings, 'legend translation missing');
                 auditAssert(document.querySelector('label[for="fontScaleInput"]').textContent === expected.textSize, 'size label translation missing');
@@ -297,7 +297,7 @@ try {
                 const trigger = document.getElementById(visibleSettingsTrigger);
                 const rect = trigger.getBoundingClientRect();
                 const legend = document.querySelector('#textSettings legend').getBoundingClientRect();
-                const header = document.querySelector('.topbar').getBoundingClientRect();
+                const header = document.getElementById('editorToolbar').getBoundingClientRect();
                 // The stage trigger scrolls out of view when it opens text
                 // settings far below the preview. That is expected behavior:
                 // don't require both distant elements to remain in the viewport.

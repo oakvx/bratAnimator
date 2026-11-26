@@ -61,6 +61,7 @@ const APP_ASSETS = [
   "./assets/js/export-preflight.js",
   "./assets/js/editor-templates.js",
   "./assets/js/editor-tabs.js",
+  "./assets/js/editor-window.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
   "./favicon.svg",

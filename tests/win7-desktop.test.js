@@ -15,7 +15,8 @@ test("7.css menubar includes actionable File/Edit/View/Tools/Help groups", () =>
     const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
     const css = fs.readFileSync(path.join(__dirname, "../vendor/7css/7.scoped.css"), "utf8");
     assert.match(html, /id="studioWin7MenuBar" role="menubar"/);
-    assert.equal((html.match(/<li role="menuitem" tabindex="[^"]+" aria-haspopup="true"/g) || []).length, 5);
+    const studioMenu = html.slice(html.indexOf('id="studioWin7MenuBar"'), html.indexOf('id="studioNav"'));
+    assert.equal((studioMenu.match(/<li role="menuitem" tabindex="[^"]+" aria-haspopup="true"/g) || []).length, 5);
     for (const action of ["new","projects","editor","timeline","minimize","maximize","help","about","settings","sounds"]) {
         assert.ok(html.includes('data-win7-command="' + action + '"'), action + " missing");
     }

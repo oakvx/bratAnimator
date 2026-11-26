@@ -2253,13 +2253,14 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             document.body.classList.toggle("panel-open", isOpen);
             document.body.classList.toggle("panel-closed", !isOpen);
             togglePanelBtn.setAttribute("aria-expanded", String(isOpen));
+            togglePanelBtn.setAttribute("aria-checked", String(isOpen));
         }
 
         function syncThemeButtons() {
             bgBtn.classList.toggle("active", state.theme === "green");
             darkBtn.classList.toggle("active", state.theme === "dark");
-            bgBtn.setAttribute("aria-pressed", String(state.theme === "green"));
-            darkBtn.setAttribute("aria-pressed", String(state.theme === "dark"));
+            bgBtn.setAttribute("aria-checked", String(state.theme === "green"));
+            darkBtn.setAttribute("aria-checked", String(state.theme === "dark"));
         }
 
         function rebuildTimelineFromCurrentInputs() {
@@ -5809,8 +5810,6 @@ async function updateExportEstimate() {
 (function setupEditorSidebarUpgrade() {
     const tabs = Array.from(document.querySelectorAll('.editor-tab'));
     const sections = Array.from(document.querySelectorAll('.editor-section'));
-    const dockPreviewBtn = document.getElementById('dockPreviewBtn');
-    const dockExportBtn = document.getElementById('dockExportBtn');
     const sidebarExportProjectBtn = document.getElementById('sidebarExportProjectBtn');
     const sidebarClearSavedBtn = document.getElementById('sidebarClearSavedBtn');
     const autosaveBadge = document.getElementById('autosaveBadge');
@@ -6282,42 +6281,6 @@ async function updateExportEstimate() {
         if (event.key === 'ArrowLeft' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)) {
             goToPreviousTutorialStep();
         }
-    });
-
-    dockPreviewBtn?.addEventListener('click', () => {
-        openEditorTab('timing');
-        const parsed = parseLRC(
-            lyricsInput.value,
-            startFromZeroCheckbox.checked,
-            getActiveAudioAnalysis()
-        );
-
-        if (!lyricsInput.value.trim()) {
-            meta.textContent = 'paste or load LRC lyrics to preview';
-            lyricsInput.focus();
-            return;
-        }
-
-        if (!parsed.length) {
-            meta.textContent = 'use [MM:SS.xx] timestamps before previewing';
-            lyricsInput.focus();
-            return;
-        }
-
-        state.timeline = parsed;
-        startFromBeginning();
-    });
-
-    dockExportBtn?.addEventListener('click', () => {
-        if (!lyricsInput.value.trim()) {
-            openEditorTab('timing');
-            meta.textContent = 'paste or load LRC lyrics before exporting';
-            lyricsInput.focus();
-            return;
-        }
-
-        openEditorTab('export');
-        exportVideoBtn.click();
     });
 
     sidebarExportProjectBtn?.addEventListener('click', () => exportProjectBtn?.click());
