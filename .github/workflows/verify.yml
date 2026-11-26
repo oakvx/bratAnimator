@@ -39,6 +39,7 @@ jobs:
           node --check assets/js/timeline-core.js
           node --check assets/js/timeline-editor.js
           node --check assets/js/editor-templates.js
+          node --check assets/js/editor-tabs.js
           node --check assets/js/tiktok-link.js
           node --check assets/js/tiktok-login.js
           node --check assets/js/tiktok-config.js

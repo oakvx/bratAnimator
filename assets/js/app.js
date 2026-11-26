@@ -4115,7 +4115,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
         }
 
         function showTab(tabName) {
-            document.querySelector(`[data-open-tab="${tabName}"]`)?.click();
+            window.BratEditorNav?.openTab(tabName);
         }
 
         const commandDefinitions = [
@@ -4612,7 +4612,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
             if (youtubeVideoId) {
                 loadInvidiousPlayer(youtubeVideoId);
                 updateAudioStatus("YouTube cannot be downloaded here. Use it as preview, then upload an audio/video file or paste a direct CORS-enabled media URL you can use.", true);
-                document.querySelector('[data-open-tab="timing"]')?.click();
+                window.BratEditorNav?.openTab("timing");
                 return;
             }
 
@@ -5080,7 +5080,7 @@ async function updateExportEstimate() {
         playerBox?.addEventListener("click", (event) => {
             const addMediaButton = event.target.closest?.(".yt-add-media-btn");
             if (!addMediaButton) return;
-            document.querySelector('[data-open-tab="timing"]')?.click();
+            window.BratEditorNav?.openTab("timing");
             audioFileInput?.click();
         });
 
@@ -5926,12 +5926,21 @@ async function updateExportEstimate() {
     let tutorialIndex = 0;
     let tutorialActive = false;
 
-    function openEditorTab(tabName) {
+    function openEditorTab(tabName, { reveal = true } = {}) {
+        // accetta sia i 4 tab nuovi sia i nomi storici delle sezioni
+        const EditorTabs = window.BratEditorTabs;
+        const group = EditorTabs.groupOf(tabName);
+        const visible = EditorTabs.sectionsOf(group);
         let activeTab = null;
-        let activeSection = null;
+        let target = null;
+
+        if (reveal && panel?.classList.contains('hidden')) {
+            panel.classList.remove('hidden');
+            syncPanelState();
+        }
 
         tabs.forEach((tab) => {
-            const isActive = tab.dataset.openTab === tabName;
+            const isActive = tab.dataset.openTab === group;
             tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-selected', String(isActive));
             tab.setAttribute('tabindex', isActive ? '0' : '-1');
@@ -5939,26 +5948,31 @@ async function updateExportEstimate() {
         });
 
         sections.forEach((section) => {
-            const isActive = section.dataset.editorTab === tabName;
+            const isActive = visible.includes(section.dataset.editorTab);
             section.classList.toggle('active', isActive);
             section.toggleAttribute('hidden', !isActive);
             section.setAttribute('aria-hidden', String(!isActive));
-            if (isActive) activeSection = section;
+            if (isActive && section.dataset.editorTab === tabName) target = section;
         });
 
-        if (window.matchMedia('(max-width: 700px)').matches) {
-            activeTab?.scrollIntoView({
-                block: 'nearest',
-                inline: 'center',
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        if (activeTab?.id) {
+            sections.forEach((section) => {
+                if (visible.includes(section.dataset.editorTab)) section.setAttribute('aria-labelledby', activeTab.id);
             });
-            if (activeSection) activeSection.scrollTop = 0;
+        }
+        // nome storico non primo del gruppo: porta in vista la sua sezione
+        if (target && target.dataset.editorTab !== visible[0]) {
+            target.scrollIntoView({ block: 'start', behavior: 'instant' });
+        } else if (reveal) {
+            const scroller = document.getElementById('panel');
+            if (scroller) scroller.scrollTop = 0;
         }
 
         try {
-            localStorage.setItem('bratAnimator.activeSidebarTab', tabName);
+            localStorage.setItem('bratAnimator.activeSidebarTab', group);
         } catch (_) {}
     }
+    window.BratEditorNav = Object.freeze({ openTab: openEditorTab });
 
     function clearTutorialFocus() {
         document.querySelectorAll('.tutorial-focus').forEach((node) => {
@@ -6341,8 +6355,7 @@ async function updateExportEstimate() {
         restoredTab = localStorage.getItem('bratAnimator.activeSidebarTab') || restoredTab;
     } catch (_) {}
 
-    if (!tabs.some((tab) => tab.dataset.openTab === restoredTab)) restoredTab = 'lyrics';
-    openEditorTab(restoredTab);
+    openEditorTab(restoredTab, { reveal: false });
     updateSidebarStatus();
 
     if (window.BratStudioShellEnabled) {
@@ -6527,7 +6540,7 @@ async function updateExportEstimate() {
     stageRestartBtn?.addEventListener('click', () => restartBtn?.click());
     stagePlayBtn?.addEventListener('click', () => {
         if (!ensureTimeline()) {
-            document.querySelector('[data-open-tab="timing"]')?.click();
+            window.BratEditorNav?.openTab("timing");
             lyricsInput?.focus();
             return;
         }

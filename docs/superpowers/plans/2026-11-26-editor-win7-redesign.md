@@ -43,12 +43,12 @@
 
 **Interfaces:**
 - Produces: `BratEditorTabs.GROUPS` = `{ text: ["lyrics","timing"], timeline: ["tracks"], style: ["design","canvas"], export: ["export","project"] }` (frozen, ordine = ordine dei tab); `BratEditorTabs.groupOf(name: string) -> "text"|"timeline"|"style"|"export"` (accetta gruppo o sezione storica, sconosciuto → `"text"`); `BratEditorTabs.sectionsOf(group) -> string[]`. UMD come gli altri moduli (`module.exports` + `globalThis.BratEditorTabs`).
-- Produces: `window.BratEditor.openTab(name: string)` in `app.js`: attiva il tab `groupOf(name)`, mostra tutte le sezioni del gruppo, se `name` è una sezione la porta in vista; se il pannello è nascosto lo apre.
+- Produces: `window.BratEditorNav.openTab(name: string)` in `app.js`: attiva il tab `groupOf(name)`, mostra tutte le sezioni del gruppo, se `name` è una sezione la porta in vista; se il pannello è nascosto lo apre.
 - Tab buttons: `<button data-open-tab="text|timeline|style|export" role="tab">` con etichette i18n `tabText`, `tabTimeline`, `tabStyle`, `tabExport` (IT: Testo, Timeline, Stile, Esporta; EN: Text, Timeline, Style, Export; RU/ZH tradotte).
 
 - [ ] **Step 1: test che fallisce** — `tests/editor-tabs.test.js`: `groupOf("timing") === "text"`, `groupOf("canvas") === "style"`, `groupOf("project") === "export"`, `groupOf("tracks") === "timeline"`, `groupOf("style") === "style"`, `groupOf("boh") === "text"`; ogni sezione storica compare in esattamente un gruppo; `Object.keys(GROUPS)` è `["text","timeline","style","export"]`.
 - [ ] **Step 2:** `node --test tests/editor-tabs.test.js` → FAIL (modulo mancante).
-- [ ] **Step 3:** creare `editor-tabs.js`; in `app.js` riscrivere `openEditorTab` su `groupOf/sectionsOf`, esporre `window.BratEditor.openTab`, sostituire i tre click diretti e `showTab` con `openTab`; HTML con 4 tab; togliere da `editor-layout.js` il blocco `navigation` e `leadTitles`.
+- [ ] **Step 3:** creare `editor-tabs.js`; in `app.js` riscrivere `openEditorTab` su `groupOf/sectionsOf`, esporre `window.BratEditorNav.openTab`, sostituire i tre click diretti e `showTab` con `openTab`; HTML con 4 tab; togliere da `editor-layout.js` il blocco `navigation` e `leadTitles`.
 - [ ] **Step 4:** `node --test` → PASS tutto.
 - [ ] **Step 5:** browser: aggiungere a `tests/editor-v5-browser.mjs` un controllo che `BratEditor.openTab("canvas")` rende visibile `#section-canvas` e seleziona il tab `style`. `CHROME_PATH=/usr/bin/google-chrome node tests/editor-v5-browser.mjs` → PASS.
 - [ ] **Step 6:** commit `feat: editor con 4 tab (testo, timeline, stile, esporta)`.
@@ -79,7 +79,7 @@
 - Test: `tests/aero-ui.test.js` (asserzioni statiche sull'HTML)
 
 **Interfaces:**
-- Consumes: `createMenuBar` (Task 2), `BratEditor.openTab` (Task 1).
+- Consumes: `createMenuBar` (Task 2), `BratEditorNav.openTab` (Task 1).
 - Struttura:
   `#studioEditorChrome.studio-editor-window.win7 > .window.glass.active > [.title-bar (stessi id min/max/close), ul#editorMenuBar[role=menubar], div.editor-toolbar[role=toolbar], div.window-body.editor-body > (#panel, main.page-shell), div.status-bar]`.
 - Menu (bottoni con `id` esistenti dove indicato, altrimenti `data-win7-command`):

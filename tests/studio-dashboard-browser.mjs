@@ -212,7 +212,7 @@ try {
     // Phase 14: real UI operations must persist the graph through IndexedDB.
     await until("Boolean(window.BratMultitrackHost && window.BratMultitrackUI)");
     assert.equal(await evaluate("window.BratEditorWorkspace.snapshot().multitrack.tracks.length"),4);
-    await evaluate("document.querySelector('[data-open-tab=\"tracks\"]').click()");
+    await evaluate("BratEditorNav.openTab('tracks')");
     assert.equal(await evaluate("document.getElementById('section-tracks').classList.contains('active')"),true);
     await evaluate("document.getElementById('mtTrackType').value='overlay';document.getElementById('mtAddTrack').click()");
     assert.equal(await evaluate("window.BratMultitrackHost.snapshot().tracks.length"),5);
@@ -232,7 +232,7 @@ try {
     // Legacy lyric video must remain intact while phase-14 clip metadata is edited.
     assert.equal(await evaluate("document.getElementById('lyricsInput').value"),"[00:01.00] smoke test lyric");
     // Phase 12: real DOM template controls drive the existing editor engine.
-    await evaluate("document.querySelector('[data-open-tab=design]').click();document.querySelector('[data-template=kinetic-reels]').click()");
+    await evaluate("BratEditorNav.openTab('design');document.querySelector('[data-template=kinetic-reels]').click()");
     assert.equal(await evaluate("document.getElementById('formatPresetSelect').value"),"vertical");
     assert.equal(await evaluate("document.getElementById('lyricsDisplayModeSelect').value"),"kinetic");
     assert.equal(await evaluate("document.getElementById('themePresetSelect').value"),"kinetic-blue");

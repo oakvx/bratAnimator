@@ -302,6 +302,7 @@
     <script src="vendor/fflate.min.js" defer></script>
     <script src="assets/js/project-assets.js" defer></script>
     <script src="assets/js/local-workspace.js" defer></script>
+    <script src="assets/js/editor-tabs.js" defer></script>
     <script src="assets/js/app.js" defer></script>
     <script src="assets/js/multitrack-ui.js" defer></script>
     <script src="assets/js/editor-v5.js" defer></script>
@@ -818,17 +819,14 @@
 
         <div class="win7 editor-tab-strip">
         <menu class="editor-tabs" aria-label="editor sections" role="tablist">
-            <button id="tab-lyrics" class="editor-tab active" data-open-tab="lyrics" type="button" role="tab" aria-selected="true" aria-controls="section-lyrics"><span>1</span> lyrics</button>
-            <button id="tab-timing" class="editor-tab" data-open-tab="timing" type="button" role="tab" aria-selected="false" aria-controls="section-timing"><span>2</span> timing</button>
-            <button id="tab-design" class="editor-tab" data-open-tab="design" type="button" role="tab" aria-selected="false" aria-controls="section-design"><span>3</span> design</button>
-            <button id="tab-canvas" class="editor-tab" data-open-tab="canvas" type="button" role="tab" aria-selected="false" aria-controls="section-canvas"><span>4</span> canvas</button>
-            <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export"><span>5</span> export</button>
-            <button id="tab-project" class="editor-tab" data-open-tab="project" type="button" role="tab" aria-selected="false" aria-controls="section-project"><span>6</span> project</button>
-            <button id="tab-tracks" class="editor-tab" data-open-tab="tracks" type="button" role="tab" aria-selected="false" aria-controls="section-tracks"><span>7</span> tracks</button>
+            <button id="tab-text" class="editor-tab active" data-open-tab="text" type="button" role="tab" aria-selected="true" aria-controls="section-lyrics section-timing" data-i18n="tabText">Testo</button>
+            <button id="tab-timeline" class="editor-tab" data-open-tab="timeline" type="button" role="tab" aria-selected="false" aria-controls="section-tracks" data-i18n="tabTimeline">Timeline</button>
+            <button id="tab-style" class="editor-tab" data-open-tab="style" type="button" role="tab" aria-selected="false" aria-controls="section-design section-canvas" data-i18n="tabStyle">Stile</button>
+            <button id="tab-export" class="editor-tab" data-open-tab="export" type="button" role="tab" aria-selected="false" aria-controls="section-export section-project" data-i18n="tabExport">Esporta</button>
         </menu>
         </div>
 
-        <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-lyrics">
+        <div id="section-lyrics" class="section editor-section active" data-editor-tab="lyrics" role="tabpanel" aria-labelledby="tab-text">
             <div class="section-title" data-i18n="lyricsSearch">lyrics search</div>
             <label class="label" for="lyricsProviderSelect" data-i18n="lyricsProvider">lyrics source</label>
             <select id="lyricsProviderSelect">
@@ -849,7 +847,7 @@
             <p id="searchSourceCredit" class="mini-copy" hidden></p>
         </div>
 
-        <div id="section-timing" class="section editor-section" data-editor-tab="timing" role="tabpanel" aria-labelledby="tab-timing">
+        <div id="section-timing" class="section editor-section" data-editor-tab="timing" role="tabpanel" aria-labelledby="tab-text">
             <div class="section-title" data-i18n="lyricsTiming">lyrics and timing</div>
 
             <label class="label" for="lyricsInput" data-i18n="lrcText">LRC lyrics</label>
@@ -966,7 +964,7 @@
             </div>
         </div>
 
-        <div id="section-design" class="section editor-section" data-editor-tab="design" role="tabpanel" aria-labelledby="tab-design">
+        <div id="section-design" class="section editor-section" data-editor-tab="design" role="tabpanel" aria-labelledby="tab-style">
             <div class="section-title">style and animation</div>
             <section class="editor-template-section" aria-labelledby="editorTemplateHeading">
                 <div class="editor-template-heading">
@@ -1248,7 +1246,7 @@
             </details>
         </div>
 
-        <div id="section-canvas" class="section editor-section" data-editor-tab="canvas" role="tabpanel" aria-labelledby="tab-canvas">
+        <div id="section-canvas" class="section editor-section" data-editor-tab="canvas" role="tabpanel" aria-labelledby="tab-style">
             <div class="section-title">canvas and safe areas</div>
             <p class="mini-copy">Choose the output shape, preview safe zones and check what will fit before exporting.</p>
             <div class="row canvas-quick-actions">
@@ -1369,7 +1367,7 @@
             <div class="pill-note" data-i18n="exportNote">video-only by default; loaded local audio can be merged when enabled</div>
         </div>
 
-        <div id="section-tracks" class="section editor-section" data-editor-tab="tracks" role="tabpanel" aria-labelledby="tab-tracks">
+        <div id="section-tracks" class="section editor-section" data-editor-tab="tracks" role="tabpanel" aria-labelledby="tab-timeline">
             <div class="section-title">Timeline & tracks</div>
             <p class="mini-copy">Organize media and layers, edit visual properties, and mix audio without leaving this browser.</p>
             <div class="row">
@@ -1436,7 +1434,7 @@
             <p id="mtStatus" class="meta muted" aria-live="polite">Multitrack metadata is saved with this project.</p>
         </div>
 
-        <div id="section-project" class="section editor-section" data-editor-tab="project" role="tabpanel" aria-labelledby="tab-project">
+        <div id="section-project" class="section editor-section" data-editor-tab="project" role="tabpanel" aria-labelledby="tab-export">
             <div class="section-title" data-i18n="externalPreview">external video preview</div>
             <label class="label" data-i18n="videoSelection">video selection</label>
             <div id="youtubeStatus" class="meta muted" data-status-key="noVideo">no video loaded</div>

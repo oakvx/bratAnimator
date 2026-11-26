@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v30-win7-local-assets";
+const CACHE_NAME = "brat-animator-v31-win7-editor";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -60,6 +60,7 @@ const APP_ASSETS = [
   "./assets/js/dashboard-audio.js",
   "./assets/js/export-preflight.js",
   "./assets/js/editor-templates.js",
+  "./assets/js/editor-tabs.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
   "./favicon.svg",

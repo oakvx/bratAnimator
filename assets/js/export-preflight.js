@@ -113,7 +113,7 @@
         win.addEventListener?.("brat:multitrack-changed", schedule);
         refreshButton.addEventListener("click", refresh);
         fixButton.addEventListener("click", () => {
-            document.querySelector('[data-open-tab="timing"]')?.click();
+            root.BratEditorNav?.openTab("timing");
             $("lyricsInput")?.focus();
         });
         for (const id of ["lyricsInput", "startFromZeroCheckbox", "includeAudioInExportCheckbox", "exportSizeSelect", "exportFpsSelect"]) {

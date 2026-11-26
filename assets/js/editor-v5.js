@@ -288,7 +288,7 @@
         lrcRows.querySelectorAll('.lrc-row').forEach(wrapper => {
             const index = Number(wrapper.dataset.index), row = rows[index]; if (!row?.text) return;
             const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'row-style-btn'; edit.textContent = t('lineSettings');
-            edit.addEventListener('click', () => { selectPhrase(row.id); document.querySelector('[data-open-tab="design"]').click(); $('textSettings').scrollIntoView({ block: 'start' }); }); wrapper.appendChild(edit);
+            edit.addEventListener('click', () => { selectPhrase(row.id); window.BratEditorNav.openTab('design'); $('textSettings').scrollIntoView({ block: 'start' }); }); wrapper.appendChild(edit);
         });
         syncControls();
     };
@@ -391,7 +391,7 @@
         overlay.classList.toggle('v5-centered-y', Math.abs(current.style.verticalPosition || 0) < 0.012);
     }
     $('editCanvasBtn').addEventListener('click', () => {
-        if (state.style.lyricsMode !== 'brat') { document.querySelector('[data-open-tab="design"]').click(); status('Text transforms are available in Brat canvas.'); return; }
+        if (state.style.lyricsMode !== 'brat') { window.BratEditorNav.openTab('design'); status('Text transforms are available in Brat canvas.'); return; }
         editing = !editing; $('editCanvasBtn').setAttribute('aria-pressed', String(editing));
         if (editing) { stopPlayback(true); const line = activeLine(); if (line) selectPhrase(rowForLine(line)?.id); }
         refresh(); syncOverlay();

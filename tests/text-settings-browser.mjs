@@ -108,12 +108,12 @@ try {
     });
     await test('both settings triggers reopen hidden panel and focus text size', () => evaluate(() => {
         for (const id of ['textSettingsBtn', 'stageTextSettingsBtn']) {
-            document.querySelector('[data-open-tab="lyrics"]').click();
+            BratEditorNav.openTab('lyrics');
             if (!panel.classList.contains('hidden')) togglePanelBtn.click();
             document.getElementById(id).click();
             auditAssert(!panel.classList.contains('hidden'), `${id} left panel hidden`);
             auditAssert(document.getElementById('section-design').classList.contains('active'), `${id} opened wrong tab`);
-            auditAssert(document.getElementById('tab-design').getAttribute('aria-selected') === 'true', 'design aria-selected stale');
+            auditAssert(document.getElementById('tab-style').getAttribute('aria-selected') === 'true', 'style aria-selected stale');
             auditAssert(document.activeElement === fontScaleInput, `${id} did not focus slider`);
             auditAssert(togglePanelBtn.getAttribute('aria-expanded') === 'true', 'panel aria-expanded stale');
             auditAssert(document.getElementById(id).getAttribute('aria-controls') === 'textSettings', 'trigger target missing');

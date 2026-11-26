@@ -56,7 +56,7 @@
             if (VIEWS[command]) {
                 win.BratWin7ShellInstance?.restore();
                 win.BratStudio?.show(VIEWS[command]);
-                if (command === "timeline") document.querySelector('[data-open-tab="tracks"]')?.click();
+                if (command === "timeline") win.BratEditorNav?.openTab("tracks");
                 if (command === "sounds") $("studioSoundImport")?.focus();
                 return;
             }

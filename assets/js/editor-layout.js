@@ -5,26 +5,7 @@
     "use strict";
     if (document.body.dataset.inspectorLayout === "organized") return;
     const $ = id => document.getElementById(id);
-    const nav = document.querySelector(".editor-tabs");
-    if (!nav || !$("section-timing") || !$("section-tracks")) return;
-
-    // The user workflow is: find lyrics -> edit timing -> arrange timeline ->
-    // style -> canvas -> export -> manage project. Keep historical data-* names
-    // intact because they are referenced by command palette and saved settings.
-    const navigation = [
-        ["lyrics", "find"], ["timing", "lyrics"], ["tracks", "timeline"],
-        ["design", "style"], ["canvas", "canvas"], ["export", "export"],
-        ["project", "project"]
-    ];
-    for (const [index, [name, label]] of navigation.entries()) {
-        const button = nav.querySelector('[data-open-tab="' + name + '"]');
-        if (!button) continue;
-        button.replaceChildren();
-        const number = document.createElement("span");
-        number.textContent = String(index + 1);
-        button.append(number, document.createTextNode(" " + label));
-        nav.append(button);
-    }
+    if (!$("section-timing") || !$("section-tracks")) return;
 
     function section(name, label) {
         const node = $("section-" + name);
@@ -207,15 +188,6 @@
         };
         new MutationObserver(refreshReport).observe(report, { characterData: true, childList: true, subtree: true });
         refreshReport();
-    }
-
-    const leadTitles = {
-        tracks: "Timeline & tracks", timing: "Lyrics & timing", design: "Style & effects",
-        export: "Export", project: "Projects & backups", canvas: "Canvas & format", lyrics: "Find lyrics"
-    };
-    for (const [name, title] of Object.entries(leadTitles)) {
-        const tab = $("tab-" + name);
-        if (tab) tab.setAttribute("title", title);
     }
 
     function syncTrackPropertyPanels() {
