@@ -1,0 +1,180 @@
+/* brat animator — finestra editor windows 7.
+ * caricato per ultimo, dopo 7.css. nessuna regola forzata: quelle vecchie in conflitto sono state tolte.
+ * desktop ≥ 900px: finestra sopra la taskbar, pannello a sinistra, anteprima e timeline a destra.
+ * telefono < 900px: finestra a tutto schermo, menu compatto, tab in basso (vedi fondo file).
+ */
+#studioEditorChrome { display:none; }
+body.studio-editor-open #studioEditorChrome {
+  --editor-gap: 8px;
+  display:block; position:fixed; z-index:60;
+  inset:var(--editor-gap) var(--editor-gap) calc(var(--brat-taskbar-height) + var(--editor-gap));
+}
+body.studio-editor-maximized #studioEditorChrome { --editor-gap: 0px; }
+#studioEditorChrome > .window { display:flex; flex-direction:column; height:100%; margin:0; }
+body.studio-editor-maximized #studioEditorChrome > .window { border-radius:0; }
+#studioEditorChrome .title-bar { flex:0 0 auto; }
+#studioEditorChrome .title-bar-text img { vertical-align:-3px; margin-right:4px; }
+
+/* barra dei menu: aspetto 7.css, apertura gestita da win7-window-menu.js */
+#studioEditorChrome .editor-menubar { flex:0 0 auto; position:relative; z-index:50; margin:0 var(--w7-w-space); padding:0; list-style:none; }
+#studioEditorChrome .editor-menubar > [role=menuitem] { cursor:default; user-select:none; }
+#studioEditorChrome .editor-menubar > [aria-expanded="true"] { background:#39f; color:#fff; }
+#studioEditorChrome .editor-menubar > [aria-expanded="true"] > [role=menu] { display:block; }
+#studioEditorChrome .editor-menubar [role=menu] { min-width:220px; max-width:min(340px,95vw); color:#000; }
+#studioEditorChrome .editor-menubar [role=menu] :is(button,a) { display:flex; align-items:center; justify-content:space-between;
+  gap:18px; width:100%; min-width:0; min-height:0; margin:0; padding:4px 22px; border:1px solid transparent; border-radius:3px;
+  background:none; box-shadow:none; color:inherit; font:inherit; text-align:left; text-decoration:none; white-space:nowrap; }
+#studioEditorChrome .editor-menubar [role=menu] :is(button,a):is(:hover,:focus-visible) {
+  border-color:#a8d8eb; background:linear-gradient(#f2f9fd,#d8eefa); outline:none; }
+#studioEditorChrome .editor-menubar [role=menu] :is(button,a)::before,
+#studioEditorChrome .editor-menubar [role=menu] :is(button,a)::after { display:none; }
+#studioEditorChrome .editor-menubar [role=menu] button:disabled { color:#888; }
+#studioEditorChrome .editor-menubar [role=menu] kbd { opacity:.65; font:inherit; }
+/* segno di spunta per voci attive: pannello visibile, tema e lingua correnti */
+#studioEditorChrome .editor-menubar [role=menu] [aria-checked="true"] { position:relative; }
+#studioEditorChrome .editor-menubar [role=menu] [aria-checked="true"]::before {
+  display:block; content:"✓"; position:absolute; left:7px; top:50%; width:auto; height:auto; z-index:auto;
+  opacity:1; background:none; box-shadow:none; transform:translateY(-50%); }
+#studioEditorChrome .editor-menu-toggle { display:none; }
+
+/* toolbar */
+#studioEditorChrome .editor-toolbar { display:flex; align-items:center; gap:4px; flex:0 0 auto; flex-wrap:nowrap;
+  margin:0 var(--w7-w-space); padding:4px 4px; overflow-x:auto; border-bottom:1px solid #cfd7de;
+  background:linear-gradient(#fdfdfd,#eef2f6); scrollbar-width:thin; }
+#studioEditorChrome .editor-toolbar > button { flex:0 0 auto; }
+#studioEditorChrome .editor-toolbar-spacer { flex:1 1 auto; min-width:8px; }
+#studioEditorChrome .autosave-pill { flex:0 0 auto; color:var(--ink-muted); font-size:11px; white-space:nowrap; }
+#studioEditorChrome .autosave-pill[data-workspace-status="error"],
+#studioEditorChrome .autosave-pill[data-workspace-status="fallback"] { color:var(--danger); }
+
+/* corpo: pannello | anteprima + timeline */
+#studioEditorChrome .editor-body { display:grid; grid-template-columns:minmax(300px,360px) minmax(0,1fr);
+  flex:1 1 auto; min-height:0; overflow:hidden; }
+body.panel-closed #studioEditorChrome .editor-body { grid-template-columns:minmax(0,1fr); }
+#studioEditorChrome .status-bar { flex:0 0 auto; }
+#studioEditorChrome .status-bar-field { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#studioEditorChrome .status-bar-field span { color:var(--ink-muted); }
+
+/* pannello laterale */
+#studioEditorChrome #panel { display:flex; flex-direction:column; min-width:0; min-height:0;
+  overflow-y:auto; overscroll-behavior:contain; border-right:1px solid #cfd7de; background:var(--w7-surface); }
+#studioEditorChrome .recovery-banner { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 8px;
+  background:#ffffe1; border-bottom:1px solid #d9d29c; }
+#studioEditorChrome .recovery-banner span { flex:1; }
+#studioEditorChrome .editor-tab-strip { position:sticky; top:0; z-index:5; padding:6px 6px 0; background:var(--w7-surface); }
+#studioEditorChrome .editor-tabs { flex-wrap:nowrap; }
+#studioEditorChrome .editor-tabs button { flex:1 1 0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#studioEditorChrome .editor-section { display:none; min-width:0; margin:0 6px; }
+#studioEditorChrome .editor-section.active:not([hidden]) { display:block; }
+#studioEditorChrome .editor-section.active ~ .editor-section.active { margin-top:6px; }
+#studioEditorChrome .editor-section:last-of-type { margin-bottom:8px; }
+#studioEditorChrome .section-title { font-size:13px; }
+#studioEditorChrome .inspector-group { min-width:0; margin:0 0 10px; }
+#studioEditorChrome fieldset.inspector-group { display:block; }
+#studioEditorChrome .inspector-group-heading { font-weight:600; }
+#studioEditorChrome details.inspector-group { padding:2px 0; }
+#studioEditorChrome .inspector-group-description { margin:0 0 6px; color:var(--ink-muted); font-size:11px; }
+#studioEditorChrome .text-settings legend,#studioEditorChrome .v5-block legend { font-weight:600; }
+
+/* area di lavoro a destra */
+#studioEditorChrome .page-shell { display:flex; min-width:0; min-height:0; }
+#studioEditorChrome #editor.app { display:grid; grid-template-rows:minmax(0,1fr) minmax(190px,34%);
+  gap:6px; flex:1 1 auto; min-width:0; min-height:0; padding:6px; }
+#studioEditorChrome .stage-wrap { border:1px solid #a0aab3; background:#fff; }
+#studioEditorChrome .stage-toolbar { padding:4px 6px; border-bottom:1px solid #d5dbe0; background:linear-gradient(#fdfdfd,#eef2f6); }
+#studioEditorChrome .stage-title strong { font-weight:600; }
+#studioEditorChrome .stage-canvas-zone { background:#2b2b2b; padding:10px; }
+#studioEditorChrome .stage-transport { padding:4px 6px; border-top:1px solid #d5dbe0; background:var(--w7-surface); }
+#studioEditorChrome .hint { border-top:1px solid #e3e6ea; }
+#studioEditorChrome #studioTimelineDock { border:1px solid #a0aab3; background:var(--w7-surface); }
+
+/* bottoni compatti dove 7.css allargherebbe troppo (larghezza minima 75px) */
+#studioEditorChrome :is(.stage-zoom-controls,.studio-tl-tools,.stage-transport) button { min-width:0; padding-inline:10px; }
+#studioEditorChrome .studio-tl-label { min-width:116px; }
+#studioEditorChrome #section-tracks :is(.mt-track-row,.mt-clip-row) button { min-width:0; padding-inline:8px; }
+#studioEditorChrome #section-tracks .mt-select { flex:1 1 120px; }
+
+/* maniglie del riquadro testo: sono bottoni, ma non devono prendere lo stile 7.css */
+#studioEditorChrome #canvasTextBox .v5-handle { position:absolute; width:14px; height:14px; min-width:0; min-height:0;
+  padding:0; border:1px solid #000; border-radius:0; background:#fff; box-shadow:none; }
+#studioEditorChrome #canvasTextBox .v5-handle::before,#studioEditorChrome #canvasTextBox .v5-handle::after { display:none; }
+
+/* finestre che stanno sopra l'editor */
+body.studio-editor-open #studioStartMenu { z-index:1099; }
+body.studio-editor-open .studio-taskbar { display:flex; }
+
+/* checkbox 7.css: input nascosto + label disegnata subito dopo */
+#studioEditorChrome .inline-check,#studioEditorChrome .studio-tl-snap { display:inline-flex; align-items:center; min-height:22px; }
+#studioEditorChrome .row-select-box { display:inline-flex; align-items:center; }
+#studioEditorChrome .row-select-box label::before { margin-right:0; }
+
+/* intestazione del foglio: solo su telefono */
+#studioEditorChrome .editor-sheet-head { display:none; }
+
+/* ---------- telefono: < 900px ---------- */
+@media (max-width: 899px) {
+  body.studio-editor-open #studioEditorChrome { --editor-gap: 0px; }
+  #studioEditorChrome > .window { border-radius:0; }
+  #studioEditorChrome .title-bar-controls button[aria-label="Maximize"],
+  #studioEditorChrome .title-bar-controls button[aria-label="Restore"] { display:none; }
+
+  /* toolbar con il bottone menu: una riga, scorre se serve, mai tagliata */
+  #studioEditorChrome .editor-toolbar { gap:4px; padding:4px; }
+  #studioEditorChrome .editor-toolbar > button { flex:1 1 auto; min-width:0; min-height:40px; padding-inline:8px; white-space:nowrap; }
+  #studioEditorChrome .editor-toolbar > :is([data-editor-action="split"],[data-editor-action="undo"],[data-editor-action="redo"]) { display:none; }
+  #studioEditorChrome .editor-menu-toggle { display:inline-block; }
+  #studioEditorChrome .editor-toolbar-spacer,#studioEditorChrome .autosave-pill { display:none; }
+
+  /* menu compatto: si apre sotto la toolbar, voci impilate, sottomenu in linea */
+  #studioEditorChrome .editor-menubar { display:none; }
+  body.editor-menu-open #studioEditorChrome .editor-menubar { display:block; position:absolute; z-index:80;
+    left:var(--w7-w-space); right:var(--w7-w-space); top:calc(30px + 50px);
+    max-height:70%; overflow-y:auto; border:1px solid #0006; box-shadow:4px 4px 3px -2px #00000080; }
+  body.editor-menu-open #studioEditorChrome .editor-menubar > [role=menuitem] { display:block; min-height:40px; padding:10px 12px; border-bottom:1px solid #d5dbe0; }
+  #studioEditorChrome .editor-menubar > [aria-expanded="true"] > [role=menu] { position:static; display:block; margin:8px -12px -10px;
+    min-width:0; max-width:none; box-shadow:none; border-inline:0; border-bottom:0; }
+  #studioEditorChrome .editor-menubar [role=menu] :is(button,a) { min-height:40px; white-space:normal; }
+
+  /* corpo in colonna: anteprima, timeline, poi tab in basso */
+  #studioEditorChrome .editor-body { display:flex; flex-direction:column; }
+  #studioEditorChrome .page-shell { flex:1 1 auto; order:1; }
+  #studioEditorChrome .status-bar { display:none; }
+  #studioEditorChrome #editor.app { grid-template-rows:minmax(0,1fr) minmax(150px,38%); padding:4px; gap:4px; }
+  #studioEditorChrome .hint,#studioEditorChrome #stageFullscreenBtn,#studioEditorChrome .stage-zoom-controls output,
+  #studioEditorChrome .stage-title span { display:none; }
+  #studioEditorChrome .stage-toolbar,#studioEditorChrome .stage-transport { padding:3px 4px; }
+  #studioEditorChrome .stage-canvas-zone { padding:6px; min-height:120px; }
+  #studioEditorChrome :is(.stage-zoom-controls,.stage-transport,.studio-tl-tools) button { min-height:34px; }
+
+  /* pannello = barra dei tab; aperto diventa un foglio a mezza altezza */
+  #studioEditorChrome #panel { order:2; flex:0 0 auto; max-height:56%; border-right:0; border-top:1px solid #a0aab3; }
+  body:not(.editor-sheet-open) #studioEditorChrome #panel > :not(.editor-tab-strip) { display:none; }
+  body.editor-sheet-open #studioEditorChrome #panel { flex-basis:56%; }
+  body.editor-sheet-open #studioEditorChrome #studioTimelineDock { display:none; }
+  body.editor-sheet-open #studioEditorChrome #editor.app { grid-template-rows:minmax(0,1fr); }
+  #studioEditorChrome .editor-sheet-head { display:flex; justify-content:flex-end; position:sticky; top:0; z-index:6;
+    padding:4px 6px; background:var(--w7-surface); border-bottom:1px solid #d5dbe0; }
+  #studioEditorChrome .editor-sheet-head button { min-height:36px; }
+  #studioEditorChrome .editor-tab-strip { order:99; position:sticky; top:auto; bottom:0; padding:4px 4px 0; border-top:1px solid #d5dbe0; }
+  #studioEditorChrome #panel { display:flex; flex-direction:column; }
+  #studioEditorChrome #panel > .editor-tab-strip { margin-top:auto; }
+  #studioEditorChrome .editor-tabs button { min-height:40px; padding-inline:6px; }
+  #studioEditorChrome .editor-section { margin-inline:4px; }
+}
+
+/* dialoghi dell'editor: finestre 7.css centrate su uno sfondo scuro leggero */
+.command-palette.win7 .window,.permission-notice-overlay.win7 .window { width:min(520px,100%); max-height:calc(100dvh - 24px); display:flex; flex-direction:column; }
+.command-palette.win7 .window-body,.permission-notice-overlay.win7 .window-body { overflow:auto; padding:10px 12px; }
+.command-palette.win7 #commandPaletteInput { display:block; width:100%; }
+.command-palette.win7 .command-palette-list { display:flex; flex-direction:column; gap:2px; max-height:340px; margin-top:8px; overflow-y:auto; }
+.command-palette.win7 .command-palette-list button { width:100%; min-width:0; min-height:28px; justify-content:flex-start; text-align:left;
+  border-color:transparent; background:none; box-shadow:none; }
+.command-palette.win7 .command-palette-list button::before,.command-palette.win7 .command-palette-list button::after { display:none; }
+.command-palette.win7 .command-palette-list button:is(:hover,.active,:focus-visible) { border-color:#a8d8eb; background:linear-gradient(#f2f9fd,#d8eefa); }
+.permission-notice-overlay.win7 h2 { margin:0 0 8px; font-size:15px; font-weight:600; }
+.permission-notice-overlay.win7 p { margin:0; }
+.permission-notice-overlay.win7 .permission-notice-actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:14px; flex-wrap:wrap; }
+@media (max-width: 899px) {
+  .command-palette.win7 .command-palette-list button,
+  .permission-notice-overlay.win7 .permission-notice-actions button { min-height:40px; }
+}

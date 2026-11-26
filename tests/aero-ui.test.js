@@ -50,3 +50,52 @@ test("optional shell sounds use recordings and a user preference", () => {
     assert.match(source, /#studioEditorChrome/);
     assert.doesNotMatch(source, /AudioContext|createOscillator|fetch\(/);
 });
+
+test("l'editor è una finestra 7.css con menu, toolbar e barra di stato", () => {
+    const html = file("index.html");
+    const start = html.indexOf('id="studioEditorChrome"');
+    assert.ok(start > 0, "finestra editor mancante");
+    const end = html.indexOf('id="permissionNotice"', start);
+    assert.ok(end > html.indexOf("</main>", start), "anteprima e timeline devono stare dentro la finestra");
+    const editor = html.slice(start, end);
+    const menuStart = editor.indexOf('id="editorMenuBar"');
+    const menuEnd = editor.indexOf('id="editorToolbar"');
+    assert.ok(menuStart > 0 && menuEnd > menuStart, "menubar prima della toolbar");
+    const menu = editor.slice(menuStart, menuEnd);
+    assert.match(menu, /role="menubar"/);
+    for (const id of ["loadDemoBtn", "commandPaletteBtn", "tutorialBtn", "bgBtn", "darkBtn", "togglePanelBtn",
+        "textSettingsBtn", "permissionLink"]) {
+        assert.match(menu, new RegExp('id="' + id + '"'), id + " deve stare nel menu");
+    }
+    for (const command of ["undo", "redo", "about", "close-editor"]) {
+        assert.match(menu, new RegExp('data-win7-command="' + command + '"'), command + " nel menu");
+    }
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]);
+    assert.deepEqual(ids.filter((id, i) => ids.indexOf(id) !== i), [], "id duplicati");
+    assert.equal((menu.match(/class="lang-btn"/g) || []).length, 4, "4 lingue nel menu");
+    assert.match(editor, /id="panel"/);
+    assert.match(editor, /id="previewCanvas"/);
+    const status = editor.slice(editor.indexOf('class="status-bar"'));
+    for (const id of ["statusDuration", "statusFormat", "statusFps", "statusLines"]) {
+        assert.match(status, new RegExp('id="' + id + '"'));
+    }
+    assert.doesNotMatch(html, /<header class="topbar/);
+    assert.doesNotMatch(html, /class="project-status-bar"/);
+    assert.doesNotMatch(menu + editor.slice(menuEnd, editor.indexOf('class="window-body')), /<svg/);
+});
+
+test("la x della guida usa l'icona di chiusura 7.css", () => {
+    assert.match(file("index.html"), /id="tutorialWindowClose"[^>]*aria-label="Close"/);
+});
+
+test("l'editor ha un solo css windows 7, senza !important", () => {
+    const html = file("index.html");
+    const css = file("assets/css/win7-editor.css");
+    assert.doesNotMatch(css, /!important/);
+    assert.doesNotMatch(html, /assets\/css\/editor-layout\.css/);
+    const vendor = html.indexOf("vendor/7css/7.scoped.css");
+    const editor = html.indexOf("assets/css/win7-editor.css");
+    assert.ok(editor > vendor, "win7-editor.css dopo 7.css");
+    const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
+    assert.equal(links.at(-1), "assets/css/win7-editor.css", "win7-editor.css è l'ultimo foglio di stile");
+});

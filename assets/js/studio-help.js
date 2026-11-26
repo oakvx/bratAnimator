@@ -22,7 +22,7 @@
     root.document.querySelectorAll("[data-studio-quick-tab]").forEach(button => {
         button.addEventListener("click", () => {
             root.BratStudio?.show("editor");
-            root.document.querySelector('[data-open-tab="' + button.dataset.studioQuickTab + '"]')?.click();
+            root.BratEditorNav?.openTab(button.dataset.studioQuickTab);
         });
     });
     root.document.querySelectorAll("[data-studio-quick-view]").forEach(button => {

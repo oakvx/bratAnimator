@@ -20,7 +20,9 @@ function loadI18n({ language = "en-US", saved = null, search = "", unavailableSt
 test("Italian browser locale is used only when no saved or URL preference exists", () => {
     assert.equal(loadI18n({ language: "it-IT" }).i18n.getSavedLanguage(), "it");
     assert.equal(loadI18n({ language: "it" }).i18n.getSavedLanguage(), "it");
-    assert.equal(loadI18n({ language: "fr-FR" }).i18n.getSavedLanguage(), "en");
+    // senza preferenze l'editor parte in italiano come lo studio
+    assert.equal(loadI18n({ language: "fr-FR" }).i18n.getSavedLanguage(), "it");
+    assert.equal(loadI18n({ language: "en-US" }).i18n.getSavedLanguage(), "it");
     for (const saved of ["en", "ru", "zh", "it"]) {
         assert.equal(loadI18n({ language: "it-IT", saved }).i18n.getSavedLanguage(), saved);
     }
@@ -61,4 +63,38 @@ test("Italian UI translates tutorial, accessibility and status copy without repl
     assert.equal(italian.translate("saved preset: my font - green"), "stile salvato: my font - green");
     assert.equal(italian.translate("This is a user lyric with the word green"), "This is a user lyric with the word green");
     assert.equal(italian.translate("fast MP4 export: 20% • estimated remaining 0:03"), "esportazione MP4 rapida: 20% • tempo rimanente stimato 0:03");
+});
+
+test("ogni intestazione dei gruppi dell'editor ha la traduzione italiana", () => {
+    const layout = fs.readFileSync(require.resolve("../assets/js/editor-layout.js"), "utf8");
+    const strings = [...layout.matchAll(/"([A-Z][^"]{3,})"/g)].map(match => match[1].trim())
+        .filter(text => !text.endsWith("·"));
+    assert.ok(strings.length > 30, "unexpected layout string count");
+    const missing = strings.filter(text => italian.translate(text) === text);
+    assert.deepEqual(missing, []);
+});
+
+test("la descrizione dei gruppi è testo d'interfaccia traducibile", () => {
+    const source = fs.readFileSync(require.resolve("../assets/js/italian-ui.js"), "utf8");
+    assert.match(source, /\.inspector-group-description/);
+});
+
+test("i bottoni della barra del titolo tengono l'aria-label inglese che 7.css usa per le icone", () => {
+    const source = fs.readFileSync(require.resolve("../assets/js/italian-ui.js"), "utf8");
+    assert.match(source, /attribute === "aria-label" && element\.closest\("\.title-bar-controls"\)/);
+});
+
+test("stato dell'archivio locale e messaggi fissi della timeline hanno la traduzione italiana", () => {
+    for (const text of ["local workspace ready", "unsaved changes", "saving locally…", "saved locally", "local save cleared",
+        "saved in browser fallback", "save failed — export a backup", "Projects stay on this device; signing in does not synchronize them.",
+        "Drag clips to move or trim · scroll horizontally to navigate · drop local media onto a track",
+        "Clip updated • one undo step", "Select a clip to split.", "Unlock the track before editing its clips.", "Unlock this track first."]) {
+        assert.notEqual(italian.translate(text), text, text);
+    }
+});
+
+test("il pannello tracce ha le scritte in italiano", () => {
+    for (const text of ["Cannot edit clip.", "Select track", "Toggle track visibility", "visible", "hidden", "Toggle track mute", "muted", "sound", "Toggle track lock", "locked", "unlocked", "Select clip", "No clips in this track.", "Select or add a track.", "No imported media (planning only)", "Deletes all clips in this track", "Select an unlocked Video, Overlay or Audio track first.", "Importing", "Media import failed.", "Up to 512 MiB per file · stored locally", "track type", "add track", "Multitrack tracks", "selected track", "track name", "rename", "delete track", "clips", "Clips in selected track", "imported media", "name", "clip name", "start (seconds)", "duration (seconds)", "playback speed", "set track volume", "fade in (s)", "fade out (s)", "apply clip audio", "overlay text", "Title or sticker text", "apply visual settings", "add clip", "apply start / duration", "delete clip", "split at (seconds)", "split selected clip", "Multitrack metadata is saved with this project.", "import video / image / audio", "move up", "move down"]) {
+        assert.notEqual(italian.translate(text), text, text);
+    }
 });

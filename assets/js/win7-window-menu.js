@@ -16,12 +16,12 @@
         projects: "projects", sounds: "sounds", settings: "settings",
         share: "share"
     });
-    function createMenu(document, win = globalThis) {
-        const menu = document.getElementById("studioWin7MenuBar");
+    // menubar windows 7 generica: apre/chiude i sottomenu, tastiera, click fuori.
+    // i bottoni con data-win7-command vanno a run(); gli altri tengono i loro listener.
+    function createMenuBar(menu, { run = () => {}, document = globalThis.document, win = globalThis } = {}) {
         if (!menu) return null;
         const headings = Array.from(menu.children).filter(node => node.getAttribute("aria-haspopup") === "true");
         let selected = null;
-        const $ = id => document.getElementById(id);
         function close() {
             if (selected) selected.setAttribute("aria-expanded", "false");
             selected = null;
@@ -38,8 +38,82 @@
             if (selected === node) { close(); return false; }
             return open(node);
         }
+        menu.addEventListener("click", event => {
+            const command = event.target.closest("button[data-win7-command]");
+            if (command && menu.contains(command)) {
+                event.preventDefault();
+                close();
+                run(command.dataset.win7Command, command);
+                return;
+            }
+            const plain = event.target.closest("button");
+            if (plain && menu.contains(plain)) { close(); return; }
+            const heading = event.target.closest('[aria-haspopup="true"]');
+            if (heading && menu.contains(heading)) {
+                event.stopPropagation();
+                toggle(heading);
+            }
+        });
+        function itemsOf(node) {
+            return Array.from(node?.querySelectorAll('[role=menu] button:not(:disabled), [role=menu] a') || []);
+        }
+        menu.addEventListener("keydown", event => {
+            // i tasti dentro il menu restano al menu: niente play, seek o scorciatoie a lettera dell'editor
+            if (!event.ctrlKey && !event.metaKey && !event.altKey && !["Tab", "F1"].includes(event.key)) event.stopPropagation();
+            const heading = event.target.closest('[aria-haspopup="true"]');
+            const inSubmenu = Boolean(event.target.closest("[role=menu]"));
+            if (event.key === "Escape" && selected) {
+                event.preventDefault();
+                const owner = selected;
+                close();
+                owner.focus();
+                return;
+            }
+            if (inSubmenu && ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+                event.preventDefault();
+                const items = itemsOf(heading);
+                const current = items.indexOf(event.target.closest("button, a"));
+                const last = items.length - 1;
+                const next = event.key === "Home" ? 0 : event.key === "End" ? last
+                    : event.key === "ArrowDown" ? (current + 1) % items.length
+                    : (current - 1 + items.length) % items.length;
+                items[next]?.focus();
+                return;
+            }
+            if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                event.preventDefault();
+                const current = Math.max(0, headings.indexOf(heading));
+                const step = event.key === "ArrowRight" ? 1 : -1;
+                const target = headings[(current + step + headings.length) % headings.length];
+                open(target);
+                if (inSubmenu) itemsOf(target)[0]?.focus();
+                return;
+            }
+            if (event.key === "ArrowDown" && heading) {
+                event.preventDefault();
+                open(heading);
+                itemsOf(heading)[0]?.focus();
+                return;
+            }
+            if ((event.key === "Enter" || event.key === " ") && heading === event.target) {
+                event.preventDefault();
+                toggle(heading);
+                itemsOf(heading)[0]?.focus();
+            }
+        });
+        document.addEventListener("pointerdown", event => {
+            if (!menu.contains(event.target)) close();
+        });
+        win.addEventListener?.("brat:studio-view", close);
+        return Object.freeze({ open, close, toggle, headings, isOpen: () => Boolean(selected) });
+    }
+
+    function createMenu(document, win = globalThis) {
+        const menu = document.getElementById("studioWin7MenuBar");
+        if (!menu) return null;
+        const $ = id => document.getElementById(id);
+        let bar = null;
         function run(command) {
-            close();
             if (command === "help") return $("studioAddressHelp")?.click();
             if (command === "about") {
                 const dialog = $("studioAboutDialog");
@@ -56,50 +130,13 @@
             if (VIEWS[command]) {
                 win.BratWin7ShellInstance?.restore();
                 win.BratStudio?.show(VIEWS[command]);
-                if (command === "timeline") document.querySelector('[data-open-tab="tracks"]')?.click();
+                if (command === "timeline") win.BratEditorNav?.openTab("tracks");
                 if (command === "sounds") $("studioSoundImport")?.focus();
                 return;
             }
             return false;
         }
-        menu.addEventListener("click", event => {
-            const button = event.target.closest("button[data-win7-command]");
-            if (button && menu.contains(button)) {
-                event.preventDefault();
-                run(button.dataset.win7Command);
-                return;
-            }
-            const heading = event.target.closest('[aria-haspopup="true"]');
-            if (heading && menu.contains(heading)) {
-                event.stopPropagation();
-                toggle(heading);
-            }
-        });
-        menu.addEventListener("keydown", event => {
-            const heading = event.target.closest('[aria-haspopup="true"]');
-            if (event.key === "Escape") { event.preventDefault(); close(); heading?.focus(); return; }
-            if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-                event.preventDefault();
-                const current = Math.max(0, headings.indexOf(heading));
-                const step = event.key === "ArrowRight" ? 1 : -1;
-                open(headings[(current + step + headings.length) % headings.length]);
-                return;
-            }
-            if (event.key === "ArrowDown" && heading) {
-                event.preventDefault();
-                open(heading);
-                heading.querySelector('button[data-win7-command]')?.focus();
-                return;
-            }
-            if ((event.key === "Enter" || event.key === " ") && heading === event.target) {
-                event.preventDefault();
-                toggle(heading);
-                heading.querySelector('button[data-win7-command]')?.focus();
-            }
-        });
-        document.addEventListener("pointerdown", event => {
-            if (!menu.contains(event.target)) close();
-        });
+        bar = createMenuBar(menu, { run, document, win });
         document.addEventListener("keydown", event => {
             if (event.key === "Escape" && !$("studioAboutDialog")?.hidden) {
                 $("studioAboutDialog").hidden = true;
@@ -108,7 +145,7 @@
             if (event.altKey && event.key.toLowerCase() === "f" &&
                 document.body.classList.contains("studio-dashboard-open")) {
                 event.preventDefault();
-                open(headings[0]);
+                bar.open(bar.headings[0]);
             }
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n" &&
                 document.body.classList.contains("studio-dashboard-open") &&
@@ -121,8 +158,7 @@
         $("studioAboutDialog")?.addEventListener("click", event => {
             if (event.target === $("studioAboutDialog")) $("studioAboutDialog").hidden = true;
         });
-        win.addEventListener?.("brat:studio-view", close);
-        return Object.freeze({ open, close, toggle, run, isOpen: () => Boolean(selected) });
+        return Object.freeze({ open: bar.open, close: bar.close, toggle: bar.toggle, run: command => { bar.close(); return run(command); }, isOpen: bar.isOpen });
     }
-    return Object.freeze({ VIEWS, createMenu, init: createMenu });
+    return Object.freeze({ VIEWS, createMenuBar, createMenu, init: createMenu });
 });

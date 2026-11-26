@@ -37,12 +37,7 @@ test("auth integration stays disabled until public Supabase config is provided",
 test("dashboard renders concrete navigation and all three auth options", () => {
     const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
     for (const identifier of ["studioDashboard","studioProjectsView","studioSettingsView","studioAuthDialog","studioLogoutDialog","studioAuthEmail","studioAuthPassword","studioAuthCode","studioAuthGoogle","studioTransferGuest","studioNewProject","studioBackToHome"]) {
-        if (identifier === "studioBackToHome") {
-            const script = fs.readFileSync(path.join(__dirname, "../assets/js/studio-dashboard.js"), "utf8");
-            assert.match(script, /studioBackToHome/);
-        } else {
-            assert.ok(html.includes('id="' + identifier + '"'), identifier + " missing from HTML");
-        }
+        assert.ok(html.includes('id="' + identifier + '"'), identifier + " missing from HTML");
     }
     assert.match(html, /assets\/js\/auth-client\.js/);
     assert.match(html, /assets\/js\/studio-dashboard\.js/);
@@ -89,4 +84,12 @@ test("browser configuration rejects secret and service-role keys", () => {
     assert.equal(configuredAuth(undefined, "sb_secret_never_put_this_in_a_browser").api.configured(), false);
     const payload = Buffer.from(JSON.stringify({ role: "service_role" })).toString("base64url");
     assert.equal(configuredAuth(undefined, "eyJhbGciOiJIUzI1NiJ9." + payload + ".signature").api.configured(), false);
+});
+
+test("il messaggio di login non disponibile non raddoppia la punteggiatura", () => {
+    assert.equal(auth.unavailableMessage(new Error("Impossibile caricare Supabase. Controlla la connessione e riprova.")),
+        "Login non disponibile: Impossibile caricare Supabase. Controlla la connessione e riprova. L'editor ospite continua a funzionare.");
+    assert.equal(auth.unavailableMessage(new Error("timeout")),
+        "Login non disponibile: timeout. L'editor ospite continua a funzionare.");
+    assert.equal(auth.unavailableMessage(null), "Login non disponibile. L'editor ospite continua a funzionare.");
 });

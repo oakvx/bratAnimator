@@ -300,7 +300,7 @@ try {
         await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile });
         await evaluate(() => {
             auditSetLyrics('[00:00.00] Ciao, amico.\n[00:10.00] Ciaoooooooo');
-            document.querySelector('[data-open-tab="timing"]')?.click();
+            BratEditorNav.openTab('timing');
             window.dispatchEvent(new Event('resize'));
             renderPreviewAt(5);
         });

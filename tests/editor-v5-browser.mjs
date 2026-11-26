@@ -50,6 +50,92 @@ try {
     await poll(() => document.readyState === 'complete' && !!window.BratEditor, 'v5 editor ready');
     await poll(() => window.BratBoot && !window.BratBoot.isVisible(), 'Windows startup intro complete', 200);
     await evaluate(() => window.BratStudio.show('editor'));
+    await test('historic tab names open the new grouped tab', () => evaluate(() => {
+        BratEditorNav.openTab('canvas');
+        const tab = document.querySelector('.editor-tab[aria-selected="true"]');
+        auditAssert(tab?.dataset.openTab === 'style', `wrong tab ${tab?.dataset.openTab}`);
+        auditAssert(!document.getElementById('section-canvas').hidden && !document.getElementById('section-design').hidden, 'style sections hidden');
+        auditAssert(document.getElementById('section-lyrics').hidden, 'text section still visible');
+        auditAssert(document.querySelectorAll('.editor-tab').length === 4, 'expected 4 tabs');
+        BratEditorNav.openTab('lyrics');
+        return tab.dataset.openTab;
+    }));
+    await test('menu commands reopen a hidden panel on the right tab', () => evaluate(() => {
+        if (!panel.classList.contains('hidden')) togglePanelBtn.click();
+        auditAssert(panel.classList.contains('hidden'), 'panel did not hide');
+        auditAssert(togglePanelBtn.getAttribute('aria-checked') === 'false', 'panel menu check stale');
+        const view = [...document.querySelectorAll('#editorMenuBar > [aria-haspopup="true"]')][2];
+        view.click();
+        auditAssert(view.getAttribute('aria-expanded') === 'true', 'view menu did not open');
+        document.getElementById('textSettingsBtn').click();
+        auditAssert(view.getAttribute('aria-expanded') === 'false', 'menu stayed open');
+        auditAssert(!panel.classList.contains('hidden'), 'panel still hidden');
+        auditAssert(document.querySelector('.editor-tab[aria-selected="true"]').dataset.openTab === 'style', 'wrong tab');
+        document.querySelector('#editorMenuBar [data-win7-command="snapshot"]').click();
+        auditAssert(document.querySelector('.editor-tab[aria-selected="true"]').dataset.openTab === 'export', 'snapshot did not open export tab');
+        document.querySelector('#editorMenuBar .lang-btn[data-lang="it"]').click();
+        auditAssert(document.documentElement.lang === 'it', 'language menu failed');
+        auditAssert(document.querySelector('#editorMenuBar .lang-btn[data-lang="it"]').getAttribute('aria-checked') === 'true', 'language check stale');
+        auditAssert(document.querySelector('.editor-tab[aria-selected="true"]').dataset.openTab === 'export', 'language switch changed the active tab');
+        auditAssert(document.querySelector('#section-lyrics > .section-title').textContent.trim() === 'Trova il testo', `section title not localized: ${document.querySelector('#section-lyrics > .section-title').textContent}`);
+        document.querySelector('#editorMenuBar .lang-btn[data-lang="en"]').click();
+        BratEditorNav.openTab('lyrics');
+        return 'ok';
+    }));
+    await test('escape closes only the top layer and dialogs are 7.css windows', () => evaluate(() => {
+        BratGuidedTour.start(0);
+        const edit = [...document.querySelectorAll('#editorMenuBar > [aria-haspopup="true"]')][1];
+        edit.click();
+        document.getElementById('commandPaletteBtn').click();
+        const palette = document.getElementById('commandPalette');
+        auditAssert(!palette.classList.contains('hidden'), 'palette did not open');
+        auditAssert(edit.getAttribute('aria-expanded') === 'false', 'menu stayed open under the palette');
+        auditAssert(palette.querySelector('.window .title-bar .title-bar-controls button[aria-label="Close"]'), 'palette is not a 7.css window');
+        document.getElementById('commandPaletteInput').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        auditAssert(palette.classList.contains('hidden'), 'escape did not close the palette');
+        auditAssert(BratGuidedTour.state.active, 'escape on the palette also closed the tour');
+        document.getElementById('commandPaletteBtn').click();
+        document.getElementById('commandPaletteClose').click();
+        auditAssert(palette.classList.contains('hidden'), 'x did not close the palette');
+        auditAssert(document.querySelector('#permissionNotice .window .title-bar'), 'permission notice is not a 7.css window');
+        BratGuidedTour.close();
+        return 'ok';
+    }));
+    await test('one ctrl+z undoes exactly one change', () => evaluate(() => {
+        const host = window.BratMultitrackHost;
+        host.apply('add-clip', { trackId: 'main-overlay', clip: { kind: 'text', name: 'undo a', start: 0, duration: 1, source: { kind: 'text', text: 'a' } } });
+        host.apply('add-clip', { trackId: 'main-overlay', clip: { kind: 'text', name: 'undo b', start: 2, duration: 1, source: { kind: 'text', text: 'b' } } });
+        const before = state.undoStack.length;
+        document.activeElement?.blur();
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true }));
+        const after = state.undoStack.length;
+        auditAssert(after === before - 1, `ctrl+z undid ${before - after} steps`);
+        const names = host.snapshot().tracks.flatMap(track => track.clips.map(clip => clip.name));
+        auditAssert(names.includes('undo a') && !names.includes('undo b'), `wrong clips after undo: ${names}`);
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true }));
+        return { before, after };
+    }));
+    await test('menubar keys stay inside the menu and arrows walk the submenu', () => evaluate(() => {
+        const key = (target, k) => target.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: k === ' ' ? 'Space' : k, bubbles: true, cancelable: true }));
+        const file = document.querySelector('#editorMenuBar > [aria-haspopup="true"]');
+        file.focus();
+        const before = { playing: state.isPlaying, time: state.pausedElapsedSec };
+        key(file, ' ');
+        auditAssert(file.getAttribute('aria-expanded') === 'true', 'space did not open the menu');
+        auditAssert(state.isPlaying === before.playing, 'space in the menu toggled playback');
+        key(document.activeElement, 'ArrowDown');
+        const items = [...file.querySelectorAll('[role=menu] button')];
+        auditAssert(document.activeElement === items[1], `arrow down did not move to the second item: ${document.activeElement?.textContent}`);
+        key(document.activeElement, 'ArrowUp');
+        auditAssert(document.activeElement === items[0], 'arrow up did not move back');
+        key(document.activeElement, 'ArrowUp');
+        auditAssert(document.activeElement === items.at(-1), 'arrow up did not wrap to the last item');
+        key(document.activeElement, 'ArrowRight');
+        auditAssert(state.pausedElapsedSec === before.time, 'arrow right in the menu moved the playhead');
+        key(document.activeElement, 'Escape');
+        BratEditorWindow.menu.close();
+        return 'ok';
+    }));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
         const select = document.getElementById('editorModeSelect'); select.value = 'advanced'; select.dispatchEvent(new Event('change', { bubbles: true }));
@@ -65,7 +151,7 @@ try {
         stopPlayback();
         restoreProjectSettings(BratCore.migrateProjectPayload({ version: 5, lyrics: '[00:00.00] this first phrase is intentionally long enough to wrap across several visual rows in the preview and remain readable\n[00:02.00] second phrase\n[00:04.00] final phrase', style: { fontScale: 1, blur: 0, lyricsMode: 'brat', safeZones: false }, animationMode: 'line', exportSize: '720', exportFps: '24', formatPreset: 'square', seed: 1234 }));
         startFromZeroCheckbox.checked = false; useAudioTimingCheckbox.checked = false; includeAudioInExportCheckbox.checked = false;
-        seekTo(0.8); document.querySelector('[data-open-tab="design"]').click();
+        seekTo(0.8); BratEditorNav.openTab('design');
     });
     await test('global and selected phrase controls persist independently', () => evaluate(() => {
         auditInput('styleScopeSelect', 'project'); auditInput('fontScaleInput', 55, 'input'); auditInput('textColorInput', '#112233', 'input');
@@ -79,7 +165,7 @@ try {
         return { global: state.style.fontScale, selected: state.lyricRows[0].style.fontScale, id: first };
     }));
     await test('row shift, duplicate, split, merge and undo preserve phrase identities and metadata', () => evaluate(() => {
-        document.querySelector('[data-open-tab="lyrics"]').click();
+        BratEditorNav.openTab('lyrics');
         const original = structuredClone(buildProjectPayload()); const first = state.lyricRows[0]; first.translation = 'prima traduzione'; first.style.textColor = '#aa2233';
         refreshFromRows(state.lyricRows); setSelectedRowIndexes([0]);
         document.getElementById('shiftSelectedForwardBtn').click();
@@ -120,7 +206,7 @@ try {
         return { rows: angles.length, angles, bounds };
     }));
     await test('preview and downloaded PNG render the same pixels', () => evaluate(async () => {
-        document.querySelector('[data-open-tab="design"]').click(); seekTo(0.8); state.style.safeZones = false; renderPreviewAt(0.8);
+        BratEditorNav.openTab('design'); seekTo(0.8); state.style.safeZones = false; renderPreviewAt(0.8);
         const before = auditHash(previewCanvas); const { blob, filename } = await auditDownload(() => document.getElementById('exportPngBtn').click());
         const bitmap = await createImageBitmap(blob); const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height; canvas.getContext('2d').drawImage(bitmap, 0, 0); bitmap.close();
         const after = auditHash(canvas); auditAssert(before === after, `PNG differs ${before}/${after}`);
@@ -137,7 +223,7 @@ try {
     await test('canvas pointer moves pause playback, create one undo entry and Escape cancels', async () => {
         await evaluate(() => { seekTo(0.8); previewCanvas.click(); window.auditBeforeStyle = JSON.stringify(state.lyricRows[0].style); window.auditBeforeUndo = state.undoStack.length; window.auditBeforeHash = auditHash(previewCanvas); const bounds = BratEditor.currentLayout().layout.totalBounds; window.auditBeforeCenter = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; auditAssert(!document.getElementById('canvasEditOverlay').hidden, 'overlay absent'); });
         await pointerGesture('#canvasTextBox', 35, 16);
-        const moved = await evaluate(() => { auditAssert(!state.isPlaying, 'drag did not pause'); auditAssert(state.undoStack.length === window.auditBeforeUndo + 1, 'drag undo count'); auditAssert(JSON.stringify(state.lyricRows[0].style) !== window.auditBeforeStyle, 'drag did not change position'); const result = structuredClone(state.lyricRows[0].style); const saved = buildProjectPayload(); auditAssert(saved.lyricRows[0].style.positionX === result.positionX, 'released transform not saved in project'); renderPreviewAt(0.8); const bounds = BratEditor.currentLayout().layout.totalBounds; auditAssert(bounds.x + bounds.width / 2 > auditBeforeCenter.x + 5 && bounds.y + bounds.height / 2 > auditBeforeCenter.y + 5, 'released transform not used by rendered layout'); auditAssert(auditHash(previewCanvas) !== auditBeforeHash, 'released transform did not change preview pixels'); document.getElementById('undoBtn').click(); auditAssert(JSON.stringify(state.lyricRows[0].style) === window.auditBeforeStyle, 'undo did not restore'); seekTo(0.8); auditAssert(auditHash(previewCanvas) === auditBeforeHash, 'undo did not restore preview pixels'); previewCanvas.click(); window.auditBeforeUndo = state.undoStack.length; return result; });
+        const moved = await evaluate(() => { auditAssert(!state.isPlaying, 'drag did not pause'); auditAssert(state.undoStack.length === window.auditBeforeUndo + 1, 'drag undo count'); auditAssert(JSON.stringify(state.lyricRows[0].style) !== window.auditBeforeStyle, 'drag did not change position'); const result = structuredClone(state.lyricRows[0].style); const saved = buildProjectPayload(); auditAssert(saved.lyricRows[0].style.positionX === result.positionX, 'released transform not saved in project'); renderPreviewAt(0.8); const bounds = BratEditor.currentLayout().layout.totalBounds; auditAssert(bounds.x + bounds.width / 2 > auditBeforeCenter.x + 5 && bounds.y + bounds.height / 2 > auditBeforeCenter.y + 5, `released transform not used by rendered layout: ${JSON.stringify({ before: auditBeforeCenter, after: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }, style: result })}`); auditAssert(auditHash(previewCanvas) !== auditBeforeHash, 'released transform did not change preview pixels'); document.getElementById('undoBtn').click(); auditAssert(JSON.stringify(state.lyricRows[0].style) === window.auditBeforeStyle, 'undo did not restore'); seekTo(0.8); auditAssert(auditHash(previewCanvas) === auditBeforeHash, 'undo did not restore preview pixels'); previewCanvas.click(); window.auditBeforeUndo = state.undoStack.length; return result; });
         await pointerGesture('#canvasTextBox', -28, 12, true);
         await evaluate(() => { auditAssert(state.undoStack.length === window.auditBeforeUndo && JSON.stringify(state.lyricRows[0].style) === window.auditBeforeStyle, 'Escape committed drag'); });
         return moved;
@@ -189,7 +275,7 @@ try {
     });
     for (const [label, width, height, mobile] of [['desktop', 1440, 1000, false], ['mobile', 390, 844, true], ['narrow', 320, 844, true]]) {
         await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile });
-        await test(`${label} v5 settings fit viewport`, () => evaluate(async width => { document.querySelector('[data-open-tab="design"]').click(); document.getElementById('textSettings').scrollIntoView({ block: 'start', behavior: 'instant' }); window.dispatchEvent(new Event('resize')); await document.fonts.ready; await Promise.all(document.getAnimations().map(animation => animation.finished.catch(() => {}))); await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); const offenders = [...document.querySelectorAll('body *')].filter(node => { const rect = node.getBoundingClientRect(); return rect.width > 0 && rect.right > width + 1; }).slice(0, 8).map(node => ({ tag: node.tagName, id: node.id, class: node.className, right: node.getBoundingClientRect().right })); auditAssert(document.documentElement.scrollWidth <= width + 1, `horizontal overflow ${document.documentElement.scrollWidth}/${width}: ${JSON.stringify(offenders)}`); for (const id of ['editorModeSelect','styleScopeSelect','phraseSelect','fontScaleInput','entranceModeSelect','randomAngleInput']) { const node = document.getElementById(id); const rect = node.getBoundingClientRect(); auditAssert(rect.width > 0 && rect.left >= -1 && rect.right <= innerWidth + 1, `clipped ${id}: ${JSON.stringify(rect.toJSON())}`); } return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth }; }, width));
+        await test(`${label} v5 settings fit viewport`, () => evaluate(async width => { BratEditorNav.openTab('design'); document.getElementById('textSettings').scrollIntoView({ block: 'start', behavior: 'instant' }); window.dispatchEvent(new Event('resize')); await document.fonts.ready; await Promise.all(document.getAnimations().filter(animation => Number.isFinite(animation.effect?.getTiming().iterations)).map(animation => animation.finished.catch(() => {}))); await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); const offenders = [...document.querySelectorAll('body *')].filter(node => { const rect = node.getBoundingClientRect(); return rect.width > 0 && rect.right > width + 1; }).slice(0, 8).map(node => ({ tag: node.tagName, id: node.id, class: node.className, right: node.getBoundingClientRect().right })); auditAssert(document.documentElement.scrollWidth <= width + 1, `horizontal overflow ${document.documentElement.scrollWidth}/${width}: ${JSON.stringify(offenders)}`); for (const id of ['editorModeSelect','styleScopeSelect','phraseSelect','fontScaleInput','entranceModeSelect','randomAngleInput']) { const node = document.getElementById(id); const rect = node.getBoundingClientRect(); auditAssert(rect.width > 0 && rect.left >= -1 && rect.right <= innerWidth + 1, `clipped ${id}: ${JSON.stringify(rect.toJSON())}`); } return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth }; }, width));
         const screenshot = await cdp('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }); const screenshotPath = path.join(artifacts, `${label}-editor-v5.png`); await writeFile(screenshotPath, Buffer.from(screenshot.data, 'base64')); console.log(`Screenshot: ${screenshotPath}`);
     }
     await test('no uncaught JavaScript errors', async () => { assert.deepEqual(runtimeErrors, []); return runtimeErrors; });

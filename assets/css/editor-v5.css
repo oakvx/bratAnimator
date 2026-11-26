@@ -2,145 +2,75 @@
 body[data-ui-mode="simple"] .advanced-only { display:none !important; }
 /* Simple mode is an editing density, never an incomplete app: all six sections remain accessible. */
 .v5-short-label { display:none; }
-.v5-preferences { display:flex; align-items:end; gap:12px; padding:11px 24px 16px;
-  border-bottom:0; }
-.v5-preferences .v5-field { flex:0 0 185px; margin:0; }
-.v5-preferences #editorModeSelect { font-weight:700; border-color:#b6c7ad; background:#fff; }
-.v5-preferences #v5Status { flex:1; min-width:0; margin-bottom:8px; color:var(--ink-muted); font-size:11px; }
-.v5-field { min-width:0; margin:13px 0; }
-.v5-preferences label,.v5-field>label { display:block; margin-bottom:6px; color:var(--ink-soft);
-  font-size:11px; font-weight:700; }
-.v5-block { min-width:0; margin:17px 0; padding:15px; border:1px solid var(--line);
-  border-radius:12px; background:#fff; }
-.v5-block legend { padding:0 7px; color:var(--ink); font-size:13px; font-weight:750; }
+.v5-preferences { display:flex; align-items:end; gap:10px; padding:6px 8px 8px; }
+.v5-preferences .v5-field { flex:0 0 170px; margin:0; }
+.v5-preferences #v5Status { flex:1; min-width:0; margin-bottom:4px; color:var(--ink-muted); font-size:11px; }
+.v5-field { min-width:0; margin:8px 0; }
+.v5-preferences label,.v5-field>label { display:block; margin-bottom:3px; color:var(--ink-soft); }
+.v5-block { min-width:0; margin:10px 0; }
 .v5-block progress { width:100%; }
-.v5-field textarea { min-height:88px; }
-.v5-range { display:grid; grid-template-columns:minmax(0,1fr) 50px; align-items:center; gap:11px; }
-.v5-range output { color:var(--ink); text-align:right; font:650 11px var(--font-mono); }
-.v5-scope { margin-bottom:16px; padding-bottom:13px; border-bottom:1px solid var(--line); }
-.v5-scope button,.v5-font-upload button { font-size:11px; }
-.v5-font-upload { margin-top:14px; }
-.v5-error { margin-top:8px; color:var(--danger); font-size:12px; }
-.v5-checks { display:grid; gap:5px; margin-top:12px; }
-.v5-unmatched-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px;
-  align-items:center; margin:8px 0; font-size:12px; }
+.v5-field textarea { min-height:80px; }
+.v5-range { display:grid; grid-template-columns:minmax(0,1fr) 46px; align-items:center; gap:8px; }
+.v5-range output { text-align:right; font:11px var(--font-mono); }
+.v5-scope { margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.v5-font-upload { margin-top:8px; }
+.v5-error { margin-top:6px; color:var(--danger); }
+.v5-checks { display:grid; gap:4px; margin-top:8px; }
+.v5-unmatched-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; align-items:center; margin:6px 0; }
 .v5-unmatched-row>span { overflow-wrap:anywhere; }
-.v5-unmatched button { font-size:11px; }
-.row-style-btn { grid-column:2/-1; justify-self:start; font-size:10px; }
-#editCanvasBtn { min-width:0; max-width:190px; margin-left:auto; padding:7px 10px;
-  border-color:#4a5e45; background:transparent; color:#dce8d7; font-size:11px; }
-#editCanvasBtn:hover { border-color:#accb90; color:#fff; }
-#editCanvasBtn[aria-pressed="true"] { border-color:var(--accent); background:var(--accent); color:var(--ink); }
-.v5-edit-hint { margin:0; padding:10px 15px; background:#293627; color:#e5f2dd; font-size:11px; }
+.row-style-btn { grid-column:2/-1; justify-self:start; }
+#editCanvasBtn { min-width:0; max-width:190px; margin-left:auto; }
+.v5-edit-hint { margin:0; padding:4px 8px; background:#ffffe1; border:1px solid #bdbdbd; font-size:11px; }
 .v5-canvas-overlay { position:absolute; z-index:3; pointer-events:none; }
 .v5-text-box { position:absolute; min-width:16px; min-height:16px;
-  outline:1.5px solid #c7ff76; outline-offset:1px; cursor:move; pointer-events:auto; touch-action:none; }
-.v5-text-box:focus-visible { outline:3px solid #c7ff76; outline-offset:3px; }
-.v5-handle { position:absolute; width:16px; height:16px; min-height:16px; padding:0;
-  border:2px solid #172515; border-radius:5px; background:#c7ff76; touch-action:none; }
-.v5-handle-nw { left:-8px; top:-8px; cursor:nwse-resize; }
-.v5-handle-ne { right:-8px; top:-8px; cursor:nesw-resize; }
-.v5-handle-sw { left:-8px; bottom:-8px; cursor:nesw-resize; }
-.v5-handle-se { right:-8px; bottom:-8px; cursor:nwse-resize; }
-.v5-handle-e { right:-8px; top:calc(50% - 8px); cursor:ew-resize; }
-.v5-handle-s { bottom:-8px; left:calc(50% - 8px); cursor:ns-resize; }
-.v5-guide-x,.v5-guide-y { position:absolute; display:none; background:rgba(199,255,118,.65); }
+  outline:1px dashed #000; outline-offset:1px; cursor:move; pointer-events:auto; touch-action:none; }
+.v5-text-box:focus-visible { outline:2px solid #3c7fb1; outline-offset:3px; }
+.v5-handle { position:absolute; width:14px; height:14px; min-width:0; min-height:14px; padding:0;
+  border:1px solid #000; background:#fff; touch-action:none; }
+.v5-handle-nw { left:-7px; top:-7px; cursor:nwse-resize; }
+.v5-handle-ne { right:-7px; top:-7px; cursor:nesw-resize; }
+.v5-handle-sw { left:-7px; bottom:-7px; cursor:nesw-resize; }
+.v5-handle-se { right:-7px; bottom:-7px; cursor:nwse-resize; }
+.v5-handle-e { right:-7px; top:calc(50% - 7px); cursor:ew-resize; }
+.v5-handle-s { bottom:-7px; left:calc(50% - 7px); cursor:ns-resize; }
+.v5-guide-x,.v5-guide-y { position:absolute; display:none; background:rgba(60,127,177,.7); }
 .v5-centered-x .v5-guide-x { display:block; width:1px; height:100%; left:50%; }
 .v5-centered-y .v5-guide-y { display:block; width:100%; height:1px; top:50%; }
-/* Kinetic collage controls are part of the simple editor, not an advanced-only feature. */
-.kinetic-settings { margin-block:13px 20px; border-color:#b4d48c; background:#f7fcef; }
-.kinetic-settings legend { font-size:14px; }
-.kinetic-settings .mini-copy { margin:3px 0 13px; }
-.kinetic-setting-grid { display:grid; grid-template-columns:1fr; gap:11px; }
-.kinetic-setting-grid > label { display:grid; grid-template-columns:minmax(0,1fr) auto;
-  gap:7px; padding:12px; border:1px solid var(--line); border-radius:10px;
-  background:#fff; color:var(--ink-soft); font-size:12px; font-weight:700; }
-.kinetic-setting-grid output { color:var(--ink); font:700 12px var(--font-mono); }
+/* collage cinetico: fa parte dell'editor semplice */
+.kinetic-settings { margin-block:8px 12px; }
+.kinetic-settings .mini-copy { margin:2px 0 8px; }
+.kinetic-setting-grid { display:grid; grid-template-columns:1fr; gap:8px; }
+.kinetic-setting-grid > label { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px; }
+.kinetic-setting-grid output { font:11px var(--font-mono); }
 .kinetic-setting-grid input[type="range"] { grid-column:1/-1; margin:0; }
 body[data-ui-mode="simple"] #section-design>.tool-strip { display:none; }
 body[data-ui-mode="simple"] #editCanvasBtn { display:none; }
-@media (max-width:1100px) {
-  .v5-preferences { padding-inline:19px; }
-  #editCanvasBtn { max-width:135px; }
-}
-@media (max-width:980px) {
-  .v5-preferences { max-width:800px; width:100%; margin:auto; padding:8px 18px 17px; }
-}
 @media (max-width:700px) {
-  .v5-preferences .v5-field { flex:0 1 150px; }
-  .v5-block { padding:13px; }
-  #editCanvasBtn { max-width:100px; font-size:10px; }
   #editCanvasBtn .v5-long-label { display:none; }
   #editCanvasBtn .v5-short-label { display:inline; }
 }
-@media (max-width:440px) {
-  .v5-preferences { gap:8px; }
-  .v5-preferences .v5-field { flex-basis:135px; }
-  .v5-unmatched-row { grid-template-columns:1fr; }
-  #editCanvasBtn { max-width:68px; padding:6px; font-size:9px; line-height:1.2; white-space:normal; }
-  #stageTextSettingsBtn { max-width:86px; padding:6px; font-size:9px; line-height:1.2; white-space:normal; }
-}
 
-
-/* Export readiness — scoped to the editor, no 7.css window overrides. */
-.export-preflight {
-    margin: 15px 0;
-    padding: 13px 14px;
-    border: 1px solid var(--border, #c7d3da);
-    border-radius: 9px;
-    background: var(--surface, #f7fafb);
-    color: inherit;
-}
-.export-preflight-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-.export-preflight-header h3 { margin:0; font-size:14px; font-weight:650; }
-.export-preflight-header button { padding:6px 10px; }
-.export-preflight #exportPreflightSummary { margin:8px 0; font-size:13px; font-weight:600; }
-.export-preflight-list { list-style:none; margin:8px 0 10px; padding:0; display:grid; gap:7px; }
-.export-preflight-list li { position:relative; padding:5px 8px 5px 24px; font-size:12px; line-height:1.5; }
-.export-preflight-list li::before { position:absolute; left:4px; top:4px; font-weight:700; }
+/* controlli pre-esportazione */
+.export-preflight { margin:8px 0; }
+.export-preflight-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+.export-preflight-header h3 { margin:0; font-size:12px; font-weight:600; }
+.export-preflight #exportPreflightSummary { margin:6px 0; font-weight:600; }
+.export-preflight-list { list-style:none; margin:6px 0 8px; padding:0; display:grid; gap:4px; }
+.export-preflight-list li { position:relative; padding:2px 6px 2px 20px; font-size:11px; }
+.export-preflight-list li::before { position:absolute; left:4px; top:2px; font-weight:700; }
 .export-preflight-ok::before { content:"✓"; color:#23834c; }
 .export-preflight-warning::before { content:"!"; color:#9a6e08; }
 .export-preflight-error::before { content:"×"; color:#b72a35; }
-.export-preflight[data-state="blocked"] { border-left:3px solid #b72a35; }
-.export-preflight[data-state="warning"] { border-left:3px solid #c38a15; }
-.export-preflight[data-state="ready"] { border-left:3px solid #278f58; }
-.export-preflight-note { margin:8px 0 0; font-size:11px; opacity:.78; line-height:1.5; }
-.export-preflight [hidden] { display:none !important; }
-@media(max-width:560px) { .export-preflight { padding:10px; } }
+.export-preflight-note { margin:6px 0 0; font-size:11px; color:var(--ink-muted); }
 
-
-/* Phase 12: actionable, mobile-friendly template gallery. */
-.editor-template-section {
-    margin: 13px 0 17px;
-    padding: 13px;
-    border: 1px solid #a8bdc9;
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--card-bg, #e9f1f7) 88%, transparent);
-}
-.editor-template-heading h3 {margin:0;font-size:14px;}
-.editor-template-heading p {margin:5px 0 11px;font-size:12px;line-height:1.45;}
-.editor-template-gallery {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
-.editor-template-gallery button {
-    display:flex;flex-direction:column;align-items:start;gap:5px;
-    min-height:66px;text-align:left;white-space:normal;
-    padding:10px 12px;border-radius:6px;
-    border:1px solid #8eaebf;background:linear-gradient(#fff,#e0eef7);
-    color:#19445f;box-shadow:0 1px 2px #284b6226;
-}
-.editor-template-gallery button strong {font-size:12px;}
-.editor-template-gallery button span {font-size:11px;line-height:1.35;}
-.editor-template-gallery button:hover,.editor-template-gallery button:focus-visible {
-    border-color:#4d91be;outline:2px solid #9bd0ed;outline-offset:1px;
-}
-.editor-template-section #editorTemplateStatus {margin:10px 0 0;}
-@media (max-width:520px) {
-    .editor-template-gallery {grid-template-columns:1fr;}
-    .editor-template-gallery button {min-height:54px;}
-}
-
-
-/* Offset the sticky editor header and tab bar when opening text settings
- * from the topbar or stage on touch-size screens. */
-@media (max-width: 980px) {
-    #textSettings { scroll-margin-top: calc(var(--topbar-height) + 118px); }
-}
+/* galleria modelli */
+.editor-template-section { margin:8px 0 10px; }
+.editor-template-heading h3 { margin:0; font-size:12px; font-weight:600; }
+.editor-template-heading p { margin:4px 0 8px; font-size:11px; }
+.editor-template-gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.editor-template-gallery button { display:flex; flex-direction:column; align-items:start; gap:3px;
+  min-height:54px; height:auto; text-align:left; white-space:normal; padding:6px 8px; }
+.editor-template-gallery button strong { font-size:12px; }
+.editor-template-gallery button span { font-size:11px; color:var(--ink-soft); }
+.editor-template-section #editorTemplateStatus { margin:8px 0 0; }
+@media (max-width:520px) { .editor-template-gallery { grid-template-columns:1fr; } }

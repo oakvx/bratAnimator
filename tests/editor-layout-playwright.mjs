@@ -113,7 +113,7 @@ try {
     await bootPage.screenshot({ path: path.join(output, 'win7-native-file-menu.png'), fullPage: true });
     await bootPage.keyboard.press('Escape');
     await bootPage.locator('#studioWin7MenuBar > li').last().click();
-    await bootPage.locator('[data-win7-command="about"]').click();
+    await bootPage.locator('#studioWin7MenuBar [data-win7-command="about"]').click();
     assert.equal(await bootPage.locator('#studioAboutDialog').isVisible(), true);
     await bootPage.screenshot({ path: path.join(output, 'win7-about-dialog.png'), fullPage: true });
     await bootPage.locator('#studioAboutClose').click();
@@ -169,7 +169,7 @@ try {
     assert.equal(await bootPage.evaluate(async () => (await window.BratBoot.ready).reason), 'unavailable');
     await bootContext.close();
     console.log('WINDOWS 7 SHELL PASS: offline theme import, boot frames, 7.css menus, Start and window controls.');
-    const tabs = ['lyrics', 'timing', 'tracks', 'design', 'canvas', 'export', 'project'];
+    const tabs = ['text', 'timeline', 'style', 'export'];
     const summary = [];
     for (const viewport of [
         { width: 1440, height: 900, name: 'desktop' },
@@ -301,7 +301,8 @@ try {
             const metrics = await page.evaluate(section => {
                 const panel = document.getElementById('panel');
                 const active = document.querySelector('.editor-section.active');
-                const nodes = [...active.querySelectorAll('input, select, textarea, button')].filter(n => {
+                const actives = [...document.querySelectorAll('.editor-section.active')];
+                const nodes = actives.flatMap(node => [...node.querySelectorAll('input, select, textarea, button')]).filter(n => {
                     const r = n.getBoundingClientRect(), style = getComputedStyle(n);
                     return r.width > 0 && r.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
                 });
@@ -309,9 +310,9 @@ try {
                     const box = n.getBoundingClientRect(), sectionBox = active.getBoundingClientRect();
                     return box.left < sectionBox.left - 2 || box.right > sectionBox.right + 2;
                 }).map(n => n.id || n.outerHTML.slice(0, 80));
-                const headings = [...active.querySelectorAll('.inspector-group-heading, .section-title')]
+                const headings = actives.flatMap(node => [...node.querySelectorAll('.inspector-group-heading, .section-title')])
                     .filter(n => n.getBoundingClientRect().height > 0).map(n => n.textContent.trim());
-                return { section, active: active.dataset.editorTab,
+                return { section, active: window.BratEditorTabs.groupOf(active.dataset.editorTab),
                     docWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth,
                     panelWidth: Math.round(panel.getBoundingClientRect().width),
                     sectionWidth: Math.round(active.getBoundingClientRect().width),
@@ -337,7 +338,7 @@ try {
                     start: 0, duration: 2, source: { kind: 'text', text: 'Title' } }
             });
         });
-        await page.locator('[data-open-tab="tracks"]').click({ force: true });
+        await page.locator('[data-open-tab="timeline"]').click({ force: true });
         assert.equal(await page.locator('[data-layout-group="track-visual"]').isVisible(), true);
         assert.equal(await page.locator('[data-layout-group="track-audio"]').isVisible(), false);
         await page.screenshot({ path: path.join(output, viewport.name + '-visual-properties.png'), fullPage: true });
@@ -352,7 +353,7 @@ try {
         await page.screenshot({ path: path.join(output, viewport.name + '-audio-properties.png'), fullPage: true });
         // The advanced editor must remain usable after controls were moved.
         await page.locator('#editorModeSelect').selectOption('advanced');
-        await page.locator('[data-open-tab="design"]').click({ force: true });
+        await page.locator('[data-open-tab="style"]').click({ force: true });
         assert.equal(await page.locator('#entranceSettings').isVisible(), true);
         assert.equal(await page.locator('#textSettings').isVisible(), true);
         await page.screenshot({ path: path.join(output, viewport.name + '-advanced-design.png'), fullPage: true });
@@ -369,8 +370,12 @@ try {
                 source: { kind: 'text', text: 'Hello' }
             } });
         });
+        // su telefono la timeline sta sotto il foglio del pannello: lo si chiude per usarla
+        await page.evaluate(() => window.BratEditorWindow?.setSheet(false));
         await page.locator('#studioTlViewport').scrollIntoViewIfNeeded();
-        await page.locator('#studioTlSnap').uncheck();
+        // 7.css nasconde l'input: si clicca la label come farebbe l'utente
+        await page.locator('label[for="studioTlSnap"]').click();
+        assert.equal(await page.locator('#studioTlSnap').isChecked(), false, 'snap label did not toggle the checkbox');
         await page.waitForFunction(() =>
             document.querySelectorAll('#studioTlLanes .studio-tl-clip').length >= 2);
         const imageId = await page.evaluate(() => window.__timelineImageId);

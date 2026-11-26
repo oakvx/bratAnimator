@@ -23,11 +23,12 @@
     function label(key, tag = 'span') { return `<${tag} data-v5-key="${key}">${strings[key]?.[0] || key}</${tag}>`; }
     function field(id, key, control) { return `<div class="v5-field"><label for="${id}" data-v5-key="${key}">${strings[key][0]}</label>${control}</div>`; }
     function range(id, key, min, max, value, step = 1) { return field(id, key, `<div class="v5-range"><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${value}"><output for="${id}"></output></div>`); }
-    function check(id, key, checked = false) { return `<label class="inline-check"><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}>${label(key)}</label>`; }
+    // schema 7.css: il checkbox si vede solo se è seguito dalla sua label
+    function check(id, key, checked = false) { return `<span class="inline-check"><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}><label for="${id}">${label(key)}</label></span>`; }
     function button(id, key) { return `<button id="${id}" type="button" data-v5-key="${key}">${strings[key][0]}</button>`; }
     function block(id, key, content, extra = '') { return `<fieldset id="${id}" class="v5-block ${extra}"><legend data-v5-key="${key}">${strings[key][0]}</legend>${content}</fieldset>`; }
 
-    document.querySelector('.panel-header').insertAdjacentHTML('afterend', `<div class="v5-preferences">${field('editorModeSelect', 'editorMode', `<select id="editorModeSelect"><option value="simple" data-v5-key="simple">simple</option><option value="advanced" data-v5-key="advanced">advanced</option></select>`)}<div id="v5Status" class="mini-copy" role="status"></div></div>`);
+    document.querySelector('#panel .editor-tab-strip').insertAdjacentHTML('beforebegin', `<div class="v5-preferences">${field('editorModeSelect', 'editorMode', `<select id="editorModeSelect"><option value="simple" data-v5-key="simple">simple</option><option value="advanced" data-v5-key="advanced">advanced</option></select>`)}<div id="v5Status" class="mini-copy" role="status"></div></div>`);
     $('textSettings').insertAdjacentHTML('afterbegin', `<div class="v5-scope advanced-only">${field('styleScopeSelect', 'scope', `<select id="styleScopeSelect"><option value="project" data-v5-key="project">whole project</option><option value="line" data-v5-key="selected">selected phrase</option></select>`)}${field('phraseSelect', 'phrase', '<select id="phraseSelect"></select>')}${button('inheritStyleBtn', 'inherit')}</div>`);
     $('textSettings').insertAdjacentHTML('beforeend', `<div class="advanced-only v5-font-upload">${field('customFontInput', 'customFont', '<input id="customFontInput" type="file" accept=".ttf,.otf,.woff,.woff2" multiple>')}<div id="fontStatus" class="mini-copy" role="status"></div>${button('replaceMissingFontsBtn', 'replaceFonts')}</div>`);
     $('textSettings').insertAdjacentHTML('afterend', block('entranceSettings', 'entrance', `<div class="tool-strip">${button('tiltedElasticBtn', 'tilted')}</div><div class="advanced-only">${field('entranceModeSelect', 'entrance', `<select id="entranceModeSelect"><option value="none" data-v5-key="none">none</option><option value="stretch-x" data-v5-key="horizontal">horizontal stretch</option><option value="stretch-y" data-v5-key="vertical">vertical stretch</option><option value="elastic" data-v5-key="elastic">elastic stretch</option></select>`)}${range('entranceDurationInput', 'duration', 100, 800, 320, 10)}${range('entranceIntensityInput', 'intensity', 0, 30, 15)}${check('randomAnglesCheckbox', 'random')}${range('randomAngleInput', 'angle', 0, 15, 8)}<div class="tool-strip">${button('rerollPhraseBtn', 'rerollLine')}${button('rerollProjectBtn', 'rerollAll')}</div></div>`));
@@ -288,7 +289,7 @@
         lrcRows.querySelectorAll('.lrc-row').forEach(wrapper => {
             const index = Number(wrapper.dataset.index), row = rows[index]; if (!row?.text) return;
             const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'row-style-btn'; edit.textContent = t('lineSettings');
-            edit.addEventListener('click', () => { selectPhrase(row.id); document.querySelector('[data-open-tab="design"]').click(); $('textSettings').scrollIntoView({ block: 'start' }); }); wrapper.appendChild(edit);
+            edit.addEventListener('click', () => { selectPhrase(row.id); window.BratEditorNav.openTab('design'); $('textSettings').scrollIntoView({ block: 'start' }); }); wrapper.appendChild(edit);
         });
         syncControls();
     };
@@ -391,7 +392,7 @@
         overlay.classList.toggle('v5-centered-y', Math.abs(current.style.verticalPosition || 0) < 0.012);
     }
     $('editCanvasBtn').addEventListener('click', () => {
-        if (state.style.lyricsMode !== 'brat') { document.querySelector('[data-open-tab="design"]').click(); status('Text transforms are available in Brat canvas.'); return; }
+        if (state.style.lyricsMode !== 'brat') { window.BratEditorNav.openTab('design'); status('Text transforms are available in Brat canvas.'); return; }
         editing = !editing; $('editCanvasBtn').setAttribute('aria-pressed', String(editing));
         if (editing) { stopPlayback(true); const line = activeLine(); if (line) selectPhrase(rowForLine(line)?.id); }
         refresh(); syncOverlay();

@@ -1,4 +1,4 @@
-const CACHE_NAME = "brat-animator-v30-win7-local-assets";
+const CACHE_NAME = "brat-animator-v31-win7-editor";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -9,7 +9,7 @@ const APP_ASSETS = [
   "./assets/css/editor-v5.css",
   "./vendor/7css/7.scoped.css",
   "./assets/css/studio-win7.css",
-  "./assets/css/editor-layout.css",
+  "./assets/css/win7-editor.css",
   "./assets/css/timeline-editor.css",
   "./assets/css/studio-aero-polish.css",
   "./assets/css/win7-boot.css",
@@ -39,7 +39,6 @@ const APP_ASSETS = [
   "./assets/js/editor-layout.js",
   "./assets/js/timeline-editor.js",
   "./assets/js/italian-ui.js",
-  "./assets/js/studio-shell.js",
 "./assets/js/supabase-config.js",
 "./assets/js/auth-client.js",
   "./assets/js/bratcode.js",
@@ -60,6 +59,8 @@ const APP_ASSETS = [
   "./assets/js/dashboard-audio.js",
   "./assets/js/export-preflight.js",
   "./assets/js/editor-templates.js",
+  "./assets/js/editor-tabs.js",
+  "./assets/js/editor-window.js",
   "./vendor/mp4-muxer.mjs",
   "./vendor/fflate.min.js",
   "./favicon.svg",

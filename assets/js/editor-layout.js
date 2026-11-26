@@ -5,31 +5,16 @@
     "use strict";
     if (document.body.dataset.inspectorLayout === "organized") return;
     const $ = id => document.getElementById(id);
-    const nav = document.querySelector(".editor-tabs");
-    if (!nav || !$("section-timing") || !$("section-tracks")) return;
-
-    // The user workflow is: find lyrics -> edit timing -> arrange timeline ->
-    // style -> canvas -> export -> manage project. Keep historical data-* names
-    // intact because they are referenced by command palette and saved settings.
-    const navigation = [
-        ["lyrics", "find"], ["timing", "lyrics"], ["tracks", "timeline"],
-        ["design", "style"], ["canvas", "canvas"], ["export", "export"],
-        ["project", "project"]
-    ];
-    for (const [index, [name, label]] of navigation.entries()) {
-        const button = nav.querySelector('[data-open-tab="' + name + '"]');
-        if (!button) continue;
-        button.replaceChildren();
-        const number = document.createElement("span");
-        number.textContent = String(index + 1);
-        button.append(number, document.createTextNode(" " + label));
-        nav.append(button);
-    }
+    if (!$("section-timing") || !$("section-tracks")) return;
 
     function section(name, label) {
         const node = $("section-" + name);
         const title = node?.querySelector(":scope > .section-title");
-        if (title) title.textContent = label;
+        if (title) {
+            // il titolo nuovo lo traduce italian-ui: la vecchia chiave i18n lo riscriverebbe
+            title.removeAttribute("data-i18n");
+            title.textContent = label;
+        }
         return node;
     }
     function rootChild(container, node) {
@@ -43,11 +28,12 @@
     const optionalGroups = new Set(["style-motion", "style-background", "style-library", "export-preflight", "project-preview"]);
     function createGroup(container, key, heading, description = "") {
         const collapsible = optionalGroups.has(key);
-        const group = document.createElement(collapsible ? "details" : "section");
+        // gruppi fissi = fieldset 7.css, opzionali = details 7.css
+        const group = document.createElement(collapsible ? "details" : "fieldset");
         group.className = "inspector-group";
         group.dataset.layoutGroup = key;
         group.setAttribute("aria-label", heading);
-        const title = document.createElement(collapsible ? "summary" : "h3");
+        const title = document.createElement(collapsible ? "summary" : "legend");
         title.className = "inspector-group-heading";
         title.textContent = heading;
         group.append(title);
@@ -127,7 +113,7 @@
         add(canvas, dimensions, ["[data-preset-quick='square']", "#canvasFormatSummary"]);
         const guides = createGroup(canvas, "canvas-guides", "Safe zones & preview");
         add(canvas, guides, ["#canvasFullscreenBtn", "#previewZoomInput"]);
-        const checkbox = $("safeZonesCheckbox")?.closest("label");
+        const checkbox = $("safeZonesCheckbox")?.closest(".inline-check");
         if (checkbox) guides.prepend(checkbox); // Keep the existing checkbox and its handlers.
     }
 
@@ -207,15 +193,6 @@
         };
         new MutationObserver(refreshReport).observe(report, { characterData: true, childList: true, subtree: true });
         refreshReport();
-    }
-
-    const leadTitles = {
-        tracks: "Timeline & tracks", timing: "Lyrics & timing", design: "Style & effects",
-        export: "Export", project: "Projects & backups", canvas: "Canvas & format", lyrics: "Find lyrics"
-    };
-    for (const [name, title] of Object.entries(leadTitles)) {
-        const tab = $("tab-" + name);
-        if (tab) tab.setAttribute("title", title);
     }
 
     function syncTrackPropertyPanels() {
