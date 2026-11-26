@@ -87,3 +87,15 @@ test("l'editor è una finestra 7.css con menu, toolbar e barra di stato", () => 
 test("la x della guida usa l'icona di chiusura 7.css", () => {
     assert.match(file("index.html"), /id="tutorialWindowClose"[^>]*aria-label="Close"/);
 });
+
+test("l'editor ha un solo css windows 7, senza !important", () => {
+    const html = file("index.html");
+    const css = file("assets/css/win7-editor.css");
+    assert.doesNotMatch(css, /!important/);
+    assert.doesNotMatch(html, /assets\/css\/editor-layout\.css/);
+    const vendor = html.indexOf("vendor/7css/7.scoped.css");
+    const editor = html.indexOf("assets/css/win7-editor.css");
+    assert.ok(editor > vendor, "win7-editor.css dopo 7.css");
+    const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
+    assert.equal(links.at(-1), "assets/css/win7-editor.css", "win7-editor.css è l'ultimo foglio di stile");
+});

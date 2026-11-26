@@ -3155,7 +3155,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 wrapper.className = "lrc-row" + (index === state.selectedLrcRowIndex ? " selected" : "") + (isSelected ? " multi-selected" : "");
                 wrapper.dataset.index = String(index);
                 wrapper.innerHTML = `
-                    <input class="row-select" type="checkbox" ${isSelected ? "checked" : ""} aria-label="select lyric row">
+                    <span class="row-select-box"><input id="lrcRowSelect${index}" class="row-select" type="checkbox" ${isSelected ? "checked" : ""} aria-label="select lyric row"><label for="lrcRowSelect${index}"></label></span>
                     <input class="lrc-time" value="${secondsToTag(row.time).replace(/[\[\]]/g, "")}" aria-label="timestamp">
                     <input class="lrc-text" value="${escapeHtml(row.text).replaceAll('"', '&quot;')}" aria-label="lyric text">
                     <button class="seek-row" type="button" title="seek to row">play</button>
@@ -3163,7 +3163,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
                 `;
 
                 wrapper.addEventListener("click", (event) => {
-                    if (event.target.closest("input, button")) return;
+                    if (event.target.closest("input, button, label")) return;
                     setSelectedRowIndexes([index]);
                     refreshFromRows(readRowsFromEditor());
                 });

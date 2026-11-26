@@ -17,16 +17,8 @@
 body.studio-active {
   background:#0b5c91 var(--win7-wallpaper,none) center / cover no-repeat fixed;
 }
-/* The editor stays mounted but is visually independent from the dashboard. */
-body.studio-dashboard-open .topbar,
-body.studio-dashboard-open .panel,
-body.studio-dashboard-open .page-shell { display:none !important; }
+/* l'editor resta montato ma è una finestra separata dalla dashboard */
 body.studio-editor-open #studioDashboard { display:none !important; }
-body.studio-editor-open .topbar,
-body.studio-editor-open .panel {left:0;}
-body.studio-editor-open .page-shell {margin-left:var(--panel-width,340px);}
-body.studio-editor-open.panel-closed .page-shell {margin-left:0;}
-body.studio-editor-open .studio-taskbar {display:none;}
 #studioDashboard {
   display:none;
   min-height:100dvh;
@@ -512,7 +504,6 @@ body.studio-window-maximized #studioDashboard .studio-classic-body-grid {min-hei
   font:13px/1.4 "Segoe UI",Tahoma,Arial,sans-serif;
 }
 #studioStartMenu[hidden] {display:none !important;}
-body.studio-editor-open #studioStartMenu {display:none !important;}
 #studioStartMenu .studio-start-surface.window-body {
   display:grid;
   grid-template-columns:minmax(0,1fr) 143px;
@@ -579,8 +570,6 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
   #studioStartMenu .studio-start-entry {min-height:42px;}
 }
 
-/* Editor back control needs to remain independent from Win7 theme. */
-.studio-editor-back {display:none;}
 @media(max-width:980px) {
   #studioDashboard .studio-dashboard-inner {padding:8px 8px 70px;}
   #studioDashboard .studio-classic-body-grid {grid-template-columns:1fr;}
@@ -605,17 +594,6 @@ body.studio-editor-open #studioStartMenu {display:none !important;}
   #studioDashboard .studio-main-content {padding-bottom:55px;}
   #studioDashboard .studio-classic-home {grid-template-columns:1fr;}
   #studioDashboard .studio-classic-shortcuts {display:none;}
-  body.studio-editor-open .topbar {padding-left:70px;}
-  body.studio-editor-open .panel {left:auto;}
-  body.studio-editor-open .page-shell {margin-left:0;}
-  body.studio-editor-open .studio-editor-back {
-    display:inline-flex;align-items:center;
-    position:absolute;left:8px;top:50%;
-    transform:translateY(-50%);z-index:3;
-    min-height:31px;padding:4px 7px;
-    background:#e6f4ff;border:1px solid #83b7d2;
-    border-radius:3px;color:#184e76;font-size:11px;
-  }
 }
 @media(max-width:580px) {
   :root {--brat-taskbar-height:43px;}

@@ -1,5 +1,6 @@
 const BRAT_TRANSLATIONS = {
   en: {
+    toolRestart: "From start",
     menuToggle: "Menu",
     menuFile: "File",
     menuNew: "New project",
@@ -144,6 +145,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "no video loaded"
   },
   it: {
+    toolRestart: "Da capo",
     menuToggle: "Menu",
     menuFile: "File",
     menuNew: "Nuovo progetto",
@@ -288,6 +290,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "nessun video caricato"
   },
   ru: {
+    toolRestart: "С начала",
     menuToggle: "Меню",
     menuFile: "Файл",
     menuNew: "Новый проект",
@@ -432,6 +435,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "видео не загружено"
   },
   zh: {
+    toolRestart: "从头开始",
     menuToggle: "菜单",
     menuFile: "文件",
     menuNew: "新建项目",

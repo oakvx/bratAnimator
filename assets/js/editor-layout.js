@@ -24,11 +24,12 @@
     const optionalGroups = new Set(["style-motion", "style-background", "style-library", "export-preflight", "project-preview"]);
     function createGroup(container, key, heading, description = "") {
         const collapsible = optionalGroups.has(key);
-        const group = document.createElement(collapsible ? "details" : "section");
+        // gruppi fissi = fieldset 7.css, opzionali = details 7.css
+        const group = document.createElement(collapsible ? "details" : "fieldset");
         group.className = "inspector-group";
         group.dataset.layoutGroup = key;
         group.setAttribute("aria-label", heading);
-        const title = document.createElement(collapsible ? "summary" : "h3");
+        const title = document.createElement(collapsible ? "summary" : "legend");
         title.className = "inspector-group-heading";
         title.textContent = heading;
         group.append(title);
@@ -108,7 +109,7 @@
         add(canvas, dimensions, ["[data-preset-quick='square']", "#canvasFormatSummary"]);
         const guides = createGroup(canvas, "canvas-guides", "Safe zones & preview");
         add(canvas, guides, ["#canvasFullscreenBtn", "#previewZoomInput"]);
-        const checkbox = $("safeZonesCheckbox")?.closest("label");
+        const checkbox = $("safeZonesCheckbox")?.closest(".inline-check");
         if (checkbox) guides.prepend(checkbox); // Keep the existing checkbox and its handlers.
     }
 

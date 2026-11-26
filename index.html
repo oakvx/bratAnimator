@@ -25,11 +25,11 @@
     <!-- 7.css v0.21.0 upstream CSS, vendored in full for offline/PWA use. -->
     <link rel="stylesheet" href="vendor/7css/7.scoped.css" />
     <link rel="stylesheet" href="assets/css/studio-win7.css" />
-<link rel="stylesheet" href="assets/css/editor-layout.css" />
 <link rel="stylesheet" href="assets/css/timeline-editor.css" />
     <link rel="stylesheet" href="assets/css/studio-aero-polish.css" />
     <link rel="stylesheet" href="assets/css/win7-boot.css" />
     <link rel="stylesheet" href="assets/css/win7-desktop-polish.css" />
+    <link rel="stylesheet" href="assets/css/win7-editor.css" />
     <script>
         window.BratStudioShellEnabled = true;
         try {
@@ -885,7 +885,7 @@
                 <summary>visual LRC editor</summary>
                 <label class="label" for="lrcSearchInput">search lyric</label>
                 <input id="lrcSearchInput" type="search" placeholder="filter visible lines" />
-                <div class="editor-toolbar">
+                <div class="panel-toolbar">
                     <button id="refreshEditorBtn">refresh rows</button>
                     <button id="applyEditorBtn" class="primary">apply rows to LRC</button>
                     <button id="addLrcRowBtn">+ add line</button>
@@ -897,7 +897,7 @@
                     <button id="duplicateLrcRowBtn" type="button">duplicate</button>
                     <button id="playSelectedRowBtn" type="button">play lyric</button>
                 </div>
-                <div class="editor-toolbar timing-toolbar">
+                <div class="panel-toolbar timing-toolbar">
                     <label>offset <input id="timingOffsetInput" type="number" step="0.05" value="0.50" /></label>
                     <button id="shiftSelectedBackBtn" type="button">selected -</button>
                     <button id="shiftSelectedForwardBtn" type="button">selected +</button>
@@ -937,7 +937,7 @@
             <canvas id="timelineCanvas" class="timeline-canvas" width="900" height="92" aria-label="lyric timeline"></canvas>
 
             <div class="inline-toggle">
-                <label><input id="useAudioTimingCheckbox" type="checkbox" checked /> <span data-i18n="useAudioTiming">use audio to improve timing</span></label>
+                <span class="inline-check"><input id="useAudioTimingCheckbox" type="checkbox" checked /><label for="useAudioTimingCheckbox" data-i18n="useAudioTiming">use audio to improve timing</label></span>
             </div>
 
             <div class="timing-speed">
@@ -950,7 +950,7 @@
             </div>
 
             <div class="inline-toggle">
-                <label><input id="startFromZeroCheckbox" type="checkbox" /> <span data-i18n="startFromZero">start timeline from 0:00</span></label>
+                <span class="inline-check"><input id="startFromZeroCheckbox" type="checkbox" /><label for="startFromZeroCheckbox" data-i18n="startFromZero">start timeline from 0:00</label></span>
             </div>
 
             <div class="row">
@@ -1121,10 +1121,9 @@
 
                 <fieldset class="effect-setting">
                     <legend>color exchange</legend>
-                    <label class="inline-toggle" for="colorSwapEnabledCheckbox">
-                        <input id="colorSwapEnabledCheckbox" type="checkbox" aria-describedby="colorSwapHint" />
-                        swap text and background
-                    </label>
+                    <span class="inline-check">
+                        <input id="colorSwapEnabledCheckbox" type="checkbox" aria-describedby="colorSwapHint" /><label for="colorSwapEnabledCheckbox">swap text and background</label>
+                    </span>
                     <div id="colorSwapOptions" class="swap-options">
                         <div>
                             <label class="label" for="colorSwapUnitSelect">change on</label>
@@ -1159,7 +1158,7 @@
                     </div>
                     <div>
                         <label class="label" for="wordHighlightCheckbox">highlight</label>
-                        <label class="inline-check"><input id="wordHighlightCheckbox" type="checkbox" checked /> word-progress highlight</label>
+                        <span class="inline-check"><input id="wordHighlightCheckbox" type="checkbox" checked /><label for="wordHighlightCheckbox">word-progress highlight</label></span>
                     </div>
                 </div>
                 <div class="range-grid">
@@ -1190,8 +1189,8 @@
                 </div>
                 <div class="beautiful-note">Use <code>[bg]</code>, <code>[side]</code> or <code>[rom]</code> before a lyric line to render backing vocals, side vocals or secondary/romanized lines.</div>
                 <div class="row">
-                    <label class="inline-check"><input id="beautifulDynamicBgCheckbox" type="checkbox" checked /> dynamic blurred background</label>
-                    <label class="inline-check"><input id="beautifulSideVocalsCheckbox" type="checkbox" checked /> side / backing vocals</label>
+                    <span class="inline-check"><input id="beautifulDynamicBgCheckbox" type="checkbox" checked /><label for="beautifulDynamicBgCheckbox">dynamic blurred background</label></span>
+                    <span class="inline-check"><input id="beautifulSideVocalsCheckbox" type="checkbox" checked /><label for="beautifulSideVocalsCheckbox">side / backing vocals</label></span>
                 </div>
                 <div class="range-grid">
                     <label>background motion <input id="beautifulMotionInput" type="range" min="0" max="100" value="86" /></label>
@@ -1203,7 +1202,7 @@
 
             <div class="tool-strip">
                 <button id="randomStyleBtn">randomize style</button>
-                <label class="inline-check"><input id="safeZonesCheckbox" type="checkbox" /> show social safe zones</label>
+                <span class="inline-check"><input id="safeZonesCheckbox" type="checkbox" /><label for="safeZonesCheckbox">show social safe zones</label></span>
                 <button id="fullscreenBtn">fullscreen preview</button>
             </div>
 
@@ -1343,10 +1342,9 @@
             </div>
 
             <div class="export-audio-option">
-                <label class="inline-check">
-                    <input id="includeAudioInExportCheckbox" type="checkbox" checked />
-                    <span data-i18n="includeAudioInExport">include loaded audio</span>
-                </label>
+                <span class="inline-check">
+                    <input id="includeAudioInExportCheckbox" type="checkbox" checked /><label for="includeAudioInExportCheckbox" data-i18n="includeAudioInExport">include loaded audio</label>
+                </span>
                 <div class="range-grid">
                     <label>volume <input id="exportAudioVolumeInput" type="range" min="0" max="200" value="100" /></label>
                     <label>fade in <input id="exportAudioFadeInInput" type="range" min="0" max="1000" value="0" /></label>
@@ -1489,9 +1487,7 @@
                     </div>
                 </div>
                 <div class="stage-transport win7" aria-label="preview playback">
-                    <button id="stageRestartBtn" class="transport-icon" type="button" aria-label="restart preview">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v5h5M5.6 17a8 8 0 1 0 .2-10.2L4 8" /></svg>
-                    </button>
+                    <button id="stageRestartBtn" type="button" data-i18n="toolRestart">Da capo</button>
                     <button id="stagePlayBtn" class="transport-play" type="button" aria-label="play preview" aria-pressed="false">play</button>
                     <span id="stageCurrentTime" class="transport-time">0:00</span>
                     <input id="stageSeekInput" type="range" min="0" max="1000" value="0" step="1" aria-label="preview playhead" />
@@ -1508,7 +1504,7 @@
                         <button id="studioTlUndo" type="button" title="Undo timeline edit (Ctrl+Z)" aria-label="Undo timeline edit" disabled>↶</button>
                         <button id="studioTlRedo" type="button" title="Redo timeline edit (Ctrl+Shift+Z)" aria-label="Redo timeline edit" disabled>↷</button>
                         <button id="studioTlSplit" type="button" title="Split selected clip at playhead">split</button>
-                        <label class="studio-tl-snap"><input id="studioTlSnap" type="checkbox" checked> snap</label>
+                        <span class="studio-tl-snap"><input id="studioTlSnap" type="checkbox" checked><label for="studioTlSnap">snap</label></span>
                         <button id="studioTlZoomOut" type="button" aria-label="Zoom timeline out">−</button>
                         <label class="studio-tl-zoom-label" for="studioTlZoom">zoom
                             <input id="studioTlZoom" type="range" min="12" max="240" step="1" value="48" />

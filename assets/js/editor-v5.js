@@ -23,7 +23,8 @@
     function label(key, tag = 'span') { return `<${tag} data-v5-key="${key}">${strings[key]?.[0] || key}</${tag}>`; }
     function field(id, key, control) { return `<div class="v5-field"><label for="${id}" data-v5-key="${key}">${strings[key][0]}</label>${control}</div>`; }
     function range(id, key, min, max, value, step = 1) { return field(id, key, `<div class="v5-range"><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${value}"><output for="${id}"></output></div>`); }
-    function check(id, key, checked = false) { return `<label class="inline-check"><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}>${label(key)}</label>`; }
+    // schema 7.css: il checkbox si vede solo se è seguito dalla sua label
+    function check(id, key, checked = false) { return `<span class="inline-check"><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}><label for="${id}">${label(key)}</label></span>`; }
     function button(id, key) { return `<button id="${id}" type="button" data-v5-key="${key}">${strings[key][0]}</button>`; }
     function block(id, key, content, extra = '') { return `<fieldset id="${id}" class="v5-block ${extra}"><legend data-v5-key="${key}">${strings[key][0]}</legend>${content}</fieldset>`; }
 

@@ -113,7 +113,7 @@ try {
     await bootPage.screenshot({ path: path.join(output, 'win7-native-file-menu.png'), fullPage: true });
     await bootPage.keyboard.press('Escape');
     await bootPage.locator('#studioWin7MenuBar > li').last().click();
-    await bootPage.locator('[data-win7-command="about"]').click();
+    await bootPage.locator('#studioWin7MenuBar [data-win7-command="about"]').click();
     assert.equal(await bootPage.locator('#studioAboutDialog').isVisible(), true);
     await bootPage.screenshot({ path: path.join(output, 'win7-about-dialog.png'), fullPage: true });
     await bootPage.locator('#studioAboutClose').click();
@@ -371,7 +371,9 @@ try {
             } });
         });
         await page.locator('#studioTlViewport').scrollIntoViewIfNeeded();
-        await page.locator('#studioTlSnap').uncheck();
+        // 7.css nasconde l'input: si clicca la label come farebbe l'utente
+        await page.locator('label[for="studioTlSnap"]').click();
+        assert.equal(await page.locator('#studioTlSnap').isChecked(), false, 'snap label did not toggle the checkbox');
         await page.waitForFunction(() =>
             document.querySelectorAll('#studioTlLanes .studio-tl-clip').length >= 2);
         const imageId = await page.evaluate(() => window.__timelineImageId);

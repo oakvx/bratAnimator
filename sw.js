@@ -9,7 +9,7 @@ const APP_ASSETS = [
   "./assets/css/editor-v5.css",
   "./vendor/7css/7.scoped.css",
   "./assets/css/studio-win7.css",
-  "./assets/css/editor-layout.css",
+  "./assets/css/win7-editor.css",
   "./assets/css/timeline-editor.css",
   "./assets/css/studio-aero-polish.css",
   "./assets/css/win7-boot.css",
