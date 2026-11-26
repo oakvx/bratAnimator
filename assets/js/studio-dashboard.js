@@ -707,6 +707,6 @@
             notify("");
             return renderProjects();
         }
-    }).catch(error => notify("Login non disponibile: " + error.message + ". L'editor ospite continua a funzionare.", true));
+    }).catch(error => notify(auth.unavailableMessage(error), true));
     window.BratStudio = { show: viewSwitch, showAuth, getView: () => view };
 })();

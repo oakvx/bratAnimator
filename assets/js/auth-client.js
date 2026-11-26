@@ -108,7 +108,16 @@
         return root.location ? root.location.origin + root.location.pathname : undefined;
     }
 
+    // frase unica per l'avviso: niente punto doppio se il motivo finisce già con la punteggiatura
+    function unavailableMessage(error) {
+        const reason = String(error?.message || "").trim().replace(/[.!?…]+$/u, "");
+        return reason
+            ? "Login non disponibile: " + reason + ". L'editor ospite continua a funzionare."
+            : "Login non disponibile. L'editor ospite continua a funzionare.";
+    }
+
     return Object.freeze({
+        unavailableMessage,
         configured,
         initialize,
         listen,

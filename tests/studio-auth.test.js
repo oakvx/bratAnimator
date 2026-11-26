@@ -85,3 +85,11 @@ test("browser configuration rejects secret and service-role keys", () => {
     const payload = Buffer.from(JSON.stringify({ role: "service_role" })).toString("base64url");
     assert.equal(configuredAuth(undefined, "eyJhbGciOiJIUzI1NiJ9." + payload + ".signature").api.configured(), false);
 });
+
+test("il messaggio di login non disponibile non raddoppia la punteggiatura", () => {
+    assert.equal(auth.unavailableMessage(new Error("Impossibile caricare Supabase. Controlla la connessione e riprova.")),
+        "Login non disponibile: Impossibile caricare Supabase. Controlla la connessione e riprova. L'editor ospite continua a funzionare.");
+    assert.equal(auth.unavailableMessage(new Error("timeout")),
+        "Login non disponibile: timeout. L'editor ospite continua a funzionare.");
+    assert.equal(auth.unavailableMessage(null), "Login non disponibile. L'editor ospite continua a funzionare.");
+});
