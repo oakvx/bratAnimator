@@ -67,7 +67,7 @@ test("l'editor è una finestra 7.css con menu, toolbar e barra di stato", () => 
         "textSettingsBtn", "permissionLink"]) {
         assert.match(menu, new RegExp('id="' + id + '"'), id + " deve stare nel menu");
     }
-    for (const command of ["undo-text", "redo-text", "undo-timeline", "redo-timeline", "about", "close-editor"]) {
+    for (const command of ["undo", "redo", "about", "close-editor"]) {
         assert.match(menu, new RegExp('data-win7-command="' + command + '"'), command + " nel menu");
     }
     const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(m => m[1]);

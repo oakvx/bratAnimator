@@ -121,7 +121,7 @@ body.studio-editor-open .studio-taskbar { display:flex; }
   /* toolbar con il bottone menu: una riga, scorre se serve, mai tagliata */
   #studioEditorChrome .editor-toolbar { gap:4px; padding:4px; }
   #studioEditorChrome .editor-toolbar > button { flex:1 1 auto; min-width:0; min-height:40px; padding-inline:8px; white-space:nowrap; }
-  #studioEditorChrome .editor-toolbar > [data-editor-action="split"] { display:none; }
+  #studioEditorChrome .editor-toolbar > :is([data-editor-action="split"],[data-editor-action="undo"],[data-editor-action="redo"]) { display:none; }
   #studioEditorChrome .editor-menu-toggle { display:inline-block; }
   #studioEditorChrome .editor-toolbar-spacer,#studioEditorChrome .autosave-pill { display:none; }
 

@@ -101,6 +101,20 @@ try {
         BratGuidedTour.close();
         return 'ok';
     }));
+    await test('one ctrl+z undoes exactly one change', () => evaluate(() => {
+        const host = window.BratMultitrackHost;
+        host.apply('add-clip', { trackId: 'main-overlay', clip: { kind: 'text', name: 'undo a', start: 0, duration: 1, source: { kind: 'text', text: 'a' } } });
+        host.apply('add-clip', { trackId: 'main-overlay', clip: { kind: 'text', name: 'undo b', start: 2, duration: 1, source: { kind: 'text', text: 'b' } } });
+        const before = state.undoStack.length;
+        document.activeElement?.blur();
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true }));
+        const after = state.undoStack.length;
+        auditAssert(after === before - 1, `ctrl+z undid ${before - after} steps`);
+        const names = host.snapshot().tracks.flatMap(track => track.clips.map(clip => clip.name));
+        auditAssert(names.includes('undo a') && !names.includes('undo b'), `wrong clips after undo: ${names}`);
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true }));
+        return { before, after };
+    }));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
         const select = document.getElementById('editorModeSelect'); select.value = 'advanced'; select.dispatchEvent(new Event('change', { bubbles: true }));

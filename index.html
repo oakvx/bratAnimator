@@ -774,10 +774,8 @@
             </li>
             <li role="menuitem" tabindex="-1" aria-haspopup="true" aria-expanded="false"><span data-i18n="menuEdit">Modifica</span>
                 <ul role="menu">
-                    <li role="menuitem"><button type="button" data-win7-command="undo-text"><span data-i18n="menuUndoText">Annulla testo e stile</span> <kbd>Ctrl+Z</kbd></button></li>
-                    <li role="menuitem"><button type="button" data-win7-command="redo-text"><span data-i18n="menuRedoText">Ripeti testo e stile</span> <kbd>Ctrl+Y</kbd></button></li>
-                    <li role="menuitem" class="has-divider"><button type="button" data-win7-command="undo-timeline" data-i18n="menuUndoTimeline">Annulla timeline</button></li>
-                    <li role="menuitem"><button type="button" data-win7-command="redo-timeline" data-i18n="menuRedoTimeline">Ripeti timeline</button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="undo"><span data-i18n="menuUndo">Annulla</span> <kbd>Ctrl+Z</kbd></button></li>
+                    <li role="menuitem"><button type="button" data-win7-command="redo"><span data-i18n="menuRedo">Ripeti</span> <kbd>Ctrl+Y</kbd></button></li>
                     <li role="menuitem" class="has-divider"><button id="commandPaletteBtn" type="button" aria-haspopup="dialog" aria-controls="commandPalette"><span data-i18n="menuCommands">Comandi…</span> <kbd>Ctrl+K</kbd></button></li>
                 </ul>
             </li>
@@ -811,6 +809,8 @@
             <button id="editorMenuToggle" class="editor-menu-toggle" type="button" aria-controls="editorMenuBar" aria-expanded="false" data-i18n="menuToggle">Menu</button>
             <button id="studioBackToHome" type="button" data-editor-action="studio" aria-label="Torna allo studio" data-i18n="toolStudio">Studio</button>
             <button id="toolbarPlayBtn" type="button" data-editor-action="play" aria-pressed="false" data-i18n="toolPlay">Riproduci</button>
+            <button type="button" data-editor-action="undo" data-i18n="menuUndo">Annulla</button>
+            <button type="button" data-editor-action="redo" data-i18n="menuRedo">Ripeti</button>
             <button type="button" data-editor-action="split" data-i18n="toolSplit">Dividi clip</button>
             <button type="button" class="default" data-editor-action="export" data-i18n="toolExport">Esporta…</button>
             <span class="editor-toolbar-spacer"></span>

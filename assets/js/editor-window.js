@@ -25,10 +25,9 @@
         "snapshot": () => { nav()?.openTab("project"); focusLater("snapshotNameInput"); },
         "bundle": () => { nav()?.openTab("project"); $("packageSettings")?.scrollIntoView({ block: "start" }); },
         "close-editor": () => click("studioEditorClose"),
-        "undo-text": () => click("undoBtn"),
-        "redo-text": () => click("redoBtn"),
-        "undo-timeline": () => click("studioTlUndo"),
-        "redo-timeline": () => click("studioTlRedo"),
+        // testo e timeline condividono la stessa pila di annullamento
+        "undo": () => click("undoBtn"),
+        "redo": () => click("redoBtn"),
         "fit": () => click("stageFitBtn"),
         "fullscreen": () => click("stageFullscreenBtn"),
         "about": () => {
@@ -59,6 +58,8 @@
     const actions = {
         studio: () => root.BratStudio?.show("home"),
         play: () => click("stagePlayBtn"),
+        undo: () => click("undoBtn"),
+        redo: () => click("redoBtn"),
         split: () => click("studioTlSplit"),
         export: () => { nav()?.openTab("export"); focusLater("exportVideoBtn"); }
     };

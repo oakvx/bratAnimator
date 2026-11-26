@@ -1,5 +1,7 @@
 const BRAT_TRANSLATIONS = {
   en: {
+    menuUndo: "Undo",
+    menuRedo: "Redo",
     paletteTitle: "Commands",
     sheetClose: "Close",
     toolRestart: "From start",
@@ -11,10 +13,6 @@ const BRAT_TRANSLATIONS = {
     menuBundle: "Complete project…",
     menuCloseEditor: "Close editor",
     menuEdit: "Edit",
-    menuUndoText: "Undo text & style",
-    menuRedoText: "Redo text & style",
-    menuUndoTimeline: "Undo timeline",
-    menuRedoTimeline: "Redo timeline",
     menuCommands: "Commands…",
     menuView: "View",
     menuFit: "Fit preview",
@@ -147,6 +145,8 @@ const BRAT_TRANSLATIONS = {
     noVideo: "no video loaded"
   },
   it: {
+    menuUndo: "Annulla",
+    menuRedo: "Ripeti",
     paletteTitle: "Comandi",
     sheetClose: "Chiudi",
     toolRestart: "Da capo",
@@ -158,10 +158,6 @@ const BRAT_TRANSLATIONS = {
     menuBundle: "Progetto completo…",
     menuCloseEditor: "Chiudi editor",
     menuEdit: "Modifica",
-    menuUndoText: "Annulla testo e stile",
-    menuRedoText: "Ripeti testo e stile",
-    menuUndoTimeline: "Annulla timeline",
-    menuRedoTimeline: "Ripeti timeline",
     menuCommands: "Comandi…",
     menuView: "Visualizza",
     menuFit: "Adatta anteprima",
@@ -294,6 +290,8 @@ const BRAT_TRANSLATIONS = {
     noVideo: "nessun video caricato"
   },
   ru: {
+    menuUndo: "Отменить",
+    menuRedo: "Повторить",
     paletteTitle: "Команды",
     sheetClose: "Закрыть",
     toolRestart: "С начала",
@@ -305,10 +303,6 @@ const BRAT_TRANSLATIONS = {
     menuBundle: "Полный проект…",
     menuCloseEditor: "Закрыть редактор",
     menuEdit: "Правка",
-    menuUndoText: "Отменить (текст и стиль)",
-    menuRedoText: "Повторить (текст и стиль)",
-    menuUndoTimeline: "Отменить (таймлайн)",
-    menuRedoTimeline: "Повторить (таймлайн)",
     menuCommands: "Команды…",
     menuView: "Вид",
     menuFit: "Вписать превью",
@@ -441,6 +435,8 @@ const BRAT_TRANSLATIONS = {
     noVideo: "видео не загружено"
   },
   zh: {
+    menuUndo: "撤销",
+    menuRedo: "重做",
     paletteTitle: "命令",
     sheetClose: "关闭",
     toolRestart: "从头开始",
@@ -452,10 +448,6 @@ const BRAT_TRANSLATIONS = {
     menuBundle: "完整项目…",
     menuCloseEditor: "关闭编辑器",
     menuEdit: "编辑",
-    menuUndoText: "撤销文本和样式",
-    menuRedoText: "重做文本和样式",
-    menuUndoTimeline: "撤销时间线",
-    menuRedoTimeline: "重做时间线",
     menuCommands: "命令…",
     menuView: "查看",
     menuFit: "适应预览",
