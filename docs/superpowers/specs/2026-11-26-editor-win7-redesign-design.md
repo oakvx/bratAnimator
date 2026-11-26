@@ -33,8 +33,8 @@ telefono. L'obiettivo è un editor **usabile da PC e da telefono**, **stabile** 
 
 ## Anti-obiettivi (fallimento anche se "funziona")
 
-- Un altro strato di JS che sposta nodi del DOM dopo il caricamento
-  (`editor-layout.js` è esattamente il problema di oggi).
+- Un altro strato di JS che sposta nodi del DOM dopo il caricamento, oltre
+  all'unico organizzatore `editor-layout.js`.
 - CSS che vince a colpi di `!important` sopra file vecchi.
 - Su telefono: scroll orizzontale, bottoni tagliati, pannelli che coprono
   l'anteprima senza poterli chiudere.
@@ -119,9 +119,12 @@ destra). Niente più card bianche arrotondate.
 
 ### Implementazione — regole per chi costruisce
 
-- Il markup nuovo va scritto **direttamente in `index.html`** (e nelle copie
-  localizzate `it/ en/ ru/ zh/` se contengono l'editor). Nessuno spostamento di
-  nodi a runtime: `editor-layout.js` viene rimosso o ridotto a zero.
+- La struttura della finestra (title bar, menu, toolbar, tab, status bar) va
+  scritta **direttamente in `index.html`** (le copie `it/ en/ ru/ zh/` sono solo
+  landing SEO, senza editor). I contenuti dei pannelli sono in parte generati da
+  `editor-v5.js`, quindi **`editor-layout.js` resta l'unico modulo che
+  raggruppa i controlli** nei `fieldset`: viene ripulito (niente più
+  rinomina/riordino dei tab) e nessun altro strato può spostare nodi.
 - **Gli `id` esistenti restano** (`app.js`, test e command palette ci si
   agganciano). Gli elementi che spariscono dalla barra superiore restano come
   voci di menu con lo stesso `id` dove i listener lo richiedono, oppure il menu
