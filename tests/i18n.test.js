@@ -83,3 +83,12 @@ test("i bottoni della barra del titolo tengono l'aria-label inglese che 7.css us
     const source = fs.readFileSync(require.resolve("../assets/js/italian-ui.js"), "utf8");
     assert.match(source, /attribute === "aria-label" && element\.closest\("\.title-bar-controls"\)/);
 });
+
+test("stato dell'archivio locale e messaggi fissi della timeline hanno la traduzione italiana", () => {
+    for (const text of ["local workspace ready", "unsaved changes", "saving locally…", "saved locally", "local save cleared",
+        "saved in browser fallback", "save failed — export a backup", "Projects stay on this device; signing in does not synchronize them.",
+        "Drag clips to move or trim · scroll horizontally to navigate · drop local media onto a track",
+        "Clip updated • one undo step", "Select a clip to split.", "Unlock the track before editing its clips.", "Unlock this track first."]) {
+        assert.notEqual(italian.translate(text), text, text);
+    }
+});

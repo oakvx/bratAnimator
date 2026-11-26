@@ -6,6 +6,20 @@
     // Only editor-owned labels are translated. Song names, lyrics, custom preset
     // names, file names, editable values and the rendered video remain untouched.
     const phrases = {
+        // stato dell'archivio locale e messaggi fissi della timeline
+        "local workspace ready": "archivio locale pronto",
+        "unsaved changes": "modifiche non salvate",
+        "saving locally…": "salvataggio in corso…",
+        "saved locally": "salvato in questo dispositivo",
+        "local save cleared": "salvataggio locale eliminato",
+        "saved in browser fallback": "salvato nell'archivio di riserva del browser",
+        "save failed — export a backup": "salvataggio non riuscito — esporta un backup",
+        "Projects stay on this device; signing in does not synchronize them.": "I progetti restano su questo dispositivo; l'accesso non li sincronizza.",
+        "Drag clips to move or trim · scroll horizontally to navigate · drop local media onto a track": "Trascina le clip per spostarle o accorciarle · scorri in orizzontale per muoverti · rilascia un file su una traccia",
+        "Clip updated • one undo step": "Clip aggiornata • un passo di annullamento",
+        "Select a clip to split.": "Seleziona una clip da dividere.",
+        "Unlock the track before editing its clips.": "Sblocca la traccia prima di modificarne le clip.",
+        "Unlock this track first.": "Prima sblocca questa traccia.",
         // intestazioni e descrizioni dei gruppi creati da editor-layout.js
         "Find lyrics": "Trova il testo",
         "Search a song": "Cerca una canzone",

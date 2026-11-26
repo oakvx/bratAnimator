@@ -10,7 +10,11 @@
     function section(name, label) {
         const node = $("section-" + name);
         const title = node?.querySelector(":scope > .section-title");
-        if (title) title.textContent = label;
+        if (title) {
+            // il titolo nuovo lo traduce italian-ui: la vecchia chiave i18n lo riscriverebbe
+            title.removeAttribute("data-i18n");
+            title.textContent = label;
+        }
         return node;
     }
     function rootChild(container, node) {
