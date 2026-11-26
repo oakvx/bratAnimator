@@ -155,8 +155,19 @@ destra). Niente più card bianche arrotondate.
 3. Su mobile la barra superiore dell'editor è tagliata e "Studio" copre il logo.
 4. "settings" salta a metà del tab style con il titolo tagliato.
 5. Messaggio Supabase con doppio punto ("riprova..").
-6. Altri bug trovati durante il giro funzionale (lyrics, timeline, export,
-   progetti, Sound Hub) vengono aggiunti qui e sistemati.
+6. In italiano le icone di chiusura/riduzione/ingrandimento di tutte le
+   finestre sparivano: `italian-ui.js` traduceva l'`aria-label` che 7.css usa
+   per disegnarle.
+7. Con 7.css i checkbox annidati nelle label erano invisibili (snap della
+   timeline, opzioni di stile ed esportazione, selezione righe LRC).
+8. Le maniglie del riquadro testo sull'anteprima finivano tutte al centro
+   (7.css dà `position:relative` ai bottoni) e il trascinamento ridimensionava
+   invece di spostare.
+9. Esc con la palette comandi aperta chiudeva anche la guida.
+10. Menu Modifica: due coppie Annulla/Ripeti che facevano la stessa cosa (la
+    pila di annullamento è unica).
+11. Intestazioni dei gruppi, stato dell'archivio e pannello tracce restavano in
+    inglese con l'editor in italiano.
 
 ### Verifica
 
