@@ -1,6 +1,6 @@
 # Editor Windows 7 — redesign stabile e uniforme
 
-Data: 2026-11-26 · Stato: in attesa di approvazione
+Data: 2026-11-26 · Stato: approvato da Gabri
 
 ## Perché
 
@@ -58,7 +58,7 @@ Gabri ha scelto l'approccio 1.
 ```
 ┌ Brat Animator — Editor ─────────────────────────── _ □ X ┐
 │ File  Modifica  Visualizza  Lingua  ?                     │  menubar 7.css
-│ [◀ Studio] │ ▶ ⟲ │ ↶ ↷ │ ✂ │ Esporta…          Salvato ✓   │  toolbar
+│ [Studio][Riproduci][Annulla][Ripeti][Dividi][Esporta…] ✓  │  toolbar
 ├───────────────────────┬───────────────────────────────────┤
 │ [Testo][Timeline]     │  Anteprima 1080×1080   − 100% + ⤢ │
 │ [Stile][Esporta]      │  ┌─────────────────────────────┐  │
@@ -82,9 +82,9 @@ Gabri ha scelto l'approccio 1.
   - *Lingua*: Italiano, English, Русский, 中文 (voci radio).
   - *?*: Guida introduttiva (F1), Richiedi permesso di pubblicazione,
     Informazioni.
-- **Toolbar**: solo le azioni frequenti — torna allo Studio, play/restart,
+- **Toolbar**: solo le azioni frequenti — torna allo Studio, riproduci,
   annulla/ripeti, dividi, **Esporta…** (bottone default 7.css), indicatore di
-  salvataggio a destra.
+  salvataggio a destra. Bottoni 7.css con **testo**, nessuna icona.
 - **Pannello sinistro**: tab 7.css (`menu role=tablist`) con **4 tab** al posto
   di 7:
   - *Testo* = cerca testo + modifica testo/timing (ex find + lyrics)
@@ -129,6 +129,13 @@ destra). Niente più card bianche arrotondate.
 - I valori storici di `data-open-tab` (`lyrics`, `timing`, `tracks`, `design`,
   `canvas`, `export`, `project`) restano validi: aprire uno di questi apre il
   nuovo tab che lo contiene e scorre al gruppo giusto.
+- **Solo 7.css**: ogni controllo usa i componenti della libreria così come
+  sono (button, menubar, tabs, fieldset, details, slider, select, status-bar,
+  window, title-bar-controls). **Vietate le icone SVG disegnate a mano** e le
+  ricostruzioni di componenti che 7.css già offre. Le uniche immagini ammesse
+  sono quelle già presenti nel progetto (`favicon.svg`, artwork Windows 7
+  caricato dall'utente via `win7-assets.js`). Dove servirebbe un'icona si usa
+  testo.
 - **Un solo file CSS per l'editor**: `assets/css/win7-editor.css`, caricato
   dopo `7.scoped.css`. Le regole editor in `style.css`, `editor-v5.css`,
   `editor-layout.css`, `studio-aero-polish.css`, `win7-desktop-polish.css` che
@@ -141,12 +148,11 @@ destra). Niente più card bianche arrotondate.
 ### Bug noti da sistemare
 
 1. La X della guida introduttiva è vuota (nessuna icona).
-2. Le icone di Progetti / Sound Hub nel menu Start sono nascoste.
-3. L'editor parte in inglese mentre lo studio è in italiano.
-4. Su mobile la barra superiore dell'editor è tagliata e "Studio" copre il logo.
-5. "settings" salta a metà del tab style con il titolo tagliato.
-6. Messaggio Supabase con doppio punto ("riprova..").
-7. Altri bug trovati durante il giro funzionale (lyrics, timeline, export,
+2. L'editor parte in inglese mentre lo studio è in italiano.
+3. Su mobile la barra superiore dell'editor è tagliata e "Studio" copre il logo.
+4. "settings" salta a metà del tab style con il titolo tagliato.
+5. Messaggio Supabase con doppio punto ("riprova..").
+6. Altri bug trovati durante il giro funzionale (lyrics, timeline, export,
    progetti, Sound Hub) vengono aggiunti qui e sistemati.
 
 ### Verifica
@@ -160,5 +166,4 @@ destra). Niente più card bianche arrotondate.
 
 ## Lasciato a chi costruisce
 
-Icone della toolbar (SVG semplici in stile Windows 7 o glifi), spaziature
-precise, ordine delle voci dentro ogni gruppo, come dividere i commit.
+Spaziature precise, ordine delle voci dentro ogni gruppo, come dividere i commit.
