@@ -92,3 +92,9 @@ test("stato dell'archivio locale e messaggi fissi della timeline hanno la traduz
         assert.notEqual(italian.translate(text), text, text);
     }
 });
+
+test("il pannello tracce ha le scritte in italiano", () => {
+    for (const text of ["Cannot edit clip.", "Select track", "Toggle track visibility", "visible", "hidden", "Toggle track mute", "muted", "sound", "Toggle track lock", "locked", "unlocked", "Select clip", "No clips in this track.", "Select or add a track.", "No imported media (planning only)", "Deletes all clips in this track", "Select an unlocked Video, Overlay or Audio track first.", "Importing", "Media import failed.", "Up to 512 MiB per file · stored locally", "track type", "add track", "Multitrack tracks", "selected track", "track name", "rename", "delete track", "clips", "Clips in selected track", "imported media", "name", "clip name", "start (seconds)", "duration (seconds)", "playback speed", "set track volume", "fade in (s)", "fade out (s)", "apply clip audio", "overlay text", "Title or sticker text", "apply visual settings", "add clip", "apply start / duration", "delete clip", "split at (seconds)", "split selected clip", "Multitrack metadata is saved with this project.", "import video / image / audio", "move up", "move down"]) {
+        assert.notEqual(italian.translate(text), text, text);
+    }
+});
