@@ -1538,17 +1538,22 @@
         </div>
       </div>
     </div>
-    <div id="permissionNotice" class="permission-notice-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
-        <div class="permission-notice-card" tabindex="-1">
-            <p class="permission-notice-kicker" data-i18n="permissionNoticeKicker">usage note</p>
-            <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">usage and publishing permissions</h2>
-            <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
-                You can use Brat Animator without creating an account. To publish, share publicly, redistribute,
-                self-host, commercialize, or integrate anything made with it, please ask permission first.
-            </p>
-            <div class="permission-notice-actions">
-                <button id="permissionNoticeAckBtn" type="button" class="primary" data-i18n="permissionNoticeAcknowledge">i understand</button>
-                <a id="permissionNoticeRequestLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="permissionNoticePermission">ask permission</a>
+    <div id="permissionNotice" class="permission-notice-overlay win7 hidden" role="dialog" aria-modal="true" aria-labelledby="permissionNoticeTitle" aria-describedby="permissionNoticeBody">
+        <div class="window active permission-notice-card" tabindex="-1">
+            <div class="title-bar">
+                <div class="title-bar-text" data-i18n="permissionNoticeKicker">usage note</div>
+                <div class="title-bar-controls"><button id="permissionNoticeClose" type="button" aria-label="Close" title="Chiudi"></button></div>
+            </div>
+            <div class="window-body">
+                <h2 id="permissionNoticeTitle" data-i18n="permissionNoticeTitle">usage and publishing permissions</h2>
+                <p id="permissionNoticeBody" data-i18n="permissionNoticeText">
+                    You can use Brat Animator without creating an account. To publish, share publicly, redistribute,
+                    self-host, commercialize, or integrate anything made with it, please ask permission first.
+                </p>
+                <section class="field-row permission-notice-actions">
+                    <a id="permissionNoticeRequestLink" href="mailto:oakvx@icloud.com?subject=Brat%20Animator%20permission%20request&body=Hi%20oakvx%2C%0A%0AI%27d%20like%20to%20ask%20permission%20to%20publish%20or%20use%20something%20made%20with%20Brat%20Animator.%0A" data-i18n="permissionNoticePermission">ask permission</a>
+                    <button id="permissionNoticeAckBtn" type="button" class="default" data-i18n="permissionNoticeAcknowledge">i understand</button>
+                </section>
             </div>
         </div>
     </div>
@@ -1577,11 +1582,16 @@
         </div>
     </div>
 
-    <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
-        <div class="command-palette-card">
-            <h2 id="commandPaletteTitle">commands</h2>
-            <input id="commandPaletteInput" type="search" placeholder="type a command" aria-label="command search" />
-            <div id="commandPaletteList" class="command-palette-list"></div>
+    <div id="commandPalette" class="command-palette win7 hidden" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+        <div class="window active command-palette-card">
+            <div class="title-bar">
+                <div id="commandPaletteTitle" class="title-bar-text" data-i18n="paletteTitle">Comandi</div>
+                <div class="title-bar-controls"><button id="commandPaletteClose" type="button" aria-label="Close" title="Chiudi"></button></div>
+            </div>
+            <div class="window-body">
+                <input id="commandPaletteInput" type="search" placeholder="type a command" aria-label="command search" />
+                <div id="commandPaletteList" class="command-palette-list has-scrollbar"></div>
+            </div>
         </div>
     </div>
 

@@ -1,5 +1,6 @@
 const BRAT_TRANSLATIONS = {
   en: {
+    paletteTitle: "Commands",
     sheetClose: "Close",
     toolRestart: "From start",
     menuToggle: "Menu",
@@ -146,6 +147,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "no video loaded"
   },
   it: {
+    paletteTitle: "Comandi",
     sheetClose: "Chiudi",
     toolRestart: "Da capo",
     menuToggle: "Menu",
@@ -292,6 +294,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "nessun video caricato"
   },
   ru: {
+    paletteTitle: "Команды",
     sheetClose: "Закрыть",
     toolRestart: "С начала",
     menuToggle: "Меню",
@@ -438,6 +441,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "видео не загружено"
   },
   zh: {
+    paletteTitle: "命令",
     sheetClose: "关闭",
     toolRestart: "从头开始",
     menuToggle: "菜单",

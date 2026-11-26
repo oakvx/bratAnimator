@@ -4154,6 +4154,7 @@ const LINE_TIMESTAMP_RE = /\[(\d+):(\d{2}(?:[.,]\d{1,3})?)\]/g;
 
         function openCommandPalette() {
             if (!commandPalette) return;
+            window.BratEditorWindow?.menu?.close();
             commandPalette.classList.remove("hidden");
             if (commandPaletteInput) commandPaletteInput.value = "";
             renderCommandPalette();
@@ -5264,7 +5265,9 @@ async function updateExportEstimate() {
         commandPaletteInput?.addEventListener("input", renderCommandPalette);
         commandPaletteInput?.addEventListener("keydown", (event) => {
             if (event.key === "Escape") {
+                // esc chiude solo la palette, non la guida o i menu sotto
                 event.preventDefault();
+                event.stopPropagation();
                 closeCommandPalette();
                 return;
             }
@@ -5277,6 +5280,7 @@ async function updateExportEstimate() {
         commandPalette?.addEventListener("click", (event) => {
             if (event.target === commandPalette) closeCommandPalette();
         });
+        document.getElementById("commandPaletteClose")?.addEventListener("click", closeCommandPalette);
 
         document.addEventListener("keydown", (event) => {
             // Editor shortcuts must not fire behind the Windows 7 dashboard,
@@ -5288,6 +5292,7 @@ async function updateExportEstimate() {
             const paletteOpen = Boolean(commandPalette && !commandPalette.classList.contains("hidden"));
             if (paletteOpen && event.key === "Escape") {
                 event.preventDefault();
+                event.stopImmediatePropagation();
                 closeCommandPalette();
                 return;
             }
@@ -6260,6 +6265,7 @@ async function updateExportEstimate() {
     tutorialBackBtn?.addEventListener('click', goToPreviousTutorialStep);
     tutorialNextBtn?.addEventListener('click', goToNextTutorialStep);
     permissionNoticeAckBtn?.addEventListener('click', closePermissionNotice);
+    document.getElementById('permissionNoticeClose')?.addEventListener('click', closePermissionNotice);
     permissionNoticeRequestLink?.addEventListener('click', closePermissionNotice);
 
     document.addEventListener('keydown', (event) => {

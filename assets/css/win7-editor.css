@@ -161,3 +161,20 @@ body.studio-editor-open .studio-taskbar { display:flex; }
   #studioEditorChrome .editor-tabs button { min-height:40px; padding-inline:6px; }
   #studioEditorChrome .editor-section { margin-inline:4px; }
 }
+
+/* dialoghi dell'editor: finestre 7.css centrate su uno sfondo scuro leggero */
+.command-palette.win7 .window,.permission-notice-overlay.win7 .window { width:min(520px,100%); max-height:calc(100dvh - 24px); display:flex; flex-direction:column; }
+.command-palette.win7 .window-body,.permission-notice-overlay.win7 .window-body { overflow:auto; padding:10px 12px; }
+.command-palette.win7 #commandPaletteInput { display:block; width:100%; }
+.command-palette.win7 .command-palette-list { display:flex; flex-direction:column; gap:2px; max-height:340px; margin-top:8px; overflow-y:auto; }
+.command-palette.win7 .command-palette-list button { width:100%; min-width:0; min-height:28px; justify-content:flex-start; text-align:left;
+  border-color:transparent; background:none; box-shadow:none; }
+.command-palette.win7 .command-palette-list button::before,.command-palette.win7 .command-palette-list button::after { display:none; }
+.command-palette.win7 .command-palette-list button:is(:hover,.active,:focus-visible) { border-color:#a8d8eb; background:linear-gradient(#f2f9fd,#d8eefa); }
+.permission-notice-overlay.win7 h2 { margin:0 0 8px; font-size:15px; font-weight:600; }
+.permission-notice-overlay.win7 p { margin:0; }
+.permission-notice-overlay.win7 .permission-notice-actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:14px; flex-wrap:wrap; }
+@media (max-width: 899px) {
+  .command-palette.win7 .command-palette-list button,
+  .permission-notice-overlay.win7 .permission-notice-actions button { min-height:40px; }
+}

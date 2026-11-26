@@ -80,6 +80,25 @@ try {
         BratEditorNav.openTab('lyrics');
         return 'ok';
     }));
+    await test('escape closes only the top layer and dialogs are 7.css windows', () => evaluate(() => {
+        BratGuidedTour.start(0);
+        const edit = [...document.querySelectorAll('#editorMenuBar > [aria-haspopup="true"]')][1];
+        edit.click();
+        document.getElementById('commandPaletteBtn').click();
+        const palette = document.getElementById('commandPalette');
+        auditAssert(!palette.classList.contains('hidden'), 'palette did not open');
+        auditAssert(edit.getAttribute('aria-expanded') === 'false', 'menu stayed open under the palette');
+        auditAssert(palette.querySelector('.window .title-bar .title-bar-controls button[aria-label="Close"]'), 'palette is not a 7.css window');
+        document.getElementById('commandPaletteInput').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        auditAssert(palette.classList.contains('hidden'), 'escape did not close the palette');
+        auditAssert(BratGuidedTour.state.active, 'escape on the palette also closed the tour');
+        document.getElementById('commandPaletteBtn').click();
+        document.getElementById('commandPaletteClose').click();
+        auditAssert(palette.classList.contains('hidden'), 'x did not close the palette');
+        auditAssert(document.querySelector('#permissionNotice .window .title-bar'), 'permission notice is not a 7.css window');
+        BratGuidedTour.close();
+        return 'ok';
+    }));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
         const select = document.getElementById('editorModeSelect'); select.value = 'advanced'; select.dispatchEvent(new Event('change', { bubbles: true }));
