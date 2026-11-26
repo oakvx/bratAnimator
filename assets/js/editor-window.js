@@ -99,9 +99,22 @@
             root.syncPanelState?.();
         }
     }
+    // il menu compatto si chiude toccando fuori, con esc o scegliendo un tab
+    document.addEventListener("pointerdown", event => {
+        if (!document.body.classList.contains("editor-menu-open")) return;
+        if (menu.contains(event.target) || toggle?.contains(event.target)) return;
+        closeCompactMenu();
+        bar?.close();
+    }, true);
+    document.addEventListener("keydown", event => {
+        if (event.key !== "Escape" || !document.body.classList.contains("editor-menu-open") || bar?.isOpen()) return;
+        closeCompactMenu();
+        toggle?.focus();
+    });
     document.addEventListener("click", event => {
         if (!isPhone()) return;
         const tab = event.target.closest?.(".editor-tab");
+        if (tab) closeCompactMenu();
         if (tab && document.body.classList.contains("editor-sheet-open") && tab.getAttribute("aria-selected") === "true") {
             event.stopPropagation();
             setSheet(false);

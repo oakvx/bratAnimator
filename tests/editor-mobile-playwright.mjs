@@ -126,6 +126,18 @@ try {
             assert.equal(await page.locator('#panel').isVisible(), true, 'desktop shows the side panel');
             await page.setViewportSize({ width, height });
         });
+        await check('the compact menu closes on a tab tap, a tap outside and escape', async () => {
+            await page.locator('#editorMenuToggle').tap();
+            await page.locator('.editor-tab[data-open-tab="style"]').tap();
+            assert.equal(await page.locator('#editorMenuBar').isVisible(), false, 'menu left open over the sheet');
+            await page.evaluate(() => window.BratEditorWindow.setSheet(false));
+            await page.locator('#editorMenuToggle').tap();
+            await page.locator('#studioTlStatus').tap({ force: true });
+            assert.equal(await page.locator('#editorMenuBar').isVisible(), false, 'menu left open after tapping outside');
+            await page.locator('#editorMenuToggle').tap();
+            await page.keyboard.press('Escape');
+            assert.equal(await page.locator('#editorMenuBar').isVisible(), false, 'escape did not close the menu');
+        });
         await check('no uncaught errors', async () => assert.deepEqual(errors, []));
         await page.screenshot({ path: path.join(output, 'mobile-' + label + '-editor.png') });
         await context.close();

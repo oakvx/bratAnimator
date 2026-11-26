@@ -115,6 +115,27 @@ try {
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true }));
         return { before, after };
     }));
+    await test('menubar keys stay inside the menu and arrows walk the submenu', () => evaluate(() => {
+        const key = (target, k) => target.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: k === ' ' ? 'Space' : k, bubbles: true, cancelable: true }));
+        const file = document.querySelector('#editorMenuBar > [aria-haspopup="true"]');
+        file.focus();
+        const before = { playing: state.isPlaying, time: state.pausedElapsedSec };
+        key(file, ' ');
+        auditAssert(file.getAttribute('aria-expanded') === 'true', 'space did not open the menu');
+        auditAssert(state.isPlaying === before.playing, 'space in the menu toggled playback');
+        key(document.activeElement, 'ArrowDown');
+        const items = [...file.querySelectorAll('[role=menu] button')];
+        auditAssert(document.activeElement === items[1], `arrow down did not move to the second item: ${document.activeElement?.textContent}`);
+        key(document.activeElement, 'ArrowUp');
+        auditAssert(document.activeElement === items[0], 'arrow up did not move back');
+        key(document.activeElement, 'ArrowUp');
+        auditAssert(document.activeElement === items.at(-1), 'arrow up did not wrap to the last item');
+        key(document.activeElement, 'ArrowRight');
+        auditAssert(state.pausedElapsedSec === before.time, 'arrow right in the menu moved the playhead');
+        key(document.activeElement, 'Escape');
+        BratEditorWindow.menu.close();
+        return 'ok';
+    }));
     await test('fresh startup and simple/advanced preference', () => evaluate(() => {
         if (document.body.dataset.uiMode !== 'simple') throw new Error(`Fresh users should start simple, got ${document.body.dataset.uiMode}`);
         const select = document.getElementById('editorModeSelect'); select.value = 'advanced'; select.dispatchEvent(new Event('change', { bubbles: true }));

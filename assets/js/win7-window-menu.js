@@ -54,33 +54,51 @@
                 toggle(heading);
             }
         });
+        function itemsOf(node) {
+            return Array.from(node?.querySelectorAll('[role=menu] button:not(:disabled), [role=menu] a') || []);
+        }
         menu.addEventListener("keydown", event => {
+            // i tasti dentro il menu restano al menu: niente play, seek o scorciatoie a lettera dell'editor
+            if (!event.ctrlKey && !event.metaKey && !event.altKey && !["Tab", "F1"].includes(event.key)) event.stopPropagation();
             const heading = event.target.closest('[aria-haspopup="true"]');
+            const inSubmenu = Boolean(event.target.closest("[role=menu]"));
             if (event.key === "Escape" && selected) {
                 event.preventDefault();
-                event.stopPropagation();
                 const owner = selected;
                 close();
                 owner.focus();
+                return;
+            }
+            if (inSubmenu && ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+                event.preventDefault();
+                const items = itemsOf(heading);
+                const current = items.indexOf(event.target.closest("button, a"));
+                const last = items.length - 1;
+                const next = event.key === "Home" ? 0 : event.key === "End" ? last
+                    : event.key === "ArrowDown" ? (current + 1) % items.length
+                    : (current - 1 + items.length) % items.length;
+                items[next]?.focus();
                 return;
             }
             if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
                 event.preventDefault();
                 const current = Math.max(0, headings.indexOf(heading));
                 const step = event.key === "ArrowRight" ? 1 : -1;
-                open(headings[(current + step + headings.length) % headings.length]);
+                const target = headings[(current + step + headings.length) % headings.length];
+                open(target);
+                if (inSubmenu) itemsOf(target)[0]?.focus();
                 return;
             }
             if (event.key === "ArrowDown" && heading) {
                 event.preventDefault();
                 open(heading);
-                heading.querySelector("button")?.focus();
+                itemsOf(heading)[0]?.focus();
                 return;
             }
             if ((event.key === "Enter" || event.key === " ") && heading === event.target) {
                 event.preventDefault();
                 toggle(heading);
-                heading.querySelector("button")?.focus();
+                itemsOf(heading)[0]?.focus();
             }
         });
         document.addEventListener("pointerdown", event => {
