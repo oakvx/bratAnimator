@@ -6,6 +6,53 @@
     // Only editor-owned labels are translated. Song names, lyrics, custom preset
     // names, file names, editable values and the rendered video remain untouched.
     const phrases = {
+        // intestazioni e descrizioni dei gruppi creati da editor-layout.js
+        "Find lyrics": "Trova il testo",
+        "Search a song": "Cerca una canzone",
+        "Use a provider or paste a song link; the resulting lyrics can be edited in the next tab.": "Scegli una fonte o incolla il link di una canzone; il testo trovato si modifica nella sezione successiva.",
+        "Lyrics & timing": "Testo e tempi",
+        "Projects & backups": "Progetti e backup",
+        "Style & effects": "Stile ed effetti",
+        "Canvas & format": "Area video e formato",
+        "Export": "Esporta",
+        "Timeline & tracks": "Timeline e tracce",
+        "Source text": "Testo di partenza",
+        "Paste, import or normalize time-coded lyrics.": "Incolla, importa o normalizza un testo con i tempi.",
+        "Phrase editor": "Editor delle frasi",
+        "Fine-tune individual lines and generate timestamps.": "Rifinisci le singole righe e genera i timestamp.",
+        "Timing reference": "Riferimento per i tempi",
+        "Use local audio/video to analyze beats and align the lyrics.": "Usa un audio o video locale per analizzare i battiti e allineare il testo.",
+        "Synchronize & playback": "Sincronizza e riproduci",
+        "Looks & animation": "Aspetto e animazione",
+        "Typography": "Tipografia",
+        "Colors & effects": "Colori ed effetti",
+        "Lyric animation": "Animazione del testo",
+        "Background media": "Sfondo",
+        "Presets & utilities": "Preset e strumenti",
+        "Output shape": "Formato di uscita",
+        "Use the same aspect ratio for the preview and the video export.": "Anteprima ed esportazione usano le stesse proporzioni.",
+        "Safe zones & preview": "Zone sicure e anteprima",
+        "Import & organize tracks": "Importa e organizza le tracce",
+        "Use local video, image and audio files. Tracks are rendered from back to front.": "Usa file video, immagine e audio locali. Le tracce si sovrappongono dal fondo verso l'alto.",
+        "Select & arrange clips": "Seleziona e disponi le clip",
+        "Audio properties": "Proprietà audio",
+        "Track/clip gain, fade-in, fade-out and soundtrack playback.": "Volume di traccia e clip, dissolvenze in entrata e uscita, riproduzione della colonna sonora.",
+        "Visual properties": "Proprietà visive",
+        "Edit overlays, position, scale, rotation and opacity.": "Modifica sovrapposizioni, posizione, scala, rotazione e opacità.",
+        "Import media, arrange clips and choose the properties of the selected layer. All changes are stored locally.": "Importa i media, disponi le clip e scegli le proprietà del livello selezionato. Tutto resta salvato in questo browser.",
+        "Media files remain in this browser. File limit: 512 MiB each.": "I file restano in questo browser. Limite: 512 MiB per file.",
+        "Output settings": "Impostazioni di uscita",
+        "Choose the destination format, resolution, frame rate and optional legacy audio.": "Scegli formato, risoluzione, fotogrammi al secondo e l'audio facoltativo.",
+        "Render & download": "Genera e scarica",
+        "Preflight checks": "Controlli prima dell'esportazione",
+        "Advanced browser/codec checks; review these if an export fails.": "Controlli avanzati su browser e codec: guardali se un'esportazione non riesce.",
+        "Export your current arrangement as video or still frames. Timing and audio are taken from the same timeline.": "Esporta il montaggio come video o come fotogrammi. Tempi e audio vengono dalla stessa timeline.",
+        "Audio/video tracks are mixed automatically. Legacy Timing audio is optional.": "Le tracce audio e video vengono mixate in automatico. L'audio della sezione Tempi è facoltativo.",
+        "Snapshots": "Snapshot",
+        "Save named editing states and recover your work in this browser.": "Salva stati del lavoro con un nome e recuperali in questo browser.",
+        "Portable files & data": "File portabili e dati",
+        "JSON saves settings only; complete bundles include locally available media.": "Il JSON salva solo le impostazioni; il progetto completo include anche i media locali.",
+        "External reference video": "Video di riferimento esterno",
         "kinetic collage": "collage cinetico", "kinetic collage (stacked words)": "collage cinetico (parole sfalsate)",
         "kinetic collage · blue / cream": "collage cinetico · blu / crema",
         "words on screen": "parole sullo schermo", "size contrast": "contrasto dimensioni", "transition speed": "velocità transizione",
@@ -244,7 +291,7 @@
     const originalAttributes = new WeakMap();
     const editableOrContent = "script,style,textarea,input,canvas,svg,kbd,code,[contenteditable='true'],[data-user-content]";
     const userRegions = "#lrclibResults,#youtubeResults,.snapshot-details,#userPresetSelect,#fontFamilySelect,#translationFontSelect,#phraseSelect,#unmatchedTranslations";
-    const uiSelector = "button,label,summary,legend,option,nav,h1,h2,h3,.mini-copy,.section-title,.mode-note,.beautiful-note,.contrast-kicker,.project-status-bar,.canvas-summary-grid,.stage-title,.hint,.skip-link,[role='status'],.meta,.timing-report,.tutorial-card,.autosave-pill,#colorSwapHint,#contrastRatio,#contrastStatus,#compatPanel,#tutorialProgress,#tutorialBody,#tutorialTip,[data-v5-key]";
+    const uiSelector = "button,label,summary,legend,option,nav,h1,h2,h3,.mini-copy,.inspector-group-description,.section-title,.mode-note,.beautiful-note,.contrast-kicker,.project-status-bar,.canvas-summary-grid,.stage-title,.hint,.skip-link,[role='status'],.meta,.timing-report,.tutorial-card,.autosave-pill,#colorSwapHint,#contrastRatio,#contrastStatus,#compatPanel,#tutorialProgress,#tutorialBody,#tutorialTip,[data-v5-key]";
 
     function isUiText(node) {
         const parent = node.parentElement;
@@ -297,6 +344,8 @@
             const saved = originalAttributes.get(element) || {};
             for (const attribute of ["aria-label", "title", "placeholder"]) {
                 if (!element.hasAttribute(attribute) || element.hasAttribute(`data-i18n-${attribute}`)) continue;
+                // 7.css disegna le icone di chiusura/riduzione leggendo aria-label in inglese: non si traduce
+                if (attribute === "aria-label" && element.closest(".title-bar-controls")) continue;
                 // Placeholder lyric examples are source material, not interface copy.
                 if (attribute === "placeholder" && element.id === "lyricsInput") continue;
                 const current = element.getAttribute(attribute);

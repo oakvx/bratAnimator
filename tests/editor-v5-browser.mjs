@@ -76,6 +76,7 @@ try {
         document.querySelector('#editorMenuBar .lang-btn[data-lang="it"]').click();
         auditAssert(document.documentElement.lang === 'it', 'language menu failed');
         auditAssert(document.querySelector('#editorMenuBar .lang-btn[data-lang="it"]').getAttribute('aria-checked') === 'true', 'language check stale');
+        auditAssert(document.querySelector('.editor-tab[aria-selected="true"]').dataset.openTab === 'export', 'language switch changed the active tab');
         document.querySelector('#editorMenuBar .lang-btn[data-lang="en"]').click();
         BratEditorNav.openTab('lyrics');
         return 'ok';

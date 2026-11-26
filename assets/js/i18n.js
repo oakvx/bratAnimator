@@ -608,8 +608,8 @@ const BRAT_TRANSLATIONS = {
     try { saved = localStorage.getItem(STORAGE_KEY); } catch (_) { /* Browser storage can be unavailable. */ }
     const preferred = getLanguageFromUrl() || saved;
     if (preferred) return normalizeLanguage(preferred);
-    const browserLanguage = window.navigator?.language || "en";
-    return /^it(?:-|$)/i.test(browserLanguage) ? "it" : "en";
+    // senza preferenza l'editor parla italiano come lo studio windows 7
+    return "it";
   }
 
   function translate(lang, key) {

@@ -68,7 +68,7 @@ try {
             assert.equal(await page.locator('#editorMenuBar').isVisible(), false);
         });
         await check('toolbar buttons are touch sized and never clipped', async () => {
-            const boxes = await page.$$eval('#editorToolbar button', nodes => nodes.map(n => {
+            const boxes = await page.$$eval('#editorToolbar button', nodes => nodes.filter(n => n.getClientRects().length).map(n => {
                 const r = n.getBoundingClientRect(); return { h: r.height, sw: n.scrollWidth, cw: n.clientWidth, text: n.textContent };
             }));
             for (const box of boxes) {

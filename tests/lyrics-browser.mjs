@@ -48,7 +48,8 @@ try {
     };
     await cdp("Page.enable");
     await cdp("Page.addScriptToEvaluateOnNewDocument", { source: "sessionStorage.setItem('bratAnimator.permissionNotice.dismissed.v1','true');localStorage.setItem('bratAnimator.tutorial.seen.v1','true');" });
-    await cdp("Page.navigate", { url: `http://127.0.0.1:${server.address().port}` });
+    // il test verifica i messaggi in inglese: la lingua di default ora è italiano
+    await cdp("Page.navigate", { url: `http://127.0.0.1:${server.address().port}/?lang=en` });
     for (let attempt = 0; attempt < 100; attempt += 1) {
         if (await evaluate(() => Boolean(window.BratEditor && typeof drawMusicSyncedScene === "function"))) break;
         await new Promise(resolve => setTimeout(resolve, 100));
