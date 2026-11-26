@@ -84,9 +84,48 @@
         syncPlay();
     }
 
-    root.matchMedia?.("(min-width: 900px)").addEventListener?.("change", event => {
-        if (event.matches) { closeCompactMenu(); bar?.close(); }
+    // telefono: il pannello diventa un foglio a mezza altezza aperto dai tab in basso
+    const phone = root.matchMedia?.("(max-width: 899px)");
+    const panel = $("panel");
+    const isPhone = () => Boolean(phone?.matches);
+    function setSheet(open) {
+        document.body.classList.toggle("editor-sheet-open", open);
+    }
+    function ensurePanel() {
+        // su telefono il pannello non si nasconde mai: resta la barra dei tab
+        if (isPhone() && panel?.classList.contains("hidden")) {
+            panel.classList.remove("hidden");
+            root.syncPanelState?.();
+        }
+    }
+    document.addEventListener("click", event => {
+        if (!isPhone()) return;
+        const tab = event.target.closest?.(".editor-tab");
+        if (tab && document.body.classList.contains("editor-sheet-open") && tab.getAttribute("aria-selected") === "true") {
+            event.stopPropagation();
+            setSheet(false);
+            return;
+        }
+        if (event.target.closest?.("#togglePanelBtn")) {
+            event.stopPropagation();
+            closeCompactMenu();
+            bar?.close();
+            setSheet(!document.body.classList.contains("editor-sheet-open"));
+        }
+    }, true);
+    root.addEventListener("brat:editor-tab", event => {
+        if (!isPhone() || !event.detail?.reveal) return;
+        ensurePanel();
+        setSheet(true);
     });
-    root.addEventListener("brat:studio-view", closeCompactMenu);
-    root.BratEditorWindow = Object.freeze({ commands: Object.keys(commands), closeCompactMenu, menu: bar });
+    $("editorSheetClose")?.addEventListener("click", () => setSheet(false));
+    phone?.addEventListener?.("change", event => {
+        closeCompactMenu();
+        bar?.close();
+        if (event.matches) ensurePanel();
+        else setSheet(false);
+    });
+    ensurePanel();
+    root.addEventListener("brat:studio-view", () => { closeCompactMenu(); setSheet(false); });
+    root.BratEditorWindow = Object.freeze({ commands: Object.keys(commands), closeCompactMenu, setSheet, menu: bar });
 })(typeof globalThis !== "undefined" ? globalThis : window);

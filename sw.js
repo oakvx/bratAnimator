@@ -39,7 +39,6 @@ const APP_ASSETS = [
   "./assets/js/editor-layout.js",
   "./assets/js/timeline-editor.js",
   "./assets/js/italian-ui.js",
-  "./assets/js/studio-shell.js",
 "./assets/js/supabase-config.js",
 "./assets/js/auth-client.js",
   "./assets/js/bratcode.js",

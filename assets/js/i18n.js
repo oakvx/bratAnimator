@@ -1,5 +1,6 @@
 const BRAT_TRANSLATIONS = {
   en: {
+    sheetClose: "Close",
     toolRestart: "From start",
     menuToggle: "Menu",
     menuFile: "File",
@@ -145,6 +146,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "no video loaded"
   },
   it: {
+    sheetClose: "Chiudi",
     toolRestart: "Da capo",
     menuToggle: "Menu",
     menuFile: "File",
@@ -290,6 +292,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "nessun video caricato"
   },
   ru: {
+    sheetClose: "Закрыть",
     toolRestart: "С начала",
     menuToggle: "Меню",
     menuFile: "Файл",
@@ -435,6 +438,7 @@ const BRAT_TRANSLATIONS = {
     noVideo: "видео не загружено"
   },
   zh: {
+    sheetClose: "关闭",
     toolRestart: "从头开始",
     menuToggle: "菜单",
     menuFile: "文件",

@@ -309,7 +309,6 @@
 <script src="assets/js/editor-layout.js" defer></script>
 <script src="assets/js/timeline-editor.js" defer></script>
     <script src="assets/js/italian-ui.js" defer></script>
-    <script src="assets/js/studio-shell.js" defer></script>
     <script src="assets/js/supabase-config.js" defer></script>
     <script src="assets/js/tiktok-config.js" defer></script>
     <script src="assets/js/tiktok-login.js" defer></script>
@@ -762,7 +761,6 @@
                 <button id="studioEditorClose" type="button" aria-label="Close" title="Chiudi l'editor e torna al desktop"></button>
             </div>
         </div>
-        <button id="editorMenuToggle" class="editor-menu-toggle" type="button" aria-controls="editorMenuBar" aria-expanded="false" data-i18n="menuToggle">Menu</button>
         <ul id="editorMenuBar" class="editor-menubar" role="menubar" aria-label="Menu editor">
             <li role="menuitem" tabindex="0" aria-haspopup="true" aria-expanded="false"><span data-i18n="menuFile">File</span>
                 <ul role="menu">
@@ -810,6 +808,7 @@
             </li>
         </ul>
         <div id="editorToolbar" class="editor-toolbar" role="toolbar" aria-label="Strumenti editor">
+            <button id="editorMenuToggle" class="editor-menu-toggle" type="button" aria-controls="editorMenuBar" aria-expanded="false" data-i18n="menuToggle">Menu</button>
             <button id="studioBackToHome" type="button" data-editor-action="studio" aria-label="Torna allo studio" data-i18n="toolStudio">Studio</button>
             <button id="toolbarPlayBtn" type="button" data-editor-action="play" aria-pressed="false" data-i18n="toolPlay">Riproduci</button>
             <button type="button" data-editor-action="split" data-i18n="toolSplit">Dividi clip</button>
@@ -819,6 +818,9 @@
         </div>
         <div class="window-body editor-body">
     <div id="panel" class="panel" aria-label="editor controls">
+        <div class="editor-sheet-head">
+            <button id="editorSheetClose" type="button" data-i18n="sheetClose">Chiudi</button>
+        </div>
         <div id="recoveryBanner" class="recovery-banner hidden" role="status">
             <span data-i18n="recoveryText">autosaved project restored in this browser</span>
             <button id="recoveryKeepBtn" type="button" data-i18n="recoveryKeep">keep</button>

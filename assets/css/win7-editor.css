@@ -107,3 +107,57 @@ body.studio-editor-open .studio-taskbar { display:flex; }
 #studioEditorChrome .inline-check,#studioEditorChrome .studio-tl-snap { display:inline-flex; align-items:center; min-height:22px; }
 #studioEditorChrome .row-select-box { display:inline-flex; align-items:center; }
 #studioEditorChrome .row-select-box label::before { margin-right:0; }
+
+/* intestazione del foglio: solo su telefono */
+#studioEditorChrome .editor-sheet-head { display:none; }
+
+/* ---------- telefono: < 900px ---------- */
+@media (max-width: 899px) {
+  body.studio-editor-open #studioEditorChrome { --editor-gap: 0px; }
+  #studioEditorChrome > .window { border-radius:0; }
+  #studioEditorChrome .title-bar-controls button[aria-label="Maximize"],
+  #studioEditorChrome .title-bar-controls button[aria-label="Restore"] { display:none; }
+
+  /* toolbar con il bottone menu: una riga, scorre se serve, mai tagliata */
+  #studioEditorChrome .editor-toolbar { gap:4px; padding:4px; }
+  #studioEditorChrome .editor-toolbar > button { flex:1 1 auto; min-width:0; min-height:40px; padding-inline:8px; white-space:nowrap; }
+  #studioEditorChrome .editor-toolbar > [data-editor-action="split"] { display:none; }
+  #studioEditorChrome .editor-menu-toggle { display:inline-block; }
+  #studioEditorChrome .editor-toolbar-spacer,#studioEditorChrome .autosave-pill { display:none; }
+
+  /* menu compatto: si apre sotto la toolbar, voci impilate, sottomenu in linea */
+  #studioEditorChrome .editor-menubar { display:none; }
+  body.editor-menu-open #studioEditorChrome .editor-menubar { display:block; position:absolute; z-index:80;
+    left:var(--w7-w-space); right:var(--w7-w-space); top:calc(30px + 50px);
+    max-height:70%; overflow-y:auto; border:1px solid #0006; box-shadow:4px 4px 3px -2px #00000080; }
+  body.editor-menu-open #studioEditorChrome .editor-menubar > [role=menuitem] { display:block; min-height:40px; padding:10px 12px; border-bottom:1px solid #d5dbe0; }
+  #studioEditorChrome .editor-menubar > [aria-expanded="true"] > [role=menu] { position:static; display:block; margin:8px -12px -10px;
+    min-width:0; max-width:none; box-shadow:none; border-inline:0; border-bottom:0; }
+  #studioEditorChrome .editor-menubar [role=menu] :is(button,a) { min-height:40px; white-space:normal; }
+
+  /* corpo in colonna: anteprima, timeline, poi tab in basso */
+  #studioEditorChrome .editor-body { display:flex; flex-direction:column; }
+  #studioEditorChrome .page-shell { flex:1 1 auto; order:1; }
+  #studioEditorChrome .status-bar { display:none; }
+  #studioEditorChrome #editor.app { grid-template-rows:minmax(0,1fr) minmax(150px,38%); padding:4px; gap:4px; }
+  #studioEditorChrome .hint,#studioEditorChrome #stageFullscreenBtn,#studioEditorChrome .stage-zoom-controls output,
+  #studioEditorChrome .stage-title span { display:none; }
+  #studioEditorChrome .stage-toolbar,#studioEditorChrome .stage-transport { padding:3px 4px; }
+  #studioEditorChrome .stage-canvas-zone { padding:6px; min-height:120px; }
+  #studioEditorChrome :is(.stage-zoom-controls,.stage-transport,.studio-tl-tools) button { min-height:34px; }
+
+  /* pannello = barra dei tab; aperto diventa un foglio a mezza altezza */
+  #studioEditorChrome #panel { order:2; flex:0 0 auto; max-height:56%; border-right:0; border-top:1px solid #a0aab3; }
+  body:not(.editor-sheet-open) #studioEditorChrome #panel > :not(.editor-tab-strip) { display:none; }
+  body.editor-sheet-open #studioEditorChrome #panel { flex-basis:56%; }
+  body.editor-sheet-open #studioEditorChrome #studioTimelineDock { display:none; }
+  body.editor-sheet-open #studioEditorChrome #editor.app { grid-template-rows:minmax(0,1fr); }
+  #studioEditorChrome .editor-sheet-head { display:flex; justify-content:flex-end; position:sticky; top:0; z-index:6;
+    padding:4px 6px; background:var(--w7-surface); border-bottom:1px solid #d5dbe0; }
+  #studioEditorChrome .editor-sheet-head button { min-height:36px; }
+  #studioEditorChrome .editor-tab-strip { order:99; position:sticky; top:auto; bottom:0; padding:4px 4px 0; border-top:1px solid #d5dbe0; }
+  #studioEditorChrome #panel { display:flex; flex-direction:column; }
+  #studioEditorChrome #panel > .editor-tab-strip { margin-top:auto; }
+  #studioEditorChrome .editor-tabs button { min-height:40px; padding-inline:6px; }
+  #studioEditorChrome .editor-section { margin-inline:4px; }
+}

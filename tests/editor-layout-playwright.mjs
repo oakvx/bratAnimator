@@ -370,6 +370,8 @@ try {
                 source: { kind: 'text', text: 'Hello' }
             } });
         });
+        // su telefono la timeline sta sotto il foglio del pannello: lo si chiude per usarla
+        await page.evaluate(() => window.BratEditorWindow?.setSheet(false));
         await page.locator('#studioTlViewport').scrollIntoViewIfNeeded();
         // 7.css nasconde l'input: si clicca la label come farebbe l'utente
         await page.locator('label[for="studioTlSnap"]').click();

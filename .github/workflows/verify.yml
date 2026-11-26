@@ -119,6 +119,8 @@ jobs:
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.58.2
       - name: Audit real editor sections and save visual evidence
         run: node tests/editor-layout-playwright.mjs
+      - name: Audit phone editor (sheet, compact menu, touch targets)
+        run: node tests/editor-mobile-playwright.mjs
       - name: Upload screenshots for manual visual review
         if: always()
         uses: actions/upload-artifact@v4

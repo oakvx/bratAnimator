@@ -5970,6 +5970,7 @@ async function updateExportEstimate() {
         try {
             localStorage.setItem('bratAnimator.activeSidebarTab', group);
         } catch (_) {}
+        window.dispatchEvent(new CustomEvent('brat:editor-tab', { detail: { group, section: tabName, reveal } }));
     }
     window.BratEditorNav = Object.freeze({ openTab: openEditorTab });
 
