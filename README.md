@@ -244,7 +244,7 @@ Setup: [supabase/README.md](supabase/README.md) · [docs/supabase-tiktok-setup.m
 
 ## Naming & SEO
 
-Primary search focus: **Free Brat Video Editor Online** (English) and **Editor Video Brat Gratis Online** (Italian) — with substantive localized pages, reciprocal `hreflang`, and structured `WebApplication` data. The "Free" marketing lives in metadata only: it is intentionally absent from the visible app and localized guide headings. Free usage does not override the publication/redistribution restrictions in the [terms](terms.html).
+Primary search focus: **Free Brat Video Editor Online** (English) and **Editor Video Brat Gratis Online** (Italian) — with substantive localized pages, reciprocal `hreflang`, and structured `WebApplication` data. The "Free" marketing lives in metadata only: it is intentionally absent from the visible app and localized guide headings. SEO rules: each indexed page has exactly one descriptive `<h1>` (the home keeps a visually-hidden crawlable intro, while the dashboard heading is an `<h2>`), titles stay under 60 characters and never say "free", and descriptions are 100–170 characters (CJK: 45+). Localized pages carry a visible FAQ mirrored by `FAQPage` JSON-LD. `sitemap.xml` `lastmod` should be bumped whenever indexed pages change. These rules are enforced by `tests/seo-metadata.test.js`. Free usage does not override the publication/redistribution restrictions in the [terms](terms.html).
 
 ## Development & testing
 

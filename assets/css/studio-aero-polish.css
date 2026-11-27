@@ -50,7 +50,7 @@
   border-bottom:0;
   background:linear-gradient(#ffffff,#edf7ff);
 }
-#studioDashboard .studio-dashboard-head h1 {color:#1c486b; font-size:18px;}
+#studioDashboard .studio-dashboard-head h2 {color:#1c486b; font-size:18px;}
 #studioDashboard .studio-addressbar {
   display:flex;align-items:center;gap:7px;
   margin:0;
