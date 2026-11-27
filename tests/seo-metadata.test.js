@@ -17,7 +17,7 @@ function schema(page) {
 }
 test("home visibly brands Brat Animator while retaining searchable free-editor metadata", () => {
     const html = read("index.html");
-    assert.match(html, /<title>Brat Animator — Brat Video Editor<\/title>/);
+    assert.match(html, /<title>Brat Animator — Brat Video Editor &amp; Lyric Video Maker<\/title>/);
     assert.match(meta(html, "description"), /Brat-style videos for free/i);
     assert.doesNotMatch(meta(html, "og:title", "property"), /Free/i);
     assert.match(meta(html, "og:title", "property"), /Brat Video Editor/);
@@ -29,7 +29,7 @@ test("home visibly brands Brat Animator while retaining searchable free-editor m
 test("indexed English and Italian pages have distinct meaningful descriptions", () => {
     const en = read("en/index.html");
     const it = read("it/index.html");
-    assert.match(en, /<h1>Brat Animator — Brat Video Studio/);
+    assert.match(en, /<h1>Brat Animator — Brat Video Editor Online/);
     assert.match(it, /<h1>Brat Animator — Studio Video Brat/);
     assert.match(meta(en, "description"), /multitrack timeline/);
     assert.match(meta(it, "description"), /editor video gratuito/);
@@ -85,4 +85,34 @@ test("free keywords stay searchable but not in visible English or Italian headin
         assert.doesNotMatch(body, /<h[1-6][^>]*>[^<]*(?:Free|gratis|gratuito)/i);
     }
     assert.doesNotMatch(home, /<section class="studio-seo-intro"/);
+});
+
+test("every indexed page has one descriptive h1, a sane title and no visible 'free' wording", () => {
+    const pages = ["index.html", "en/index.html", "it/index.html", "ru/index.html", "zh/index.html"];
+    for (const page of pages) {
+        const html = read(page);
+        assert.equal((html.match(/<h1[\s>]/g) || []).length, 1, page + " must have exactly one h1");
+        const title = html.match(/<title>([^<]+)<\/title>/)[1].replace(/&amp;/g, "&");
+        assert.ok(title.length <= 60, page + " title too long: " + title.length);
+        assert.doesNotMatch(title, /free|gratis|gratuit|бесплат|免费/i, page + " title must not say free");
+        const description = meta(html, "description");
+        const min = /[\u4e00-\u9fff]/.test(description) ? 45 : 100;
+        assert.ok(description.length >= min && description.length <= 170, page + " description length " + description.length);
+        const body = html.slice(html.indexOf("<body>"))
+            .replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]+>/g, " ");
+        assert.doesNotMatch(body, /free to use|\bfree\b|gratis|gratuit|бесплатн|免费/i, page + " visible text must not say free");
+    }
+});
+test("home keeps a crawlable intro while the dashboard heading is not an h1", () => {
+    const html = read("index.html");
+    assert.match(html, /<h1>Brat Animator — Brat Video Editor &amp; Lyric Video Maker<\/h1>/);
+    assert.match(html, /<h2 id="studioTitle">/);
+    assert.match(read("assets/css/style.css"), /\.seo-visually-hidden/);
+});
+test("localized pages expose a visible FAQ mirrored by FAQPage JSON-LD", () => {
+    for (const locale of ["en", "ru", "zh"]) {
+        const html = read(locale + "/index.html");
+        assert.ok(/"@type":\s*"FAQPage"/.test(html), locale + " missing FAQPage");
+        assert.ok(html.includes("<h3>"), locale + " missing visible FAQ questions");
+    }
 });

@@ -141,7 +141,7 @@ body.studio-dashboard-open #studioDashboard {display:block;}
   border-bottom:1px solid #c6d4df;
   background:linear-gradient(#fff,#eef6fd);
 }
-#studioDashboard .studio-dashboard-head h1 {
+#studioDashboard .studio-dashboard-head h2 {
   font:600 18px/1.2 "Segoe UI",Tahoma,sans-serif;
   color:#2a4e66;margin:0 0 3px;
 }
@@ -599,7 +599,7 @@ body.studio-window-maximized #studioDashboard .studio-classic-body-grid {min-hei
   :root {--brat-taskbar-height:43px;}
   #studioDashboard .studio-dashboard-inner {padding:4px 3px 60px;}
   #studioDashboard .studio-dashboard-head {padding:10px;gap:9px;}
-  #studioDashboard .studio-dashboard-head h1 {font-size:16px;}
+  #studioDashboard .studio-dashboard-head h2 {font-size:16px;}
   #studioDashboard .studio-view {padding:10px 11px;}
   #studioDashboard .studio-classic-commandbar {margin:-10px -11px 12px;}
   #studioDashboard .studio-project-grid {grid-template-columns:1fr;}

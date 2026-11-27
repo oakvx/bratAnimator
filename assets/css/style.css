@@ -195,3 +195,6 @@ kbd { font:11px var(--font-mono); opacity:.7; }
   *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important;
     animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }
+
+/* Crawler-readable intro; hidden visually but kept for accessibility tools. */
+.seo-visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
